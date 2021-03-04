@@ -1,0 +1,73 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Base.Services
+{
+    //??
+    public static class Extension
+    {
+        public static string ToTaiwanShortDate(this DateTime dt)
+        {
+            return (dt.Year-1911).ToString() + "/" + dt.ToString("MM/dd");
+        }
+
+        public static string ToTaiwanLongDate(this DateTime dt)
+        {
+            return (dt.Year - 1911).ToString() + "/" + dt.ToString("MM/dd hh:mm:ss");
+        }
+
+        public static bool HasPro(this object obj, string propertyName)
+        {
+            return obj.GetType().GetProperty(propertyName) != null;
+        }
+
+        public static string GetProp(this object obj, string propertyName)
+        {
+            if (obj.HasPro(propertyName) && obj.GetType().GetProperty(propertyName).GetValue(obj) != null)
+                return obj.GetType().GetProperty(propertyName).GetValue(obj).ToString();
+            return "";
+        }
+
+        public static T GetProp<T>(this object obj, string propertyName)
+        {
+            if (obj.HasPro(propertyName))
+            {
+                if (obj.GetType().GetProperty(propertyName).GetValue(obj)!=null)
+                    return (T)obj.GetType().GetProperty(propertyName).GetValue(obj);
+                else return default(T);
+            }
+            return default(T);
+        }
+
+        public static T Map<T>(this NameValueCollection obj,T t) where T : class
+        {
+            foreach (string kvp in obj.AllKeys)
+            {
+                PropertyInfo pi = t.GetType().GetProperty(kvp, BindingFlags.Public | BindingFlags.Instance);
+                if (pi != null)
+                {
+                    var type = pi.GetType();
+                    var value = obj[kvp];
+                    if (value!="")
+                        pi.SetValue(t, obj[kvp], null);
+                }
+            }
+
+            return t;
+        }
+
+        private static Random random = new Random();
+
+        public static string RandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+    }
+}

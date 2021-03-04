@@ -1,0 +1,61 @@
+﻿using System;
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
+using StackExchange.Redis;
+
+namespace Base.Services
+{
+    /// <summary>
+    /// 將 Cache class 包裝成靜態類別
+    /// </summary>
+    public class _Cache
+    {
+
+        /// <summary>
+        /// 初始化, 如果config設定不存在, 則log error, 後續的cache操作不再操作
+        /// 如果要啟動cache功能, 則在 application_start() 執行此函數
+        /// </summary>
+        public static void Init()
+        {
+            if (_Config.GetStr(_Fun.CacheHost, false) == "")
+                _Log.Error("web.config no " + _Fun.CacheHost + ".");
+        }
+
+        /*
+        /// <summary>
+        /// get cache of query result
+        /// </summary>
+        /// <param name="stCache"></param>
+        /// <returns>0(no cache server), -1(no cache rows), 1(get cache rows)</returns>
+        public static JArray GetQuery(StCache stCache)
+        {
+            return new Cache().GetQuery(stCache);
+        }
+
+        /// <summary>
+        /// get group row of cache
+        /// </summary>
+        /// <param name="cache"></param>
+        /// <returns>0(no cache server), -1(not found), 1(found)</returns>
+        public static JArray GetGroup(StCache stCache)
+        {
+            return new Cache().GetGroup(stCache);
+        }
+
+        public JObject GetRow(StCache stCache, int sn)
+        {
+            return new Cache().GetRow(stCache, sn);
+        }
+
+        public void DeleteKeys(List<StDeleteCache> rows, string db="")
+        {
+            new Cache().DeleteKeys(rows, db);
+        }
+
+        public void DeleteKey(string table, List<string> fids, string db = "")
+        {
+            new Cache().DeleteKey(table, fids, db, true);
+        }
+        */
+    }
+}

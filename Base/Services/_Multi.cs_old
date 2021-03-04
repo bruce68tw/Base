@@ -1,0 +1,74 @@
+﻿using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
+
+namespace Base.Services
+{
+    //for save multiple rows
+    public static class _Multi
+    {
+        //same as CrudEdit.cs _fun !!
+        //private const string RowFun = "_fun";
+
+        /// <summary>
+        /// set row key for edit/add row
+        /// </summary>
+        /// <param name="rows"></param>
+        /// <param name="kid"></param>
+        /// <param name="kvalue">if null, will call _Str.NewId() !!</param>
+        public static void SetKey(JArray rows, string kid, string kvalue = null)
+        {
+            foreach (JObject row in rows)
+            {
+                if (_Fun.IsNewRow(row))
+                    row[kid] = (kvalue == null) ? _Str.NewId() : kvalue;
+            }
+        }
+
+        /// <summary>
+        /// set key of parent row for edit/add row
+        /// </summary>
+        /// <param name="rows"></param>
+        /// <param name="kid"></param>
+        /// <param name="kvalue">if null, will call _Str.NewId() !!</param>
+        public static void SetUpKey(JArray rows, string kid, string kvalue)
+        {
+            foreach (JObject row in rows)
+            {
+                if (_Fun.IsNewRow(row))
+                    row[kid] = kvalue;
+            }
+        }
+
+        /// <summary>
+        /// set this & parent key for edit/add row
+        /// </summary>
+        /// <param name="rows"></param>
+        /// <param name="upKid"></param>
+        /// <param name="upKvalue"></param>
+        /// <param name="kid"></param>
+        /// <param name="kvalue"></param>
+        public static void Set2Key(JArray rows, string upKid, string upKvalue, string kid, string kvalue = null )
+        {
+            foreach (JObject row in rows)
+            {
+                if (_Fun.IsNewRow(row))
+                {
+                    row[upKid] = upKvalue;
+                    row[kid] = (kvalue == null) ? _Str.NewId() : kvalue;
+                }
+            }
+        }
+
+        //convert string to keys(2 dimension)
+        public static List<List<string>> StrToKeys(string str)
+        {
+            var list = new List<List<string>>();
+            var tables = str.Split(_Fun.TableSep);
+            foreach (var table in tables)
+            {
+                list.Add(_Str.ToList(table, _Fun.RowSep));
+            }
+            return list;
+        }
+    }//class
+}

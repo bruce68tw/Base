@@ -1,0 +1,35 @@
+﻿using System;
+using System.DirectoryServices;
+
+namespace Base.Services
+{
+    public static class _Ad
+    {
+        //login Ad server
+        //see: http://www.itread01.com/articles/1478571605.html
+        public static bool Login(string server, string id, string pwd)
+        {
+            DirectoryEntry entry = new DirectoryEntry(server, id, pwd);
+            try
+            {
+                object obj = entry.NativeObject;
+                DirectorySearcher search = new DirectorySearcher(entry);
+                search.Filter = string.Format("(SAMAccountName={0})", id);
+                search.PropertiesToLoad.Add("cn");
+
+                SearchResult result = search.FindOne();
+                return (result != null);
+            }
+            catch (Exception ex)
+            {
+                _Log.Error("_Ad.cs Login() failed: " + ex.Message);
+                return false;
+            }
+            finally
+            {
+                entry.Close();
+            }
+        }
+
+    }//class
+}

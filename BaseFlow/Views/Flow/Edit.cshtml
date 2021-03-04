@@ -1,0 +1,61 @@
+﻿@using BaseFlow.Models;
+@model StateMachineVM
+@{
+    ViewBag.Title = "jsPlumb 2.3.0 demo - statemachine";
+}
+
+<!--
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+-->
+<link href="~/Content/font-awesome/css/font-awesome.css" rel="stylesheet">
+<!--
+<link href="//fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet">
+<link rel="stylesheet" href="~/Content/jsPlumb/main.css">
+-->
+<link href="~/Content/jsPlumb/jsplumbtoolkit-defaults.css" rel="stylesheet">
+<!--
+<link rel="stylesheet" href="~/Content/jsPlumb/jsplumbtoolkit-demo.css">
+-->
+<link href="~/Content/view/xf.css" rel="stylesheet">
+
+@section Scripts {
+    <script src="~/Scripts/jsplumb.js"></script>
+    <script src="~/Scripts/view/stateMachine.js"></script>
+    <!--
+    <script src="~/Scripts/demo-list.js"></script>
+    -->
+
+    <script type="text/javascript">
+        jsPlumb.ready(function () {
+            //Html.Raw 外面必須用 ', 不可用 " !!
+            _stateMachine.init('@Html.Raw(Json.Encode(Model.Nodes))', '@Html.Raw(Json.Encode(Model.Lines))');
+        });
+    </script>
+}
+
+<div id="divCanvas" class="jtk-surface jtk-surface-nopan">
+    @foreach (var node in Model.Nodes ?? new List<NodeModel>())
+    { 
+    <!-- id前面加上 node -->
+    <div data-shape="Circle" class="xf-node" id='@("node"+@node.Sn)' style='left:@(node.X+"px"); top:@(node.Y+"px");'>@node.Name
+        <div class="xf-ep" action="begin"></div>
+    </div>
+    }
+</div>
+
+<!-- context menu for node & line -->
+<ul class='xg-context-menu'>
+    <li onclick="_stateMachine.onClickEdit()">Edit</li>
+    <li onclick="_stateMachine.onClickDelete()">Delete</li>
+</ul>
+
+<!-- node property -->
+@Html.Partial("_NodeProp")
+@Html.Partial("_LineProp")
+
+<!-- line property -->
+@*
+    <div id="divLineEdit" style="display:none">
+        @Html.Partial("_LineProp")
+    </div>
+*@

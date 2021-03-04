@@ -1,0 +1,21 @@
+﻿using System.Collections.Generic;
+
+namespace Base.Models
+{
+    //工作表Model
+    public class ExcelSheetModel
+    {
+        /// <summary>
+        /// 建構式
+        /// </summary>
+        public ExcelSheetModel()
+        {
+            Rows = new List<ExcelRowModel>();
+        }
+
+        public string SheetName { get; set; }
+
+        public List<ExcelRowModel> Rows { get; set; }
+
+    } //class
+}

@@ -1,0 +1,19 @@
+﻿using System.Collections.Generic;
+using Base.Models;
+
+namespace Base.Services
+{
+    public class _Error
+    {
+        public static void AddRowError(ErrorModel model, string fid, string msg)
+        {
+            if (model.ErrorFields == null)
+                model.ErrorFields = new List<IdStrModel>();
+            model.ErrorFields.Add(new IdStrModel()
+            {
+                Id = fid,
+                Str = msg,
+            });
+        }
+    }
+}

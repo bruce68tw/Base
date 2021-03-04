@@ -1,0 +1,35 @@
+﻿using Base.Models;
+
+namespace Base.Services
+{
+    //redis server for session
+    public class SessionRedisService : ISession
+    {
+        const string _tailName = "_Session";
+
+        //connect to redis server
+        private void Connect()
+        {
+
+        }
+
+        //read session row
+        public UserInfoModel Read(string sysId)
+        {
+            //return _Model.JsonStrToModel<T>(HttpContext.Current.Session[sysId + _tailName] as string);
+            return null;
+        }
+
+        //write session row
+        public void Write(string sysId, UserInfoModel model)
+        {
+            //HttpContext.Current.Session[sysId + _tailName] = _Model.ToJsonStr<T>(model);
+        }
+
+        //reset
+        public void Reset(string sysId)
+        {
+            //HttpContext.Current.Session.RemoveAll();
+        }
+    }//class
+}

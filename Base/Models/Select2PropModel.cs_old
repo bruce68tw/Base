@@ -1,0 +1,71 @@
+﻿
+namespace Base.Models
+{
+    // (for bootstrap-select)
+    /// <summary>
+    /// 下拉式欄位可接受的屬性(bootstrap-select), 屬性名稱配合 bootstrap-select
+    /// </summary>
+    public class Select2PropModel
+    {
+        //constructor
+        public Select2PropModel()
+        {
+            //default value
+            ShowOptionTitle = false;
+            AddEmptyRow = true;
+            Separator = '|';
+            DropUpAuto = true;
+            ButtonClass = "xg-select-btn";
+        }
+
+        /// <summary>
+        /// 是否顯示 option title 在下拉式畫面
+        /// </summary>
+        public bool ShowOptionTitle { get; set; }
+
+        /// <summary>
+        /// 是否增加一筆空白的資料在最上面, option label = placeHolder
+        /// </summary>
+        public bool AddEmptyRow { get; set; }
+
+        /// <summary>
+        /// placeholder
+        /// </summary>
+        public string PlaceHolder { get; set; }
+
+        /// <summary>
+        /// className
+        /// </summary>
+        public string ClassName { get; set; }
+
+        /// <summary>
+        /// select onChange event name
+        /// </summary>
+        public string OnChange { get; set; }
+
+        /// <summary>
+        /// column amount, 大於1表示多欄
+        /// </summary>
+        public int Columns { get; set; }
+
+        /// <summary>
+        /// 多選欄位值的分隔符號
+        /// </summary>
+        public char Separator { get; set; }
+
+        /// <summary>
+        /// 指定下拉式欄位要顯示的筆數(for 考慮畫面空間)
+        /// </summary>
+        public int Size { get; set; }
+
+        /// <summary>
+        /// 是否由系統指定下拉式欄位展開方向, 如果否則往下展開
+        /// </summary>
+        public bool DropUpAuto { get; set; }
+
+        /// <summary>
+        /// button class name, default to xg-select-btn
+        /// </summary>
+        public string ButtonClass { get; set; }
+    }
+}

@@ -1,0 +1,14 @@
+﻿using Base.Models;
+
+namespace Base.Services
+{
+    public class Db0Service
+    {
+        protected Session0Model _session;
+        public Db0Service(Session0Model session)
+        {
+            _session = session;
+        }
+
+    }//class
+}

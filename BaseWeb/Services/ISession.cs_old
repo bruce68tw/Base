@@ -1,0 +1,23 @@
+﻿using Base.Models;
+
+namespace BaseWeb.Services
+{
+    //for handle UserProfileModel
+    public interface ISession
+    {
+        //get session Id
+        string GetId();
+
+        //set session Id
+        void SetId();
+
+        //read session row
+        BaseUserInfoDto GetUserInfo();
+
+        //write session row
+        void SetUserInfo(BaseUserInfoDto userInfo);
+
+        //reset
+        void Reset();
+    }
+}

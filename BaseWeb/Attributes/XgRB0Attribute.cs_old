@@ -1,0 +1,28 @@
+﻿using Base.Services;
+using BaseWeb.Services;
+using Microsoft.AspNetCore.Mvc.Filters;
+
+namespace BaseWeb.Attributes
+{
+    //設定ViewBag.RB for locale, 同時切換多國語for view
+    //annotation for controller only !!
+    public class XgRB0Attribute : ActionFilterAttribute
+    {
+        //外部傳入參數(語系), 如果無, 則取預設值
+        public string Locale = "";
+
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            /* //todo
+            string locale = (Locale != "") ? Locale : _Fun.DefaultLocale;
+            if (_Helper.SetRB(context, locale))
+                base.OnActionExecuting(context);
+            */
+
+            //return
+            //base.OnActionExecuting(context);
+            //return;
+        }
+
+    }//class
+}

@@ -1,0 +1,14 @@
+﻿using BaseFlow.Enums;
+
+namespace BaseFlow.Models
+{
+    public class LineModel
+    {
+        public string FromNode { get; set; }
+        public string ToNode { get; set; }
+        public int OrderNo = 1;
+        public string Fid { get; set; }
+        public string Op = EnumLineOp.Eq;      //use EnumLineOp
+        public string Value { get; set; }
+    }
+}

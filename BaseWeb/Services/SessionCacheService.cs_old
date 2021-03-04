@@ -1,0 +1,61 @@
+﻿using Base.Models;
+using Base.Services;
+using System;
+using System.Runtime.Caching;
+
+namespace BaseWeb.Services
+{
+    //use memoryCache for session
+    public class SessionCacheService : Session0Service
+    //public class SessionCacheService : ISession
+    {
+        /*
+//=== copy form Session0Service start ===
+//get session key
+public override string GetKey()
+{
+   var cookie = HttpContext.Current.Request.Cookies[_sessionFid];
+   return (cookie == null) ? "" : cookie.Value;
+}
+
+//get cookie for session key
+public override void SetKey()
+{
+   HttpContext.Current.Response.SetCookie(new HttpCookie(_sessionFid, Guid.NewGuid().ToString()));
+}
+//=== copy form Session0Service end ===
+*/
+
+        //get user info
+        public override BaseUserInfoDto GetUserInfo()
+        {
+            var key = GetClientKey();
+            if (string.IsNullOrEmpty(key))
+                return null;
+
+            var cache = MemoryCache.Default;
+            return cache.Contains(key)
+                ? cache.Get(key) as BaseUserInfoDto
+                : null;
+        }
+
+        //set user info
+        public override void SetUserInfo(string key, BaseUserInfoDto userInfo)
+        {
+            if (string.IsNullOrEmpty(key))
+                key = GetClientKey();
+
+            var policy = new CacheItemPolicy()
+            {
+                AbsoluteExpiration = DateTime.Now.AddSeconds(_Fun.Config.CacheSecond),
+            };
+            MemoryCache.Default.Set(key, userInfo, policy);
+        }
+
+        //reset
+        public override void Reset()
+        {
+            //HttpContext.Current.Session.RemoveAll();
+        }
+    }//class
+}

@@ -1,0 +1,127 @@
+﻿using Base.Enums;
+using Base.Models;
+using LightInject;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace Base.Services
+{
+    /// <summary>
+    /// session level data, has two parts:
+    ///   1.userProfile0(use lightInject)
+    ///   2.db format(for locale) for base class
+    /// called by:
+    ///   1.Db.cs
+    ///   2.XgDateHelper.cs
+    /// </summary>
+    public class UserDataService
+    {
+        //singleton service
+        private static UserProfile0Service _up0Service;
+
+        //基本元件的多國語系內容, <locale, 多國語>
+        //private static Dictionary<string, BaseR0Model> _baseR0s = new Dictionary<string, BaseR0Model>();
+
+        private UserProfile0Model _up0 = null;  //part1
+        private BaseR0Model _baseR0;            //part2
+
+        //constructor
+        public UserDataService()
+        {
+            //1.per Db instance, _up0 will create everytime
+            if (_up0 != null)
+                return;
+
+            //2._up0Service is singleton, only create once(for performance)
+            if (_up0Service != null)
+            {
+                SetData();
+                return;
+            }
+
+            /* use DI instead
+            //3.if config no this field, use default UserProfile0Model
+            if (_Str.IsEmpty(_Fun.UserProfileService))
+            {
+                //SetData();
+                _up0 = new UserProfile0Model();
+                return;
+            }
+            */
+
+            //4.get _up0Service & call setData(use lightInject)
+            //Assert.
+            var di = _Fun.GetDI();
+            //var status = di.CanGetInstance(typeof(UserProfile0Service), string.Empty);
+            _up0Service = (di.CanGetInstance(typeof(UserProfile0Service), string.Empty))
+                ? di.GetInstance<UserProfile0Service>()
+                : new UserProfile0Service();
+            SetData();
+        }
+
+        //set user profile0 & db format, 
+        //TODO: add other locale if need !!
+        private void SetData()
+        {
+            //set user profile0
+            _up0 = _up0Service.GetData();
+
+            //set resource0
+            //var locale = _up0.Locale;
+            //_baseR0 = LocaleToR0(_up0.Locale);// new Resource0Model();
+            /*
+            if (locale == EnumLocale.TW || locale == EnumLocale.CN)
+            {
+                _baseR0.FrontDate = "yyyy/M/d";
+                _baseR0.FrontDt = "yyyy/M/d HH:mm:ss";   //24 hours
+                _baseR0.FrontDtNoSec = "yyyy/M/d HH:mm";
+            }
+            else
+            {
+                //use english othercase
+                _baseR0.FrontDate = "d MMM yyyy";
+                _baseR0.FrontDt = "d MMM yyyy HH:mm:ss";   //24 hours
+                _baseR0.FrontDtNoSec = "d MMM yyyy HH:mm"; 
+            }
+            */
+        }
+
+        /*
+        private BaseR0Model LocaleToR0(string locale)
+        {
+            var r0 = _baseR0s.Where(a => a.Key == locale)
+                .Select(a => a.Value)
+                .FirstOrDefault();
+            if (r0 != null)
+                return r0;
+
+            //case of not found below
+            //no resource file, 
+            r0 = new BaseR0Model(); //initial value
+            var file = _Fun.DirRoot + "Locale/" + locale + "/_R0.json";
+            if (File.Exists(file))
+            {
+                var json = _Json.StrToJson(_File.ToStr(file));
+                _Json.CopyProp(json, r0);
+            }
+
+            _baseR0s.Add(locale, r0);
+            return r0;
+        }
+        */
+
+        public UserProfile0Model GetUserProfile0()
+        {
+            return _up0;
+        }
+
+        /*
+        public BaseR0Model GetBaseR0()
+        {
+            return _baseR0;
+        }
+        */
+
+    }//class
+}

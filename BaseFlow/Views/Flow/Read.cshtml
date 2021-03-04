@@ -1,0 +1,109 @@
+﻿@using Resources
+@using R = Resources.Flow
+
+@section Scripts {
+    <script type="text/javascript">
+        $(function () {
+            _me.init();
+        });
+
+        var _me = {
+            init: function () {
+                _me.divRead = $('#divRead');
+                _me.divEdit = $('#divEdit');
+                //_me.formFind = $('#formFind');
+                _me.formEdit = $('#formEdit');
+
+                //datatable config
+                var config = {
+                    dom: _xp.dtDom,
+                    columns: [
+                        //{ data: '_D' },
+                        { data: 'Name' },
+                        { data: '_Fun' },
+                        { data: 'Status' },
+                    ],
+                    columnDefs: [
+                        _xp.dtProp,
+                        { targets: [0], render: function (data, type, full, meta) {
+                            return _str.format('<a href="javascript:_me.onClickLink(\'{0}\');">{1}</a>', full.Id, data);
+                        }},
+                        { targets: [2], render: function (data, type, full, meta) {
+                            return _xp.dtSetStatus(full.Id, data);
+                        }},
+                    ],
+                };
+
+                //init datatable
+                _me.dt = _datatable.init('#table1', 'GetPage', config);
+
+                _prog.setReadPath();        //prog path
+                _valid.init(_me.formEdit);  //enable validation
+            },
+
+            /*
+            onClickFind: function () {
+                _datatable.find(_me.dt, _form.toJson(_me.formFind));
+            },
+            */
+
+            onClickSave: function () {
+                //check input
+                var fm = _me.formEdit;
+                if (!fm.valid())
+                    return;
+
+                //save: ajax call
+                var data = { isNew: _me.isNew, row: _form.toJsonStr(fm) };
+                _fun.ajax('Save', data, function (data) {
+                    _form.swap(_me.divRead);
+                    _tool.alert('@R0.SaveOk');
+                    _datatable.reload(_me.dt);
+                });
+            },
+
+            onClickAdd: function () {
+                _xp.setEditMode(true);
+                _form.reset(_me.formEdit);
+                _form.swap(_me.divEdit);
+            },
+
+            onClickLink: function (id) {
+                _xp.setEditMode(false);
+                _fun.ajax('GetRow', { key: id }, function (data) {
+                    _form.swap(_me.divEdit);
+                    _form.readJson(_me.formEdit, data);
+                });
+            },
+
+        }; //class
+    </script>
+}
+
+@Html.XgProgPath(R0.MainFun, R.ProgName)
+<div class="xp-prog">
+    <div id="divRead" class="xg-swap xg-active">
+        <!--toolbar-->
+        <div class="col-md-12 col-sm-12 col-xs-12 xp-toolbar xg-right">
+            @Html.XpAdd()
+        </div>
+
+        <!--table-->
+        <table id="table1" class="table table-bordered xg-datatable" cellspacing="0">
+            <thead>
+                <tr>
+                    @Html.XgDeleteRows()
+                    <th>@R.ProjectName</th>
+                    <th width='80px'>@R0.Fun</th>
+                    <th width='60px'>@R0.Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- edit form -->
+    <div id="divEdit" class="xg-swap">
+        @Html.Partial("Edit")
+    </div>
+</div>

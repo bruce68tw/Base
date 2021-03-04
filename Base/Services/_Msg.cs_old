@@ -1,0 +1,15 @@
+﻿
+namespace Base.Services
+{
+    //kernel程式傳到前端的訊息
+    public static class _Msg
+    {
+        public const string InsertFail = "資料新增失敗。";
+        public const string DeleteFail = "資料刪除失敗。";
+        public const string UpdateFail = "資料更新失敗。";
+        public const string SaveFail = "資料儲存失敗。";
+
+        public const string InputWrong = "資料輸入錯誤。";
+
+    }
+}

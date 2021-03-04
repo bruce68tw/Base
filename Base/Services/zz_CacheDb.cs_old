@@ -1,0 +1,38 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Base.Models;
+
+namespace Base.Services
+{
+    public class zz_CacheDb : IDisposable
+    {
+
+        private Db _db = null;   //or will compile error !!
+        private Cache _cache = null;
+
+        public void Dispose()
+        {
+            //throw new NotImplementedException();
+            Close();
+        }
+
+        public List<T> GetRows<T>(CacheListModel cache, ref string keyList, string sql, List<string> argFids = null, List<object> argValues = null)
+        {
+        }
+
+        public void Close()
+        {
+            if (_db != null)
+                _db.Close();
+
+            if (_cache != null)
+                _cache.Close();
+        }
+
+    }
+
+
+}

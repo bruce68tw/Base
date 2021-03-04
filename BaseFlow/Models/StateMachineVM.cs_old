@@ -1,0 +1,11 @@
+﻿using System.Collections.Generic;
+
+namespace BaseFlow.Models
+{
+    public class StateMachineVM
+    {
+        public List<NodeModel> Nodes { get; set; }
+
+        public List<LineModel> Lines { get; set; }
+    }
+}

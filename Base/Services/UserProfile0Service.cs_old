@@ -1,0 +1,16 @@
+﻿using Base.Models;
+
+namespace Base.Services
+{
+    //for base class access user profile0, and implement at child class !!
+    //if no locale function, no need derive this class
+    public class UserProfile0Service
+    {
+        //for child class, set user profile0
+        public virtual UserProfile0Model GetData()
+        {
+            return new UserProfile0Model();
+        }
+
+    }//class
+}

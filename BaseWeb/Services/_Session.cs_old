@@ -1,0 +1,49 @@
+﻿using Base.Models;
+using Base.Services;
+//using LightInject;
+
+namespace BaseWeb.Services
+{
+    public static class _Session
+    {
+        private static Session0Service _service = null;
+        //private static ISession _service = null;
+
+        //constructor
+        static _Session()
+        {
+            //_service = _Fun.GetDI().GetInstance<ISession>();
+            _service = (Session0Service)_Fun.GetDI().GetService(typeof(Session0Service));
+        }
+
+        public static string NewKey()
+        {
+            return _service.NewKey();
+        }
+
+        //get user profile
+        //return null if not login
+        public static BaseUserInfoDto GetUserInfo()
+        {
+            return _service.GetUserInfo(); 
+        }
+
+        //set user profile
+        public static void SetUserInfo(string key, BaseUserInfoDto model)
+        {
+            _service.SetUserInfo(key, model);
+        }
+
+        public static void SetClientKey(string key)
+        {
+            _service.SetClientKey(key);
+        }
+
+        //reset user profile
+        public static void Reset()
+        {
+            _service.Reset();
+        }
+
+    }//class
+}

@@ -1,0 +1,37 @@
+﻿using System.Collections.Generic;
+
+namespace Base.Models
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    public class SqlArgModel
+    {
+        /// <summary>
+        /// 讀取的欄位清單(逗號分隔)
+        /// 此欄位用來考慮cache(有值: cache type1, 空白表示cache type2)
+        /// </summary>
+        //public string ColList = "";
+
+        /// <summary>
+        /// sql statement
+        /// </summary>
+        public string Sql = "";
+
+        /// <summary>
+        /// 傳入參數的欄位名稱
+        /// </summary>
+        public List<string> ArgFids = null;
+
+        /// <summary>
+        /// 傳入參數的欄位值
+        /// </summary>
+        public List<object> ArgValues = null;
+
+        /// <summary>
+        /// db 連線時間(秒), 如果為0則使用預設時間
+        /// </summary>
+        //public int ConnectSec = 0;
+
+    }
+}

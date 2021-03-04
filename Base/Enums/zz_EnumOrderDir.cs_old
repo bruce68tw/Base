@@ -1,0 +1,12 @@
+﻿
+namespace Base.Enums
+{
+    /// <summary>
+    /// for jquery datatable order
+    /// </summary>
+    public enum EnumOrderDir
+    {
+        Asc,
+        Desc
+    }
+}

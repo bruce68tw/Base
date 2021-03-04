@@ -1,0 +1,163 @@
+﻿using Base.Enums;
+using Base.Models;
+using System;
+
+/// <summary>
+/// 與資料庫日期格式有關的method !!
+/// </summary>
+namespace Base.Services
+{
+    public class Date2
+    {
+        public Date2()
+        {
+            SetUserProfile();
+            SetNow();
+        }
+
+        private DbFormatModel _dbFormat;
+        private DateTime _now;
+
+        #region session 資料 for base class (含)多國語
+        //每建立一個Db instance, _session就會建立一次
+        private Session0Model _session0 = null;
+
+        //靜態屬性, 只建立一次(use Activator) !!
+        private static Session0Service _sessionService;
+
+        public Session0Model GetSession0()
+        {
+            return _session0;
+        }
+
+        //set _session variables, use Activator
+        private void SetUserProfile()
+        {
+            //1.每建立一個Db instance, _session就會建立一次
+            if (_session0 != null)
+                return;
+
+            //2._sessionService 為 singleton, 只會建立一次(提昇效能)
+            if (_sessionService != null)
+            {
+                _session0 = _sessionService.GetData();
+                SetDbFormat();
+                return;
+            }
+
+            //3.檢查 config, 如果沒有設定此欄位, 則使用default session0
+            var serviceName = _Config.GetStr("SessionService", false);
+            if (_Str.IsEmpty(serviceName))
+            {
+                _session0 = new Session0Model();
+                SetDbFormat();
+                return;
+            }
+
+            //4.建立 _sessionService
+            _sessionService = (Session0Service)Activator.CreateInstance(Type.GetType(serviceName));
+            _session0 = _sessionService.GetData();
+            SetDbFormat();
+        }
+        #endregion
+
+
+        public DbFormatModel GetDbFormat()
+        {
+            return _dbFormat;
+        }
+
+        //設定資料格式: 日期
+        //如果有其他語系, 則必須再加入 !!
+        private void SetDbFormat()
+        {
+            var locale = _session0.Locale;
+            //var culture = new CultureInfo(locale);
+            //CultureInfo.CurrentCulture = culture;
+
+            _dbFormat = new DbFormatModel();
+            if (locale == EnumLocale.Us)
+            {
+                _dbFormat.FrontDate = "d MMM yyyy";
+                _dbFormat.FrontDt = "d MMM yyyy HH:mm:ss";   //24小時制
+                _dbFormat.FrontDtNoSec = "d MMM yyyy HH:mm";   //24小時制
+            }
+            else
+            {
+                _dbFormat.FrontDate = "yyyy/M/d";
+                _dbFormat.FrontDt = "yyyy/M/d HH:mm:ss";   //24小時制
+                _dbFormat.FrontDtNoSec = "yyyy/M/d HH:mm";   //24小時制
+            }
+        }
+
+        //set _now, 考慮時差
+        public void SetNow()
+        {
+            _now = DateTime.Now.AddHours(_session0.DiffHour);
+        }
+
+        /*
+        public DateTime GetNow()
+        {
+            return _now;
+        }
+        */
+
+        /// <summary>
+        /// 傳回 Web 主機目前的時間字串 for update Db
+        /// </summary>
+        /// <returns>時間字串</returns>
+        public string GetNowStrForWriteDb()
+        {
+            var dbType = _Fun.GetDbType();
+            if (dbType == EnumDbType.MSSql)
+                return _now.ToString("yyyy-MM-dd HH:mm:ss");
+            else
+                return "";
+        }
+
+        public string ToDateHmStr(DateTime? dt)
+        {
+            return (dt == null) 
+                ? "" 
+                : dt.Value.ToString(_dbFormat.FrontDtNoSec);
+        }
+
+        //傳回日期, 不取時間
+        public string StrToDateStr(string dt)
+        {
+            return _Str.IsEmpty(dt)
+                ? ""
+                : ToDateStr(DateTime.Parse(dt));
+        }
+
+        public string ToDateStr(DateTime? dt)
+        {
+            return (dt == null) 
+                ? "" 
+                : dt.Value.ToString(_dbFormat.FrontDate);
+        }
+
+        /*
+        //convert to db format for update db
+        public string ToDbStr(DateTime date)
+        {
+            return date.ToString("yyyy-MM-dd HH:mm:ss");
+        }
+        */
+
+        /// <summary>
+        /// 將日期變數轉換成日期字串 (yyyy/MM/dd)  
+        /// </summary>
+        /// <param name="p_dt">日期變數</param>
+        /// <returns>日期字串</returns>
+        public string ToStr(DateTime? dt)
+        {
+            return (dt == null)
+                ? ""
+                : dt.Value.ToString(_dbFormat.FrontDt);
+            //: Convert.ToString(dt, new CultureInfo("ja-JP")).Trim();
+        }
+
+    }//class
+}

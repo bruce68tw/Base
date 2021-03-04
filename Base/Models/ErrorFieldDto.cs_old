@@ -1,0 +1,32 @@
+﻿//using System.Collections.Generic;
+
+namespace Base.Models
+{
+    public class ErrorFieldDto
+    {
+        /// <summary>
+        /// 錯誤訊息
+        /// </summary>
+        public string Fid = "";
+
+        /// <summary>
+        /// 錯誤訊息
+        /// </summary>
+        public string ErrorMsg = "";
+
+        /// <summary>
+        /// 資料群組, base 0
+        /// </summary>
+        public int GroupNo = 0;
+
+        /// <summary>
+        /// 是否多筆
+        /// </summary>
+        public bool IsMulti = false;
+
+        /// <summary>
+        /// 資料序號
+        /// </summary>
+        public int RowNo = 0;
+    }
+}

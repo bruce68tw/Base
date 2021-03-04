@@ -1,0 +1,89 @@
+﻿@using BaseWeb.Helpers;
+@using Base.Models;
+@using BaseFlow.Enums;
+@{ 
+    var _ops = new List<IdStrDto>()
+    {
+        new IdStrDto() { Id = EnumLineOp.Else, Str = "else" },
+        new IdStrDto() { Id = EnumLineOp.Ge, Str = ">=" },
+    };
+    var _toUsers = new List<IdStrDto>()
+    {
+        new IdStrDto() { Id = "user", Str = "用戶指定部門同事" },
+        new IdStrDto() { Id = "boss", Str = "部門主管" },
+        new IdStrDto() { Id = "role", Str = "選取角色" },
+    };
+    var _roles = new List<IdStrDto>()
+    {
+        new IdStrDto() { Id = "hr", Str = "人事主管" },
+        new IdStrDto() { Id = "gr", Str = "總經理" },
+    };
+    var _amountTypes = new List<IdStrDto>()
+    {
+        new IdStrDto() { Id = "1", Str = "一位" },
+        new IdStrDto() { Id = "n", Str = "全部" },
+    };
+}
+
+<style>
+    .xu-col2 {
+        width: 49%;
+    }
+    .xu-col3 {
+        width: 32%;
+    }
+</style>
+
+<div id="divLineProp" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Line Property</h4>
+            </div>
+            <div class="modal-body">
+                <form id="frmEdit" class="form-horizontal" action="">
+                    <div class="form-group">
+                        <label class="col-md-3">From Node</label>
+                        <div class="col-md-8">
+                            @Html.XiLabel("id1", "label1")
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-3">Target Node</label>
+                        <div class="col-md-8">
+                            @Html.XiLabel("id1", "label1")
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-3">執行條件</label>
+                        <div class="col-md-8">
+                            <div class="xu-col3 xg-inline">@Html.XiText("id1", "label1", "請輸入欄位id")</div>
+                            <div class="xu-col3 xg-inline">@Html.XiSelect("id1", "label1", _ops)</div>
+                            <div class="xu-col3 xg-inline">@Html.XiText("id1", "label1", "請輸入欄位value")</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-3">傳送對象</label>
+                        <div class="col-md-8">
+                            <div class="xu-col2 xg-inline">@Html.XiSelect("id1", "label1", _toUsers)</div>
+                            <div class="xu-col2 xg-inline">@Html.XiSelect("id1", "label1", _roles)</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-3">傳送人數</label>
+                        <span class="col-md-8">
+                            @Html.XiRadios("id1", "label1", _amountTypes)
+                        </span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,81 @@
+﻿using Base.Models;
+using System;
+using Microsoft.AspNetCore.Http;
+using BaseWeb.Extensions;
+using Base.Services;
+
+//use DI
+//use HttpContext(in BaseWeb)
+namespace BaseWeb.Services
+{
+    //for base class
+    public class SessionService : IDisposable
+    {
+        //cookie name for session id
+        //public const string SessionFid = "_Session_";
+
+        private ISession _session = null;
+
+        public SessionService()
+        {
+            _session = (ISession)_Fun.GetDI().GetService(typeof(ISession));
+        }
+
+        public void Dispose()
+        {
+
+        }
+
+        #region for base class
+        /// <summary>
+        /// get session key
+        /// </summary>
+        /// <returns></returns>
+        public string NewKey()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
+        /// <summary>
+        /// get cookie session key
+        /// </summary>        
+        public string GetClientKey()
+        {
+            var cookie = _Web.GetRequest().Cookies[SessionFid];
+            return (cookie == null) ? "" : cookie.ToString();
+        }
+
+        /// <summary>
+        /// set cookie session key
+        /// </summary>
+        /// <param name="key"></param>
+        public void SetClientKey(string key)
+        {
+            //var key = Guid.NewGuid().ToString();
+            _Web.GetResponse().Cookies.Append(key, SessionFid);
+        }
+        #endregion
+
+        #region derive class rewrite
+        /// <summary>
+        /// get user info
+        /// </summary>
+        /// <returns></returns>
+        public abstract BaseUserInfoDto GetUserInfo();
+
+        /// <summary>
+        /// set user info
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="userInfo"></param>
+        public abstract void SetUserInfo(string key, BaseUserInfoDto userInfo);
+
+        /// <summary>
+        /// reset session
+        /// </summary>
+        public abstract void Reset();
+
+        #endregion
+
+    }//class
+}

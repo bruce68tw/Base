@@ -1,0 +1,599 @@
+﻿using System;
+using Newtonsoft.Json.Linq;
+using StackExchange.Redis;
+using Base.Models;
+using Base.Enums;
+
+namespace Base.Services
+{
+    //redis cache, 使用 StackExchange
+    public class Cache : IDisposable
+    {
+        //有7種資料, 分3類 (1,2,3,4), (5,6), //(7)
+        //第1類(資料名稱 Rows): 單一table(無join), 資料異動時, 1.更新單筆資料, 2.清除異動條件欄位對應的所有的查詢結果
+        ////1.資料表-條件欄位(s)-sqlhash(s)
+        ////2.sqlhash-rowKey(s)
+        ////3.rowKey-model
+        //
+        //1.(t)資料表->條件欄位s(t+Table->sets) : 此table用到的條件欄位清單(項目2)
+        //2.(c)欄位->sqlhashs(c+Table_Column->sets) : 此欄位相關的查詢結果(hash) (項目3)
+        //3.(h)sqlhash->rowKeys(h+Hash->strings) : 查詢結果, 儲存 KValue list(項目4)
+        //4.(r)rowKey->model(r+Table_KValue->json字串) : 單筆資料內容, 包含單一table的全部欄位
+        //
+        //第2類(資料名稱 Query): join table, 資料異動時, 清除異動table所有的查詢結果
+        ////1.資料表-sqlhash(s)-query
+        //
+        //5.(x)資料表->sqlhashs(x+Table->sets) : 此table產生的查詢結果(項目6)
+        //6.(y)sqlhash->query(y+Hash->strings) : 查詢結果
+        //
+        ////第3類(資料名稱 Group): code table, 資料異動時, 清除異動key欄位的查詢結果
+        //7.(g)雜項檔查詢結果(g+Table_KValue:json字串) : 查詢結果
+
+        //constant for pre char
+        //private const string _preFid = "_f";        //save Kid list
+        //private const string _preKid = "_k";        //??, _k+kid -> Query hash list (kid為空白表示無kid)
+
+        //在每一種資料前面放置前置字元, 做為區別
+        //第1類
+        private const string _preTable = "t";
+        private const string _preColumn = "c";
+        private const string _preRows = "s";
+        private const string _preRow = "r";
+        //第2類
+        private const string _preQueryTable = "x";
+        private const string _preQuery = "q";
+        //第3類
+        private const string _preGroup = "g";
+
+        //private const int _hashLen = 25;             //sql hash code 長度
+
+        //private const string _snList = "[snList]";    //sql where 後面加上此字串, for查詢資料濾掉snList, 與CrudListService.cs一致 !!
+        //private const int _keyDay = 100;            //cache(read, row) 有效期限 100天
+
+        //cache
+        private ConnectionMultiplexer _host;    //cache host
+        private bool _isReady = false;          //cache host is ready or not
+        private IDatabase _cacheDb = null;      //cache database
+
+        //目前時間, for計算效能
+        //private DateTime _now;
+
+        //constructor
+        public Cache ()
+        {
+            //check config
+            string hostStr = _Config.GetStr(_Fun.CacheHost, false);
+            if (hostStr == "")
+                return;
+
+            //connect redis server
+            try
+            {
+                _host = ConnectionMultiplexer.Connect(hostStr);
+                _isReady = true;
+            }
+            catch (Exception ex)
+            {
+                _Log.Error("Cache.cs constructor failed: " + ex.Message);
+                _isReady = false;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_host.IsConnected)
+                _host.Dispose();
+        }
+
+        public bool IsReady()
+        {
+            return _isReady;
+        }
+
+        //get cache database index, 取最右邊數字為 cache database index !!
+        public void SelectDb(EnumCacheDb db)
+        {
+            _cacheDb = _host.GetDatabase((int)db);
+        }
+
+        /// <summary>
+        /// get hash code by sql string and input values, 固定25個字元長度
+        /// </summary>
+        /// <param name="dbModel"></param>
+        /// <returns></returns>
+        public string GetSqlHash(DbReadModel dbModel)
+        {
+            var data = dbModel.Sql + (dbModel.ArgValues == null ? "" : string.Join(",", dbModel.ArgValues.ToArray()));
+            return _Str.GetHashKey(data);
+        }
+
+        /// <summary>
+        /// 傳回查詢結果的內容(數值)
+        /// </summary>
+        /// <param name="hash"></param>
+        /// <returns>如果失敗, 則傳回 -1</returns>
+        public int GetQueryInt(string hash)
+        {
+            //call getQuery()
+            var str = GetQuery(hash);
+            int num;
+            if (int.TryParse(str, out num))
+                return num;
+
+            //case of parse error
+            _Log.Error("Cache.cs GetResultInt() failed.");
+            return -1;
+        }
+
+        /// <summary>
+        /// 傳回查詢結果的字串內容
+        /// </summary>
+        /// <param name="hash"></param>
+        /// <returns>如果失敗, 傳回 null string</returns>
+        public string GetQuery(string hash)
+        {
+            //switch db
+            SelectDb(EnumCacheDb.Query);
+
+            //get cache
+            string key = _preQuery + hash;
+            return (_cacheDb.KeyExists(key))
+                ? _cacheDb.StringGet(key).ToString()
+                : _Fun.NullString;
+        }
+
+        /// <summary>
+        /// 設定 result 結果(第2類)
+        /// </summary>
+        /// <param name="tables"></param>
+        /// <param name="hash"></param>
+        /// <param name="value"></param>
+        public void SetQuery(string[] tables, string hash, object value)
+        {
+            //switch db & set result cache
+            SelectDb(EnumCacheDb.QueryTable);
+            foreach (var table in tables)
+                _cacheDb.SetAdd(_preQueryTable + GetKeyName(table), hash);
+
+            //switch db & set hash2
+            SelectDb(EnumCacheDb.Query);
+            _cacheDb.StringSet(_preQuery + hash, value.ToString());
+        }
+
+        //傳回cache key 的部分欄位名稱(轉成小寫) !!
+        private string GetKeyName(string name)
+        {
+            return name.ToLower();
+        }
+
+        /*
+        //把 hash list 轉成 string array ??
+        private string[] HashToArray(string hashList)
+        {
+            var len = hashList.Length / _hashLen;
+            var results = new string[len];
+            for (var i = 0; i < len; i++)
+                results[i] = hashList.Substring(i * _hashLen, _hashLen);
+            return results;
+        }
+        */
+
+        /// <summary>
+        /// 傳回查詢結果(第1類)
+        /// </summary>
+        /// <param name="cache"></param>
+        /// <param name="status">cache status</param>
+        /// <returns>查詢結果</returns>
+        public JArray GetRows(string sqlHash, CacheReadModel cacheModel, ref EnumCacheStatus status)
+        {
+            //如果找不到則直接回傳null
+            SelectDb(EnumCacheDb.Rows);
+            var key = _preRows + sqlHash;
+            if (!_cacheDb.KeyExists(key))
+                return null;
+
+            //case of has cache key
+            //get kValue list
+            //有資料, 但是為 null
+            var data = _cacheDb.StringGet(key).ToString();
+            if (data == _Fun.NullString)
+            {
+                status = EnumCacheStatus.Ok;
+                return null;
+            }
+
+            //case of 有正常資料
+            //get detail row(s)
+            var values = data.Split(',');
+            status = EnumCacheStatus.Miss;     //initial
+            var results = new JArray();     //return rows
+            var preKey = _preRow + GetKeyName(cacheModel.Tables[0]) + "_";
+            //string rowStr;
+            var comm = cacheModel.KeyIsString ? "','" : ",";
+            SelectDb(EnumCacheDb.Row);
+            foreach (var value in values)
+            {
+                string rowStr = _cacheDb.StringGet(preKey + value);
+                if (rowStr == null)
+                    return null;
+
+                //add row
+                results.Add(_Json.StrToJson(rowStr));
+            }
+
+            /*
+            //調整 valueList
+            if (valueList != "")
+                valueList = cacheModel.KeyIsString
+                    ? "'" + valueList.Substring(0, valueList.Length - 2)
+                    : valueList.Substring(0, valueList.Length - 1);
+            */
+            status = EnumCacheStatus.Ok;
+            return results;
+        }
+
+        /// <summary>
+        /// 設定cache row(單筆)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="cacheModel"></param>
+        /// <param name="row"></param>
+        public void SetRow(CacheReadModel cacheModel, JObject row)
+        {
+            SetRow(cacheModel, new JArray() { row });
+        }
+
+        /// <summary>
+        /// 設定cache row(多筆)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="cacheModel"></param>
+        /// <param name="rows"></param>
+        public void SetRow(CacheReadModel cacheModel, JArray rows)
+        {
+            //check input
+            if (!_isReady || rows == null || rows.Count == 0)
+                return;
+
+            SelectDb(EnumCacheDb.Row);
+            var preKey = _preRow + GetKeyName(cacheModel.Tables[0]) + "_";
+            foreach(var row in rows)
+            {
+                //var key = preKey + _Model.GetValue(row, cacheModel.Kid).ToString();
+                var key = preKey + GetKeyName(row[cacheModel.Kid].ToString());
+                _cacheDb.StringSet(key, _Json.ToStr((JObject)row));
+            }
+        }
+
+        /// <summary>
+        /// update rows into cache, 包含 table, rows, row(多筆)
+        /// </summary>
+        /// <param name="cacheModel"></param>
+        /// <param name="sqlHash"></param>
+        /// <param name="rows"></param>
+        public void SetRows(CacheReadModel cacheModel, string sqlHash, JArray rows)
+        {
+            //check input
+            if (String.IsNullOrEmpty(cacheModel.Kid))
+            {
+                _Log.Error("Cache.cs SetRows() failed, cacheModel.Kid is empty !");
+                return;
+            }
+
+            //如果 rows為null, 則仍然寫入cache, 表示此條件下無任何資料
+            if (rows == null)
+                rows = new JArray();
+
+            //write cache below
+            //1: write cache-table(table-columns)
+            SelectDb(EnumCacheDb.Table);
+            var table = GetKeyName(cacheModel.Tables[0]);
+            foreach (var col in cacheModel.WhereOrders)
+                _cacheDb.SetAdd(_preTable + table, col);
+
+            //2: write cache-column(column-sqlHash)
+            SelectDb(EnumCacheDb.Column);
+            var preKey = _preColumn + table + "_";
+            foreach (var col in cacheModel.WhereOrders)
+                _cacheDb.SetAdd(preKey + col, sqlHash);
+
+            //3: write cache detail row(s) (row-json字串)
+            SelectDb(EnumCacheDb.Row);
+            var valueList = "";     //for write cache(4)
+            preKey = _preRow + table + "_";
+            foreach (var row in rows)
+            {
+                var key = GetKeyName(row[cacheModel.Kid].ToString());
+                _cacheDb.StringSet(preKey + key, _Json.ToStr((JObject)row));
+                //for cache(4)
+                valueList += key + ",";
+            }
+
+            //4: write cache-hash(hash-rows kValue)
+            SelectDb(EnumCacheDb.Rows);
+            _cacheDb.StringSet(_preRows + sqlHash, valueList.Substring(0, valueList.Length - 1));
+        }
+
+        /*
+        /// <summary>
+        /// get group row of cache
+        /// </summary>
+        /// <param name="stCache"></param>
+        /// <param name="rows"></param>
+        /// <returns>0(no cache server), -1(not found), 1(found)</returns>
+        public JArray GetGroup(StCache stCache)
+        {
+            //check cache server status
+            Init(stCache.db);
+
+            //check key
+            string key = stCache.table + _preGroup + stCache.kid;
+            if (_isReady)
+            {
+                string keyStr = _cacheDb.StringGet(key);
+                if (keyStr != null)
+                    return _Json.StringToJsons(keyStr);
+            }
+
+            //read db
+            InitDb(stCache);
+            JArray rows = _db.GetRows(stCache.sql, stCache.argFids, stCache.argValues);
+
+            //case of no cache server, return rows
+            if (_isReady)
+                _cacheDb.StringSet(key, _Json.ArrayToStr(rows));
+
+            return rows;
+        }
+
+        public JObject GetRow(StCache stCache, int sn)
+        {
+            Init(stCache.db);
+
+            //if key exists, return cache
+            string key = stCache.table + _preItem + sn;
+            if (_isReady)
+            {
+                string keyStr = _cacheDb.StringGet(key);
+                if (keyStr != null)
+                    return _Json.StringToJson(keyStr);
+            }
+
+            //read db
+            InitDb(stCache);
+            JObject row = _Fun.Row1(_db.GetRows(stCache.sql, stCache.argFids, stCache.argValues));
+
+            //write cache if need
+            if (_isReady)
+                _cacheDb.StringSet(key, _Json.JsonToString(row));
+
+            return row;
+        }
+        */
+
+        /*
+        /// <summary>
+        /// set cache rows are modified for tables
+        /// </summary>
+        /// <param name="tables"></param>
+        /// <param name="sn2s"></param>
+        /// <param name="db"></param>
+        public void ModifyRow2s(List<string> tables, List<List<int>> sn2s, string db = "")
+        {
+            Init(db);
+            SetNow();
+
+            int len = tables.Count;
+            for (int i = 0; i < len; i++)
+                ModifyRows(tables[i], sn2s[i], db, false);
+
+            //check slow cache action
+            CheckSlowAction("ModifyRow2s(" + len + " tables)");
+        }
+
+        /// <summary>
+        /// set cache rows are modified one table
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="sns"></param>
+        /// <param name="db"></param>
+        /// <param name="init"></param>
+        public void ModifyRows(string table, List<int> sns, string db = "", bool init = true)
+        {
+            if (init)
+                Init(db);
+
+            string key = table + _preCD;
+            string snList = _cacheDb.StringGet(key);
+            if (snList == null)
+                _cacheDb.StringSet(key, string.Join(",", sns));
+            else
+            {
+                string addList = "";
+                snList = (snList == null) ? "" : "," + snList + ",";
+                for (int i = 0; i < sns.Count; i++)
+                {
+                    if (snList.IndexOf("," + sns[i] + ",") < 0)
+                        addList += sns[i] + ",";
+                }
+
+                if (addList != "")
+                    _cacheDb.StringSet(key, snList.Substring(1, snList.Length - 1) + addList.Substring(0, addList.Length - 1));
+            }
+        }
+
+        /// <summary>
+        /// 刪除某個 table 的所有查詢結果
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="db"></param>
+        public void DeleteTableRead(string table, string db = "")
+        {
+            Init(db);
+            SetNow();
+
+            //string[] querys = 
+            string kidList = _cacheDb.StringGet(table + _preTable);
+            if (kidList == null)
+                return;
+
+            string preKey = table + _preKid;
+            string preQuery = table + _preRead;
+            string[] kids = kidList.Split(',');
+            for (int i = 0; i < kids.Length; i++)
+            {
+                string kidKey = preKey + kids[i];
+                string queryList = _cacheDb.StringGet(kidKey);
+                if (queryList != null)
+                {
+                    //delete all query result under this kid
+                    string[] querys = queryList.Split(',');
+                    for (int j = 0; j < querys.Length; j++)
+                        _cacheDb.KeyDelete(preQuery + querys[j]);
+
+                    //delete key
+                    _cacheDb.KeyDelete(kidKey);
+                }
+            }
+
+            //check slow cache action
+            CheckSlowAction("DeleteTableRead(table=" + table + ")");
+        }
+        */
+
+        /// <summary>
+        /// delete cache key array
+        /// </summary>
+        /// <param name="list">{table, fids}</param>
+        /// <param name="db"></param>
+        /*
+        public void DeleteTables(List<string> tables, string db = "")
+        {
+            Init(db);
+            SetNow();
+
+            int len = tables.Count;
+            for (int i = 0; i < len; i++)
+                DeleteTable(tables[i], db, false);
+
+            //check slow cache action
+            CheckSlowAction("DeleteTables(" + len + " tables)");
+        }
+
+        /// <summary>
+        /// delete cache key
+        /// </summary>
+        /// <param name="table">cache table name</param>
+        /// <param name="fids">field id list</param>
+        /// <param name="db">cache db, ex:db0, db1... or empty</param>
+        public void DeleteTable(string table, string db="", bool init=true)
+        {
+            if (init)
+            {
+                Init(db);
+                SetNow();
+            }
+
+            string kids = _cacheDb.StringGet(table + _preRows1);
+            if (kids != null) 
+                DeleteKeys(table, new List<string>(kids.Split(',')));
+
+            //check slow cache action
+            if (init)
+                CheckSlowAction("DeleteTable(" + table + ")");
+        }
+
+        /// <summary>
+        /// 刪除某個 table 的某些 kid cache (when update row)
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="db"></param>
+        public void DeleteKeys(string table, List<string> kids, string db = "", bool init = true)
+        {
+            if (init)
+            {
+                Init(db);
+                SetNow();
+            }
+
+            //string[] querys = 
+            //string kidList = _cacheDb.StringGet(table + _preKid);
+            //if (kidList == null)
+            //    return;
+
+            string preKey = table + _preKid;
+            string preRead = table + _preRows2;
+            //string[] kids = kidList.Split(',');
+            for (int i = 0; i < kids.Count; i++)
+            {
+                string kidKey = preKey + kids[i];
+                string readList = _cacheDb.StringGet(kidKey);
+                if (readList != null)
+                {
+                    //delete all query result under this kid
+                    string[] querys = readList.Split(',');
+                    for (int j = 0; j < querys.Length; j++)
+                        _cacheDb.KeyDelete(preRead + querys[j]);
+
+                    //delete key
+                    _cacheDb.KeyDelete(kidKey);
+                }
+            }
+
+            //check slow cache action
+            if (init)
+                CheckSlowAction("DeleteKeys(table=" + table + ")");
+
+        }
+
+        /// <summary>
+        /// 刪除多個 table 的多個 kid cache (when update row)
+        /// </summary>
+        /// <param name="tables"></param>
+        /// <param name="db"></param>
+        public void DeleteKey2s(List<string> tables, List<List<string>> kid2s, string db = "")
+        {
+            Init(db);
+            SetNow();
+
+            int len = tables.Count;
+            for (int i = 0; i < len; i++)
+                DeleteKeys(tables[i], kid2s[i], db, false);
+
+            //check slow cache action
+            CheckSlowAction("DeleteKey2s(" + len + " tables)");
+        }
+
+        public void DeleteRows(List<string> tables, List<string> sns, string db = "")
+        {
+            Init(db);
+            SetNow();
+
+            int len = tables.Count;
+            for (int i = 0; i < len; i++)
+                _cacheDb.KeyDelete(tables[i] + _preItem + sns[i]);
+
+            //check slow cache action
+            CheckSlowAction("DeleteRows(" + len + " rows)");
+        }
+
+        //set _now
+        private void SetNow()
+        {
+            _now = DateTime.Now;
+        }
+
+        //check and log if slow query
+        private void CheckSlowAction(string key)
+        {
+            int time = _Config.GetInt("slowCache");
+            if (time > 0)
+            {
+                int diff = (int)_Date.MiniSecDiff(_now, DateTime.Now);
+                if (diff >= time)
+                    _Log.LogError("Slow Cache(" + diff + "): " + key);
+            }
+        }
+        */
+    }
+}
