@@ -55,11 +55,8 @@ namespace Base.Services
         //public CrudEdit(EditDto edit, string dbStr = "", object dbBox = null)
         public CrudEdit(EditDto edit, string dbStr = "")
         {
-            //_localeNo = (localeNo >= 0) ? localeNo : _Fun.DefaultLocaleNo;
-            //_session = session;
             _edit = edit;
             _dbStr = dbStr;
-            //_dbBox = dbBox;
         }
 
         private Db GetDb()

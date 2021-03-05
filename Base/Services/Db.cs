@@ -42,9 +42,6 @@ namespace Base.Services
         //public Db(string dbStr = "", object di = null)
         public Db(string dbStr = "")
         {
-            //_localeNo = (localeNo >= 0) ? localeNo : _Fun.DefaultLocaleNo;
-            //_session = session;
-
             //_dbStr: db field name at config, if length > 30, it will be connection string !!
             _dbStr = (dbStr == "") ? _Fun.Config.Db : dbStr;
             //_DI = (di == null) ? _Fun.GetDI() : (ServiceContainer)di;

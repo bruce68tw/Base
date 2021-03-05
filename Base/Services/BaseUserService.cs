@@ -15,7 +15,7 @@ namespace Base.Services
                 UserName = "U01 name",
                 DeptId = "D01",
                 DeptName = "D01 name",
-                Locale = _Fun.Config.DefaultLocale,
+                Locale = _Fun.Config.Locale,
                 //FrontDtFormat = _Fun.Config.FrontDtFormat,
                 //HourDiff = 0,
             };

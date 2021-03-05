@@ -12,7 +12,7 @@ namespace Base.Services
         public BaseResService()
         {
             _br = new BaseResDto(); //initial value
-            var file = _Fun.DirRoot + "wwwroot/locale/" + _Fun.Config.DefaultLocale + "/BR.json";
+            var file = _Fun.DirRoot + "wwwroot/locale/" + _Fun.Config.Locale + "/BR.json";
             if (!File.Exists(file))
             {
                 _Log.Error("no file: " + file);
