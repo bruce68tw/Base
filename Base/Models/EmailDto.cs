@@ -5,7 +5,7 @@ namespace Base.Models
     /// <summary>
     /// smtp email
     /// </summary>
-    public class MailDto
+    public class EmailDto
     {
         public string Subject { get; set; }
 
@@ -19,10 +19,12 @@ namespace Base.Models
         //attach files
         public List<string> Files { get; set; }
 
+        public List<IdStrDto> Images { get; set; }
+
         //image id list
-        public List<string> ImageIds { get; set; }
+        //public List<string> ImageIds { get; set; }
 
         //image path list
-        public List<string> ImagePaths { get; set; }
+        //public List<string> ImagePaths { get; set; }
     }
 }

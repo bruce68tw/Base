@@ -10,10 +10,10 @@ namespace Base.Services
     public class _Model
     {
         /// <summary>
-        /// convert model to string, seperate with "," for show model content only, can not decode !!
+        /// convert model to form string, seperate with "," for show model content only, can not decode !!
         /// </summary>
         /// <returns></returns>
-        public static string ToStr<T>(T model)
+        public static string ToFormStr<T>(T model)
         {
             if (model == null)
                 return "";
@@ -46,6 +46,12 @@ namespace Base.Services
             */
         }
 
+        /// <summary>
+        /// model to json
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="model"></param>
+        /// <returns></returns>
         public static JObject ToJson<T>(T model)
         {
             if (model == null)
@@ -59,6 +65,15 @@ namespace Base.Services
             }
             return result;
         }
+
+        /*
+        public static List<PropertyInfo> GetProps<T>(T model) where T : new()
+        {
+            return (model == null)
+                ? null
+                : model.GetType().GetProperties();
+        }
+        */
 
         /// <summary>
         /// decode string into model 
@@ -121,7 +136,7 @@ namespace Base.Services
         /// <typeparam name="T"></typeparam>
         /// <param name="table"></param>
         /// <returns></returns>
-        public static T HashtableToModel<T>(Hashtable table) where T : new()
+        public static T HashToModel<T>(Hashtable table) where T : new()
         {
             T model = new T();
             foreach (var prop in model.GetType().GetProperties())
@@ -138,9 +153,14 @@ namespace Base.Services
 
             return model;
         }
-        
-        //convert list model to json string(for javascript)
-        public static string ListToStr<T>(List<T> rows)
+
+        /// <summary>
+        /// convert list model to json string(for javascript)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="rows"></param>
+        /// <returns></returns>
+        public static string ListToJsonStr<T>(List<T> rows)
         {
             return JsonConvert.SerializeObject(rows);
         }

@@ -49,8 +49,8 @@ namespace BaseWeb.ViewComponents
             //value attr will disappear, use data-value instead !!
             var html = $@"
 <label class='xi-check {extClass}' {extAttr}>
-    <input{attr} data-type='check' type='checkbox' data-value='{value}'>{label}
-    <span></span>
+    <input{attr} type='checkbox' data-type='check' data-value='{value}'>{label}
+    <span class='xi-cspan'></span>
 </label>";
 
             //add title

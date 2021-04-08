@@ -460,6 +460,26 @@ namespace Base.Services
         }
 
         /// <summary>
+        /// file extension to http content type, for download file
+        /// </summary>
+        /// <param name="ext">file ext both has dot or not</param>
+        /// <returns></returns>
+        /*
+        public static string FileExtToContentType(string ext)
+        {
+            ext = ext.Replace(".", "");
+            var type = (ext == "xls" || ext == "xlsx") ? "application/msexcel" :
+                (ext == "doc" || ext == "docx") ? "application/ms-word" :
+                (ext == "pdf") ? "application/pdf" :
+                "";
+
+            if (type == "")
+                _Log.Error("_Str.cs FileExtToContentType() failed, ext wrong (" + ext + ")");
+            return type;
+        }
+        */
+
+        /// <summary>
         /// mustache 字串填充, 使用 Handlebars.Net
         /// </summary>
         /// <param name="source">來源字串</param>

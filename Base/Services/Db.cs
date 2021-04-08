@@ -449,11 +449,11 @@ namespace Base.Services
             {
                 //fid = reader.GetName(i);
                 var typeName = reader.GetDataTypeName(i).ToLower();
-                if (typeName.IndexOf("datetime") >= 0)
+                if (typeName.Contains("datetime"))
                     type = DataTypeEnum.Datetime;
-                else if (typeName.IndexOf("date") >= 0)
+                else if (typeName.Contains("date"))
                     type = DataTypeEnum.Date;
-                else if (typeName.IndexOf("bit") >= 0)
+                else if (typeName.Contains("bit"))
                     type = DataTypeEnum.Bit;
                 else
                     type = DataTypeEnum.Other;

@@ -153,9 +153,12 @@ namespace Base.Services
 
         private string GetSqlByField(EditDto edit, string key)
         {
+            return string.Format(edit.ReadSql, key);
+            /*
             return _Str.CheckKeyRule(key, edit.ReadSql)
                  ? string.Format(edit.ReadSql, key)
                  : "";
+            */
         }
 
         private string GetSqlByWhere(EditDto edit, string where)
@@ -191,17 +194,17 @@ namespace Base.Services
             //ResetArg();
 
             //connect db if need
-            var emptyDb = (db == null);
-            if (emptyDb)
-                db = GetDb();
+            var emptyDb = false;
+            _Fun.CheckOpenDb(ref db, ref emptyDb, _dbStr);
 
             //return row & close db if need
             var sql = string.IsNullOrEmpty(edit.ReadSql)
                 ? GetSql(edit, key)
                 : GetSqlByField(edit, key);
             var row = db.GetJson(sql, _sqlArgs);
-            if (emptyDb)
-                db.Dispose();
+            //if (emptyDb)
+            //    db.Dispose();
+            _Fun.CheckCloseDb(db, emptyDb);
             return row;
         }
 
@@ -214,6 +217,12 @@ namespace Base.Services
         /// <returns></returns>
         public JObject GetJson(string key)
         {
+            if (!_Str.CheckKeyRule(key))
+            {
+                _Log.Error("CrudEdit.cs GetJson() failed, key wrong: " + key);
+                return null;
+            }
+
             var db = GetDb();
             var data = GetDbRow(_edit, key, db);    //return data
             if (data == null)
@@ -1782,9 +1791,8 @@ namespace Base.Services
             //var error = "";
             ResetArg();
 
-            var emptyDb = (db == null);
-            if (emptyDb)
-                db = GetDb() ;
+            var emptyDb = false;
+            _Fun.CheckOpenDb(ref db, ref emptyDb);
 
             //delete rows
             //var fid = "";
@@ -1809,19 +1817,11 @@ namespace Base.Services
             var count = db.ExecSql(sql, _sqlArgs);
             //if (count == 0)
             //    goto lab_error;
-            if (emptyDb)
-                db.Dispose();
+            _Fun.CheckCloseDb(db, emptyDb);
 
             //case of ok
             _saveRows += count;
             return true;
-
-            /*
-        lab_error:
-            if (emptyDb)
-                db.Dispose();
-            return false;
-            */
         }
 
         private List<string> GetKeysByUpKeys(EditDto edit, List<string> upKeys, Db db)

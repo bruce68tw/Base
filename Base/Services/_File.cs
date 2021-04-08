@@ -18,10 +18,24 @@ namespace Base.Services
                 Directory.CreateDirectory(dir);
         }
 
-        //get file name(and .ext) with path
+        /// <summary>
+        /// get file name(and .ext) with path
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public static string GetFileName(string path)
         {
             return Path.GetFileName(path);
+        }
+
+        /// <summary>
+        /// get file ext, lowercase with dot, ex: .docx
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static string GetFileExt(string path)
+        {
+            return Path.GetExtension(path).ToLower();
         }
 
         /*

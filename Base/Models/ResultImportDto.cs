@@ -2,19 +2,24 @@
 namespace Base.Models
 {
     /// <summary>
-    /// for send server side result to front end
+    /// import result dto, namig for file sorting
     /// </summary>
-    public class ResultDto
+    public class ResultImportDto
     {
         /// <summary>
-        /// error code if any
+        /// ok rows count
         /// </summary>
-        public string Code = "";
+        public int OkCount;
 
         /// <summary>
-        /// result value
+        /// fail rows count
         /// </summary>
-        public string Value = "";
+        public int FailCount;
+
+        /// <summary>
+        /// total rows count
+        /// </summary>
+        public int TotalCount;
 
         /// <summary>
         /// error msg if any (necessary field for resultXXX dto)

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
+//nuGet System.Drawing.Common
+//using System.Drawing.Drawing2D;
+//using System.Drawing.Imaging;
 using System.IO;
 
 namespace Base.Models
@@ -75,6 +76,7 @@ namespace Base.Models
         /// 建立驗證的圖片
         /// </summary>
         /// <param name="validateCode">驗證碼</param>
+        /*
         public byte[] CreateValidateGraphic(string validateCode)
         {
             Bitmap image = new Bitmap((int)Math.Ceiling(validateCode.Length * 15.0), 28);
@@ -119,6 +121,7 @@ namespace Base.Models
                 image.Dispose();
             }
         }
+        */
 
         /// <summary>
         /// 得到驗證碼圖片的長度

@@ -13,10 +13,10 @@
             //FrontDtFormat = "yyyy/M/d HH:mm:ss";
             ServerId = "A";
             SlowSql = 1000;
-            LogInfo = false;
+            LogDebug = false;
             LogSql = false;
-            RootMail = "";
-            TesterMail = "";
+            RootEmail = "";
+            TesterEmail = "";
             UploadFileMax = 5;
             CacheSecond = 3600;
             SSL = false;
@@ -42,16 +42,16 @@
         public int SlowSql { get; set; }
 
         //log info
-        public bool LogInfo { get; set; }
+        public bool LogDebug { get; set; }
 
         //log sql
         public bool LogSql { get; set; }
 
         //root email address for send error
-        public string RootMail { get; set; }
+        public string RootEmail { get; set; }
 
         //tester email address
-        public string TesterMail { get; set; }
+        public string TesterEmail { get; set; }
 
         //upload file max size(MB)
         public int UploadFileMax { get; set; }
@@ -64,6 +64,9 @@
 
         //smtp, format: 0(Host),1(Port),2(Ssl),3(Id),4(Pwd),5(FromEmail),6(FromName) 
         public string Smtp { get; set; }
+
+        //email image path list: Id,Path.., ex: _TopImage, c:/xx/xx.png
+        public string EmailImagePairs { get; set; }
 
     }
 }

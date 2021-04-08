@@ -29,12 +29,14 @@ namespace BaseWeb.ViewComponents
         {
             //prop = prop ?? new PropNumDto();
 
-            //attr
-            var type = isDigit ? "digits" : "number";
+            //attr, both digits/number should be type=number for validate(digits not work !!)
+            //var type = isDigit ? "digits" : "number";
             var attr = _Helper.GetInputAttr(fid, editable, required) +
-                $" type='{type}' value='{value}' style='text-align:right; width:{width}'" +
+                $" type='number' value='{value}' style='text-align:right; width:{width}'" +
                 _Helper.GetRequired(required) +
                 _Helper.GetPlaceHolder(inputTip);
+            if (isDigit)
+                attr += " digits='true'";   //only digits won't work for validate !!
 
             if (min != null)
                 attr += " min='" + min + "'";
@@ -42,7 +44,7 @@ namespace BaseWeb.ViewComponents
                 attr += " max='" + max + "'";
 
             //html
-            var html = $"<input{attr} data-type='num' class='form-control {extClass}' {extAttr}>";
+            var html = $"<input{attr} data-type='num' class='form-control xi-box {extClass}' {extAttr}>";
 
             //add title
             if (!string.IsNullOrEmpty(title))

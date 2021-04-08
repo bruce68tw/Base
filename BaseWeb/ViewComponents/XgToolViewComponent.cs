@@ -100,7 +100,7 @@ namespace BaseWeb.ViewComponents
 <div id='xgImage' class='modal fade'>
     <div class='modal-dialog' role='document'>
         <div class='modal-content'>
-            <div class='modal-body'>
+            <div class='modal-body' style='margin:auto;'>
 				<img/>
             </div>
             <div class='modal-footer justify-content-between'>

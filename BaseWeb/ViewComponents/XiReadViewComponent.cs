@@ -12,7 +12,7 @@ namespace BaseWeb.ViewComponents
         /// <param name="fid"></param>
         /// <param name="label"></param>
         /// <param name="inRow"></param>
-        /// <param name="format">FormatEstr type for datetime/date</param>
+        /// <param name="format">BrFormatEstr type for datetime/date</param>
         /// <param name="cols"></param>
         /// <returns></returns>
         public HtmlString Invoke(string title, string fid, 

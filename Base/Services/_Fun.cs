@@ -52,6 +52,7 @@ namespace Base.Services
 
         //temp folder
         public static string DirTemp = DirRoot + "_temp\\";
+        public static string DirWeb = DirRoot + "wwwroot\\";
         #endregion
 
         #region Db variables
@@ -231,6 +232,30 @@ Offset {2} Rows Fetch Next {3} Rows Only
         public static string GetLocale()
         {
             return GetBaseUser().Locale;
+        }
+
+        /// <summary>
+        /// check and open db
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="emptyDb"></param>
+        /// <param name="dbStr"></param>
+        public static void CheckOpenDb(ref Db db, ref bool emptyDb, string dbStr = "")
+        {
+            emptyDb = (db == null);
+            if (emptyDb)
+                db = new Db(dbStr);
+        }
+
+        /// <summary>
+        /// check and close db
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="emptyDb"></param>
+        public static void CheckCloseDb(Db db, bool emptyDb)
+        {
+            if (emptyDb)
+                db.Dispose();
         }
 
     } //class

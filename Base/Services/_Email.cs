@@ -7,29 +7,33 @@ using System.Net.Mail;
 using System.Net.Mime;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Base.Services
 {
-    public class _Mail
+    public class _Email
     {
+        //get from _Fun.Config.EmailImagePairs
+        //null(will get)
+        private static List<IdStrDto> _emailImagePairs = null;
+
         /// <summary>
-        /// email to Root(web.config RootMail field)
+        /// email to Root(web.config RootEmail field)
         /// </summary>
         /// <param name="msg"></param>
         public static void SendRoot(string msg)
         {
             //check
-            if (string.IsNullOrEmpty(_Fun.Config.RootMail))
+            if (string.IsNullOrEmpty(_Fun.Config.RootEmail))
                 return;
 
             //send
-            SendMail(new MailDto()
+            var email = new EmailDto()
             {
                 Subject = _Fun.Config.SystemName + " Error",
-                ToUsers = StrToUsers(_Fun.Config.RootMail),
+                ToUsers = StrToUsers(_Fun.Config.RootEmail),
                 Body = msg,
-            });
+            };
+            SendByMsgSync(DtoToMsg(email), null, false);
         }
 
         /// <summary>
@@ -37,7 +41,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="userStr"></param>
         /// <returns></returns>
-        public static List<string> StrToUsers(string userStr)
+        private static List<string> StrToUsers(string userStr)
         {
             return userStr.Replace(';', ',').Split(',').ToList();
         }
@@ -45,34 +49,43 @@ namespace Base.Services
         /// <summary>
         /// send one mail
         /// </summary>
-        /// <param name="mail">email model</param>
+        /// <param name="email">email model</param>
         /// <param name="smtp">smtp model</param>
         /// <param name="sync">sync send or not, false(web ap), console(true)</param>
-        public static void Send(MailDto mail, SmtpDto smtp = null, bool sync = false)
+        public static void SendByDto(EmailDto email, SmtpDto smtp = null)
         {
-            Sends(new List<MailDto>() { mail }, smtp, sync);
+            SendByDtos(new List<EmailDto>() { email }, smtp);
         }
 
-        //send many mails
-        public static void Sends(List<MailDto> mails, SmtpDto smtp = null, bool sync = false)
+        /// <summary>
+        /// send mails asynchronus
+        /// </summary>
+        /// <param name="emails"></param>
+        /// <param name="smtp"></param>
+        public static void SendByDtos(List<EmailDto> emails, SmtpDto smtp = null)
         {
             //change receiver to tester if need !!
-            var mail = new MailDto();// = null;
-            var testMode = !string.IsNullOrEmpty(_Fun.Config.TesterMail);
+            //var email = new EmailDto();// = null;
+            var testMode = !string.IsNullOrEmpty(_Fun.Config.TesterEmail);
             if (testMode)
             {
-                mail = mails[0];
-                mail.ToUsers = StrToUsers(_Fun.Config.TesterMail);
-                mail.CcUsers = null;
+                var email = emails[0];
+                email.ToUsers = StrToUsers(_Fun.Config.TesterEmail);
+                email.CcUsers = null;
+                emails = new List<EmailDto>() { email };
             }
 
+            //send
+            SendByMsgs(DtosToMsgs(emails, smtp), smtp);
+
+            /*
             //sync = true;    //temp add
             if (sync)
             {
                 if (testMode)
-                    SendMail(mail, smtp);
+                    SendByDto2(email, smtp);
                 else
-                    SendMails(mails, smtp);
+                    SendByDtos2(emails, smtp);
             }
             else
             {
@@ -80,41 +93,182 @@ namespace Base.Services
                 {                    
                     var thread = new Thread(delegate ()
                     {
-                        SendMail(mail, smtp);
+                        SendByDto2(email, smtp);
                     });
                     thread.Start();
                 }
                 else
                 {
-                    /*
-                    Task.Factory.StartNew(() =>
-                    {
-                        SendMails(mails, smtp);
-                    });
-                    */
                     var thread = new Thread(delegate ()
                     {
-                        SendMails(mails, smtp);                        
+                        SendByDtos2(emails, smtp);                        
                     });
                     thread.Start();
                 }
             }
+            */
         }
 
+        /*
         //send one mail
-        private static void SendMail(MailDto mail, SmtpDto smtp = null)
+        private static void SendByDto2(EmailDto email, SmtpDto smtp = null)
         {
-            SendMails(new List<MailDto>() { mail }, smtp);
+            SendByDtos2(new List<EmailDto>() { email }, smtp);
+        }
+        */
+
+        //mailMessage add image
+        private static void MsgAddImages(MailMessage msg, List<IdStrDto> images)
+        {
+            if (images == null || images.Count == 0)
+                return;
+
+            foreach (var image in images)
+            {
+                var imageHtml = $"<html><body><img src=cid:{image.Id}/><br></body></html>";
+                var altView = AlternateView.CreateAlternateViewFromString(imageHtml, null, MediaTypeNames.Text.Html);
+
+                var linkSrc = new LinkedResource(image.Str, MediaTypeNames.Image.Jpeg);
+                linkSrc.ContentId = Guid.NewGuid().ToString();
+                altView.LinkedResources.Add(linkSrc);
+
+                //MailMessage mail = new MailMessage();
+                msg.AlternateViews.Add(altView);
+            }
         }
 
-        //send mails, send one by one for security reason
-        private static void SendMails(List<MailDto> mails, SmtpDto smtp = null)
+        public static MailMessage DtoToMsg(EmailDto email, SmtpDto smtp = null)
+        {
+            if (smtp == null)
+                smtp = _Fun.Smtp;
+
+            var utf8 = Encoding.GetEncoding("utf-8");
+            var sender = new MailAddress(_Str.IsEmpty(smtp.Id) ? smtp.FromEmail : smtp.Id);  //real sender
+            var from = new MailAddress(_Str.IsEmpty(smtp.FromEmail) ? smtp.Id : smtp.FromEmail, smtp.FromName, utf8);
+            return DtoToMsgByArg(email, utf8, sender, from);
+        }
+
+        private static MailMessage DtoToMsgByArg(EmailDto email, Encoding utf8, MailAddress sender, MailAddress from)
+        {
+            var msg = new MailMessage()
+            {
+                SubjectEncoding = utf8,
+                BodyEncoding = utf8,   //or will get random code !!
+                Subject = email.Subject,
+                Body = email.Body,
+                IsBodyHtml = true,
+                Sender = sender,
+                From = from,
+            };
+
+            //add image, use cid(better than base64 !!)
+            MsgAddImages(msg, email.Images);
+
+            //attach files
+            if (email.Files != null)
+            {
+                foreach (var file in email.Files)
+                {
+                    if (File.Exists(file))
+                    {
+                        var attach = new Attachment(file);
+                        attach.Name = _File.GetFileName(file);  //否則email附檔會出現路徑
+                        msg.Attachments.Add(attach);
+                    }
+                }
+            }
+
+            if (email.ToUsers != null)
+            {
+                foreach (var user in email.ToUsers)
+                {
+                    msg.To.Clear();
+                    msg.To.Add(user);
+                    //client.Send(msg);   //call sync method here!!
+                }
+            }
+            //if (mail.CcUsers != null)
+            //{
+            //    foreach (var user in mail.CcUsers)
+            //        msg.CC.Add(user);
+            //}
+            return msg;
+        }
+
+        public static List<MailMessage> DtosToMsgs(List<EmailDto> emails, SmtpDto smtp = null)
+        {
+            if (smtp == null)
+                smtp = _Fun.Smtp;
+
+            var msgs = new List<MailMessage>();
+            var utf8 = Encoding.GetEncoding("utf-8");
+            var sender = new MailAddress(_Str.IsEmpty(smtp.Id) ? smtp.FromEmail : smtp.Id);  //real sender
+            var from = new MailAddress(_Str.IsEmpty(smtp.FromEmail) ? smtp.Id : smtp.FromEmail, smtp.FromName, utf8);
+            foreach (var email in emails)
+                msgs.Add(DtoToMsgByArg(email, utf8, sender, from));
+
+            return msgs;
+        }
+
+        /// <summary>
+        /// send by MailMessage
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="smtp"></param>
+        public static void SendByMsg(MailMessage msg, SmtpDto smtp = null)
+        {
+            SendByMsgs(new List<MailMessage>() { msg }, smtp);
+        }
+
+        /// <summary>
+        /// send mails async, send one by one for security reason
+        /// </summary>
+        /// <param name="msgs"></param>
+        /// <param name="smtp"></param>
+        public static void SendByMsgs(List<MailMessage> msgs, SmtpDto smtp = null)
+        {
+            //async send email
+            var thread = new Thread(delegate ()
+            {
+                SendByMsgsSync(msgs, smtp);
+            });
+            thread.Start();
+        }
+
+        public static void SendByMsgSync(MailMessage msg, SmtpDto smtp = null, bool sendImage = true)
+        {
+            SendByMsgsSync(new List<MailMessage>() { msg }, smtp, sendImage);
+        }
+
+        /// <summary>
+        /// send mails, send one by one for security reason
+        /// </summary>
+        /// <param name="msgs"></param>
+        /// <param name="smtp"></param>
+        public static void SendByMsgsSync(List<MailMessage> msgs, SmtpDto smtp = null, bool sendImage = true)
         {
             //check
             if (smtp == null)
                 smtp = _Fun.Smtp;
 
-            //var smtp = smtp0.Value;
+            //set _emailImagePairs if need
+            if (sendImage && _emailImagePairs == null)
+            { 
+                _emailImagePairs = new List<IdStrDto>();
+                if (!string.IsNullOrEmpty(_Fun.Config.EmailImagePairs))
+                {
+                    var values = _Fun.Config.EmailImagePairs.Split(',');
+                    for (var i = 0; i < values.Length; i += 2)
+                    {
+                        _emailImagePairs.Add(new IdStrDto()
+                        {
+                            Id = values[i],
+                            Str = values[i + 1],
+                        });
+                    }
+                }
+            }
+
             //send
             try
             {
@@ -129,101 +283,42 @@ namespace Base.Services
                     Timeout = 30000,
                 };
 
-                //string encode = "utf-8";
-                var utf8 = Encoding.GetEncoding("utf-8");
-                var sender = new MailAddress(_Str.IsEmpty(smtp.Id) ? smtp.FromEmail : smtp.Id);  //real sender
-                var from = new MailAddress(_Str.IsEmpty(smtp.FromEmail) ? smtp.Id : smtp.FromEmail, smtp.FromName, utf8);
-                foreach (var mail in mails)
+                foreach (var msg in msgs)
                 {
-                    var msg = new MailMessage()
-                    {
-                        SubjectEncoding = utf8,
-                        BodyEncoding = utf8,   //or will get random code !!
-                        Subject = mail.Subject,
-                        Body = mail.Body,
-                        IsBodyHtml = true,
-                        Sender = sender,
-                        From = from,
-                        //Sender = new MailAddress(_Str.IsEmpty(smtp.Id) ? smtp.FromEmail : smtp.Id),  //real sender
-                        //From = new MailAddress(_Str.IsEmpty(smtp.FromEmail) ? smtp.Id : smtp.FromEmail, smtp.FromName, utf8),
-                    };
-
-                    //add image, use cid(better than base64 !!)
-                    if (mail.ImageIds != null && mail.ImageIds.Count > 0)
-                    {
-                        for (var i = 0; i < mail.ImageIds.Count; i++)
-                        {
-                            var imageHtml = string.Format("<html><body><img src=cid:{0}/><br></body></html>", mail.ImageIds[i]);
-                            var altView = AlternateView.CreateAlternateViewFromString(imageHtml, null, MediaTypeNames.Text.Html);
-
-                            var linkSrc = new LinkedResource(mail.ImagePaths[i], MediaTypeNames.Image.Jpeg);
-                            linkSrc.ContentId = Guid.NewGuid().ToString();
-                            altView.LinkedResources.Add(linkSrc);
-
-                            //MailMessage mail = new MailMessage();
-                            msg.AlternateViews.Add(altView);
-                        }
-                    }
-
-                    //attach files
-                    if (mail.Files != null)
-                    {
-                        foreach (var file in mail.Files)
-                        {
-                            if (File.Exists(file))
-                            {
-                                var attach = new Attachment(file);
-                                attach.Name = _File.GetFileName(file);  //否則email附檔會出現路徑
-                                msg.Attachments.Add(attach);
-                            }
-                        }
-                    }
-
-                    if (mail.ToUsers != null)
-                    {
-                        foreach (var user in mail.ToUsers)
-                        {
-                            msg.To.Clear();
-                            msg.To.Add(user);
-                            client.Send(msg);   //call sync method here!!
-                        }
-                    }
-                    /*
-                    if (mail.CcUsers != null)
-                    {
-                        foreach (var user in mail.CcUsers)
-                            msg.CC.Add(user);
-                    }
-                    */
-
-                }//for
+                    if (sendImage)
+                        MsgAddImages(msg, _emailImagePairs);
+                    client.Send(msg);   //call sync method here!!
+                }
 
                 client.Dispose();
             }
             catch (Exception ex)
             {
-                var error = "Mail failed: " + ex.Message;
-                _Log.Error(error, false);    //false here!!
+                var error = "_Email.cs SendByMsgsSync() failed: " + ex.InnerException.Message;
+                _Log.Error(error);    //false here, not mailRoot, or endless roop !!
             }
-        }
-
-        private static void AddImage(MailDto mail, string imageId, string imagePath)
-        {
-            if (!File.Exists(imagePath))
-                return;
-
-            if (mail.ImageIds == null)
-            {
-                mail.ImageIds = new List<string>();
-                mail.ImagePaths = new List<string>();
-            }
-
-            mail.ImageIds.Add(imageId);
-            mail.ImagePaths.Add(imagePath);
         }
 
         #region remark code
         /*
+        private static void AddImage(EmailDto email, string imageId, string imagePath)
+        {
+            if (!File.Exists(imagePath))
+            {
+                _Log.Error("_Email.cs AddImage() failed, no image(" + imagePath +")");
+                return;
+            }
+
+            if (email.ImageIds == null)
+            {
+                email.ImageIds = new List<string>();
+                email.ImagePaths = new List<string>();
+            }
+
+            email.ImageIds.Add(imageId);
+            email.ImagePaths.Add(imagePath);
+        }
+
         public static bool sendMailsByFile(string ps_template, JsonObject p_tplDw, string ps_subject, JsonArray pa_dw)
         {
             return sendMailsByFile(ps_template, p_tplDw, ps_subject, pa_dw, "", "");

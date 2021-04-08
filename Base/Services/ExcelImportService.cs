@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-//excel 匯入
+//excel import
 namespace Base.Services
 {
     //匯入excel, 提供公用的method
@@ -19,7 +19,7 @@ namespace Base.Services
     {
         //constant
         //const string _inputError = "輸入錯誤。";
-        const string _rowSep = "\r\n";  //row seperator
+        const string RowSep = "\r\n";  //row seperator
 
         
         #region instance variables
@@ -37,7 +37,7 @@ namespace Base.Services
         private List<int> _okRowNos = new List<int>();
 
         //錯誤的資料列序號/訊息
-        private List<SnStrDto> _errorRows = new List<SnStrDto>();
+        private List<SnStrDto> _failRows = new List<SnStrDto>();
         #endregion
 
         /*
@@ -116,22 +116,23 @@ namespace Base.Services
         }
         */
 
-        public string ImportByStream(string frontDtFormat, Stream stream, ExcelImportDto<T> import)
+        //cell name remove tail number
+        private string CellNameRemoveNum(string colName)
+        {
+            return Regex.Replace(colName, @"[\d]", string.Empty);
+        }
+
+        //import by stream
+        public ResultImportDto ImportByStream(Stream stream, ExcelImportDto<T> importDto, string fileName, string frontDtFormat)
         {
             stream.Position = 0;
             var docx = _Excel.StreamToDocx(stream);
             //var docx = SpreadsheetDocument.Open(stream, false);
-            var error = ImportByDocx(frontDtFormat, docx, import);
+            var result = ImportByDocx(docx, importDto, fileName, frontDtFormat);
 
             //release docx
             docx = null;
-            return error;
-        }
-
-        //欄位字元移除後面的數字
-        private string CellNameRemoveNum(string colName)
-        {
-            return Regex.Replace(colName, @"[\d]", string.Empty);
+            return result;
         }
 
         /// <summary>
@@ -139,33 +140,34 @@ namespace Base.Services
         /// excel row/cell 為base 0
         /// </summary>
         /// <param name="docx"></param>
-        /// <param name="import">匯入參數</param>
+        /// <param name="importDto">import info</param>
         /// <returns>error msg if any</returns>
-        public string ImportByDocx(string frontDtFormat, SpreadsheetDocument docx, ExcelImportDto<T> import)
+        public ResultImportDto ImportByDocx(SpreadsheetDocument docx, ExcelImportDto<T> importDto, string fileName, string frontDtFormat)
         {
-            //檢查傳入參數           
+            //check input        
 
             #region set docx, excelRows, ssTable
+            var errorMsg = "";
             var wbPart = docx.WorkbookPart;
             var wsPart = (WorksheetPart)wbPart.GetPartById(
-                wbPart.Workbook.Descendants<Sheet>().ElementAt(import.SheetNo).Id);
+                wbPart.Workbook.Descendants<Sheet>().ElementAt(importDto.SheetNo).Id);
 
-            var excelRows = wsPart.Worksheet.Descendants<Row>();
+            var excelRows = wsPart.Worksheet.Descendants<Row>();    //include empty rows
             var ssTable = wbPart.GetPartsOfType<SharedStringTablePart>().First().SharedStringTable;
             #endregion
 
-            #region set import.ExcelFids, excelFidLen
+            #region set importDto.ExcelFids, excelFidLen
             int idx;
             //string colName;
             var colMap = new JObject();     //欄位字元(ex:A) -> 欄位陣列元素idx
             var cells = excelRows.ElementAt(0).Elements<Cell>();
-            if (import.ExcelFids == null || import.ExcelFids.Count == 0)
+            if (importDto.ExcelFids == null || importDto.ExcelFids.Count == 0)
             {
                 //如果沒有傳入excel欄位名稱, 則使用第一行excel做為欄位名稱
                 idx = 0;
                 foreach (var cell in cells)
                 {
-                    import.ExcelFids.Add(GetCellValue(ssTable, cell));
+                    importDto.ExcelFids.Add(GetCellValue(ssTable, cell));
                     colMap[CellNameRemoveNum(cell.CellReference)] = idx;
                     idx++;
                 }
@@ -175,9 +177,10 @@ namespace Base.Services
                 //有傳入excel欄位名稱
                 //check
                 var cellLen = cells.Count();
-                if (cellLen != import.ExcelFids.Count)
+                if (cellLen != importDto.ExcelFids.Count)
                 {
-                    return "import.ExcelFids length should be " + cellLen;
+                    errorMsg = "import.ExcelFids length should be " + cellLen;
+                    goto lab_error;
                 }
 
                 //set colMap
@@ -190,7 +193,7 @@ namespace Base.Services
 
             //initial excelIsDates & set excelFidLen
             var excelIsDates = new List<bool>();        //是否為是日期欄位
-            var excelFidLen = import.ExcelFids.Count;
+            var excelFidLen = importDto.ExcelFids.Count;
             for (var i = 0; i < excelFidLen; i++)
                 excelIsDates.Add(false);    //initial
             #endregion
@@ -204,7 +207,7 @@ namespace Base.Services
                 //如果對應的excel欄位不存在, 則不記錄此欄位(skip)
                 //var type = prop.GetValue(model, null).GetType();
                 var fid = prop.Name;
-                fno = import.ExcelFids.FindIndex(a => a == fid);
+                fno = importDto.ExcelFids.FindIndex(a => a == fid);
                 if (fno < 0)
                     continue;
 
@@ -219,18 +222,18 @@ namespace Base.Services
 
             #region set modelRows
             //var rb = _Locale.RB;
-            var modelRows = new List<T>();
+            var fileRows = new List<T>();   //excel rows with data(not empty row)
             //Cell cell;
             //string value;
             var excelRowLen = excelRows.LongCount();
-            for (var i = import.ExcelStartRow - 1; i < excelRowLen; i++)
+            for (var i = importDto.ExcelStartRow - 1; i < excelRowLen; i++)
             {
                 //var cells = excelRows.ElementAt(i).Elements<Cell>();
                 var excelRow = excelRows.ElementAt(i);
                 //var cells = excelRows.ElementAt(i).Descendants<Cell>();
                 //var cells = row.Elements<Cell>();
 
-                var modelRow = new T();
+                var fileRow = new T();
                 /*
                 //寫入日期欄位
                 //var rowHasCol = false;
@@ -248,7 +251,7 @@ namespace Base.Services
                 }
                 */
 
-                //寫入非日期欄位
+                //write not date column
                 //for (var j = 0; j < modelNotDateFidLen; j++)
                 //var j = 0;
                 foreach (Cell cell in excelRow)
@@ -266,29 +269,29 @@ namespace Base.Services
                     var value = (cell.DataType == CellValues.SharedString) 
                         ? ssTable.ChildElements[int.Parse(cell.CellValue.Text)].InnerText 
                         : cell.CellValue.Text;
-                    _Model.SetValue(modelRow, import.ExcelFids[fno], excelIsDates[fno]
+                    _Model.SetValue(fileRow, importDto.ExcelFids[fno], excelIsDates[fno]
                         ? DateTime.FromOADate(double.Parse(value)).ToString(frontDtFormat)
                         : value
                     );
                 }
 
-                modelRows.Add(modelRow);
+                fileRows.Add(fileRow);
             }
             #endregion
 
             #region validate modelRows loop
             idx = 0;
             var error = "";
-            foreach (var modelRow in modelRows)
+            foreach (var fileRow in fileRows)
             {
                 //validate
-                var context = new ValidationContext(modelRow, null, null);
+                var context = new ValidationContext(fileRow, null, null);
                 var results = new List<ValidationResult>();
-                if (Validator.TryValidateObject(modelRow, context, results, true))
+                if (Validator.TryValidateObject(fileRow, context, results, true))
                 {
                     //user validate rule
-                    if (import.FnCheckImportRow != null)
-                        error = import.FnCheckImportRow(modelRow);
+                    if (importDto.FnCheckImportRow != null)
+                        error = importDto.FnCheckImportRow(fileRow);
                     if (string.IsNullOrEmpty(error))
                         _okRowNos.Add(idx);
                     else
@@ -302,16 +305,16 @@ namespace Base.Services
             }
             #endregion
 
-            #region save database if need
+            #region save database for ok rows(call FnSaveImportRows())
             if (_okRowNos.Count > 0)
             {
                 //set okRows
                 var okRows = new List<T>();
                 foreach(var okRowNo in _okRowNos)
-                    okRows.Add(modelRows[okRowNo]);
+                    okRows.Add(fileRows[okRowNo]);
 
                 idx = 0;
-                var saveResults = import.FnSaveImportRows(okRows);
+                var saveResults = importDto.FnSaveImportRows(okRows);
                 if (saveResults != null)
                 {
                     foreach (var result in saveResults)
@@ -325,41 +328,43 @@ namespace Base.Services
             #endregion
 
             //save excel file
-            var fileStem = _Str.AddAntiSlash(import.SaveDir) + import.LogRowId;
-            docx.SaveAs(fileStem + "_source.xlsx");
+            if (string.IsNullOrEmpty(importDto.LogRowId))
+                importDto.LogRowId = _Str.NewId();
+            var fileStem = _Str.AddAntiSlash(importDto.SaveDir) + importDto.LogRowId;
+            docx.SaveAs(fileStem + ".xlsx");
 
-            #region save error excel file
-            var errorLen = _errorRows.Count;
-            if (errorLen > 0)
+            #region save fail excel file (tail _fail.xlsx)
+            var failCount = _failRows.Count;
+            if (failCount > 0)
             {
                 //產生 excel 欄位與 model 欄位的對應 excelFnos
                 var excelFnos = new List<int>();
                 for (var i = 0; i < excelFidLen; i++)
                 {
-                    fno = modelFids.FindIndex(a => a == import.ExcelFids[i]);
+                    fno = modelFids.FindIndex(a => a == importDto.ExcelFids[i]);
                     excelFnos.Add(fno);    //小於0表示無對應欄位
                 }
 
                 //get docx
-                var errorFilePath = fileStem + "_error.xlsx";
-                File.Copy(import.TplFilePath, errorFilePath, true);
+                var failFilePath = fileStem + "_fail.xlsx";
+                File.Copy(importDto.TplPath, failFilePath, true);
 
-                var docx2 = SpreadsheetDocument.Open(errorFilePath, true);
+                var docx2 = SpreadsheetDocument.Open(failFilePath, true);
                 var wbPart2 = docx2.WorkbookPart;
                 var wsPart2 = (WorksheetPart)wbPart2.GetPartById(
                     wbPart2.Workbook.Descendants<Sheet>().ElementAt(0).Id);
                 var sheetData2 = wsPart2.Worksheet.GetFirstChild<SheetData>();
 
-                var startRow = import.ExcelStartRow - 1;    //insert position
-                for (var i = 0; i < errorLen; i++)
+                var startRow = importDto.ExcelStartRow - 1;    //insert position
+                for (var i = 0; i < failCount; i++)
                 {
                     //add row, fill value & copy row style
-                    var modelRow = modelRows[_errorRows[i].Sn];
+                    var modelRow = fileRows[_failRows[i].Sn];
                     var newRow = new Row();     //new excel row
                     for (var colNo = 0; colNo < excelFidLen; colNo++)
                     {
                         fno = excelFnos[colNo];
-                        var value2 = _Model.GetValue(modelRow, import.ExcelFids[colNo]);
+                        var value2 = _Model.GetValue(modelRow, importDto.ExcelFids[colNo]);
                         newRow.Append(new Cell()
                         {
                             CellValue = new CellValue(fno < 0 || value2 == null ? "" : value2.ToString()),
@@ -370,7 +375,7 @@ namespace Base.Services
                     //write cell for error msg
                     newRow.Append(new Cell()
                     {
-                        CellValue = new CellValue(_errorRows[i].Str),
+                        CellValue = new CellValue(_failRows[i].Str),
                         DataType = CellValues.String,
                     });
 
@@ -381,22 +386,36 @@ namespace Base.Services
             }
             #endregion
 
-            #region add import log
+            #region add import log (table ImportLog)
+            var totalCount = fileRows.Count;
+            var okCount = totalCount - failCount;
             var sql = string.Format(@"
-insert into dbo._ImportLog(Id, UploadFileName,
+insert into dbo.ImportLog(Id, Type, FileName,
 OkCount, FailCount, TotalCount,
 CreatorName, Created)
-values('{0}', '{1}',
-{2}, {3}, {4},
-'{5}', '{6}')
-", import.LogRowId, import.UploadFileName,
-modelRows.Count - _errorRows.Count, _errorRows.Count, modelRows.Count,
-import.CreatorName, _Date.NowDbStr());
+values('{0}', '{1}', '{2}',
+{3}, {4}, {5}, 
+'{6}', '{7}')
+", importDto.LogRowId, importDto.ImportType, fileName,
+okCount, failCount, totalCount,
+importDto.CreatorName, _Date.NowDbStr());
 
             _Db.ExecSql(sql);
             #endregion
 
-            return string.Empty;
+            //return string.Empty;
+            return new ResultImportDto()
+            {
+                OkCount = okCount,
+                FailCount = failCount,
+                TotalCount = totalCount,
+            };
+
+        lab_error:
+            return new ResultImportDto()
+            {
+                ErrorMsg = errorMsg,
+            };
         }
 
         private string GetCellValue(SharedStringTable ssTable, Cell cell)
@@ -408,6 +427,35 @@ import.CreatorName, _Date.NowDbStr());
                 : value;
         }
 
+
+        /// <summary>
+        /// 增加一筆row error
+        /// </summary>
+        /// <param name="error"></param>
+        public void AddError(int rowNo, string error)
+        {
+            if (!string.IsNullOrEmpty(error))
+            {
+                _failRows.Add(new SnStrDto()
+                {
+                    Sn = rowNo,
+                    Str = error,
+                });
+            }
+        }
+
+        /// <summary>
+        /// 增加一筆row error for 多個 error msg
+        /// </summary>
+        /// <param name="rowNo"></param>
+        /// <param name="results"></param>
+        private void AddErrorByResults(int rowNo, List<ValidationResult> results)
+        {
+            var error = string.Join(RowSep, results.Select(a => a.ErrorMessage).ToList());
+            AddError(rowNo, error);
+        }
+
+        #region remark code
         /*
         //excel docx to datatable
         private DataTable DocxToDataTable(SpreadsheetDocument docx)
@@ -548,35 +596,7 @@ import.CreatorName, _Date.NowDbStr());
         {
             _okRowNos.Add(rowNo);
         }
-        */
 
-        /// <summary>
-        /// 增加一筆row error
-        /// </summary>
-        /// <param name="error"></param>
-        public void AddError(int rowNo, string error)
-        {
-            if (!string.IsNullOrEmpty(error))
-            {
-                _errorRows.Add(new SnStrDto() {
-                    Sn = rowNo,
-                    Str = error,
-                });
-            }
-        }
-
-        /// <summary>
-        /// 增加一筆row error for 多個 error msg
-        /// </summary>
-        /// <param name="rowNo"></param>
-        /// <param name="results"></param>
-        private void AddErrorByResults(int rowNo, List<ValidationResult> results)
-        {
-            var error = string.Join(_rowSep, results.Select(a => a.ErrorMessage).ToList());
-            AddError(rowNo, error);
-        }
-
-        /*
         //excel column number to letter string
         //colNo: base 1
         private string ColNumToStr(int colNo)
@@ -636,6 +656,8 @@ import.CreatorName, _Date.NowDbStr());
         }
         #endregion
         */
+
+        #endregion
 
     }//class
 }

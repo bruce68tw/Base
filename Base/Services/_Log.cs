@@ -40,10 +40,23 @@ namespace Base.Services
         /// <param name="msg">log msg</param>
         public static void Info(string msg)
         {
-            if (_Fun.Config.LogInfo)
-                LogFile(GetFile("info"), msg);
+            LogFile(GetFile("info"), msg);
         }
 
+        /// <summary>
+        /// log debug when _Fun.LogDebug true !!
+        /// </summary>
+        /// <param name="msg">log msg</param>
+        public static void Debug(string msg)
+        {
+            if (_Fun.Config.LogDebug)
+                LogFile(GetFile("debug"), msg);
+        }
+
+        /// <summary>
+        /// log sql only when _Fun.LogSql true !!
+        /// </summary>
+        /// <param name="msg">log msg</param>
         public static void Sql(string msg)
         {
             if (_Fun.Config.LogSql)
@@ -60,7 +73,7 @@ namespace Base.Services
 
             //send root
             if (mailRoot)
-                _Mail.SendRoot(msg);
+                _Email.SendRoot(msg);
         }
 
         /// <summary>

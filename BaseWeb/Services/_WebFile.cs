@@ -116,10 +116,12 @@ namespace BaseWeb.Services
                 }
 
                 var key = fileJson[col].ToString();
-                var keyIdx = ParseKey(key);
+                var keyIdx = (key == "" && !isMulti)
+                    ? 1 : ParseKey(key);
+
+                //case of new key: set key
                 if (keyIdx > 0)
                 {
-                    //new key
                     //var col2 = "f" + levelStr;
                     if (newKey2 == null)
                     {

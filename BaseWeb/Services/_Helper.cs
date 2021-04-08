@@ -43,20 +43,17 @@ namespace BaseWeb.Services
         /// <summary>
         /// get input attr: data-fid,name,readonly, ext attributes
         /// </summary>
-        /// <param name="fid"></param>
+        /// <param name="fid">if empty will not set name attribute</param>
         /// <param name="editable"></param>
         /// <param name="extAttr"></param>
         /// <param name="setName">set name attribute or not</param>
         /// <returns></returns>
         public static string GetInputAttr(string fid,
-            bool editable = true, bool required = false,
-            bool setFid = true, bool setName = false)
+            bool editable = true, bool required = false)
         {
             //set data-fid, name
-            var attr = setFid
-                ? $" data-fid='{fid}'" : "";
-            if (setName)
-                attr += $" name='{fid}'";
+            var attr = string.IsNullOrEmpty(fid)
+                ? " " : $" data-fid='{fid}' name='{fid}'";
             if (!editable)
                 attr += " readonly";
             if (required)
@@ -107,6 +104,7 @@ namespace BaseWeb.Services
         */
         #endregion
 
+        #region get html string
         /// <summary>
         /// get date view component html string
         /// </summary>
@@ -124,14 +122,14 @@ namespace BaseWeb.Services
             if (string.IsNullOrEmpty(type))
             {
                 //no fid, name
-                attr = GetInputAttr(fid, editable, required, false);
+                attr = GetInputAttr("", editable, required);
             }
             else
             {
                 //only fid
                 attr = GetInputAttr(fid, editable, required) +
                     $" data-type='{type}'";
-                extClass += " xi-date";
+                extClass += " xi-box";
             }
             attr += GetPlaceHolder(inputTip);
 
@@ -154,37 +152,36 @@ namespace BaseWeb.Services
         /// <summary>
         /// get select view component html string
         /// </summary>
-        /// <param name="br"></param>
         /// <param name="fid"></param>
         /// <param name="value"></param>
+        /// <param name="type">empty means part component</param>
         /// <param name="rows"></param>
-        /// <param name="prop"></param>
+        /// <param name="required"></param>
+        /// <param name="editable"></param>
+        /// <param name="addEmptyRow"></param>
+        /// <param name="inputTip"></param>
+        /// <param name="extAttr"></param>
+        /// <param name="extClass"></param>
+        /// <param name="fnOnChange"></param>
         /// <returns></returns>
         public static string GetSelectHtml(string fid, string value, 
             string type, List<IdStrDto> rows,
-            bool setFid = true, bool setName = false,
             bool required = false, bool editable = true, bool addEmptyRow = true, 
             string inputTip = "", string extAttr = "", string extClass = "",
             string fnOnChange = "")
         {
-            string attr;
-            if (string.IsNullOrEmpty(type))
-            {
-                attr = GetInputAttr(fid, editable, required, false);
-            }
-            else 
-            {
-                attr = GetInputAttr(fid, editable, required, true) +
-                    $" data-type='{type}'";
-            }
+            var hasType = !string.IsNullOrEmpty(type);
+            string attr = hasType
+                ? GetInputAttr(fid, editable, required) + $" data-type='{type}'"
+                : GetInputAttr("", editable, required);
             attr += GetPlaceHolder(inputTip);
             if (!string.IsNullOrEmpty(fnOnChange))
                 attr += $" onchange='{fnOnChange}'";
 
             //ext class
             //var extClass = required ? XdRequired : "";
-            //if (prop.ExtClass != "")
-            //    extClass = " " + prop.ExtClass;
+            if (hasType)
+                extClass += " xi-box";
 
             //option item
             var optList = "";
@@ -207,9 +204,36 @@ namespace BaseWeb.Services
             return $@"
 <select{attr} class='form-control {extClass}' {extAttr}>
     {optList}
-</select>";
-            
+</select>";            
         }
+
+        /*
+        public static string GetTextareaHtml(string title, string fid, 
+            string type, string value = "",
+            int maxLen = 0, int rowsCount = 3,
+            bool required = false, bool editable = true, bool inRow = false,
+            string labelTip = "", string inputTip = "",            
+            string extAttr = "", string extClass = "", string cols = "")
+        {
+            //attr
+            var attr = _Helper.GetInputAttr(fid, editable, required) +
+                $" value='{value}' rows='{rowsCount}' style='width:100%'" +
+                GetPlaceHolder(inputTip) +
+                GetRequired(required) +
+                GetMaxLength(maxLen);
+            if (!string.IsNullOrEmpty(extAttr))
+                attr += " " + extAttr;
+
+            //html
+            var html = $"<textarea{attr} data-type='{type}' class='form-control xi-box {extClass}'></textarea>";
+            if (!string.IsNullOrEmpty(title))
+                html = InputAddLayout(html, title, required, labelTip, inRow, cols);
+
+            //html = String.Format(html, attr, _Html.Decode(value), extClass, fid + _WebFun.Error, _WebFun.ErrorLabelClass);
+            return html;
+        }
+        */
+        #endregion
 
         /// <summary>
         /// get input field html

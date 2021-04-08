@@ -29,6 +29,9 @@
         public string BtnCancel { get; set; }
         public string BtnClose { get; set; }
 
+        //front dt format pass to c#
+        public string FrontDtFormat { get; set; }
+
         //select input
         public string PlsSelect { get; set; }
 
@@ -44,5 +47,9 @@
 
         //not login
         public string NotLogin { get; set; }
+
+        //validation
+        public string Required { get; set; }
+        public string StrLen { get; set; }
     }
 }

@@ -2,7 +2,7 @@ using Base.Models;
 using Base.Services;
 using Newtonsoft.Json.Linq;
 
-namespace BaseFlow.Services
+namespace BaseWeb.Services
 {
     public class FlowRead
     {

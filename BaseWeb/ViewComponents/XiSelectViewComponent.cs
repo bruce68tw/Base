@@ -27,7 +27,7 @@ namespace BaseWeb.ViewComponents
         {
 
             var html = _Helper.GetSelectHtml(fid, value, "select", rows,
-                true, false, required, editable, addEmptyRow, 
+                required, editable, addEmptyRow, 
                 inputTip, extAttr, extClass, fnOnChange);
 
             if (!string.IsNullOrEmpty(title))

@@ -151,9 +151,9 @@ namespace BaseWeb.Services
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static string GetFilePath(string fileName)
+        public static string GetPath(string fileName)
         {
-            return _Fun.DirRoot + "Locale\\" + GetLocale() + "\\" + fileName;
+            return _Fun.DirWeb + "Locale\\" + GetLocale() + "\\" + fileName;
         }
 
         #region remark code

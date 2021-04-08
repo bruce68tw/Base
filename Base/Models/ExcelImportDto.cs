@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace Base.Models
 {
     //匯入excel時的欄位屬性設定
-    //來源的excel檔名為 Id + "_Source.xlsx"
-    //匯入失敗的excel檔名為 Id + "_Fail.xlsx"
+    //來源的excel檔名為 Id + "_source.xlsx"
+    //匯入失敗的excel檔名為 Id + "_fail.xlsx"
     public class ExcelImportDto<T> where T : class, new()
     {
         public FnCheckImportRow<T> FnCheckImportRow = null;
@@ -13,7 +13,7 @@ namespace Base.Models
 
         //public string SaveFilePath;
         //public string ErrorFilePath;
-        public string TplFilePath;
+        public string TplPath;
 
         /// <summary>
         /// 如果空白, 表示excel第一列為欄位Id, 欄位順序必須與excel檔案相同
@@ -35,9 +35,30 @@ namespace Base.Models
         /// </summary>
         public int SheetNo = 0;
 
+        /// <summary>
+        /// Row Id, set to _Str.NewId() if empty
+        /// </summary>
         public string LogRowId;
+
+        //mandatory fields
+        /// <summary>
+        /// map to ImportLog.Type
+        /// </summary>
+        public string ImportType;
+
+        /// <summary>
+        /// file save dir
+        /// </summary>
         public string SaveDir;
-        public string UploadFileName;
+
+        /// <summary>
+        /// upload file name
+        /// </summary>
+        //public string UploadFileName;
+
+        /// <summary>
+        /// creator name
+        /// </summary>
         public string CreatorName;
 
     }

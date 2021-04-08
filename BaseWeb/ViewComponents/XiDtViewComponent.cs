@@ -27,7 +27,7 @@ namespace BaseWeb.Helpers
 
             var width = "style='width:70px'";
             var html = string.Format(@"
-<div data-fid='{0}' data-type='dt' class='xi-dt {1}' {2}>
+<div data-fid='{0}' data-type='dt' class='xi-box {1}' {2}>
     {3}
     {4}
     <span>:</span>
@@ -35,8 +35,8 @@ namespace BaseWeb.Helpers
 </div>",
 fid, extClass, extAttr,
 _Helper.GetDateHtml("", date, "", required, editable, inputTip, extClass: "xg-inline"),
-_Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, false, false, editable, false, extAttr: width, extClass: "xg-inline"),
-_Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(minuteStep), false, false, false, editable, false, extAttr: width, extClass: "xg-inline")
+_Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, editable, false, extAttr: width, extClass: "xg-inline"),
+_Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(minuteStep), false, editable, false, extAttr: width, extClass: "xg-inline")
 );
 
             if (!string.IsNullOrEmpty(title))

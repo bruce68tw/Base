@@ -17,10 +17,7 @@ namespace Base.Services
 
         public static JArray GetJsons(string sql, List<object> args = null, string dbStr = "")
         {
-            using (var db = new Db(dbStr))
-            {
-                return db.GetJsons(sql, args);
-            }
+            return new Db(dbStr).GetJsons(sql, args);
         }
         #endregion        
 
@@ -32,29 +29,20 @@ namespace Base.Services
         }
         public static List<T> GetModels<T>(string sql, List<object> args = null, string dbStr = "")
         {
-            using (var db = new Db(dbStr))
-            {
-                return db.GetModels<T>(sql, args);
-            }
+            return new Db(dbStr).GetModels<T>(sql, args);
         }
         #endregion
         
         //update
         public static int ExecSql(string sql, List<object> args = null, string dbStr = "")
         {
-            using (var db = new Db(dbStr))
-            {
-                return db.ExecSql(sql, args);
-            }
+            return new Db(dbStr).ExecSql(sql, args);
         }
 
         //set row Status column to true/false
         public static bool SetRowStatus(string table, string kid, object kvalue, bool status, string statusId = "Status", string where = "", string dbStr = "")
         {
-            using (var db = new Db(dbStr))
-            {
-                return db.SetRowStatus(table, kid, kvalue, status, statusId, where);
-            }
+            return new Db(dbStr).SetRowStatus(table, kid, kvalue, status, statusId, where);
         }
 
     }//class

@@ -22,10 +22,12 @@ namespace BaseWeb.ViewComponents
             bool required = false, bool inRow = false, string cols = "",
             string labelTip = "", int maxSize = 0, string fileType = "I",
             string extAttr = "", string extClass = "",
-            string fnOnViewFile = "_me.onViewFile(this)",
+            string fnOnViewFile = "",
             string fnOnOpenFile = "_ifile.onOpenFile(this)",
             string fnOnDeleteFile = "_ifile.onDeleteFile(this)")
         {
+            if (string.IsNullOrEmpty(fnOnViewFile))
+                fnOnViewFile = $"_me.onViewFile(\"{fid}\", this)";
 
             var attr = _Helper.GetInputAttr(fid, true, required);
             if (maxSize <= 0)
@@ -39,19 +41,18 @@ namespace BaseWeb.ViewComponents
             //button open/delete will be handled by status, but link(view) is not.
             //need hidden input text for validate
             var html = $@"
-<div class='xi-file {extClass}' {extAttr}>
-    <label class='form-control' style='margin-bottom:0'>
-        <button type='button' class='btn btn-link' onclick='{fnOnOpenFile}'>
-            <i class='ico-open'></i>
-        </button>
-        <button type='button' class='btn btn-link' onclick='{fnOnDeleteFile}'>
-            <i class='ico-delete'></i>
-        </button>
-        <a href='#' onclick='event.preventDefault(); {fnOnViewFile}'>{value}</a>
-    </label>
-    <input name='{fid}' type='file' data-max='{maxSize}' data-exts='{exts}' onchange='_ifile.onChangeFile(this)' style='display:none'>
+<label class='form-control xi-box {extClass}' style='margin-bottom:0' {extAttr}>
+    <input type='file' data-max='{maxSize}' data-exts='{exts}' onchange='_ifile.onChangeFile(this)' style='display:none'>
     <input{attr} data-type='file' type='hidden'>
-</div>";
+
+    <button type='button' class='btn btn-link' onclick='{fnOnOpenFile}'>
+        <i class='ico-open'></i>
+    </button>
+    <button type='button' class='btn btn-link' onclick='{fnOnDeleteFile}'>
+        <i class='ico-delete'></i>
+    </button>
+    <a href='#' onclick='javascript:event.preventDefault(); {fnOnViewFile}'>{value}</a>
+</label>";
 
             //add label if need
             if (!string.IsNullOrEmpty(title))

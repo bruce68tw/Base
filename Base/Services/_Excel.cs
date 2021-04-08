@@ -5,15 +5,11 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.OleDb;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 
 namespace Base.Services
 {
-
     public class _Excel
     {
         /// <summary>
@@ -34,7 +30,7 @@ namespace Base.Services
         ///   1.import table first column must be LineNo
         ///   2.can not assign rows range(only OpenRowSet, but need db server install access engine, not consider!!),
         ///   3.can not assign excel begin row & has header or not
-        ///   4.use bulkcopy(fast, OpenXml is slow)
+        ///   4.use bulkcopy(fast, OpenXml is slow), need include sqlClient
         /// </summary>
         /// <param name="filePath">excel file path</param>
         /// <param name="sheetName">excel sheet name</param>
@@ -45,6 +41,7 @@ namespace Base.Services
         /// <param name="excelHeader">excel has header or not, not work, must be true!!</param>
         /// <param name="excelCols">excel columns name, if empty then use tableCols</param>
         /// <returns>import status</returns>
+        /*
         public static bool ImportByLargeFile(string filePath, string sheetName, int excelStartRow, string toTable, string[] tableCols, string notNullFid = "", bool excelHeader = true, string[] excelCols = null)
         {
             //excel to datatable
@@ -76,7 +73,6 @@ namespace Base.Services
             if (notNullFid != "")
                 sql += string.Format(" where not ({0} is null or {0} = '')", notNullFid);
 
-
             var dt = new DataTable();
             try
             {
@@ -90,31 +86,20 @@ namespace Base.Services
                     //var cols = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Columns, null);
                     //sheetName = schema.Rows[0]["TABLE_NAME"].ToString() + "$A5:R";
 
-
                     //dataAdapter
                     //OleDbDataAdapter da = new OleDbDataAdapter();
                     //DataSet ds = new DataSet();
                     //da.Fill(ds);
 
-
-
                     OleDbCommand cmd = new OleDbCommand(sql, conn);
-                    /*
-                    cmd.CommandText = sql;
-                    da.SelectCommand = cmd;
-                    da.Fill(ds);
-                    */
-
                     OleDbDataAdapter da = new OleDbDataAdapter(cmd);
                     da.Fill(dt);
 
-                    /*
                     //need if {}, or will error !!
-                    if (excelStartRow > 2)
-                    {
-                        dt = dt.AsEnumerable().Skip(excelStartRow - 2) as DataTable;
-                    }
-                    */
+                    //if (excelStartRow > 2)
+                    //{
+                    //    dt = dt.AsEnumerable().Skip(excelStartRow - 2) as DataTable;
+                    //}
                     //conn.Close();
                 }
 
@@ -147,6 +132,7 @@ namespace Base.Services
                 return false;
             }
         }
+        */
 
         /// <summary>
         /// import db by excel file, table first column must be LineNo
@@ -159,7 +145,7 @@ namespace Base.Services
         /// <param name="sheetNo"></param>
         /// <param name="db"></param>
         /// <returns>import status</returns>
-        public static bool ImportByFile(string frontDtFormat, string filePath, string insertSql, int[] excelCols, int excelStartRow, bool[] isDates = null, int sheetNo = 0, Db db = null)
+        public static bool ImportByPath(string frontDtFormat, string filePath, string insertSql, int[] excelCols, int excelStartRow, bool[] isDates = null, int sheetNo = 0, Db db = null)
         {
             //check
             if (!File.Exists(filePath))
@@ -186,9 +172,8 @@ namespace Base.Services
         public static bool ImportByDocx(string frontDtFormat, SpreadsheetDocument docx, string insertSql, int[] excelCols, int excelStartRow, bool[] isDates = null, int sheetNo = 0, Db db = null)
         {
             //var rb = _Locale.RB;
-            var emptyDb = (db == null);
-            if (emptyDb)
-                db = new Db();
+            var emptyDb = false;
+            _Fun.CheckOpenDb(ref db, ref emptyDb);
 
             //open excel
             var wbPart = docx.WorkbookPart;
@@ -247,8 +232,7 @@ namespace Base.Services
                 }
             }
 
-            if (emptyDb)
-                db.Dispose();
+            _Fun.CheckCloseDb(db, emptyDb);
 
             //book = null;    //can not Dispose(), must close by caller
             //sheet = null;
@@ -273,32 +257,46 @@ namespace Base.Services
             var ok = ImportByDocx(frontDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
 
             //release docx
-            docx = null;
+            //docx = null;
             return ok;
         }
 
         /// <summary>
-        /// 產生docx
+        /// tpl file to docx
+        /// </summary>
+        /// <param name="tplPath"></param>
+        /// <returns></returns>
+        public static SpreadsheetDocument TplToDocx(MemoryStream ms, string tplPath)
+        {
+            //var ms = new MemoryStream();
+            //SpreadsheetDocument docx = null;
+            var tplBytes = File.ReadAllBytes(tplPath);
+            ms.Write(tplBytes, 0, tplBytes.Length);
+            return SpreadsheetDocument.Open(ms, true);
+        }
+
+        /// <summary>
+        /// file or tpl to docx
         /// </summary>
         /// <param name="filePath">要產生的excel檔案, 不可為空白</param>
-        /// <param name="template">excel template, 可為空白</param>
+        /// <param name="tplPath">excel template file path, 可為空白</param>
         /// <returns></returns>
-        private static SpreadsheetDocument FileToDocx(string filePath, string template = "")
+        private static SpreadsheetDocument PathToDocx(string filePath, string tplPath = "")
         {
             //filePath不可空白
             if (string.IsNullOrEmpty(filePath))
                 return null;
 
-            if (!string.IsNullOrEmpty(template))
+            if (!string.IsNullOrEmpty(tplPath))
             {
-                if (!File.Exists(template))
+                if (!File.Exists(tplPath))
                 {
-                    _Log.Error("no template file: " + template);
+                    _Log.Error("no template file: " + tplPath);
                     return null;
                 }
 
                 //copy to filepath if need
-                File.Copy(template, filePath, true);
+                File.Copy(tplPath, filePath, true);
                 return SpreadsheetDocument.Open(filePath, true);
             }
             else
@@ -309,33 +307,49 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// crud to Excel file
+        /// crud export to Excel file
         /// </summary>
-        /// <param name="crud">crud setting</param>
+        /// <param name="readDto">crud setting</param>
         /// <param name="findJson"></param>
         /// <param name="filePath">export excel path</param>
         /// <param name="sheetName">excel sheet name</param>
         /// <param name="headers">excel header list</param>
         /// <param name="cols"></param>
         /// <param name="dbStr"></param>
-        public static void FileByCrud(ReadDto crud, JObject findJson, string filePath, string template = "", int srcRowNo = 1, string dbStr = "")
+        public static void ExportByRead(string filePath, ReadDto readDto, JObject findJson, string tplPath = "", int srcRowNo = 1, string dbStr = "")
         {
-            FileByRows(new CrudRead(dbStr).GetAllRows(crud, findJson, true), filePath, template, srcRowNo);
+            ExportByRows(filePath, new CrudRead(dbStr).GetAllRows(readDto, findJson, true), tplPath, srcRowNo);
+        }
+        public static void ExportByRead(SpreadsheetDocument docx, ReadDto readDto, JObject findJson, string dbStr = "")
+        {
+            ExportByRows(docx, new CrudRead(dbStr).GetAllRows(readDto, findJson, true));
         }
 
         /// <summary>
         /// sql statement to excel file
         /// </summary>
+        /// <param name="filePath">excel file path to save</param>
         /// <param name="sql"></param>
         /// <param name="dbStr">db property name in config file</param>
-        /// <param name="filePath">excel file path to save</param>
-        /// <param name="sheetName"></param>
-        /// <param name="headers"></param>
-        /// <param name="cols"></param>
-        public static void FileBySql(string sql, string filePath, string template = "", int srcRowNo = 1, string dbStr = "")
+        public static void ExportBySql(string filePath, string sql, string template = "", int srcRowNo = 1, Db db = null)
         {
-            var rows = _Db.GetJsons(sql, null, dbStr);
-            FileByRows(rows, filePath, template, srcRowNo);
+            var emptyDb = false;
+            _Fun.CheckOpenDb(ref db, ref emptyDb);
+
+            var rows = db.GetJsons(sql);
+            _Fun.CheckCloseDb(db, emptyDb);
+
+            ExportByRows(filePath, rows, template, srcRowNo);
+        }
+        public static void ExportBySql(SpreadsheetDocument docx, string sql, Db db = null)
+        {
+            var emptyDb = false;
+            _Fun.CheckOpenDb(ref db, ref emptyDb);
+
+            var rows = db.GetJsons(sql);
+            _Fun.CheckCloseDb(db, emptyDb);
+            
+            ExportByRows(docx, rows);
         }
 
         /// <summary>
@@ -343,18 +357,26 @@ namespace Base.Services
         /// </summary>
         /// <param name="rows"></param>
         /// <param name="filePath"></param>
-        /// <param name="template">excel template, 如果空白, 則欄位名稱會使用row field id</param>
+        /// <param name="tplPath">excel template, 如果空白, 則欄位名稱會使用row field id</param>
         /// <param name="srcRowNo">資料開始列數, base 1, 如果為0表示沒有使用template file, 則此參數自動設為1</param>
         /// <param name="sheetName">default 'Sheet1', excel save sheet name</param>
         //public static void FileByRows(JArray rows, string filePath, string sheetName, List<string> headers = null, List<string> cols = null)
-        public static void FileByRows(JArray rows, string filePath, string template = "", int srcRowNo = 1)
+        public static void ExportByRows(string filePath, JArray rows, string tplPath = "", int srcRowNo = 1)
         {
             //var docx = SpreadsheetDocument.Create(filePath, SpreadsheetDocumentType.Workbook);
-            var docx = FileToDocx(filePath, template);
-            if (string.IsNullOrEmpty(template))
+            var docx = PathToDocx(filePath, tplPath);
+            ExportByRows(docx, rows);
+            /*
+            if (string.IsNullOrEmpty(tplPath))
                 srcRowNo = 0;
-            DocxByRows(rows, docx, srcRowNo);
+            RowsToDocx(rows, docx, srcRowNo);
+            */
             docx.Dispose();
+        }
+
+        public static void ExportByRows(SpreadsheetDocument docx, JArray rows)
+        {
+            RowsToDocx(rows, docx, 1);
         }
 
         /*
@@ -371,22 +393,20 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// json rows to openXml object
+        /// json rows to openXml excel object
         /// see https://blog.johnwu.cc/article/asp-net-core-export-to-excel.html
         /// </summary>
         /// <param name="rows">json array</param>
         /// <param name="docx"></param>
         /// <param name="srcRowNo">資料開始列數, base 1, 如果為0表示沒有使用template file, 則此參數自動設為1</param>
-        /// <param name="sheetName">default 'Sheet1', excel save sheet name</param>
-        /// //<param name="template">excel template, 如果空白, 則欄位名稱會使用row field id</param>
-        /// //<param name="headers">excel欄位header, 如果空白, 則使用欄位id</param>
-        /// //<param name="cols">要輸出的excel欄位, 如果空白, 則全部輸出</param>
-        //public static void DocxByRows(JArray rows, SpreadsheetDocument docx, string template, string sheetName, List<string> headers = null, List<string> cols = null)
-        public static void DocxByRows(JArray rows, SpreadsheetDocument docx, int srcRowNo = 1)
+        public static void RowsToDocx(JArray rows, SpreadsheetDocument docx, int srcRowNo = 1)
         {
             //check
             if (docx == null)
+            {
+                _Log.Error("_Excel.cs RowsToDocx() failed, docx is null.");
                 return;
+            }
 
             //set cols
             var rowCount = (rows == null) ? 0 : rows.Count;
@@ -401,14 +421,11 @@ namespace Base.Services
             //    headers = cols;
 
             SheetData sheetData = null;
-            var hasTemplate = (srcRowNo > 0);
+            var hasTpl = (srcRowNo > 0);
             var colCount = cols.Count;
-            //Row srcRow = null;
-            //Row nowRow = null;
-            //Row newRow = null;
-            if (hasTemplate)
+            if (hasTpl)
             {
-                //使用範本
+                //use template file
                 #region prepre excel-sheetData
                 var sheet = docx.WorkbookPart.Workbook.Descendants<Sheet>().FirstOrDefault();
                 var wsPart = (WorksheetPart)docx.WorkbookPart.GetPartById(sheet.Id);
@@ -420,7 +437,7 @@ namespace Base.Services
                 //TODO: copy row style
                 //srcRow = sheetData.Elements<Row>().ElementAt(srcRowNo);
 
-                //寫入excel row, 使用範本
+                //write excel row, use template
                 for (var rowNo = 0; rowNo < rowCount; rowNo++)
                 {
                     //第一筆時不必新增一列
@@ -457,7 +474,7 @@ namespace Base.Services
             }
             else
             {
-                //沒有範本
+                //no template file
                 #region prepre excel-sheetData
                 var bookPart = docx.AddWorkbookPart();
                 bookPart.Workbook = new Workbook();
@@ -488,7 +505,7 @@ namespace Base.Services
                 }
                 sheetData.AppendChild(newRow);
 
-                //寫入excel row, 沒有範本
+                //write excel row, no template
                 for (var rowNo = 0; rowNo < rowCount; rowNo++)
                 {
                     //var excelRow = NewRow(row, colCount, cols);

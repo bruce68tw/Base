@@ -25,7 +25,7 @@ namespace BaseWeb.ViewComponents
         {
 
             var html = $@"
-<a href='#' data-type='linkFile' data-fid='{fid}' class='{extClass}' style='height:32px; display:table-cell; vertical-align:middle;' onclick='event.preventDefault(); {fnOnClick}' {extAttr}>{value}</a>
+<a href='#' data-fid='{fid}' data-type='linkFile' class='{extClass}' style='height:32px; display:table-cell; vertical-align:middle;' onclick='event.preventDefault(); {fnOnClick}' {extAttr}>{value}</a>
 ";
             //add label if need
             if (!string.IsNullOrEmpty(title))

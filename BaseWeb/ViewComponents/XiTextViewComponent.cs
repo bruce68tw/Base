@@ -23,7 +23,7 @@ namespace BaseWeb.ViewComponents
                 _Helper.GetMaxLength(maxLen);
 
             //get input html
-            var html = $"<input{attr} data-type='text' class='form-control {extClass}'>";
+            var html = $"<input{attr} data-type='text' class='form-control xi-box {extClass}'>";
 
             //add title,required,tip,cols for single form
             //consider this field could in datatable(no title) !!

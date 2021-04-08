@@ -1,7 +1,6 @@
 ﻿using Base.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Validation;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
@@ -18,8 +17,8 @@ namespace Base.Services
     public static class _Word
     {
         //word carrier
-        //public const string Carrier = "<w:br/>";
-        //public const string PageBreak = "<w:p><w:pPr><w:sectPr><w:type w:val=\"nextPage\" /></w:sectPr></w:pPr></w:p>";
+        public const string Carrier = "<w:br/>";
+        public const string PageBreak = "<w:p><w:pPr><w:sectPr><w:type w:val=\"nextPage\" /></w:sectPr></w:pPr></w:p>";
 
         //checked char type(yes/no)
         public const int Checkbox = 1;  //checkbox
@@ -81,7 +80,6 @@ namespace Base.Services
         /// <param name="tplPath">template path</param>
         /// <param name="filePath">output file path</param>
         /// <param name="images">image data, four fields for one imge(path,width,height,tag)</param>
-        /*
         public static bool RowToFile(JObject row, string tplPath, string filePath, List<WordImageDto> images = null)
         {
             //check template file
@@ -102,7 +100,6 @@ namespace Base.Services
             stream.Dispose();
             return true;
         }
-        */
 
         /// <summary>
         /// convert template word file(with row) to stream
@@ -111,7 +108,6 @@ namespace Base.Services
         /// <param name="tplPath"></param>
         /// <param name="stream"></param>
         /// <param name="images"></param>
-        /*
         public static bool RowToStream(JObject row, string tplPath, Stream stream, List<WordImageDto> images = null)
         {
             //check template file
@@ -126,7 +122,32 @@ namespace Base.Services
             stream.Write(tplBytes, 0, (int)tplBytes.Length);
             return StreamFillData(row, stream, images);
         }
-        */
+
+        /// <summary>
+        /// read docx MainDocumentPart to string
+        /// </summary>
+        /// <returns></returns>
+        public static string GetMainTpl(WordprocessingDocument docx)
+        {
+            var str = "";
+            using (var sr = new StreamReader(docx.MainDocumentPart.GetStream()))
+            {
+                str = sr.ReadToEnd();
+            }
+            return str;
+        }
+
+        /// <summary>
+        /// write string into docx mainpart
+        /// </summary>
+        public static void StrToDocxMain(string str, WordprocessingDocument docx)
+        {
+            //string to docx stream, must use FileMode.Create, or target file can not open !!
+            using (var sw = new StreamWriter(docx.MainDocumentPart.GetStream(FileMode.Create)))
+            {
+                sw.Write(str);
+            }
+        }
 
         /// <summary>
         /// template string fill json row
@@ -134,66 +155,11 @@ namespace Base.Services
         /// <param name="str"></param>
         /// <param name="row"></param>
         /// <returns></returns>
-        /*
         public static string StrFillRow(string str, JObject row)
         {
             foreach (var item in row)
                 str = str.Replace("[" + item.Key + "]", item.Value.ToString());
             return str;
-        }
-        */
-
-        /// <summary>
-        /// fill template string and return row string
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="rowTpl"></param>
-        /// <param name="row"></param>
-        /// <returns></returns>
-        public static string TplFillRow<T>(string rowTpl, T row)
-        {
-            if (row == null)
-                return rowTpl;
-
-            var props = row.GetType().GetProperties();
-            var result = rowTpl;
-            foreach (var prop in props)
-            {
-                var value = prop.GetValue(row, null);
-                result = result.Replace("[" + prop.Name + "]", (value == null) ? "" : value.ToString());
-            }
-            return result;
-        }
-
-        /// <summary>
-        /// fill template string and return rows string
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="rowTpl"></param>
-        /// <param name="rows"></param>
-        /// <returns></returns>
-        public static string TplFillRows(string rowTpl, IEnumerable<dynamic> rows)
-        {
-            if (rows == null || rows.Count() == 0)
-                return "";
-
-            //var rows = (List<T>)row0s;
-            //if (rows.Count == 0)
-            //    return "";
-
-            var props = rows.First().GetType().GetProperties();
-            var result = "";
-            foreach (var row in rows)
-            {
-                var text = rowTpl;
-                foreach (var prop in props)
-                {
-                    var value = prop.GetValue(row, null);
-                    text = text.Replace("[" + prop.Name + "]", (value == null) ? "" : value.ToString());
-                }
-                result += text;
-            }
-            return result;
         }
 
         /// <summary>
@@ -203,7 +169,6 @@ namespace Base.Services
         /// <param name="stream"></param>
         /// <param name="images"></param>
         /// <param name="rows">"multiple" rows</param>
-        /*
         public static bool StreamFillData(JObject row, Stream stream, List<WordImageDto> images = null, List<WordRowsDto> wordRows = null)
         {
             //stream -> docx
@@ -215,6 +180,13 @@ namespace Base.Services
                 //=== 2.do single row start ===
                 //read template file
                 var mainTpl = GetMainTpl(docx);
+                /*
+                var mainTpl = "";
+                using (var sr = new StreamReader(mainPart.GetStream()))
+                {
+                    mainTpl = sr.ReadToEnd();
+                }
+                */
 
                 //add image first
                 if (images != null)
@@ -228,7 +200,7 @@ namespace Base.Services
                 //multiple rows
                 if (wordRows != null)
                 {
-                    foreach (var wordRow in wordRows)
+                    foreach(var wordRow in wordRows)
                     {
                         //find tag name
                         //find box tag & row -> template string
@@ -236,7 +208,7 @@ namespace Base.Services
                         var tplEnd = 0;
                         var rowTpl = "";
                         var rowList = "";
-                        foreach (JObject row2 in wordRow.Rows)
+                        foreach(JObject row2 in wordRow.Rows)
                         {
                             var rowStr = rowTpl;
                             foreach (var item in row2)
@@ -249,6 +221,13 @@ namespace Base.Services
                 }
 
                 StrToDocxMain(mainTpl, docx);
+                /*
+                //string to docx stream, must use FileMode.Create, or target file can not open !!
+                using (var sw = new StreamWriter(mainPart.GetStream(FileMode.Create)))
+                {
+                    sw.Write(mainTpl);
+                }
+                */
 
                 //Debug.Assert(IsDocxValid(doc), "Invalid File!");
 
@@ -258,7 +237,6 @@ namespace Base.Services
                 return true;
             }
         }
-        */
 
         //word doc add image, and convert image to text
         public static void DocxAddImage(WordprocessingDocument docx, ref string text, List<WordImageDto> images)
@@ -317,17 +295,57 @@ namespace Base.Services
             }
         }
 
+        /// <summary>
+        /// get range string for word multiple rows
+        /// </summary>
+        /// <param name="startPos">(ref)found start pos to return</param>
+        /// <param name="endPos">(ref)found end pos to return</param>
+        /// <param name="srcText">source text</param>
+        /// <param name="midStartStr">find start string</param>
+        /// <param name="midEndStr">equal to midStartStr if empty</param>
+        /// <param name="startStr">find start string</param>
+        /// <param name="endStr">equal to startStr if empty</param>
+        /// <returns></returns>
+        public static string GetRangeStr(ref int startPos, ref int endPos, string srcText, string midStartStr = "", string midEndStr = "", string startStr = "<w:tr ", string endStr = "</w:tr>")
+        {
+            //int midStartPos = -1, midEndPos = -1;
+            if (midStartStr == "")
+            {
+                startPos = srcText.IndexOf(startStr);
+                endPos = srcText.IndexOf(endStr);
+            }
+            else
+            {
+                var midStartPos = srcText.IndexOf(midStartStr);
+                if (midStartPos < 0)
+                    return "";
+
+                var midEndPos = (midEndStr == "") ? midStartPos : srcText.IndexOf(midStartStr, midStartPos);
+                if (midEndPos < 0)
+                    return "";
+
+                startPos = srcText.LastIndexOf(startStr, midStartPos);
+                endPos = srcText.IndexOf(endStr, midEndPos);
+            }
+
+            if (startPos < 0 || endPos < 0)
+                return "";
+
+            //case of ok
+            return srcText.Substring(startPos, endPos + endStr.Length - startPos);
+        }
+
+        /*
         //check docx content has error or not
-        public static bool IsDocxValid(WordprocessingDocument docx)
+        private static bool IsDocxValid(WordprocessingDocument docx)
         {
             OpenXmlValidator validator = new OpenXmlValidator();
             var errors = validator.Validate(docx);
             foreach (ValidationErrorInfo error in errors)
-            {
-                var aa = error.Description;
-            }
+                Debug.Write(error.Description);
             return (errors.Count() == 0);
         }
+        */
 
         /// <summary>
         /// set multiple checkbox fields

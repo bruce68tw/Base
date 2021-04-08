@@ -16,7 +16,6 @@ namespace BaseWeb.ViewComponents
         /// <param name="fid"></param>
         /// <param name="value"></param>
         /// <param name="rows"></param>
-        /// <param name="prop"></param>
         /// <returns></returns>
         public HtmlString Invoke(string title, string fid, string value, 
             List<IdStrDto> rows, bool inRow = false,  
@@ -24,25 +23,21 @@ namespace BaseWeb.ViewComponents
             bool isHori = true, string cols = "",
             string fnOnChange = "")
         {
-            //prop ??= new PropRadioDto();
-
-            //box class
-            var boxClass = isHori ? "xg-inline" : "";
-            //if (prop.BoxClass != "")
-            //    boxClass += " " + prop.BoxClass;
-
-            //ext class
-            if (extClass != "")
-                extClass = " " + extClass;
+            //box & ext class
+            //var boxClass = "xi-box"; 
+            if (isHori)
+                extClass += " xg-inline";
+            //if (extClass != "")
+            //    extClass = " " + extClass;
 
             //default input this
             //prop.FnOnChange = _Helper.GetFnOnChange("onclick", prop, "this");
 
             //one radio (span for radio sign)
-            var htmlRow = @"
-<label class='xg-radio{0}'>
-	<input data-type='radio' type='radio'{1}>{2}
-	<span></span>
+            var tplItem = @"
+<label class='xi-check'>
+	<input type='radio'{0}>{1}
+	<span class='xi-rspan'></span>
 </label>
 ";
             var list = "";
@@ -54,20 +49,19 @@ namespace BaseWeb.ViewComponents
                     row.Str = "&nbsp;";
 
                 //get attr, no consider readonly
-                var attr = (i == 0 ? $" data-fid='{fid}'" : "") +
-                    $" name='{fid}' value='{row.Id}'" +
+                //value attr will disappear, use data-value instead !!
+                var attr = (i == 0 ? $" data-fid='{fid}' data-type='radio'" : "") +
+                    $" name='{fid}' data-value='{row.Id}'" +
                     (fnOnChange == "" ? "" : $" onclick='{fnOnChange}'") +
                     (row.Id == value ? " checked" : "");
-
-                list += string.Format(htmlRow, extClass, attr, row.Str);
+                list += string.Format(tplItem, attr, row.Str);
             }
 
             //get html
             var html = $@"
-<div class='{boxClass}'>
+<div class='xi-box {extClass}'>
     {list}
 </div>";
-
             //add title outside
             //consider this field could in datatable(no title) !!
             if (!string.IsNullOrEmpty(title))

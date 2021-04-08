@@ -31,7 +31,8 @@ namespace Base.Models
         public string Table;
 
         /// <summary>
-        /// sql string, 如果有值, 則會用來讀取資料
+        /// sql string, if not empty, will read db
+        /// child readSql must use "in" not "=" !!
         /// </summary>
         public string ReadSql = "";
 

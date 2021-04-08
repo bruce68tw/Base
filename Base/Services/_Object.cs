@@ -13,6 +13,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="TestObject"></param>
         /// <returns></returns>
+        /*
         public static int GetObjectSize(object obj)
         {
             var bf = new BinaryFormatter();
@@ -22,6 +23,7 @@ namespace Base.Services
             var array = ms.ToArray();
             return array.Length;
         }
+        */
 
         /// <summary>
         /// get property value by  name

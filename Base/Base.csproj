@@ -21,10 +21,20 @@
     <None Remove="Models\ErrorFieldDto.cs_old" />
     <None Remove="Models\ExcelRowModel.cs_old" />
     <None Remove="Models\ExcelSheetModel.cs_old" />
+    <None Remove="Models\PropBaseDto.c_old" />
+    <None Remove="Models\PropCheckDto.c_old" />
+    <None Remove="Models\PropDateDto.c_old" />
+    <None Remove="Models\PropFileDto.c_old" />
+    <None Remove="Models\PropNumDto.c_old" />
+    <None Remove="Models\PropRadioDto.c_old" />
+    <None Remove="Models\PropSelectDto.c_old" />
+    <None Remove="Models\PropTextAreaDto.c_old" />
+    <None Remove="Models\PropTextDto.c_old" />
     <None Remove="Models\RBDto.cs_old" />
     <None Remove="Models\Select2PropModel.cs_old" />
     <None Remove="Models\SqlArgModel.cs_old" />
     <None Remove="Models\UserProfile0Model.cs_old" />
+    <None Remove="Models\WordRowsDto.cs_old" />
     <None Remove="Services\Cache.cs_old" />
     <None Remove="Services\Date2.cs_old" />
     <None Remove="Services\Db0Service.cs_old" />
@@ -40,16 +50,14 @@
     <None Remove="Services\_Locale.cs_old" />
     <None Remove="Services\_Msg.cs_old" />
     <None Remove="Services\_Multi.cs_old" />
+    <None Remove="Services\_Word.cs_old" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="2.11.3" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.12.3" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="StackExchange.Redis" Version="2.2.4" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
     <PackageReference Include="System.Data.OleDb" Version="5.0.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
-    <PackageReference Include="System.Drawing.Common" Version="5.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
   </ItemGroup>
 
 </Project>

@@ -29,9 +29,8 @@ namespace Base.Services
     /// <summary>
     /// save import rows
     /// </summary>
-    /// <param name="rowNos"></param>
     /// <param name="okRows"></param>
-    /// <returns></returns>
+    /// <returns>list error string, '' for success</returns>
     public delegate List<string> FnSaveImportRows<T>(List<T> okRows) where T : class, new();
 
 }

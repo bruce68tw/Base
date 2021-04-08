@@ -1,11 +1,9 @@
-﻿using Base.Services;
+﻿using Base.Models;
+using Base.Services;
+using DocumentFormat.OpenXml.Packaging;
 using Newtonsoft.Json.Linq;
-using System.IO;
-using System.Web;
-using System;
 using System.Collections.Generic;
-using Base.Models;
-using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace BaseWeb.Services
 {
@@ -32,7 +30,7 @@ namespace BaseWeb.Services
         /// <param name="tplPath">template path</param>
         /// <param name="fileName">default output file name</param>
         /// <param name="images">image data, four fields for one imge(path,width,height,tag)</param>
-        public static void EchoByTplRow(JObject row, string tplPath, string fileName, List<WordImageDto> images = null)
+        public static void zz_EchoByTplRow(JObject row, string tplPath, string fileName, List<WordImageDto> images = null)
         {
             /* 
             //TODO: pending
@@ -52,255 +50,111 @@ namespace BaseWeb.Services
             */
         }
 
-        public static void EchoStream(Stream stream, string fileName)
-        {
-            //response to client, must close docx first, 
-            //so put code here, or docx file will get wrong !!
-            var response = _Web.GetResponse();
-
-            //consider IE
-            //response.AppendHeader("Content-Disposition", "attachment;filename=" + fileName);
-            var browser = _Web.GetRequest().Headers["User-Agent"].ToString();
-            if (browser != null && browser.Equals("ie", StringComparison.OrdinalIgnoreCase))
-                response.Headers.Append("Content-Disposition", "attachment; filename*=UTF-8''" + HttpUtility.UrlPathEncode(fileName) + "\"");
-            else
-                response.Headers.Append("Content-Disposition", "attachment; filename=\"" + HttpUtility.UrlPathEncode(fileName) + "\"");
-
-            //response.ContentType = "application/vnd.ms-word.document";
-            response.ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-
-            //stream.Flush();
-            stream.Position = 0;
-            stream.CopyToAsync(response.Body);
-            //response.Flush();
-            response.Body.FlushAsync();
-            //response.End();
-            //response.Body..EndWrite();
-        }
-
-        #region remark code
-        /*
-        public static void ExportFile(string filePath, string fileName, bool delete)
-        {
-            byte[] tplBytes = File.ReadAllBytes(filePath);
-            using (var mem = new MemoryStream())
-            {
-                //template file -> memory
-                mem.Write(tplBytes, 0, (int)tplBytes.Length);
-
-                ExportStream(mem, fileName);
-
-                if (delete)
-                    File.Delete(filePath);
-            }
-        }
-        */
-
-        /*
-        //檢查產生的 docx 內容是否正確
-        private static bool IsDocxValid(WordprocessingDocument docx)
-        {
-            OpenXmlValidator validator = new OpenXmlValidator();
-            var errors = validator.Validate(docx);
-            foreach (ValidationErrorInfo error in errors)
-                Debug.Write(error.Description);
-            return (errors.Count() == 0);
-        }
-
         /// <summary>
-        /// 設定多個 checkbox欄位內容
+        /// echo word template to screen
         /// </summary>
-        /// <param name="row">原始資料列</param>
-        /// <param name="value">欄位值</param>
-        /// <param name="preFid">要設定的欄位前置字串</param>
-        /// <param name="startNo">欄位開始號</param>
-        /// <param name="endNo">欄位結束號</param>
-        /// <param name="type">符號種類, 1:方形, 2:圓鈕, 3:打勾</param>
-        public static void ValueToChecks(JObject row, string value, string preFid, int startNo, int endNo, int type = _Check)
+        /// <param name="tplPath"></param>
+        /// <param name="row"></param>
+        /// <param name="childs">IEnumerable for anonymous type</param>
+        /// <param name="images"></param>
+        public static void ExportByTplRow(string tplPath, string fileName, dynamic row,
+            List<IEnumerable<dynamic>> childs = null, List <WordImageDto> images = null)
         {
-            for (var i=startNo; i<=endNo; i++)
+            //check template file
+            if (!File.Exists(tplPath))
             {
-                var fid = preFid + i;
-                row[fid] = YesNo(value == i.ToString(), type);
+                _Log.Error($"_WebWord.cs TplRowToScreen() no tpl file ({tplPath})");
+                return;
             }
+
+            #region ms stream for echo
+            var ms = new MemoryStream();
+            var tplBytes = File.ReadAllBytes(tplPath);
+            ms.Write(tplBytes, 0, tplBytes.Length);
+
+            //binding stream && docx
+            var fileStr = "";
+            using (var docx = WordprocessingDocument.Open(ms, true))
+            {
+                //initial 
+                var wordSet = new WordSetService(docx);
+                var mainTpl = wordSet.GetMainStr();
+
+                //replace images first
+                if (images != null)
+                    wordSet.AddImages(ref mainTpl, images);
+
+                //get word body start/end pos
+                int bodyStart = 0, bodyEnd = 0; //no start/end tag
+                var bodyTpl = wordSet.GetBodyTpl(mainTpl, ref bodyStart, ref bodyEnd);
+
+                #region fill childs rows
+                var hasChild = (childs != null && childs.Count > 0);
+                if (hasChild)
+                {
+                    var childLen = childs.Count;
+                    int oldStart = 0, oldEnd = 0;
+                    for (var i = 0; i < childLen; i++)
+                    {
+                        int rowStart = 0, rowEnd = 0;
+                        var rowTpl = wordSet.GetRowTpl(bodyTpl, ref rowStart, ref rowEnd, i);
+                        if (rowTpl == "")
+                            continue;
+                        /*
+                        {
+                            error = "can not find rowTpl String.";
+                            goto lab_error;
+                        }
+                        */
+
+                        //set head or add left string of rows
+                        if (i == 0)
+                            fileStr = _Word.TplFillRow(bodyTpl.Substring(0, rowStart), row);
+                        else
+                            fileStr += bodyTpl.Substring(oldEnd + 1, rowStart - oldEnd - 1);
+
+                        //add middle
+                        fileStr += _Word.TplFillRows(rowTpl, childs[i]);
+
+                        //add tail
+                        if (i == childLen - 1)
+                            fileStr += _Word.TplFillRow(bodyTpl.Substring(rowEnd + 1), row);
+
+                        //set old pos
+                        oldStart = rowStart;
+                        oldEnd = rowEnd;
+                    }//for childs
+
+                     //set word file string
+                    fileStr = mainTpl.Substring(0, bodyStart) +
+                        fileStr +
+                        mainTpl.Substring(bodyEnd + 1);
+                }
+                else
+                {
+                    fileStr = _Word.TplFillRow(bodyTpl, row);
+                }
+                #endregion
+
+                //write string into docx
+                wordSet.WriteMainStr(fileStr);
+
+                //check (for debug)
+                //_Word.IsDocxValid(docx);
+            }
+
+            //echo stream to file
+            _Web.StreamToScreen(ms, fileName);
+            return;
+            #endregion
+
+        //lab_error:
+            //_Log.Error("GenDocuService.cs Run() failed: " + error);
+            //return;
         }
 
-        //傳回Checkbox or Radio button
-        public static string YesNo(string status, int type = _Check)
-        {
-            return YesNo(status == "1", type);
-        }
-        public static string YesNo(bool status, int type = _Check)
-        {
-            if (type == _Check)
-                return status ? "■" : "□";
-            else if (type == _Radio)
-                return status ? "●" : "○";
-            else 
-                return status ? "V" : "";
-        }        
-        */
 
-        /// <summary>
-        /// docx增加圖檔
-        /// http://blog.darkthread.net/post-2017-11-06-insert-image-to-docx.aspx
-        /// https://msdn.microsoft.com/zh-tw/library/office/bb497430.aspx
-        /// </summary>
-        /// <param name="wordDoc"></param>
-        /// <param name="img"></param>
-        /// <returns></returns>
-        //public static Run GenerateImageRun(WordprocessingDocument wordDoc, WordImageModel img)
-        //public static void AddImage(MainDocumentPart mainPart, string imagePath, double width, double height, string tag)
-        //{
-        //    //如果圖檔為空白或不存在, 則清除 template的 tag
-        //    var run = GetImageRun(mainPart, imagePath, width, height);
-        //    //var cat2Img = new ImageData(imagePath);
-        //    //var run = GetImageRun2(mainPart, cat2Img);
-
-        //    //get image node
-        //    var imageNode = mainPart.Document.Body.Descendants()
-        //        .Single(o => o.LocalName == "r" && o.InnerText == tag);
-
-        //    //temp test
-        //    mainPart.Document.Body.AppendChild(new Paragraph(run));
-
-        //    /*
-        //    //將 InnerXML 置換成圖片 Run 的 InnerXML
-        //    imageNode.InnerXml = (run == null)
-        //        ? ""
-        //        : run.InnerXml;
-        //    */
-        //}
-
-        //public static void AddImage(MainDocumentPart mainPart, string imagePath, double width, double height, string tag)
-        //public static void AddImage(ref string docText, MainDocumentPart mainPart, string imagePath, double width, double height, string tag)
-        //{
-        //    //如果圖檔為空白或不存在, 則return null
-        //    //if (string.IsNullOrEmpty(imagePath) || !File.Exists(imagePath))
-        //    //    return null;
-
-        //    //temp return;
-        //    //return;
-
-        //    /*
-        //    //get image node
-        //    var imageNode = mainPart.Document.Body.Descendants()
-        //        .Single(o => o.LocalName == "r" && o.InnerText == tag);
-        //    */
-
-        //    var image = new WordImage(imagePath, width, height);
-        //    /*
-        //    if (image == null)
-        //    {
-        //        imageNode.InnerXml = "";
-        //        return;
-        //    }
-        //    */
-
-        //    //MainDocumentPart mainPart = wordDoc.MainDocumentPart;
-
-        //    var imagePart = mainPart.AddImagePart(ImagePartType.Jpeg);
-        //    imagePart.FeedData(image.DataStream);
-
-        //    /*
-        //    var fileName = @"d:\_temp\Cat.jpg";
-        //    using (FileStream stream = new FileStream(fileName, FileMode.Open))
-        //    {
-        //        imagePart.FeedData(stream);
-        //    }
-        //    */
-        //    var imagePartId = mainPart.GetIdOfPart(imagePart);
-
-        //    //var run = GetImageRun(imagePartId, null);
-        //    var run = GetImageRun(imagePartId, image);
-        //    docText = docText.Replace(tag, run.InnerXml);
-        //    /*
-        //    imageNode.InnerXml = run.InnerXml;
-        //    //temp test
-        //    //mainPart.Document.Body.AppendChild(new Paragraph(run));
-        //    var run2 = new Paragraph(run);
-        //    run2.InnerXml.ToString();
-        //    */
-        //}
-
-        /*
-        // http://blog.darkthread.net/post-2017-11-06-insert-image-to-docx.aspx
-        // https://msdn.microsoft.com/zh-tw/library/office/bb497430.aspx
-        private static Run GetImageRun(string imagePartId, WordImage img)
-        {
-            // Define the reference of the image.
-            var element =
-                 new Drawing(
-                     new DW.Inline(
-                         //Size of image, unit = EMU(English Metric Unit)
-                         //1 cm = 360000 EMUs
-                         new DW.Extent() { Cx = img.WidthInEMU, Cy = img.HeightInEMU },
-                         new DW.EffectExtent()
-                         {
-                             LeftEdge = 0L,
-                             TopEdge = 0L,
-                             RightEdge = 0L,
-                             BottomEdge = 0L
-                         },
-                         new DW.DocProperties()
-                         {
-                             Id = (UInt32Value)1U,
-                             Name = img.ImageName,
-                         },
-                         new DW.NonVisualGraphicFrameDrawingProperties(
-                             new A.GraphicFrameLocks() { NoChangeAspect = true }),
-                         new A.Graphic(
-                             new A.GraphicData(
-                                 new PIC.Picture(
-                                     new PIC.NonVisualPictureProperties(
-                                         new PIC.NonVisualDrawingProperties()
-                                         {
-                                             Id = (UInt32Value)0U,
-                                             Name = img.FileName,
-                                         },
-                                         new PIC.NonVisualPictureDrawingProperties()),
-                                     new PIC.BlipFill(
-                                         new A.Blip(
-                                             new A.BlipExtensionList(
-                                                 new A.BlipExtension()
-                                                 {
-                                                     Uri =
-                                                        "{28A0092B-C50C-407E-A947-70E740481C1C}"
-                                                 })
-                                         )
-                                         {
-                                             Embed = imagePartId,
-                                             CompressionState =
-                                             A.BlipCompressionValues.Print
-                                         },
-                                         new A.Stretch(
-                                             new A.FillRectangle())),
-                                     new PIC.ShapeProperties(
-                                         new A.Transform2D(
-                                             new A.Offset() { X = 0L, Y = 0L },
-                                             new A.Extents()
-                                             {
-                                                 Cx = img.WidthInEMU,
-                                                 Cy = img.HeightInEMU
-                                             }),
-                                         new A.PresetGeometry(
-                                             new A.AdjustValueList()
-                                         )
-                                         { Preset = A.ShapeTypeValues.Rectangle }))
-                             )
-                             { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" })
-                     )
-                     {
-                         DistanceFromTop = (UInt32Value)0U,
-                         DistanceFromBottom = (UInt32Value)0U,
-                         DistanceFromLeft = (UInt32Value)0U,
-                         DistanceFromRight = (UInt32Value)0U,
-                         //EditId = "50D07946", //word 2007 無法開啟 !!
-                     });
-            return new Run(element);
-        }        
-        */
-        #endregion
+        //#endregion
 
     }//class
 }
