@@ -83,36 +83,6 @@ namespace Base.Services
             _now = DateTime.Now;
         }
 
-        /*
-        //get pkey value list(sep with "," if multi keys) for update row
-        //single pkey get Kid field, multi pkey get _key field !!
-        //if no key value, then log
-        private string GetUpdateKeyList(EditModel edit, JObject row)
-        {
-            try
-            {
-                //no matter single/multi pkey, read _key first if existed !!
-                if (row[_Fun.Key] != null)
-                    return row[_Fun.Key].ToString();
-
-                //single pkey, read Kid
-                if (!_Str.IsEmpty(edit.Kid))
-                    return row[edit.Kid].ToString();
-
-                //multi pkey
-                var keys = "";
-                foreach (var kid in edit.Kids)
-                    keys += row[kid].ToString() + _Fun.ColSep;
-                return (keys == "") ? "" : keys.Substring(0, keys.Length - 1);
-            }
-            catch
-            {
-                _Log.Error("CrudEdit.cs GetUpdateKeyList() failed: pkey value not existed: " + _Json.ToStr(row));
-                return "";
-            }
-        }
-        */
-
         //get where by pkey for query 1st table & updata tables, set sql args at the same time
         //for getRow & update
         private string GetWhereAndArg(EditDto edit, string key)
@@ -121,26 +91,6 @@ namespace Base.Services
             var kid = "_" + edit.PkeyFid;  
             AddArg(kid, key);
             return edit.PkeyFid + "=@" + kid;
-
-            /*
-            //multi pkey
-            var where = "";
-            var and = "";
-            //var json = _Json.StrToJson(key);
-            var kids = edit.Kids;
-            var keys = key.Split(_Fun.ColSep);
-            for (var i = 0; i< kids.Length; i++)
-            {
-                //check pkey existed
-
-                //var kid = kids[i];
-                var kid2 = "_" + kids[i];
-                AddArg(kid2, keys[i]);
-                where += and + kids[i] + "=@" + kid2;
-                and = " And ";
-            }
-            return where;
-            */
         }
 
         //get select sql 
@@ -278,33 +228,6 @@ namespace Base.Services
                 data[Childs] = childs;
             }
             return data;
-
-            /*
-            //get childRowsList: childs rows for child
-            keys = _Json.ArrayToListStr(rows, edit.Kid);
-            var childRowsList = new List<JArray>();
-            var childLen = editChilds.Count;
-            for (var i = 0; i < childLen; i++)
-                childRowsList.Add(GetChildJson(editLevel + 1, editChilds[i], keys, db));
-
-            //filter childRowsList and add into return rows
-            for (var i=0; i< rows.Count; i++)
-            {
-                var upRow = rows[i];
-                var key = upRow[edit.Kid].ToString();
-                var childs = new JArray();
-                for (var j = 0; j < childLen; j++)
-                {
-                    //var childRows = ;
-                    childs.Add(new JObject()
-                    {
-                        [Rows] = _Json.FindArray(childRowsList[j], editChilds[j].MapFid, key),
-                    });
-                }
-                upRow[Childs] = childs;            
-            }
-            return rows;
-            */
         }
 
         /*
@@ -369,40 +292,6 @@ namespace Base.Services
                 : upJson[Childs][childIdx] as JObject;
         }
 
-        /*
-        //get field id & index mapping
-        //return new JObject() when null for make coding easy !!
-        private void SetFidNo(EditDto edit)
-        {
-            edit._FidNo = new JObject();
-            var fidNo = edit._FidNo;
-            var items = edit.Items;
-            for(var i=0; i< items.Length; i++)
-                fidNo[items[i].Fid] = i;
-        }
-
-        //set key value and map key value(recursive)
-        //return status
-        private bool SetKeyAndMap(EditDto edit, JObject inputRow)
-        {
-            if (inputRow[edit.Kid] == null)
-                return false;
-
-            var childLen = GetChildLen(edit);
-            for (var i = 0; i < childLen; i++)
-            {
-                var edit2 = edit.Childs[i];
-                JArray rows = GetInputChildRows(inputRow, i);
-                if (rows != null && rows.Count > 0)
-                {
-                    //recursive insert rows
-                    if (!InsertRows(edit2, key, rows, db))
-                        return false;
-                }
-            }
-        }
-        */
-
         /// <summary>
         /// get primary key(value)
         /// </summary>
@@ -455,47 +344,6 @@ namespace Base.Services
         {
             return (row[IsNew] != null && row[IsNew].ToString() == "1");
         }
-
-        /*
-        private bool SetKeyAndMaps(List<string> upKeys, EditDto edit, JArray rows)
-        {
-            var keys = new List<string>();
-            if (rows != null)
-            {
-                foreach(JObject row in rows)
-                {
-                    //set key
-                    if (row[edit.Kid] != null)
-                    {
-                        //set new key if need
-                        var keyIdx = GetNewKeyIdx(row[edit.Kid].ToString());
-                        if (keyIdx > 0)
-                            row[edit.Kid] = _Str.NewId();
-
-                        //key
-                    }
-                    if (row)
-                    //set map key
-                }
-            }
-
-            if (inputRow[edit.Kid] == null)
-                return false;
-
-            var childLen = GetChildLen(edit);
-            for (var i = 0; i < childLen; i++)
-            {
-                var edit2 = edit.Childs[i];
-                JArray rows = GetInputChildRows(inputRow, i);
-                if (rows != null && rows.Count > 0)
-                {
-                    //recursive insert rows
-                    if (!InsertRows(edit2, key, rows, db))
-                        return false;
-                }
-            }
-        }
-        */
 
         private bool HasField(JObject row, string kid)
         {
@@ -720,7 +568,7 @@ namespace Base.Services
             /* 不讀取 db, 直接 update
             #region get existed db row
             //var edit = _edit;
-            var rowKey = inputRow[edit.Kid].ToString();
+            var rowKey = inputRow[edit.PkeyFid].ToString();
             var sql = GetSql(edit, rowKey);
             var dbRow = db.GetJson(sql, _sqlArgs);
             if (dbRow == null)
@@ -794,7 +642,6 @@ namespace Base.Services
 
             //update db
             sql = "Update " + edit.Table + " Set " + sql.Substring(0, sql.Length - 1) + setCol4 + " Where " + GetWhereAndArg(edit, rowKey);
-            //AddArg(edit.Kid, inputKey);
             if (db.ExecSql(sql, _sqlArgs) == 0)
                 return false;
 
@@ -1003,7 +850,7 @@ namespace Base.Services
                     //log error if fid not existed
                     if (edit._FidNo[fid] == null)
                     {
-                        _Log.Error(string.Format("input field is wrong for {0}.({1})", edit.Table, fid));
+                        _Log.Error(string.Format("input field is wrong ({0}.{1})", edit.Table, fid));
                         return false;
                     }
 
@@ -1606,7 +1453,7 @@ namespace Base.Services
                                     }
                                     else
                                     {
-                                        _Log.Error("CrudEdit.cs SaveJson() failed: can not get FkeyFid (" + edit.FkeyFid + ")");
+                                        _Log.Error("CrudEdit.cs SetNewKeyJson2() failed: can not get FkeyFid (" + edit.FkeyFid + ")");
                                         return false;
                                     }
                                 }
@@ -1617,7 +1464,7 @@ namespace Base.Services
                                 }
                                 else if (upNewKey == null)
                                 {
-                                    _Log.Error("CrudEdit.cs SaveJson() failed: can not get MapFid (" + edit.FkeyFid + ")");
+                                    _Log.Error("CrudEdit.cs SetNewKeyJson2() failed: can not get upNewKey by FkeyFid (" + edit.FkeyFid + ")");
                                     return false;
                                 }
                                 else
@@ -1797,19 +1644,15 @@ namespace Base.Services
             //delete rows
             //var fid = "";
             var values = "";
-            var kid = "";
-            //if (edit.Kid != null)
-            //{
-                //=== case of single pkey ===
-                //set sql args
-                kid = edit.PkeyFid;
-                for (var i = 0; i < keys.Count; i++)
-                {
-                    var fid = edit.PkeyFid + i;
-                    AddArg(fid, keys[i].ToString());
-                    values += "@" + fid + ",";
-                }
-            //}
+            //=== case of single pkey ===
+            //set sql args
+            var kid = edit.PkeyFid;
+            for (var i = 0; i < keys.Count; i++)
+            {
+                var fid = edit.PkeyFid + i;
+                AddArg(fid, keys[i].ToString());
+                values += "@" + fid + ",";
+            }
 
             //update db
             var sql = string.Format(_Fun.DeleteRowsSql, edit.Table, kid, values.Substring(0, values.Length - 1));
@@ -1848,7 +1691,7 @@ namespace Base.Services
             //AddArg(kid, key);
 
             //update db
-            var sql = string.Format("delete {0} where {1} in ({2})", edit.Table, edit.MapFid, _List.ToStr(upKeys, true));
+            var sql = string.Format("delete {0} where {1} in ({2})", edit.Table, edit.FkeyFid, _List.ToStr(upKeys, true));
             var count = db.Update(sql);
             if (count == 0)
                 goto lab_error;

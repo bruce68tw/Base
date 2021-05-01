@@ -41,7 +41,7 @@
         //log error for slow sql(mini secode)
         public int SlowSql { get; set; }
 
-        //log info
+        //log debug
         public bool LogDebug { get; set; }
 
         //log sql

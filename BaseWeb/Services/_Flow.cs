@@ -52,10 +52,10 @@ select
 	EndNodeType=nt.NodeType,
 	nf.SignerType, nf.SignerValue,
     l.Sort, l.CondStr
-from dbo.FlowLine l
-join dbo.Flow f on l.FlowId=f.Id
-join dbo.FlowNode nf on l.StartNode=nf.Id
-join dbo.FlowNode nt on l.EndNode=nt.Id
+from dbo.XpFlowLine l
+join dbo.XpFlow f on l.FlowId=f.Id
+join dbo.XpFlowNode nf on l.StartNode=nf.Id
+join dbo.XpFlowNode nt on l.EndNode=nt.Id
 where f.Code='{0}'
 order by l.StartNode, l.Sort
 ", flowCode);
@@ -387,7 +387,7 @@ insert into dbo.FlowSign(
             db.BeginTran();
 
             //get flowSign row
-            var sql = $"select SourceId, FlowLevel, TotalLevel from dbo.FlowSign where Id='{flowSignId}' and SignStatus='0'";
+            var sql = $"select SourceId, FlowLevel, TotalLevel from dbo.XpFlowSign where Id='{flowSignId}' and SignStatus='0'";
             var row = db.GetJson(sql);
             if (row == null)
             {
@@ -398,7 +398,7 @@ insert into dbo.FlowSign(
             //sql for update flowSign
             var signStatus = signYes ? "Y" : "N";
             sql = $@"
-update dbo.FlowSign set 
+update dbo.XpFlowSign set 
     SignStatus=@SignStatus, 
     Note=@Note,
     SignTime=getDate()

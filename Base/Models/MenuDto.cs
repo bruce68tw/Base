@@ -7,22 +7,27 @@ namespace Base.Models
     /// </summary>
     public class MenuDto
     {
+        public MenuDto()
+        {
+            Items = new List<MenuDto>();
+        }
+
         //program Id
-        public string Id;
+        public string Code { get; set; }
 
         //program name
-        public string Name;
+        public string Name { get; set; }
 
         //if emtpy, means has child menu
-        public string Url;
+        public string Url { get; set; }
 
         //sort
-        public byte Sort;
+        public byte Sort { get; set; }
 
         //icon
-        public string Icon;
+        public string Icon { get; set; }
 
         //sub ment items
-        public List<MenuDto> Items = new List<MenuDto>();
+        public List<MenuDto> Items { get; set; }
     }
 }

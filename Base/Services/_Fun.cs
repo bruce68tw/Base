@@ -47,6 +47,9 @@ namespace Base.Services
         #endregion
 
         #region base varibles
+        //debug mode or not
+        public static bool IsDebug = true;
+
         //ap physical path, has right slash
         public static string DirRoot = _Str.GetLeft(AppDomain.CurrentDomain.BaseDirectory, "bin\\");
 

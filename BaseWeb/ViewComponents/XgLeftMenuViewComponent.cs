@@ -16,8 +16,15 @@ namespace BaseWeb.ViewComponents
         /// <param name="minWidth">px</param>
         /// <param name="maxWidth">px</param>
         /// <returns></returns>
-        public HtmlString Invoke(List<MenuDto> rows)
+        public HtmlString Invoke(List<MenuDto> rows, bool showSort = false)
         {
+            if (showSort)
+            {
+                rows.ForEach(a => {
+                    a.Name = a.Sort + "." + a.Name;
+                });
+            }
+
             var html = "";
             foreach (var row in rows)
             {

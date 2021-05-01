@@ -1,6 +1,9 @@
-﻿using Base.Services;
+﻿using Base.Enums;
+using Base.Models;
+using Base.Services;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Web;
 
@@ -11,17 +14,6 @@ namespace BaseWeb.Services
         //server side fid for file input collection, must pre '_'
         //key-value of file serverFid vs row key
         public const string FileJson = "_fileJson";
-
-        //input field error validation, need match client side _fun.js
-
-        //public const string ErrTail = "_err";           //?? error label id
-        //public const string ErrCls = "xg-error";            //error flag
-        //public const string ErrLabCls = "xg-error-label";   //?? error label
-
-        //public const string DtTitle = "_dt";   //htmlHelper 的title如果為此值, 表示在dt內
-
-        //for controller return JsonResult
-        //public const string AppJson = "application/json";
 
         //public const string SessionFid = "ASP.NET_SessionId";
         //public const string SessionFid = "_SessionId_";
@@ -65,30 +57,73 @@ namespace BaseWeb.Services
         {
             //response to client, must close docx first, 
             //so put code here, or docx file will get wrong !!
-            var response = GetResponse();
+            var resp = GetResponse();
 
             //consider IE
-            //response.AppendHeader("Content-Disposition", "attachment;filename=" + fileName);
+            //resp.AppendHeader("Content-Disposition", "attachment;filename=" + fileName);
             var browser = GetRequest().Headers["User-Agent"].ToString();
             if (browser != null && browser.Equals("ie", StringComparison.OrdinalIgnoreCase))
-                response.Headers.Append("Content-Disposition", "attachment; filename*=UTF-8''" + HttpUtility.UrlPathEncode(fileName) + "\"");
+                resp.Headers.Append("Content-Disposition", "attachment; filename*=UTF-8''" + HttpUtility.UrlPathEncode(fileName) + "\"");
             else
-                response.Headers.Append("Content-Disposition", "attachment; filename=\"" + HttpUtility.UrlPathEncode(fileName) + "\"");
+                resp.Headers.Append("Content-Disposition", "attachment; filename=\"" + HttpUtility.UrlPathEncode(fileName) + "\"");
 
             var ext = _File.GetFileExt(fileName);
-            //response.ContentType = "application/vnd.ms-word.document";
+            //resp.ContentType = "application/vnd.ms-word.document";
             if (ext == ".doc" || ext == ".docx")
-                response.ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                resp.ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             else if(ext == ".xls" || ext == ".xlsx")
-                response.ContentType = "application/ms-excel";
+                resp.ContentType = "application/ms-excel";
+            else
+                resp.ContentType = "text/plain";
 
             //stream.Flush();
             stream.Position = 0;
-            stream.CopyToAsync(response.Body);
-            //response.Flush();
-            response.Body.FlushAsync();
-            //response.End();
-            //response.Body..EndWrite();
+            stream.CopyToAsync(resp.Body);
+            //resp.Flush();
+            resp.Body.FlushAsync();
+            //resp.End();
+            //resp.Body..EndWrite();
+        }
+
+        /// <summary>
+        /// get prog menu by session, called by _Layout.cshtml for show menu
+        /// </summary>
+        /// <returns></returns>
+        public static List<MenuDto> GetMenu()
+        {
+            //get authStrs
+            var data = new List<MenuDto>();
+            var authStrs = _Fun.GetBaseUser().ProgAuthStrs;
+            if (string.IsNullOrEmpty(authStrs))
+                return data;
+
+            //get list
+            var list = new List<string>();
+            switch (_Fun.GetAuthType())
+            {
+                case AuthTypeEnum.Ctrl:
+                    //do nothing
+                    list = _Str.ToList(authStrs);
+                    break;
+
+                case AuthTypeEnum.Action:
+                    //var list2 = new List<string>();
+                    foreach (var item in list)
+                        list.Add(_Str.GetLeft(item, ":"));
+                    break;
+
+                default:
+                    return data;
+            }
+
+            //read Prog
+            var sql = string.Format(@"
+select Code, Name, Url, Sort
+from dbo.XpProg
+where Code in ({0})
+order by Sort
+", _List.ToStr(list, true));
+            return _Db.GetModels<MenuDto>(sql);
         }
 
     }//class

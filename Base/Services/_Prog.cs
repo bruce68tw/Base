@@ -49,7 +49,7 @@ select distinct
     p.Code as ProgCode, p.Name as ProgName
 from RoleProg rp
 join UserRole ur on rp.RoleId=ur.RoleId
-join Prog p on rp.ProgId = p.Id
+join Prog p on rp.ProgId=p.Id
 where ur.UserId=@UserId
 ";
                     return _Db.GetModels<ProgAuthDto>(sql, new List<object>() { "UserId", userId });
@@ -71,7 +71,7 @@ select distinct
     p.Code as ProgCode, p.Name as ProgName, {authList} as AuthList
 from RoleProg rp
 join UserRole ur on rp.RoleId=ur.RoleId
-join Prog p on rp.ProgId = p.Id
+join Prog p on rp.ProgId=p.Id
 where ur.UserId=@UserId
 ";
                     return _Db.GetModels<ProgAuthDto>(sql, new List<object>() { "UserId", userId });
@@ -87,7 +87,7 @@ where ur.UserId=@UserId
         }
 
         /// <summary>
-        /// get auth string list for check auth
+        /// get auth string list for write session (check auth)
         /// </summary>
         /// <param name="authList"></param>
         /// <returns></returns>

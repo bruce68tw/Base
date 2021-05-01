@@ -12,15 +12,11 @@ namespace Base.Services
     /// </summary>
     public class CrudRead
     {
-        //.net core DI
-        //BaseInfoDto _baseInfo;
-
         //search field name for sql args
         private const string _FindId = "_find";
 
         //db str in config file
         private string _dbStr;
-        //private object _dbBox;
 
         //jQuery dataTables input arg
         private DtDto _dtIn;
@@ -28,16 +24,10 @@ namespace Base.Services
         //sql args, (id, value)
         private List<object> _sqlArgs = new List<object>();
 
-        //front datetime format
-        //private string _frontDtFormat;
-
         //constructor
         public CrudRead(string dbStr = "")
         {
-            //_baseInfo = baseInfoService.GetInfo();
             _dbStr = dbStr;
-            //_frontDtFormat = _Fun.GetBaseUser().FrontDtFormat;
-            //_dbBox = dbBox;
         }
 
         private Db GetDb()

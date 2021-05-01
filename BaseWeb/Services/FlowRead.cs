@@ -10,7 +10,7 @@ namespace BaseWeb.Services
         {
             ReadSql = @"
 select *
-from dbo.Flow
+from dbo.XpFlow
 order by Id
 ",
         };

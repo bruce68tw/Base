@@ -21,7 +21,7 @@ namespace BaseWeb.Services
             {
                 ReadSql = $@"
 select *
-from dbo.ImportLog
+from dbo.XpImportLog
 where Type='{_importType}'
 order by Id desc
 ",
