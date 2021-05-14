@@ -1,6 +1,6 @@
 ﻿using Base.Models;
 using Base.Services;
-using System;
+using Microsoft.AspNetCore.Localization;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -8,38 +8,97 @@ using System.Linq;
 
 namespace BaseWeb.Services
 {
-    //_Date.cs will refer this class
     public static class _Locale
     {
-        //current RB for base component
-        public static BaseResDto BR = null;
+        public static string CookieName = CookieRequestCultureProvider.DefaultCookieName;     //cookie field id for locale
 
-        //backEnd date format for c#
-        public static string BackDateFormat = "yyyy/M/d";
-
-        //目前已經載入的基本元件的多國語系內容, <locale, 多國語>
+        //loaded localization list, <locale, BaseResDto>
         private static Dictionary<string, BaseResDto> _brList = new Dictionary<string, BaseResDto>();
-
-        //在BaseWeb實作
-        private static ILocale _localeService = null;
-
-        //constructor
-        static _Locale()
+     
+        /// <summary>
+        /// change culture
+        /// </summary>
+        /// <param name="locale"></param>
+        public static void SetCulture(string locale)
         {
-            try
+            //add _brList if need
+            if (!_brList.Any(a => a.Key == locale))
             {
-                //是否有實作ILocale, 如果沒有, 則Locale取預設值
-                _localeService = (ILocale)_Fun.GetDI().GetService(typeof(ILocale));
+                var br = ReadBaseRes(locale);
+                _brList.Add(locale, br);
+                if (br == null)
+                {
+                    _Log.Error($"_Locale.cs SetCulture() failed, no locale ({locale})");
+                    return;
+                }
             }
-            catch
+
+            //set default language, .net 4.5後設定DefaultThread即可
+            if (CultureInfo.CurrentCulture.Name != locale)
             {
+                var culture = new CultureInfo(locale);
+                CultureInfo.DefaultThreadCurrentCulture = culture;
+                CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+                //Thread.CurrentThread.CurrentCulture = culture;
+                //Thread.CurrentThread.CurrentUICulture = culture;
             }
-            finally
-            {
-                //TODO: RB = SetRB();
-            }
+
+            //cookie set locale code
+            //_Web.GetResponse().Cookies.Append(CookieName, locale);
+
+            //if (_localeService != null)
+            //    _localeService.SetLocale(locale);
         }
 
+        /// <summary>
+        /// get locale by cookie
+        /// </summary>
+        /// <returns></returns>
+        public static string GetLocaleByCookie()
+        {
+            var cookie = _Web.GetRequest().Cookies.GetValueByName(CookieName);
+            return (cookie == null) ? "" : cookie.ToString();
+        }
+
+        public static BaseResDto GetBaseRes(string locale = "")
+        {
+            if (string.IsNullOrEmpty(locale))
+                locale = _Fun.GetLocaleByUser();
+
+            var dict = _brList.FirstOrDefault(a => a.Key == locale);
+            return dict.Equals(default(Dictionary<string, BaseResDto>)) 
+                ? null : dict.Value;
+        }
+
+        private static BaseResDto ReadBaseRes(string locale)
+        {
+            var file = _Fun.DirWeb + "Locale/" + locale + "/BR.json";
+            if (!File.Exists(file))
+            {
+                _Log.Error("no file: " + file);
+                return null;
+            }
+
+            //set _br
+            var br = new BaseResDto(); //initial value
+            var json = _Json.StrToJson(_File.ToStr(file));
+            _Json.CopyToModel(json, br);
+            return br;
+        }
+
+        /// <summary>
+        /// get locale file path
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public static string GetPath(string fileName)
+        {
+            return _Fun.DirWeb + "Locale\\" + _Fun.GetLocaleByUser() + "\\" + fileName;
+        }
+
+        #region remark code
+        /*
         /// <summary>
         /// frontEnd datetime string to backEnd datetime, consider different locale
         /// </summary>
@@ -58,12 +117,17 @@ namespace BaseWeb.Services
         /// also called by _Layout.cshtml
         /// </summary>
         /// <returns></returns>
-        public static string GetLocale()
+        public static string GetLocale(bool dash = true)
         {
             //return Thread.CurrentThread.CurrentCulture.Name;
-            return (_localeService == null) ? _Fun.GetBaseUser().Locale : _localeService.GetLocale();
+            var locale = (_localeService == null) ? _Fun.GetBaseUser().Locale : _localeService.GetLocale();
+            if (!dash)
+                locale = locale.Replace("-", "");
+            return locale;
         }
+        */
 
+        /*
         /// <summary>
         /// locale code no dash
         /// 從 Code table 讀取多國語資料時會用到此 method
@@ -74,7 +138,6 @@ namespace BaseWeb.Services
             return GetLocale().Replace("-", "");
         }
 
-        /*
         /// <summary>
         /// set client locale
         /// </summary>
@@ -85,27 +148,6 @@ namespace BaseWeb.Services
                 _service.SetLocale(locale);
         }
         */
-
-        /// <summary>
-        /// 切換語系 for view 
-        /// </summary>
-        /// <param name="locale"></param>
-        public static void SetCulture(string locale)
-        {
-            if (CultureInfo.CurrentCulture.Name == locale)
-                return;
-
-            //set default language, .net 4.5後設定DefaultThread即可
-            var culture = new CultureInfo(locale);
-            CultureInfo.DefaultThreadCurrentCulture = culture;
-            CultureInfo.DefaultThreadCurrentUICulture = culture;
-
-            //Thread.CurrentThread.CurrentCulture = culture;
-            //Thread.CurrentThread.CurrentUICulture = culture;
-
-            if (_localeService != null)
-                _localeService.SetLocale(locale);
-        }
 
         /// <summary>
         /// get resource for base component
@@ -146,17 +188,6 @@ namespace BaseWeb.Services
         //    return rb;
         //}
 
-        /// <summary>
-        /// get locale file path
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public static string GetPath(string fileName)
-        {
-            return _Fun.DirWeb + "Locale\\" + GetLocale() + "\\" + fileName;
-        }
-
-        #region remark code
         /*         
         /// <summary>
         /// ?? get global resource, call rm.GetString(fid) when read field value

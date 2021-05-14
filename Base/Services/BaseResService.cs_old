@@ -19,7 +19,7 @@ namespace Base.Services
                 return;
             }
 
-            //set _baseR
+            //set _br
             var json = _Json.StrToJson(_File.ToStr(file));
             _Json.CopyToModel(json, _br);
         }

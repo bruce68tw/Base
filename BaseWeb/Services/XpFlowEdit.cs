@@ -4,13 +4,13 @@ using Newtonsoft.Json.Linq;
 
 namespace BaseWeb.Services
 {
-    public class FlowEdit
+    public class XpFlowEdit
     {
         private EditDto GetDto()
         {
             return new EditDto()
             {
-                Table = "dbo.Flow",
+                Table = "dbo.XpFlow",
                 PkeyFid = "Id",
                 Col4 = null,
                 Items = new [] {
@@ -24,7 +24,7 @@ namespace BaseWeb.Services
                 {
                     new EditDto
                     {
-                        Table = "dbo.FlowNode",
+                        Table = "dbo.XpFlowNode",
                         PkeyFid = "Id",
                         FkeyFid = "FlowId",
                         Col4 = null,
@@ -44,7 +44,7 @@ namespace BaseWeb.Services
                     },
                     new EditDto
                     {
-                        Table = "dbo.FlowLine",
+                        Table = "dbo.XpFlowLine",
                         PkeyFid = "Id",
                         FkeyFid = "FlowId",
                         Col4 = null,

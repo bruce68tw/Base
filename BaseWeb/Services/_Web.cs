@@ -1,6 +1,7 @@
 ﻿using Base.Enums;
 using Base.Models;
 using Base.Services;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,8 @@ namespace BaseWeb.Services
 
         //public const string SessionFid = "ASP.NET_SessionId";
         //public const string SessionFid = "_SessionId_";
-        public const string LocaleFid = "_Locale_";     //cookie field id for locale
+        //public const string LocaleFid = "_Locale_";     //cookie field id for locale
+        public static string LocaleFid = CookieRequestCultureProvider.DefaultCookieName;     //cookie field id for locale
 
         public static HttpContext GetHttp()
         {
@@ -37,11 +39,13 @@ namespace BaseWeb.Services
             return GetHttp().Response;
         }
 
+        /*
         //get cookies
         public static IRequestCookieCollection GetCookies()
         {
             return GetRequest().Cookies;
         }
+        */
 
         public static ISession GetSession()
         {

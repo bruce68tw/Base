@@ -1,4 +1,5 @@
 ﻿using Base.Services;
+using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,8 +18,7 @@ namespace BaseWeb.ViewComponents
         public HtmlString Invoke(bool isHorizontal = true, bool hasReset = false, bool hasFind2 = false)
         {
             //set toolbar buttons
-            //var rb = _Locale.RB;
-            var baseR = _Fun.GetBaseRes();
+            var baseR = _Locale.GetBaseRes();
             var html = string.Format("<button type='button' class='btn xg-btn-size btn-primary' onclick='_crud.onFind()'>{0}<i class='ico-find'></i></button>", baseR.BtnFind);
             if (hasReset)
                 html += string.Format("<button type='button' class='btn xg-btn' onclick='_crud.onReset()'>{0}<i class='ico-delete'></i></button>", baseR.BtnReset);

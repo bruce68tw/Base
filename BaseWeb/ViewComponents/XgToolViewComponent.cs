@@ -1,4 +1,5 @@
 ﻿using Base.Services;
+using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,7 +15,7 @@ namespace BaseWeb.ViewComponents
         public HtmlString Invoke()
         {
             //modal html
-            var baseR = _Fun.GetBaseRes();
+            var baseR = _Locale.GetBaseRes();
             var html = $@"
 <!-- wait -->
 <div id='xgWait'>

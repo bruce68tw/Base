@@ -8,6 +8,9 @@
         //login or not
         public bool IsLogin;
 
+        //locale code
+        public string Locale;
+
         //user id/name
         public string UserId;
         public string UserName;
@@ -15,10 +18,6 @@
         //dept id/name
         public string DeptId;
         public string DeptName;
-
-        //locale code
-        public string Locale;
-        //public string FrontDtFormat;
 
         //diffence hours to GMT for Db saving
         //public double HourDiff = 0;

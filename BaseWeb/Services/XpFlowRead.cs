@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BaseWeb.Services
 {
-    public class FlowRead
+    public class XpFlowRead
     {
         private ReadDto dto = new ReadDto()
         {

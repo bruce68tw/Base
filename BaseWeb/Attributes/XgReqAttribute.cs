@@ -1,4 +1,5 @@
 ﻿using Base.Services;
+using BaseWeb.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace BaseWeb.Attributes
@@ -16,7 +17,7 @@ namespace BaseWeb.Attributes
         {
             var result = base.IsValid(value, validationContext);
             if (!string.IsNullOrEmpty(ErrorMessage))
-                ErrorMessage = validationContext.MemberName + _Fun.GetBaseRes().Required;
+                ErrorMessage = validationContext.MemberName + _Locale.GetBaseRes().Required;
 
             return result;
         }

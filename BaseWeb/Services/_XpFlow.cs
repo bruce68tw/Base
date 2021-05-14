@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace BaseWeb.Services
 {
-    public class _Flow
+    public class _XpFlow
     {
         //match to Code.Type="AndOr" && Flow.js
         private const string OrSep = "{O}";
@@ -158,9 +158,9 @@ order by l.StartNode, l.Sort
                 nowNodeName = findLine.EndNodeName;
             }
 
-            //case of ok, write FlowSign table
+            //case of ok, write XpFlowSign table
             sql = @"
-insert into dbo.FlowSign(
+insert into dbo.XpFlowSign(
     Id, FlowId, SourceId, 
     NodeName, FlowLevel, TotalLevel,
     SignerId, SignerName, 
@@ -364,7 +364,7 @@ insert into dbo.FlowSign(
         /// <summary>
         /// sign one row
         /// </summary>
-        /// <param name="flowSignId">FlowSign.Id</param>
+        /// <param name="flowSignId">XpFlowSign.Id</param>
         /// <param name="signYes">agree or not</param>
         /// <param name="signNote">sign note</param>
         /// <param name="sourceTable">source Table for update FlowLevel, FlowStatus columns</param>
@@ -386,16 +386,16 @@ insert into dbo.FlowSign(
             db = new Db();
             db.BeginTran();
 
-            //get flowSign row
+            //get XpFlowSign row
             var sql = $"select SourceId, FlowLevel, TotalLevel from dbo.XpFlowSign where Id='{flowSignId}' and SignStatus='0'";
             var row = db.GetJson(sql);
             if (row == null)
             {
-                error = $"not found FlowSign row.(Id={flowSignId})";
+                error = $"not found XpFlowSign row.(Id={flowSignId})";
                 goto lab_error;
             }
 
-            //sql for update flowSign
+            //sql for update XpFlowSign
             var signStatus = signYes ? "Y" : "N";
             sql = $@"
 update dbo.XpFlowSign set 
@@ -407,7 +407,7 @@ where Id='{flowSignId}'
             var count = db.ExecSql(sql, new List<object>() { "SignStatus", signStatus, "Note", signNote });
             if (count != 1)
             {
-                error = $"should update FlowSign one row.({count})";
+                error = $"should update XpFlowSign one row.({count})";
                 goto lab_error;
             }
 

@@ -189,7 +189,7 @@ namespace BaseWeb.Services
 
             //add first empty row & set its title='' to show placeHolder !!
             if (addEmptyRow)
-                optList += string.Format(tplOpt, "", _Fun.GetBaseRes().PlsSelect, "title=''");
+                optList += string.Format(tplOpt, "", _Locale.GetBaseRes().PlsSelect, "title=''");
 
             var len = (rows == null) ? 0 : rows.Count;
             for (var i = 0; i < len; i++)

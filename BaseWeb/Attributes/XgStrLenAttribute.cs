@@ -1,4 +1,5 @@
 ﻿using Base.Services;
+using BaseWeb.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace BaseWeb.Attributes
@@ -7,7 +8,7 @@ namespace BaseWeb.Attributes
     {
         public XgStrLenAttribute(int maxLen) : base(maxLen)
         {
-            ErrorMessage = string.Format(_Fun.GetBaseRes().StrLen, maxLen);
+            ErrorMessage = string.Format(_Locale.GetBaseRes().StrLen, maxLen);
         }
 
     } //class

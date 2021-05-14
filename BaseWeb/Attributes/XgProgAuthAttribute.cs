@@ -1,6 +1,7 @@
 ﻿using Base.Enums;
 using Base.Models;
 using Base.Services;
+using BaseWeb.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -29,7 +30,7 @@ namespace BaseWeb.Attributes
             //=== check program right ===
             var userInfo = _Fun.GetBaseUser();
             var isLogin = userInfo.IsLogin;
-            if (isLogin && _Prog.CheckAuth(userInfo.ProgAuthStrs, ctrl, _funType))
+            if (isLogin && _XpProg.CheckAuth(userInfo.ProgAuthStrs, ctrl, _funType))
             {
                 //case of ok
                 base.OnActionExecuting(context);
@@ -42,8 +43,8 @@ namespace BaseWeb.Attributes
             //error msg when need
             //var msg = "您尚未有後台相關權限，請洽人事處進行權限申請。";
             var error = isLogin
-                ? _Fun.GetBaseRes().NoProgAuth
-                : _Fun.GetBaseRes().NotLogin;
+                ? _Locale.GetBaseRes().NoProgAuth
+                : _Locale.GetBaseRes().NotLogin;
 
             //get return type
             var returnType = "ActionResult";    //default

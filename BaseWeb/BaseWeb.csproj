@@ -20,11 +20,13 @@
     <None Remove="Attributes\XgRB0Attribute.cs_old" />
     <None Remove="Attributes\XgRBAttribute.cs_old" />
     <None Remove="Services\ActionResultExt.cs_tmp" />
+    <None Remove="Services\ImageData.cs_old" />
     <None Remove="Services\ISession.cs_old" />
     <None Remove="Services\Session0Service.cs_old" />
     <None Remove="Services\SessionCacheService.cs_old" />
     <None Remove="Services\SessionRedisService.cs_old" />
     <None Remove="Services\SessionService.cs_old" />
+    <None Remove="Services\XpResourceService.c_old" />
     <None Remove="Services\_ActionResult.cs_tmp" />
     <None Remove="Services\_Http.cs_tmp" />
     <None Remove="Services\_Session.cs_old" />
@@ -32,6 +34,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />

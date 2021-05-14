@@ -43,7 +43,7 @@ namespace Base.Services
         private static AuthTypeEnum _authType;
 
         //dynamic locale or not
-        private static bool _dynamicLocale;
+        //private static bool _dynamicLocale;
         #endregion
 
         #region base varibles
@@ -96,13 +96,13 @@ namespace Base.Services
         /// initial db environment for Ap with db function !!
         /// </summary>
         public static void Init(IServiceProvider di, DbTypeEnum dbType = DbTypeEnum.MSSql, 
-            AuthTypeEnum authType = AuthTypeEnum.None, bool dynamicLocale = false)
+            AuthTypeEnum authType = AuthTypeEnum.None)
         {
             //set instance variables
             _di = di;
             _dbType = dbType;
             _authType = authType;
-            _dynamicLocale = dynamicLocale;
+            //_dynamicLocale = dynamicLocale;
 
             #region set smtp
             var smtp = Config.Smtp;
@@ -196,11 +196,13 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return _authType;
         }
 
+        /*
         //get _dynamicLocale
         public static bool IsDynamicLocale()
         {
             return _dynamicLocale;
         }
+        */
 
         //get system error string
         public static ResultDto GetSystemError()
@@ -208,15 +210,16 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return new ResultDto() { ErrorMsg = "System Error, Please check admin !" };
         }
 
+        /*
         /// <summary>
         /// get base resource for base component
         /// </summary>
         /// <returns>BaseResourceDto</returns>
-        public static BaseResDto GetBaseRes()
+        public static BaseResDto GetBaseRes(string locale = "")
         {
-            var service = (IBaseResService)_di.GetService(typeof(IBaseResService));
-            return service.GetData();
+            return _Locale.GetBaseRes(locale);
         }
+        */
 
         /// <summary>
         /// get base user info for base component
@@ -232,7 +235,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// get locale code
         /// </summary>
         /// <returns></returns>
-        public static string GetLocale()
+        public static string GetLocaleByUser()
         {
             return GetBaseUser().Locale;
         }

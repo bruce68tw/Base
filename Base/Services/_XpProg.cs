@@ -6,7 +6,7 @@ using System.Linq;
 namespace Base.Services
 {
     //program function
-    public static class _Prog
+    public static class _XpProg
     {
         /// <summary>
         /// check program access right
@@ -47,9 +47,9 @@ namespace Base.Services
                     sql = @"
 select distinct 
     p.Code as ProgCode, p.Name as ProgName
-from RoleProg rp
-join UserRole ur on rp.RoleId=ur.RoleId
-join Prog p on rp.ProgId=p.Id
+from XpRoleProg rp
+join XpUserRole ur on rp.RoleId=ur.RoleId
+join XpProg p on rp.ProgId=p.Id
 where ur.UserId=@UserId
 ";
                     return _Db.GetModels<ProgAuthDto>(sql, new List<object>() { "UserId", userId });
@@ -69,9 +69,9 @@ where ur.UserId=@UserId
                     sql = $@"
 select distinct 
     p.Code as ProgCode, p.Name as ProgName, {authList} as AuthList
-from RoleProg rp
-join UserRole ur on rp.RoleId=ur.RoleId
-join Prog p on rp.ProgId=p.Id
+from XpRoleProg rp
+join XpUserRole ur on rp.RoleId=ur.RoleId
+join XpProg p on rp.ProgId=p.Id
 where ur.UserId=@UserId
 ";
                     return _Db.GetModels<ProgAuthDto>(sql, new List<object>() { "UserId", userId });

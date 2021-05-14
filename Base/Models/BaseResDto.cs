@@ -5,15 +5,17 @@
     /// </summary>
     public class BaseResDto
     {
+        /*
         //constructor
         public BaseResDto()
         {
-            PlsSelect = "-Select-";
+            //PlsSelect = "-Select-";
             //FrontDateFormat = "yyyy/M/d";
             //FrontDtFormat = "yyyy/M/d HH:mm:ss";   //24hour
         }
+        */
 
-        public string Locale { get; set; }
+        //public string Locale { get; set; }
 
         //for view component
         public string BtnCreate { get; set; }
