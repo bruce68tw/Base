@@ -1,31 +1,21 @@
-﻿using BaseWeb.Services;
+﻿using BaseWeb.Models;
+using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 
 namespace BaseWeb.ViewComponents
 {
+    //readonly field
     public class XiReadViewComponent
     {
-        /// <summary>
-        /// display field
-        /// </summary>
-        /// <param name="title"></param>
-        /// <param name="fid"></param>
-        /// <param name="label"></param>
-        /// <param name="inRow"></param>
-        /// <param name="format">BrFormatEstr type for datetime/date</param>
-        /// <param name="cols"></param>
-        /// <returns></returns>
-        public HtmlString Invoke(string title, string fid, 
-            string label = "", bool inRow = false, string format = "", string cols = "")
+        public HtmlString Invoke(XiReadDto dto)
         {
-            var attr = _Helper.GetInputAttr(fid);
-            if (format != "")
-                attr += $" data-format='{format}'";
-            var html = $"<label{attr} data-type='read' class='form-control xi-read'>{label}</label>";
+            var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.ExtAttr);
+            if (!string.IsNullOrEmpty(dto.Format))
+                attr += $" data-format='{dto.Format}'";
+            var html = $"<label{attr} data-type='read' class='form-control xi-read {dto.ExtClass}'>{dto.Value}</label>";
 
-            if (!string.IsNullOrEmpty(title))
-                html = _Helper.InputAddLayout(html, title, false, "", inRow, cols);
-
+            if (!string.IsNullOrEmpty(dto.Title))
+                html = _Helper.InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols);
             return new HtmlString(html);
         }
 

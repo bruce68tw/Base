@@ -1,4 +1,5 @@
-﻿using BaseWeb.Services;
+﻿using BaseWeb.Models;
+using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,15 +10,13 @@ namespace BaseWeb.ViewComponents
         /// <summary>
         /// hidden field
         /// </summary>
-        /// <param name="fid"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public HtmlString Invoke(string fid, string value = "", string extAttr = "", string extClass = "")
+        public HtmlString Invoke(XiHideDto dto)
         {
-            var attr = _Helper.GetInputAttr(fid);
-            if (!string.IsNullOrEmpty(extClass))
-                attr += $" class='{extClass}'";
-            var html = $"<input{attr} data-type='text' type='hidden' value='{value}' {extAttr}>";
+            var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.ExtAttr);
+            if (!string.IsNullOrEmpty(dto.ExtClass))
+                attr += $" class='{dto.ExtClass}'";
+
+            var html = $"<input{attr} data-type='text' type='hidden' value='{dto.Value}'>";
             return new HtmlString(html);
         }
 

@@ -34,7 +34,7 @@ namespace BaseWeb.ViewComponents
                     html += string.Format(@"
 <li>
     <a href='{0}'data-pjax='1'>
-        <i class='fa {1}'></i>{2}
+        <i class='{1}'></i>{2}
     </a>
 </li>
 ", row.Url, row.Icon, row.Name);
@@ -53,7 +53,7 @@ namespace BaseWeb.ViewComponents
                     html += string.Format(@"
 <li>
     <a class='collapsed xg-toggle'>
-        <i class='fa {0}'></i>{1}
+        <i class='{0}'></i>{1}
         <b class='xg-arrow'></b>
     </a>
     <ul class='collapse xg-leftmenu-panel' role='menu'>

@@ -1,0 +1,66 @@
+﻿using Base.Models;
+using BaseWeb.Services;
+using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BaseWeb.ViewComponents
+{
+    /// <summary>
+    /// checkbox component
+    /// </summary>
+    public class XiCheckViewComponent : ViewComponent
+    {
+        /// <summary>
+        /// checkbox component
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="fid"></param>
+        /// <param name="value"></param>
+        /// <param name="isCheck"></param>
+        /// <param name="label"></param>
+        /// <param name="inRow"></param>
+        /// <param name="edit"></param>
+        /// <param name="extAttr"></param>
+        /// <param name="extClass"></param>
+        /// <param name="cols"></param>
+        /// <param name="labelTip"></param>
+        /// <param name="fnOnClick"></param>
+        /// <returns></returns>
+        public HtmlString Invoke(string title, string fid, string value = "1",
+            bool isCheck = false, string label = "", bool inRow = false,
+            string edit = "", string extAttr = "", string extClass = "",
+            string cols = null, string labelTip = "", string fnOnClick = "")
+        {
+            //prop ??= new PropCheckDto();
+            //if (label == "")
+            //    label = "&nbsp;";   //add space, or position will wrong
+
+            //get attr
+            var attr = _Helper.GetInputAttr(fid, edit);
+            if (isCheck)
+                attr += " checked";
+            if (fnOnClick != "")
+                attr += $" onclick='{fnOnClick}'";
+
+            //ext class
+            //var extClass = (prop.ExtClass == "") ? "" : " " + prop.ExtClass;
+            if (label == "")
+                extClass += " xg-no-label";
+
+            //get html (span for checkbox checked sign)
+            //value attr will disappear, use data-value instead !!
+            var html = $@"
+<label class='xi-check {extClass}' {extAttr}>
+    <input{attr} type='checkbox' data-type='check' data-value='{value}'>{label}
+    <span class='xi-cspan'></span>
+</label>";
+
+            //add title
+            if (!string.IsNullOrEmpty(title))
+                html = _Helper.InputAddLayout(html, title, false, labelTip, inRow, cols);
+
+            return new HtmlString(html);
+        }
+
+    }//class
+}

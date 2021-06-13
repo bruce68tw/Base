@@ -16,7 +16,9 @@ namespace BaseWeb.Extensions
         {
             var value = session.GetString(key);
             //return value == null ? default : JsonSerializer.Deserialize<T>(value);
-            return value == null ? default : JsonConvert.DeserializeObject<T>(value);
+            return (value == null) 
+                ? default 
+                : JsonConvert.DeserializeObject<T>(value);
         }
 
     } //class

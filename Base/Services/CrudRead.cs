@@ -38,13 +38,14 @@ namespace Base.Services
         /// <summary>
         /// get page rows for dataTables(json)
         /// </summary>
-        /// <param name="crud"></param>
+        /// <param name="read"></param>
         /// <param name="dt"></param>
         /// <param name="findJson">if not null, will query by this and not from dtIn.findJson</param>
         /// <returns>jquery dataTables object</returns>
-        public JObject GetPage(ReadDto crud, DtDto dt, JObject findJson = null)
+        public JObject GetPage(ReadDto read, DtDto dt, JObject findJson = null)
         {
-            //adjust
+            #region 1.check input
+            //adjust page rows if need
             if (dt.length < 10)
                 dt.length = 10;
 
@@ -52,20 +53,21 @@ namespace Base.Services
             _dtIn = dt;
             if (findJson == null)
                 findJson = string.IsNullOrEmpty(dt.findJson) ? null : _Json.StrToJson(dt.findJson);
+            #endregion
 
-            //convert sql to model
-            var sqlDto = _Sql.SqlToDto(crud.ReadSql, crud.UseSquare);
+            #region 2.get sql
+            var sqlDto = _Sql.SqlToDto(read.ReadSql, read.UseSquare);
             if (sqlDto == null)
                 return null;
 
             //prepare sql where & set sql args by user input condition
-            //var sqlModel = sqlModel0.Value;
-            var where = GetWhere(crud, findJson, _dtIn.search.value);
+            var where = GetWhere(read, findJson, _dtIn.search.value);
             if (where != "")
                 sqlDto.Where = (sqlDto.Where == "") 
                     ? "Where " + where : sqlDto.Where + " And " + where;
+            #endregion
 
-            #region get rows count if need
+            #region 3.get rows count if need
             JArray rows = null;
             var db = GetDb();
             var rowCount = dt.recordsFiltered;
@@ -89,14 +91,16 @@ namespace Base.Services
             }
             #endregion
 
-            //sorting
+            #region 4.sql add sorting
             var orderColumn = (dt.order == null || dt.order.Count == 0) 
                 ? -1 : dt.order[0].column;
             if (orderColumn >= 0)
                 sqlDto.Order = "Order By " + 
                     sqlDto.Columns[orderColumn].Trim() + 
                     (dt.order[0].dir == OrderTypeEnum.Asc ? "" : " Desc");
+            #endregion
 
+            #region 5.get page rows 
             //set dbModel, consider crud.ColList
             sql = sqlDto.Select + " " + 
                 sqlDto.From + " " + 
@@ -105,13 +109,14 @@ namespace Base.Services
             //get data
             sql = string.Format(_Fun.ReadPageSql, sql, sqlDto.Order, dt.start, dt.length).Replace("  ", " ");   //2012
             rows = db.GetJsons(sql, _sqlArgs);
+            #endregion
 
-            lab_exit:
+        lab_exit:
             var result = JObject.FromObject(new
             {
                 dt.draw,
                 data = rows,
-                recordsTotal = 0,
+                //recordsTotal = 0,
                 recordsFiltered = rowCount,
             });
 
@@ -710,7 +715,7 @@ namespace Base.Services
             {
                 draw = dtIn.draw,
                 data = rows,
-                recordsTotal = 0,
+                //recordsTotal = 0,
                 recordsFiltered = rowCount,
             };
 

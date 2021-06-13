@@ -33,8 +33,11 @@ namespace Base.Services
         #endregion
 
         #region input parameters
+
+        private static bool _isDebug;
+
         //private static ServiceContainer _DI;
-        private static IServiceProvider _di;
+        private static IServiceProvider _diBox;
 
         //database type
         private static DbTypeEnum _dbType;
@@ -48,7 +51,7 @@ namespace Base.Services
 
         #region base varibles
         //debug mode or not
-        public static bool IsDebug = true;
+        //public static bool IsDebug = true;
 
         //ap physical path, has right slash
         public static string DirRoot = _Str.GetLeft(AppDomain.CurrentDomain.BaseDirectory, "bin\\");
@@ -95,11 +98,12 @@ namespace Base.Services
         /// <summary>
         /// initial db environment for Ap with db function !!
         /// </summary>
-        public static void Init(IServiceProvider di, DbTypeEnum dbType = DbTypeEnum.MSSql, 
+        public static void Init(bool isDebug, IServiceProvider diBox, DbTypeEnum dbType = DbTypeEnum.MSSql, 
             AuthTypeEnum authType = AuthTypeEnum.None)
         {
             //set instance variables
-            _di = di;
+            _isDebug = isDebug;
+            _diBox = diBox;
             _dbType = dbType;
             _authType = authType;
             //_dynamicLocale = dynamicLocale;
@@ -173,9 +177,14 @@ Offset {2} Rows Fetch Next {3} Rows Only
         }
 
         //get DI
-        public static IServiceProvider GetDI()
+        public static IServiceProvider GetDiBox()
         {
-            return _di;
+            return _diBox;
+        }
+
+        public static bool IsDebug()
+        {
+            return _isDebug;
         }
 
         //get current userId
@@ -227,7 +236,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// <returns>BaseUserInfoDto</returns>
         public static BaseUserDto GetBaseUser()
         {
-            var service = (IBaseUserService)_di.GetService(typeof(IBaseUserService));
+            var service = (IBaseUserService)_diBox.GetService(typeof(IBaseUserService));
             return service.GetData();
         }
 
@@ -235,9 +244,13 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// get locale code
         /// </summary>
         /// <returns></returns>
-        public static string GetLocaleByUser()
+        public static string GetLocaleByUser(bool dash = true)
         {
-            return GetBaseUser().Locale;
+            var br = GetBaseUser();
+            var locale = (br == null) ? _Fun.Config.Locale : br.Locale;
+            if (!dash)
+                locale = locale.Replace("-", "");
+            return locale;
         }
 
         /// <summary>

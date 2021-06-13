@@ -8,7 +8,7 @@
         //constructor
         public ConfigDto()
         {
-            SystemName = "管理系統";
+            SystemName = "MIS System";
             Locale = "zh-TW";
             //FrontDtFormat = "yyyy/M/d HH:mm:ss";
             ServerId = "A";
@@ -18,7 +18,7 @@
             RootEmail = "";
             TesterEmail = "";
             UploadFileMax = 5;
-            CacheSecond = 3600;
+            //CacheSecond = 3600;
             SSL = false;
             Smtp = "";
         }
@@ -57,7 +57,7 @@
         public int UploadFileMax { get; set; }
 
         //cache time(second)
-        public int CacheSecond { get; set; }
+        //public int CacheSecond { get; set; }
 
         //SSL or not
         public bool SSL { get; set; }

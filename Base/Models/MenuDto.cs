@@ -24,10 +24,10 @@ namespace Base.Models
         //sort
         public byte Sort { get; set; }
 
-        //icon
+        //icon class name
         public string Icon { get; set; }
 
-        //sub ment items
+        //sub menu items
         public List<MenuDto> Items { get; set; }
     }
 }

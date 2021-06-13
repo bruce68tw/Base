@@ -312,6 +312,9 @@ namespace Base.Services
         /// <returns></returns>
         public static string GetDateStr(string dt)
         {
+            if (string.IsNullOrEmpty(dt))
+                return "";
+
             var pos = dt.IndexOf(" ");
             return (pos <= 0)
                 ? dt

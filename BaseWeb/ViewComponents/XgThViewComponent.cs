@@ -16,13 +16,15 @@ namespace BaseWeb.ViewComponents
         /// <param name="tip"></param>
         /// <param name="required"></param>
         /// <returns></returns>
-        public HtmlString Invoke(string title, string tip = "", bool required = false)
+        public HtmlString Invoke(string title, string tip = "", bool required = false, string extClass = "")
         {
             title = _Helper.GetRequiredSpan(required) + title;
             var html = (tip == "")
-                ? "<th>" + title + "</th>"
-                : "<th title='" + tip + "'>" + title + "<i class='ico-info'></i></th>";
-            return new HtmlString(html);
+                ? "<th{0}>" + title + "</th>"
+                : "<th{0} title='" + tip + "'>" + title + "<i class='ico-info'></i></th>";
+            if (!string.IsNullOrEmpty(extClass))
+                extClass = " class='" + extClass + "'";
+            return new HtmlString(string.Format(html, extClass));
         }
 
     } //class

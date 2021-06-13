@@ -31,15 +31,15 @@ where u.Id='{0}'
         /// create workflow signing rows
         /// </summary>
         /// <param name="row">flow data</param>
-        /// <param name="userFid">fid of owner user id in row</param>
+        /// <param name="userFid">fid of owner user id of row</param>
         /// <param name="flowCode">Flow.Code</param>
-        /// <param name="sourceId">source data Id(key)</param>
+        /// <param name="sourceId">source row Id(key)</param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static string CreateSignRows(JObject row, string userFid, 
-            string flowCode, string sourceId, Db db)
+        public static string CreateSignRows(JObject row, string userFid, string flowCode, 
+            string sourceId, Db db)
         {
-            //get flow lines
+            #region 1.get flow lines by flow code
             var error = string.Empty;
             var sql = string.Format(@"
 select 
@@ -59,23 +59,11 @@ join dbo.XpFlowNode nt on l.EndNode=nt.Id
 where f.Code='{0}'
 order by l.StartNode, l.Sort
 ", flowCode);
-            var lines = db.GetModels<SignLineDto>(sql);
+            var flowLines = db.GetModels<SignLineDto>(sql);
+            #endregion
 
-            /*
-            //get start node
-            var checkLines = lines
-                .Where(a => a.StartNodeType == EnumNodeType.Start)
-                .OrderBy(a => a.Sort)
-                .ToList();
-            var firstLine = checkLines.FirstOrDefault();
-
-            //now start node
-            var nowNodeId = firstLine.StartNodeId;
-            var nowNodeName = firstLine.StartNodeName;
-            */
-
-            //get now line
-            var firstLine = lines
+            #region 2.get start node id/name
+            var firstLine = flowLines
                 .Where(a => a.StartNodeType == NodeTypeEstr.Start)
                 .OrderBy(a => a.Sort)
                 .FirstOrDefault();
@@ -87,42 +75,22 @@ order by l.StartNode, l.Sort
 
             var nowNodeId = firstLine.StartNodeId;
             var nowNodeName = firstLine.StartNodeName;
+            #endregion
 
-            //
-            //string nowNodeId = "", nowNodeName = "";
-            //var first = true;
-            var findIdxs = new List<int>(); //find index list
-            //List<SignLineModel> checkLines = null;
-            while(true)
+            //3.get matched lines
+            var findIdxs = new List<int>(); //found lines for insert XpFlowSign
+            while (true)
             {
-                /*
-                if (first)
-                {
-                    checkLines = lines
-                        .Where(a => a.StartNodeType == EnumNodeType.Start)
-                        .OrderBy(a => a.Sort)
-                        .ToList();
+                #region 4.get lines of current node
+                var nodeLines = flowLines
+                    .Where(a => a.StartNodeId == nowNodeId)
+                    .OrderBy(a => a.Sort)
+                    .ToList();
+                #endregion
 
-                    first = false;
-
-                    //now start node
-                    var firstLine = checkLines.FirstOrDefault();
-                    nowNodeId = firstLine.StartNodeId;
-                    nowNodeName = firstLine.StartNodeName;
-                }
-                else
-                {
-                */
-                    var checkLines = lines
-                        .Where(a => a.StartNodeId == nowNodeId)
-                        .OrderBy(a => a.Sort)
-                        .ToList();
-                //}
-                
-
-                //get matched line
+                #region 5.get matched line by condition string
                 SignLineDto findLine = null;
-                foreach(var line in checkLines)
+                foreach(var line in nodeLines)
                 {
                     if (IsLineMatch(row, line.CondStr))
                     {
@@ -139,26 +107,27 @@ order by l.StartNode, l.Sort
                 }
 
                 //check endless loop
-                var idx = lines.IndexOf(findLine);
+                var idx = flowLines.IndexOf(findLine);
                 if (findIdxs.IndexOf(idx) >= 0)
                 {
-                    error = "Find Node Twice(" + checkLines[idx].StartNodeName + ")";
+                    error = "Find Node Twice(" + nodeLines[idx].StartNodeName + ")";
                     goto lab_exit;
                 }
+                #endregion
 
-                //add find index
+                //add found line index
                 findIdxs.Add(idx);
 
-                //case of end node
+                //when end node then exit loop
                 if (findLine.EndNodeType == NodeTypeEstr.End)
                     break;
 
-                //set variables
+                //set node id/name for next loop
                 nowNodeId = findLine.EndNodeId;
                 nowNodeName = findLine.EndNodeName;
-            }
+            }//loop
 
-            //case of ok, write XpFlowSign table
+            #region 6.prepare sql for insert XpFlowSign
             sql = @"
 insert into dbo.XpFlowSign(
     Id, FlowId, SourceId, 
@@ -170,16 +139,15 @@ insert into dbo.XpFlowSign(
     @SignerId, @SignerName, 
     @SignStatus, @SignTime)
 ";
+            #endregion
 
-            //write first node
+            //insert XpFlowSign rows
             var totalLevel = findIdxs.Count - 1;
-
-            //string signerValue = "", signerName = "";
-            var level = 0;
+            var level = 0;  //current flow level, start 0
             foreach (var idx in findIdxs)
             {
-                #region get signerId by rules
-                var line = lines[idx];
+                #region 7.get signer Id/name by rules
+                var line = flowLines[idx];
                 var signerId = "";
                 DateTime? signTime = null;
                 if (level == 0)
@@ -211,7 +179,6 @@ insert into dbo.XpFlowSign(
                             break;
                     }
                 }
-                #endregion
 
                 if (string.IsNullOrEmpty(signerId))
                 {
@@ -221,8 +188,9 @@ insert into dbo.XpFlowSign(
 
                 //get signer Name
                 var signerName = db.GetStr(string.Format(SqlUserName, signerId));
+                #endregion
 
-                //update db: add row
+                #region 8.insert XpFlowSign
                 db.ExecSql(sql, new List<object>() {
                     "Id", _Str.NewId(),
                     "FlowId", line.FlowId,
@@ -236,6 +204,7 @@ insert into dbo.XpFlowSign(
                     "SignTime", signTime,
                 });
                 level++;
+                #endregion
             }
 
             //case of ok
@@ -243,9 +212,7 @@ insert into dbo.XpFlowSign(
 
             //case of error
         lab_exit:
-            //db.Dispose();
-            error = $"_Flow.cs CreateSignRows() failed(Flow.Code={flowCode}): {error}";
-            //_Log.Error(error);
+            error = $"_XpFlow.cs CreateSignRows() failed(Flow.Code={flowCode}): {error}";
             return error;
         }
 
@@ -368,13 +335,11 @@ insert into dbo.XpFlowSign(
         /// <param name="signYes">agree or not</param>
         /// <param name="signNote">sign note</param>
         /// <param name="sourceTable">source Table for update FlowLevel, FlowStatus columns</param>
-        /// <param name="sourceId">source Table Key</param>
-        /// <param name="db"></param>
         /// <returns>ResultDto for called by controller</returns>
         public static ResultDto SignRow(string flowSignId, bool signYes, string signNote,
             string sourceTable)
         {
-            //security check
+            #region 1.check XpFlowSign row existed
             Db db = null;
             string error;
             if (!_Str.CheckKeyRule(flowSignId))
@@ -394,8 +359,9 @@ insert into dbo.XpFlowSign(
                 error = $"not found XpFlowSign row.(Id={flowSignId})";
                 goto lab_error;
             }
+            #endregion
 
-            //sql for update XpFlowSign
+            #region 2.update XpFlowSign row
             var signStatus = signYes ? "Y" : "N";
             sql = $@"
 update dbo.XpFlowSign set 
@@ -410,7 +376,9 @@ where Id='{flowSignId}'
                 error = $"should update XpFlowSign one row.({count})";
                 goto lab_error;
             }
+            #endregion
 
+            #region 3.update source row FlowLevel/FlowStatus
             //flowStatus: Y(agree flow), N(not agree), 0(signing)
             var flowStatus = !signYes ? "N" :
                 (Convert.ToInt32(row["FlowLevel"]) == Convert.ToInt32(row["TotalLevel"])) ? "Y" : 
@@ -438,14 +406,16 @@ where Id='{sourceId}'
             {
                 Value = "2",  //update 2 rows
             };
+        #endregion
 
+        //case of error
         lab_error:
             if (db != null)
             {
                 db.Rollback();
                 db.Dispose();
             }
-            _Log.Error("_Flow.cs SignRow() failed: " + error);
+            _Log.Error("_XpFlow.cs SignRow() failed: " + error);
             return _Fun.GetSystemError();
         }
 

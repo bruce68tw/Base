@@ -66,6 +66,7 @@ where ur.UserId=@UserId
                             "cast((case max(p.FunView) when 1 then max(rp.FunView) else 0 end) as char(1))",
                             "cast((case max(p.FunOther) when 1 then max(rp.FunOther) else 0 end) as char(1))"
                     );
+
                     sql = $@"
 select distinct 
     p.Code as ProgCode, p.Name as ProgName, {authList} as AuthList

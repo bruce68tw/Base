@@ -10,16 +10,6 @@ using System.Linq;
 /// </summary>
 namespace Base.Services
 {
-    //single row delegate function
-    //public delegate string AfterSave(Db db);
-
-    //public delegate string WhenSave(bool isNew, JObject row);
-    //public delegate string WhenDelete(string key);
-
-    //multiple rows delegate function, delete first then update
-    //public delegate string WhenSaves(bool isNew, JObject inputRow, List<List<string>> deleteKeys, JArray updateRows);
-    //public delegate string WhenDeletes(string key);
-
     /// <summary>
     /// for Crud Edit Service
     /// </summary>
@@ -52,7 +42,6 @@ namespace Base.Services
         private JObject _newKeyJson = new JObject();
 
         //constructor
-        //public CrudEdit(EditDto edit, string dbStr = "", object dbBox = null)
         public CrudEdit(EditDto edit, string dbStr = "")
         {
             _edit = edit;
@@ -87,7 +76,7 @@ namespace Base.Services
         //for getRow & update
         private string GetWhereAndArg(EditDto edit, string key)
         {
-            //kid 參數前加底線才不會跟update的欄位衝突
+            //kid add "_" for avoid conflict when update
             var kid = "_" + edit.PkeyFid;  
             AddArg(kid, key);
             return edit.PkeyFid + "=@" + kid;
@@ -122,7 +111,6 @@ namespace Base.Services
 
             //get sql
             var order = string.IsNullOrEmpty(edit.OrderBy) ? "" : " Order By " + edit.OrderBy;
-            //var where = GetWhereWithArg(edit, key);
             return "Select " + list + " From " + edit.Table + " Where " + where + order;
         }
 
@@ -152,15 +140,13 @@ namespace Base.Services
                 ? GetSql(edit, key)
                 : GetSqlByField(edit, key);
             var row = db.GetJson(sql, _sqlArgs);
-            //if (emptyDb)
-            //    db.Dispose();
             _Fun.CheckCloseDb(db, emptyDb);
             return row;
         }
 
         /// <summary>
         /// get rows for multi tables (1 to many)
-        /// 包含: 多個欄位、_childs
+        /// include: collumns、_childs
         /// note: 1.master table must relat to child table
         /// </summary>
         /// <param name="key">table primary key value</param>
@@ -196,13 +182,12 @@ namespace Base.Services
 
         /// <summary>
         /// get childs rows(json) from db (recursive)
-        /// 傳回JObject, 最多包含2個欄位: _rows, _childs
         /// </summary>
         /// <param name="editLevel">base 0, 傳入值會從1開始</param>
         /// <param name="edit"></param>
         /// <param name="keys"></param>
         /// <param name="db"></param>
-        /// <returns></returns>
+        /// <returns>JObject with prop: _rows, _childs</returns>
         private JObject GetChildDbJson(int editLevel, EditDto edit, List<string> keys, Db db)
         {
             //get this rows
@@ -292,19 +277,6 @@ namespace Base.Services
                 : upJson[Childs][childIdx] as JObject;
         }
 
-        /// <summary>
-        /// get primary key(value)
-        /// </summary>
-        /// <param name="edit"></param>
-        /// <param name="row"></param>
-        /// <returns>0 if not new row</returns>
-        /*
-        private int ParsePkey(EditDto edit, JObject row)
-        {
-            return ParseCol(row, edit.PkeyFid);
-        }
-        */
-
         //parse foreign key
         private int ParseFkey(JObject row)
         {
@@ -362,7 +334,7 @@ namespace Base.Services
             return false;
         }
 
-        //是否為特殊編輯欄位
+        //is special fid or not
         private bool IsSpecEditFid(string fid)
         {
             return (fid.Substring(0, 1) == "_");
@@ -382,20 +354,6 @@ namespace Base.Services
             #region insert row if need
             //reset sqlArgs first
             ResetArg();
-
-            /*
-            //set new key
-            string key;
-            if (edit.AutoNewId)
-            {
-                key = _Str.NewId();
-                inputRow[edit.PkeyFid] = key;
-            }
-            else
-            {
-                key = inputRow[edit.PkeyFid].ToString();
-            }
-            */
 
             //set default value
             edit.Items
@@ -417,7 +375,7 @@ namespace Base.Services
                 if (IsSpecEditFid(fid))
                     continue;
 
-                //如果傳入欄位不存在, 則log error !!
+                //if no fid then log error !!
                 if (edit._FidNo[fid] == null)
                 {
                     _Log.Error("CrudEdit.cs InsertRow() field not existed(" + edit.Table + "." + fid + ")");
@@ -478,94 +436,20 @@ namespace Base.Services
                 return false;
             #endregion
 
-            /*
-            #region insert/update childs rows
-            var key = GetKey(edit, inputRow);
-            var childLen = GetChildLen(edit);
-            for (var i = 0; i < childLen; i++)
-            {
-                var edit2 = edit.Childs[i];
-                JArray rows = GetInputChildRows(inputRow, i);
-                if (rows != null && rows.Count > 0)
-                {
-                    //recursive insert rows
-                    if (!InsertRows(edit2, key, rows, db))
-                        return false;
-                }
-            }
-            #endregion
-            */
-
             //case of ok
             _saveRows++;
             return true;
         }
 
-        /*
-        //insert rows, recursive(call InsertRow)!!
-        private bool InsertRows(EditDto edit, string upKey, JArray rows, Db db)
-        {
-            if (rows == null || rows.Count == 0)
-                return true;
-
-            //loop: call InsertRow()
-            foreach (JObject row in rows)
-            {
-                //set Mapping column value
-                row[edit.MapId] = upKey;
-
-                //insert this row
-                if (!InsertRow(edit, row, db))
-                    return false;
-            }
-
-            //case of ok
-            return true;
-        }
-        */
-
-        //update rows, recursive!!
-        //upData: 包含 _rows, _childs, _deletes(字串list)
-        //步驟: 1.set key, 2.delete sub, 3.insert/update
-        //return error msg if any
-
-        /*
-        //mapKey的內容為數字
-        //mapId字串長度小於10, 表示從keyJson讀取
-        private string GetMapId(JObject keyJson, object mapId)
-        {
-            if (_Str.IsEmpty(mapId))
-            {
-                _Log.Error("CrudEdit.cs GetMapId() mapId is empty.");
-                return "";
-            }
-
-            var mapId2 = mapId.ToString();  //to string
-            if (mapId2.Length == 10)
-                return mapId2;
-
-            //get from up json
-            var fid = "f" + mapId2;
-            if (keyJson[fid] == null)
-            {
-                _Log.Error("CrudEdit.cs GetMapId() keyJson get empty value.");
-                return "";
-            }
-
-            //case of ok
-            return keyJson[fid].ToString();
-        }
-        */
-
         //update one row, recursive!!
         //return error msg if any
         private bool UpdateRow(EditDto edit, JObject inputRow, Db db)
         {
-            //如果無任何異動欄位, 則不需處理
+            //skip if empty
             if (_Json.IsEmpty(inputRow))
                 return true;
 
-            /* 不讀取 db, 直接 update
+            /* not read db, just update
             #region get existed db row
             //var edit = _edit;
             var rowKey = inputRow[edit.PkeyFid].ToString();
@@ -588,7 +472,7 @@ namespace Base.Services
             var rowKey = inputRow[edit.PkeyFid].ToString();
             foreach (var field in inputRow)
             {
-                //如果傳入欄位不存在, 則log error !!
+                //if no fid then log error !!
                 var fid = field.Key;
                 if (IsSpecEditFid(fid))
                     continue;
@@ -603,7 +487,7 @@ namespace Base.Services
                 if (fid == edit.PkeyFid)
                     continue;
 
-                //如果此欄位不更新, 或是與db內容相同, 則skip
+                //skip un-update fid
                 var fidNo = Convert.ToInt32(edit._FidNo[fid]);
                 if (!edit.Items[fidNo].Update
                     //|| inputRow[fid] == null
@@ -611,7 +495,7 @@ namespace Base.Services
                     )
                     continue;
 
-                //把空的日期欄位值轉成null if need, 否則會存入1900/1/1 !!
+                //set empty date to null, or will be 1900/1/1 !!
                 //object value = (inputRow[key].ToString() == "" && (type == EnumDataType.Datetime || type == EnumDataType.Date))
                 object value = (inputRow[fid].ToString() == "" && edit.EmptyToNulls.Contains(fid))
                     ? value = null
@@ -649,69 +533,7 @@ namespace Base.Services
             _saveRows++;
             return true;
             #endregion
-
-            /*
-            #region update/insert childs rows
-            //update childs rows
-            var key = GetKey(edit, inputRow);
-            var childLen = GetChildLen(edit);
-            for (var i = 0; i < childLen; i++)
-            {
-                var status = true;
-                var edit2 = edit.Childs[i];
-                List<string> deletes = (inputRow[Deletes] == null) ? null : _Str.ToList(inputRow[Deletes].ToString());
-                JArray childRows = (inputRow[Rows] == null) ? null : (JArray)inputRow[Rows];
-
-                //adjust by parent if need
-                //if (edit.DeleteThenInsert)
-                //    edit2.DeleteThenInsert = true;
-
-                //delete rows, consider delete then insert
-                //if (edit2.DeleteThenInsert)
-                //    status = DeleteRowsByUpKey(edit2, key, db);
-                else if (deletes != null && deletes.Count > 0)
-                    status = DeleteRowsByKeys(edit2, deletes, db);
-
-                //insert & update
-                if (status && childRows != null)
-                {
-                    foreach (JObject row2 in childRows)
-                    {
-                        if (IsNewRow(edit2, row2))
-                        {
-                            row2[edit2.MapId] = key; //set key value
-                            status = InsertRow(edit2, row2, db);
-                        }
-                        else
-                        {
-                            status = UpdateRow(edit2, row2, db);
-                        }
-                        if (!status)
-                            break;
-                    }
-                }
-
-                //master table must be single
-                if (!status)
-                    return false;
-            }
-            #endregion
-
-            //case of ok
-            return true;
-            */
         }
-
-        /*
-        private List<string> GetItemRequires(EditDto edit)
-        {
-            //get required field list
-            return edit.Items
-                .Where(a => a.Required == true)
-                .Select(a => a.Fid)
-                .ToList();
-        }
-        */
 
         /// <summary>
         /// set edit validate variables: _FidNo, _FidRequires
@@ -733,13 +555,6 @@ namespace Base.Services
                 .Where(a => a.Required == true)
                 .Select(a => a.Fid)
                 .ToList();
-
-            /*
-            //set childs(recursive)
-            var childLen = GetEditChildLen(edit);
-            for (var i = 0; i < childLen; i++)
-                SetValidVar(edit.Childs[i]);
-            */
         }
 
         /// <summary>
@@ -783,40 +598,6 @@ namespace Base.Services
             //case of ok
             return true;
         }
-
-        /*
-        /// <summary>
-        /// check childs rows, recursive
-        /// </summary>
-        /// <param name="edit"></param>
-        /// <param name="rows"></param>
-        /// <returns></returns>
-        private bool ValidChilds(EditDto edit, JArray rows)
-        {
-            if (rows == null)
-                return true;
-
-            //validate this & childs
-            var childLen = GetEditChildLen(edit);
-            foreach (JObject row in rows)
-            {
-                if (row == null)
-                    continue;
-
-                //validate this
-                if (!ValidRow(edit, row))
-                    return false;
-
-                //validate childs
-                for (var i = 0; i < childLen; i++)
-                    if (!ValidChilds(edit.Childs[i], GetChildRows(row, i)))
-                        return false;
-            }
-
-            //case of ok
-            return true;
-        }
-        */
 
         //validate one  row
         private bool ValidRow(EditDto edit, JObject row)
@@ -965,107 +746,6 @@ namespace Base.Services
             #endregion
         }
 
-        /// <summary>
-        /// save one row with transaction
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="row"></param>
-        /// <param name="afterSave">enable transaction if not null</param>
-        /// <returns></returns>
-        //public ErrorModel Save_old(JObject row, AfterSave afterSave = null)
-        //{
-        //    //var edit = _edit;
-        //    var key = row[_Fun.DataKey].ToString();
-        //    //var trans = (afterSave != null);    //transaction or not
-        //    var childLen = (_edit.Childs == null) ? 0 : _edit.Childs.Count;
-        //    var trans = (_edit.Transaction != null)
-        //        ? _edit.Transaction.Value
-        //        : (childLen > 0);
-        //    var error = string.Empty;
-        //    var isNew = _Str.IsEmpty(key);
-        //    //check input row
-        //    Db db = null;
-        //    JObject fidNo = null;
-        //    //if (!edit.AllCols)
-        //    //{
-        //        fidNo = GetItemMap(edit.Items);
-        //        if (!CheckRow(isNew, edit, fidNo, row))
-        //            goto lab_error;
-        //    //}
-
-        //    /*
-        //    //custom check
-        //    //var isNew = String.IsNullOrEmpty(inputKey);
-        //    if (whenSave != null)
-        //    {
-        //        try
-        //        {
-        //            var error = whenSave(isNew, mainRow);
-        //            if (error != "")
-        //                return new ErrorModel() { ErrorMsg = error };
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            //log error
-        //            _Log.Error("CrudEdit.cs Save() failed for WhenSave(): " + ex.Message);
-        //            //error = _Msg.SaveFail + "(1)";
-        //            goto lab_error;
-        //        }
-        //    }
-        //    */
-
-        //    SetNow();
-
-        //    //get db
-        //    db = GetDb();
-        //    if (trans)
-        //        db.BeginTran();
-
-        //    //update db
-        //    var status = isNew
-        //        ? InsertRow(edit, fidNo, row, db)
-        //        : UpdateRow(edit, fidNo, row, db);
-        //    if (!status)
-        //        goto lab_error;
-
-        //    //call afterSave() if need
-        //    if (afterSave != null)
-        //    {
-        //        //try
-        //        //{
-        //            error = afterSave(db);
-        //            if (error != "")
-        //                goto lab_error;
-        //            /*
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            //log error
-        //            _Log.Error("CrudEdit.cs Save() failed for AfterSave(): " + ex.Message);
-        //            goto lab_error;
-        //        }
-        //        */
-        //    }
-
-        //    //case of ok
-        //    if (trans)
-        //        db.Commit();
-        //    db.Dispose();
-        //    return new ErrorModel();
-
-        //    //case of error
-        //    lab_error:
-        //    if (db != null)
-        //    {
-        //        if (trans)
-        //            db.Rollback();
-        //        db.Dispose();
-        //    }
-        //    if (error == string.Empty)
-        //        error = _Fun.SystemError;
-        //    return new ErrorModel() { ErrorMsg = error };
-        //}
-
         //is transaction or not
         private bool IsTrans(EditDto edit)
         {
@@ -1128,9 +808,6 @@ namespace Base.Services
                 goto lab_error;
             }
 
-            //var key = (json[_edit.PkeyFid] == null) ? "" : json[_edit.PkeyFid].ToString();
-            //var isNew = _Str.IsEmpty(key);
-
             //check main row
             //SetFidNo(_edit);
             if (!ValidJson(0, _edit, inputJson))
@@ -1138,33 +815,6 @@ namespace Base.Services
                 error = "ValidJson() failed.";
                 goto lab_error;
             }
-
-            /*
-            //check child rows, recursive
-            if (!ValidChild(_edit, row))
-                goto lab_error;
-
-            //custom check
-            //var error = "";
-            if (whenSaves != null)
-            {
-                try
-                {
-                    var error = whenSaves(isNew, mainRow, deleteSubs, subRows);
-                    if (error != "")
-                        return new ErrorModel() { ErrorMsg = error };
-                }
-                catch (Exception ex)
-                {
-                    //log error
-                    _Log.Error("CrudEdit.cs SaveRows() failed for WhenSaveRows(): " + ex.Message);
-                    //error = _Msg.SaveFail + "(1)";
-                    goto lab_error;
-                }
-            }
-            //if (error != "")
-            //    goto lab_error;
-            */
 
             //set new key
             var status = (fnSetNewKeyJson == null)
@@ -1188,64 +838,6 @@ namespace Base.Services
             //var json = new JObject() { [Rows] = new JArray() { row } };
             if (!SaveJson2(_edit.HasFKey, "0", null, inputJson, _edit, db))
                 goto lab_error;
-
-            /*
-            //update db
-            var childLen = GetChildLen(_edit);
-            if (isNew)
-            {
-                //insert row, recursive!!
-                if (!InsertRow(_edit, row, db))
-                    goto lab_error;
-            }
-            else
-            {
-                //update main row
-                if (!UpdateRow(_edit, row, db))
-                    goto lab_error;
-
-                //update childs rows
-                key = GetKey(_edit, row);
-                for (var i = 0; i < childLen; i++)
-                {
-                    var status = true;
-                    var edit2 = _edit.Childs[i];
-                    List<string> deletes = (row[Deletes] == null) ? null : _Str.ToList(row[Deletes].ToString());
-                    JArray childRows = (row[Rows] == null) ? null : (JArray)row[Rows];
-                    //fidNo = fidNos[i] as JObject;
-                    //var upKey = mainRow[edit.MapIds[0]].ToString();
-
-                    //delete rows, consider delete then insert
-                    //if (edit2.DeleteThenInsert)
-                    //    status = DeleteRowsByUpKey(edit2, key, db);
-                    else if (deletes != null && deletes.Count > 0)
-                        status = DeleteRowsByKeys(edit2, deletes, db);
-
-                    //insert & update
-                    if (status && childRows != null)
-                    {
-                        foreach (JObject row2 in childRows)
-                        {
-                            if (IsNewRow(edit2, row2))
-                            {
-                                row2[edit2.MapId] = key; //set key value
-                                status = InsertRow(edit2, row2, db);
-                            }
-                            else
-                            {
-                                status = UpdateRow(edit2, row2, db);
-                            }
-                            if (!status)
-                                break;
-                        }
-                    }
-
-                    //master table must be single
-                    if (!status)
-                        goto lab_error;
-                }
-            }
-            */
 
             //call afterSave() if need
             if (fnAfterSave != null)
@@ -1376,6 +968,7 @@ namespace Base.Services
             return _newKeyJson;
         }
 
+        /*
         /// <summary>
         /// get new key of master table
         /// </summary>
@@ -1385,6 +978,7 @@ namespace Base.Services
             var fid = "t0";
             return (_newKeyJson[fid] == null) ? null : _newKeyJson[fid].ToString();
         }
+        */
 
         public bool SetNewKeyJson(JObject inputJson, EditDto edit)
         {
@@ -1507,11 +1101,12 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// FnSetNewKey() can call.
+        /// set child foreign key value
+        /// called by FnSetNewKey()
         /// </summary>
         /// <param name="levelStr"></param>
         /// <returns></returns>
-        public bool SetRelatId(JObject inputJson, int childIdx, string fid, string fromLevelStr)
+        public bool SetChildFkey(JObject inputJson, int childIdx, string fid, string fromLevelStr)
         {
             //get child rows
             string error;
@@ -1563,9 +1158,9 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// delete rows for multiple tables
+        /// delete rows of table
         /// </summary>
-        /// <param name="keys"></param>
+        /// <param name="keys">row key list</param>
         /// <returns></returns>
         public ResultDto DeleteByKeys(List<string> keys)
         {
@@ -1574,9 +1169,6 @@ namespace Base.Services
                 return _Fun.GetSystemError();
 
             //transaction or not
-            //var error = "";
-            //var len = _edit.Length;
-            //var trans = (len > 1);
             var trans = IsTrans(_edit);
             var db = GetDb();
             if (trans)
@@ -1589,23 +1181,6 @@ namespace Base.Services
             if (!SaveJson2(_edit.HasFKey, "0", null, json, _edit, db))
                 goto lab_error;
 
-            /*
-            //delete child rows first
-            var childLen = GetChildLen(_edit);
-            for (var i = 0; i < childLen; i++)
-            {
-                foreach (var key in keys)
-                {
-                    if (!DeleteRowsByUpKey(_edit.Childs[i], key, db))
-                        goto lab_error;
-                }
-            }
-
-            //delete master row
-            if (!DeleteRowsByKeys(_edit, keys, db))
-                goto lab_error;
-            */
-
             if (trans)
                 db.Commit();
             db.Dispose();
@@ -1615,9 +1190,6 @@ namespace Base.Services
             if (trans)
                 db.Rollback();
             db.Dispose();
-
-            //if (error != "")
-            //    _Log.Error(error);
             return _Fun.GetSystemError();
         }
 
@@ -1634,15 +1206,13 @@ namespace Base.Services
             if (keys == null || keys.Count == 0)
                 return true;
 
-            //return msg
-            //var error = "";
+            //reset
             ResetArg();
 
             var emptyDb = false;
             _Fun.CheckOpenDb(ref db, ref emptyDb);
 
             //delete rows
-            //var fid = "";
             var values = "";
             //=== case of single pkey ===
             //set sql args
@@ -1656,7 +1226,6 @@ namespace Base.Services
 
             //update db
             var sql = string.Format(_Fun.DeleteRowsSql, edit.Table, kid, values.Substring(0, values.Length - 1));
-            //var sqlArgs = _sqlArgs;
             var count = db.ExecSql(sql, _sqlArgs);
             //if (count == 0)
             //    goto lab_error;
@@ -1675,6 +1244,8 @@ namespace Base.Services
             var sql = string.Format("select {0} from {1} where {2} in ({3})", edit.PkeyFid, edit.Table, edit.FkeyFid, _List.ToStr(upKeys, true));
             return db.GetStrs(sql);
         }
+
+        #region remark code
 
         /*
         //delete sub table rows, pass parent key value
@@ -1709,7 +1280,60 @@ namespace Base.Services
             return false;
         }
         */
-        #region remark code
+
+        /*
+        //insert rows, recursive(call InsertRow)!!
+        private bool InsertRows(EditDto edit, string upKey, JArray rows, Db db)
+        {
+            if (rows == null || rows.Count == 0)
+                return true;
+
+            //loop: call InsertRow()
+            foreach (JObject row in rows)
+            {
+                //set Mapping column value
+                row[edit.MapId] = upKey;
+
+                //insert this row
+                if (!InsertRow(edit, row, db))
+                    return false;
+            }
+
+            //case of ok
+            return true;
+        }
+
+        //update rows, recursive!!
+        //upData: 包含 _rows, _childs, _deletes(字串list)
+        //步驟: 1.set key, 2.delete sub, 3.insert/update
+        //return error msg if any
+
+        //mapKey的內容為數字
+        //mapId字串長度小於10, 表示從keyJson讀取
+        private string GetMapId(JObject keyJson, object mapId)
+        {
+            if (_Str.IsEmpty(mapId))
+            {
+                _Log.Error("CrudEdit.cs GetMapId() mapId is empty.");
+                return "";
+            }
+
+            var mapId2 = mapId.ToString();  //to string
+            if (mapId2.Length == 10)
+                return mapId2;
+
+            //get from up json
+            var fid = "f" + mapId2;
+            if (keyJson[fid] == null)
+            {
+                _Log.Error("CrudEdit.cs GetMapId() keyJson get empty value.");
+                return "";
+            }
+
+            //case of ok
+            return keyJson[fid].ToString();
+        }
+        */
 
         /*
         //傳回where條件字串 for 查詢2st table, 同時設定sql參數

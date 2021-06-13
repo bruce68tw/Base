@@ -44,23 +44,32 @@ namespace BaseWeb.Services
         /// get input attr: data-fid,name,readonly, ext attributes
         /// </summary>
         /// <param name="fid">if empty will not set name attribute</param>
-        /// <param name="editable"></param>
+        /// <param name="edit"></param>
         /// <param name="extAttr"></param>
         /// <param name="setName">set name attribute or not</param>
         /// <returns></returns>
         public static string GetInputAttr(string fid,
-            bool editable = true, bool required = false)
+            string edit = "", bool required = false, string extAttr = "")
         {
             //set data-fid, name
             var attr = string.IsNullOrEmpty(fid)
                 ? " " : $" data-fid='{fid}' name='{fid}'";
-            if (!editable)
-                attr += " readonly";
+            //if (!edit)
+            //    attr += " readonly";
+            attr += " " + GetDataEdit(edit);
             if (required)
                 attr += " required";
-            //if (extAttr != "")
-            //    attr += " " + extAttr;
+            if (extAttr != "")
+                attr += " " + extAttr;
             return attr;
+        }
+
+        //get data-edit attribute string
+        public static string GetDataEdit(string edit)
+        {
+            if (string.IsNullOrEmpty(edit))
+                edit = "*";
+            return $" data-edit='{edit}'";
         }
 
         //add placeholder attribute
@@ -114,7 +123,7 @@ namespace BaseWeb.Services
         /// <param name="required"></param>
         /// <returns></returns>
         public static string GetDateHtml(string fid, string value, string type, 
-            bool required = false, bool editable = true, string inputTip = "",             
+            bool required = false, string edit = "", string inputTip = "",             
             string extAttr = "", string extClass = "")
         {
             //input field attribute
@@ -122,12 +131,12 @@ namespace BaseWeb.Services
             if (string.IsNullOrEmpty(type))
             {
                 //no fid, name
-                attr = GetInputAttr("", editable, required);
+                attr = GetInputAttr("", edit, required);
             }
             else
             {
                 //only fid
-                attr = GetInputAttr(fid, editable, required) +
+                attr = GetInputAttr(fid, edit, required) +
                     $" data-type='{type}'";
                 extClass += " xi-box";
             }
@@ -135,6 +144,7 @@ namespace BaseWeb.Services
 
             //value -> date format
             value = _Date.GetDateStr(value);
+            var dataEdit = GetDataEdit(edit);
 
             //input-group & input-group-addon are need for datepicker !!
             return $@"
@@ -146,7 +156,12 @@ namespace BaseWeb.Services
         <i class='ico-date' onclick='_idate.onToggle(this)'></i>
     </span>
 </div>";
+        }
 
+        //get link function string
+        public static string GetLinkFn(string fn)
+        {
+            return $"event.preventDefault();{fn};return false;";
         }
 
         /// <summary>
@@ -157,7 +172,7 @@ namespace BaseWeb.Services
         /// <param name="type">empty means part component</param>
         /// <param name="rows"></param>
         /// <param name="required"></param>
-        /// <param name="editable"></param>
+        /// <param name="edit"></param>
         /// <param name="addEmptyRow"></param>
         /// <param name="inputTip"></param>
         /// <param name="extAttr"></param>
@@ -166,14 +181,14 @@ namespace BaseWeb.Services
         /// <returns></returns>
         public static string GetSelectHtml(string fid, string value, 
             string type, List<IdStrDto> rows,
-            bool required = false, bool editable = true, bool addEmptyRow = true, 
+            bool required = false, string edit = "", bool addEmptyRow = true, 
             string inputTip = "", string extAttr = "", string extClass = "",
             string fnOnChange = "")
         {
             var hasType = !string.IsNullOrEmpty(type);
             string attr = hasType
-                ? GetInputAttr(fid, editable, required) + $" data-type='{type}'"
-                : GetInputAttr("", editable, required);
+                ? GetInputAttr(fid, edit, required, extAttr) + $" data-type='{type}'"
+                : GetInputAttr("", edit, required, extAttr);
             attr += GetPlaceHolder(inputTip);
             if (!string.IsNullOrEmpty(fnOnChange))
                 attr += $" onchange='{fnOnChange}'";
@@ -202,7 +217,7 @@ namespace BaseWeb.Services
             //use class for multi columns !!
             //xg-select-col for dropdown inner width=100%, xg-select-colX for RWD width
             return $@"
-<select{attr} class='form-control {extClass}' {extAttr}>
+<select{attr} class='form-control {extClass}'>
     {optList}
 </select>";            
         }

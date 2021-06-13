@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using Base.Enums;
+﻿using Base.Enums;
+using System.Collections.Generic;
 
 namespace Base.Models
 {
@@ -8,6 +8,7 @@ namespace Base.Models
     /// </summary>
     public class DtDto
     {
+        //Draw counter, jQuery Datatables need for control async ajax sequence
         public int draw { get; set; }
 
         //start row position, base 0
@@ -16,13 +17,10 @@ namespace Base.Models
         //rows count to display
         public int length { get; set; }
 
-        //quick search, need c# coding
-        //public string search { get; set; }
-
-        //-1: reCaculate rows count(means change jquery condition)
+        //-1: re-count filtered rows count(means change jquery condition)
         public int recordsFiltered { get; set; }
 
-        //query condition
+        //query condition json in string type
         public string findJson { get; set; }
 
         //search word
@@ -33,29 +31,6 @@ namespace Base.Models
         /// </summary>
         public List<DtOrderDto> order { get; set; }
 
-        /*
-        /// <summary>
-        /// 排序行數, -1表示無傳入
-        /// </summary>
-        public int orderColumn
-        {
-            get
-            {
-                return (order == null || order.Count == 0) ? -1 : order[0].column;
-            }
-        }
-
-        /// <summary>
-        /// 排序模式
-        /// </summary>
-        public EnumOrderDir orderDir
-        {
-            get
-            {
-                return (order == null || order.Count == 0) ? EnumOrderDir.Asc : order[0].dir;
-            }
-        }
-        */
     }
 
 

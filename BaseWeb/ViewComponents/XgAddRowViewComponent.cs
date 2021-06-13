@@ -1,5 +1,4 @@
-﻿using Base.Services;
-using BaseWeb.Services;
+﻿using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +16,6 @@ namespace BaseWeb.ViewComponents
 ", fnOnClick, _Locale.GetBaseRes().BtnAddRow);
 
             return new HtmlString(html);
-        }        
-
+        }
     }//class
 }

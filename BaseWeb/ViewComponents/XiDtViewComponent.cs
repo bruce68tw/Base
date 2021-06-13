@@ -1,4 +1,5 @@
 ﻿using Base.Services;
+using BaseWeb.Models;
 using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
@@ -9,17 +10,12 @@ namespace BaseWeb.Helpers
     public class XiDtViewComponent : ViewComponent
     {
         //fids:0(date),1(hour),2(minute)
-        public HtmlString Invoke(string title, string fid, string value = "",
-            bool editable = true, bool inRow = false, bool required = false,
-            string labelTip = "", string inputTip = "", string extAttr = "", string extClass = "",
-            int minuteStep = 10,
-            string cols = "")
+        public HtmlString Invoke(XiDtDto dto)
         {
-
             string date = "", hour = "", min = "";
-            if (value != "")
+            if (!string.IsNullOrEmpty(dto.Value))
             {
-                var dt = _Date.CsToDt(value).Value;
+                var dt = _Date.CsToDt(dto.Value).Value;
                 date = dt.Date.ToString();
                 hour = dt.Hour.ToString();
                 min = dt.Minute.ToString();
@@ -33,14 +29,14 @@ namespace BaseWeb.Helpers
     <span>:</span>
     {5}
 </div>",
-fid, extClass, extAttr,
-_Helper.GetDateHtml("", date, "", required, editable, inputTip, extClass: "xg-inline"),
-_Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, editable, false, extAttr: width, extClass: "xg-inline"),
-_Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(minuteStep), false, editable, false, extAttr: width, extClass: "xg-inline")
+dto.Fid, dto.ExtClass, dto.ExtAttr,
+_Helper.GetDateHtml("", date, "", dto.Required, dto.Edit, dto.InputTip, extClass: "xg-inline"),
+_Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, dto.Edit, false, extAttr: width, extClass: "xg-inline"),
+_Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit, false, extAttr: width, extClass: "xg-inline")
 );
 
-            if (!string.IsNullOrEmpty(title))
-                html = _Helper.InputAddLayout(html, title, required, labelTip, inRow, cols);
+            if (!string.IsNullOrEmpty(dto.Title))
+                html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
 
             return new HtmlString(html);
         } 

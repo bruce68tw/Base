@@ -1,28 +1,27 @@
-﻿using BaseWeb.Services;
+﻿using BaseWeb.Models;
+using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BaseWeb.ViewComponents
 {
     /// <summary>
-    /// text area
+    /// html editor
     /// </summary>
     public class XiHtmlViewComponent : ViewComponent
     {
         /// <summary>
         /// html input
         /// </summary>
-        /// <param name="fid"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public HtmlString Invoke(string title, string fid,
-            string value = "",
-            int maxLen = 0, int rowsCount = 10,
-            bool required = false, bool editable = true, bool inRow = false,
-            string labelTip = "", string inputTip = "",
-            string extAttr = "", string extClass = "", string cols = "")
+        public HtmlString Invoke(XiHtmlDto dto)
         {
             /*
+            string title, string fid, string value = "",
+            int maxLen = 0, int rowsCount = 10,
+            bool required = false, string edit = "", bool inRow = false,
+            string labelTip = "", string inputTip = "",
+            string extAttr = "", string extClass = "", string cols = ""
+            
             var html = _Helper.GetTextareaHtml(title, fid, "html", value,
                 maxLen, rowsCount,
                 required, editable, inRow,
@@ -30,23 +29,22 @@ namespace BaseWeb.ViewComponents
                 extAttr, extClass, cols);
             return new HtmlString(html);
             */
-            var attr = _Helper.GetInputAttr(fid, editable, required) +
-                $" value='{value}' rows='{rowsCount}' style='width:100%'" +
-                _Helper.GetPlaceHolder(inputTip) +
-                _Helper.GetRequired(required) +
-                _Helper.GetMaxLength(maxLen);
-            if (!string.IsNullOrEmpty(extAttr))
-                attr += " " + extAttr;
+            var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required) +
+                $" value='{dto.Value}' rows='{dto.RowsCount}' style='width:100%'" +
+                _Helper.GetPlaceHolder(dto.InputTip) +
+                _Helper.GetRequired(dto.Required) +
+                _Helper.GetMaxLength(dto.MaxLen);
+            //if (!string.IsNullOrEmpty(extAttr))
+            //    attr += " " + extAttr;
 
             //html
             //summernote will add div below textarea, so add div outside for validate msg
-            var html = string.Format($@"
-<div class='xi-box {0}' {1}>
+            var html = $@"
+<div class='xi-box {dto.ExtClass}' {dto.ExtAttr}>
     <textarea{attr} data-type='html' class='form-control'></textarea>
-</div>", extClass, extAttr);
-
-            if (!string.IsNullOrEmpty(title))
-                html = _Helper.InputAddLayout(html, title, required, labelTip, inRow, cols);
+</div>";
+            if (!string.IsNullOrEmpty(dto.Title))
+                html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
             return new HtmlString(html);
         }
 

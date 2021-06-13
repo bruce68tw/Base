@@ -45,7 +45,7 @@ namespace Base.Services
             //_dbStr: db field name at config, if length > 30, it will be connection string !!
             _dbStr = (dbStr == "") ? _Fun.Config.Db : dbStr;
             //_DI = (di == null) ? _Fun.GetDI() : (ServiceContainer)di;
-            _di = _Fun.GetDI();
+            _di = _Fun.GetDiBox();
 
             //_userDataService = new UserDataService();
             //_userInfo = _Session.Read();

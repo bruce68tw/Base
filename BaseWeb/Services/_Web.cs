@@ -23,7 +23,8 @@ namespace BaseWeb.Services
 
         public static HttpContext GetHttp()
         {
-            var service = (IHttpContextAccessor)_Fun.GetDI().GetService(typeof(IHttpContextAccessor));
+            var service = (IHttpContextAccessor)_Fun.GetDiBox()
+                .GetService(typeof(IHttpContextAccessor));
             return service.HttpContext;
         }
 

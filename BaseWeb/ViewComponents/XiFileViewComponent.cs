@@ -1,4 +1,5 @@
 ﻿using Base.Services;
+using BaseWeb.Models;
 using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
@@ -11,52 +12,57 @@ namespace BaseWeb.ViewComponents
     public class XiFileViewComponent : ViewComponent
     {
         /// <summary>
-        /// file upload
+        /// file upload, 
         /// </summary>
         /// <param name="title"></param>
         /// <param name="fid"></param>
         /// <param name="cols"></param>
         /// <param name="fileType">I(image),E(excel),W(word)</param>
         /// <returns></returns>
-        public HtmlString Invoke(string title, string fid, string value = "",
+        public HtmlString Invoke(XiFileDto dto)
+        {
+            /*
+             string title, string fid, string value = "",
             bool required = false, bool inRow = false, string cols = "",
             string labelTip = "", int maxSize = 0, string fileType = "I",
-            string extAttr = "", string extClass = "",
+            string extAttr = "", string extClass = "", string edit = "",
             string fnOnViewFile = "",
             string fnOnOpenFile = "_ifile.onOpenFile(this)",
-            string fnOnDeleteFile = "_ifile.onDeleteFile(this)")
-        {
-            if (string.IsNullOrEmpty(fnOnViewFile))
-                fnOnViewFile = $"_me.onViewFile(\"{fid}\", this)";
+            string fnOnDeleteFile = "_ifile.onDeleteFile(this)"
+             */
+            if (string.IsNullOrEmpty(dto.FnOnViewFile))
+                dto.FnOnViewFile = $"_me.onViewFile(\"{dto.Fid}\", this)";
+            dto.FnOnViewFile = _Helper.GetLinkFn(dto.FnOnViewFile);
 
-            var attr = _Helper.GetInputAttr(fid, true, required);
-            if (maxSize <= 0)
-                maxSize = _Fun.Config.UploadFileMax;
+            var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required);
+            if (dto.MaxSize <= 0)
+                dto.MaxSize = _Fun.Config.UploadFileMax;
+
             //fileType to file Ext list
-            var exts = _File.TypeToExts(fileType);
-            //var attr = $" data-type='file' data-max='{maxSize}' data-exts='{exts}'";
+            var exts = _File.TypeToExts(dto.FileType);
+            var dataEdit = _Helper.GetDataEdit(dto.Edit);
 
+            //if container is label, inside element onclick will trigger when click inside !!
             //hidden input text for validate msg placement
             //data-max, data-exts is checking when change file, so put in input file.
             //button open/delete will be handled by status, but link(view) is not.
-            //need hidden input text for validate
             var html = $@"
-<label class='form-control xi-box {extClass}' style='margin-bottom:0' {extAttr}>
-    <input type='file' data-max='{maxSize}' data-exts='{exts}' onchange='_ifile.onChangeFile(this)' style='display:none'>
+<div class='form-control xi-box {dto.ExtClass}' style='margin-bottom:0' {dto.ExtAttr}>
+    <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' onchange='_ifile.onChangeFile(this)' style='display:none'>
     <input{attr} data-type='file' type='hidden'>
 
-    <button type='button' class='btn btn-link' onclick='{fnOnOpenFile}'>
+    <button type='button' class='btn btn-link' onclick='{dto.FnOnOpenFile}' {dataEdit}>
         <i class='ico-open'></i>
     </button>
-    <button type='button' class='btn btn-link' onclick='{fnOnDeleteFile}'>
+    <button type='button' class='btn btn-link' onclick='{dto.FnOnDeleteFile}' {dataEdit}>
         <i class='ico-delete'></i>
     </button>
-    <a href='#' onclick='javascript:event.preventDefault(); {fnOnViewFile}'>{value}</a>
-</label>";
+    <a href='#' onclick='{dto.FnOnViewFile}'>{dto.Value}</a>
+</div>";
 
             //add label if need
-            if (!string.IsNullOrEmpty(title))
-                html = _Helper.InputAddLayout(html, title, required, labelTip, inRow, cols);
+            if (!string.IsNullOrEmpty(dto.Title))
+                html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
 
             return new HtmlString(html);
         }

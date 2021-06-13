@@ -1,4 +1,5 @@
-﻿using BaseWeb.Services;
+﻿using BaseWeb.Models;
+using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,18 +11,19 @@ namespace BaseWeb.Helpers
         /// <summary>
         /// date field
         /// </summary>
-        /// <param name="fid"></param>
         /// <returns></returns>
-        public HtmlString Invoke(string title, string fid, string value = "",
-            bool editable = true, bool inRow = false, bool required = false,
-            string labelTip = "", string inputTip = "", string extAttr = "", string extClass = "", 
-            string cols = "")
+        public HtmlString Invoke(XiDateDto dto)
         {
-
-            var html = _Helper.GetDateHtml(fid, value, "date",
-                required, editable, inputTip, extAttr, extClass);
-            if (!string.IsNullOrEmpty(title))
-                html = _Helper.InputAddLayout(html, title, required, labelTip, inRow, cols);
+            /*
+             string title, string fid, string value = "",
+            string edit = "", bool inRow = false, bool required = false,
+            string labelTip = "", string inputTip = "", string extAttr = "", 
+            string extClass = "", string cols = ""
+             */
+            var html = _Helper.GetDateHtml(dto.Fid, dto.Value, "date",
+                dto.Required, dto.Edit, dto.InputTip, dto.ExtAttr, dto.ExtClass);
+            if (!string.IsNullOrEmpty(dto.Title))
+                html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
 
             return new HtmlString(html);
 
