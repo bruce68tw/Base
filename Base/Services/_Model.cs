@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Base.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -163,6 +164,26 @@ namespace Base.Services
         public static string ListToJsonStr<T>(List<T> rows)
         {
             return JsonConvert.SerializeObject(rows);
+        }
+
+        /// <summary>
+        /// get error model 
+        /// </summary>
+        /// <param name="error">default to system error msg</param>
+        /// <returns></returns>
+        public static ResultDto GetError(string error = "System Error, Please check admin !")
+        {
+            return new ResultDto() { ErrorMsg = error };
+        }
+
+        /// <summary>
+        /// get js _BR error
+        /// </summary>
+        /// <param name="fid">_BR fid</param>
+        /// <returns></returns>
+        public static ResultDto GetErrorBR(string fid)
+        {
+            return new ResultDto() { ErrorBrFid = fid };
         }
 
     } //class

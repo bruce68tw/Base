@@ -29,13 +29,13 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get file ext, lowercase with dot, ex: .docx
+        /// get file ext, lowercase without dot, ex: docx
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">file path</param>
         /// <returns></returns>
         public static string GetFileExt(string path)
         {
-            return Path.GetExtension(path).ToLower();
+            return Path.GetExtension(path).Replace(".", "").ToLower();
         }
 
         /*
@@ -154,6 +154,10 @@ namespace Base.Services
                     return "jpg,jpeg,png,gif";
                 case "E":   //excel
                     return "xls,xlsx";
+                case "W":   //word
+                    return "doc,docx";
+                case "*":   //all
+                    return "*";
                 default:
                     return "??";
             }
@@ -171,5 +175,18 @@ namespace Base.Services
                 ? noImagePath
                 : files[0];
         }
+
+        /// <summary>
+        /// is image file or not
+        /// </summary>
+        /// <param name="ext"></param>
+        /// <returns></returns>
+        public static bool IsImageExt(string ext)
+        {
+            //ext = ext.Replace(".", "").ToLower();
+            return (",jpg,jpeg,png,gif,tif,tiff,").IndexOf("," + ext + ",") >= 0;
+        }
+
+
     }//class
 }

@@ -10,9 +10,6 @@ namespace BaseWeb.ViewComponents
     /// </summary>
     public class XiHtmlViewComponent : ViewComponent
     {
-        /// <summary>
-        /// html input
-        /// </summary>
         public HtmlString Invoke(XiHtmlDto dto)
         {
             /*
@@ -29,8 +26,9 @@ namespace BaseWeb.ViewComponents
                 extAttr, extClass, cols);
             return new HtmlString(html);
             */
-            var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required) +
-                $" value='{dto.Value}' rows='{dto.RowsCount}' style='width:100%'" +
+            //rows='{dto.RowsCount}' 
+            var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
+                $" value='{dto.Value}' style='width:{dto.Width}'" +
                 _Helper.GetPlaceHolder(dto.InputTip) +
                 _Helper.GetRequired(dto.Required) +
                 _Helper.GetMaxLength(dto.MaxLen);
@@ -40,7 +38,7 @@ namespace BaseWeb.ViewComponents
             //html
             //summernote will add div below textarea, so add div outside for validate msg
             var html = $@"
-<div class='xi-box {dto.ExtClass}' {dto.ExtAttr}>
+<div class='xi-box {dto.BoxClass}'>
     <textarea{attr} data-type='html' class='form-control'></textarea>
 </div>";
             if (!string.IsNullOrEmpty(dto.Title))

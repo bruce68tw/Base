@@ -1,4 +1,5 @@
-﻿using BaseWeb.Models;
+﻿using Base.Services;
+using BaseWeb.Models;
 using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
@@ -20,21 +21,24 @@ namespace BaseWeb.ViewComponents
             //if (label == "")
             //    label = "&nbsp;";   //add space, or position will wrong
 
+            //set default 
+            dto.Value = _Str.EmptyToValue(dto.Value, "1");
+
             //get attr
-            var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit);
+            var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, false, dto.InputAttr);
             if (dto.IsCheck)
                 attr += " checked";
-            if (dto.FnOnClick != "")
+            if (!string.IsNullOrEmpty(dto.FnOnClick))
                 attr += $" onclick='{dto.FnOnClick}'";
 
             //ext class
             if (dto.Label == "")
-                dto.ExtClass += " xg-no-label";
+                dto.BoxClass += " xg-no-label";
 
             //get html (span for checkbox checked sign)
             //value attr will disappear, use data-value instead !!
             var html = $@"
-<label class='xi-check {dto.ExtClass}' {dto.ExtAttr}>
+<label class='xi-check {dto.BoxClass}'>
     <input{attr} type='checkbox' data-type='check' data-value='{dto.Value}'>{dto.Label}
     <span class='xi-cspan'></span>
 </label>";

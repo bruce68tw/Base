@@ -4,8 +4,8 @@
     {
         public string Fid { get; set; }
         public string Value { get; set; }
-        public string ExtAttr { get; set; }
-        public string ExtClass { get; set; }
+        public string InputAttr { get; set; }
+        public string BoxClass { get; set; }
 
     }
 }

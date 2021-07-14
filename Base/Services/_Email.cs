@@ -294,8 +294,11 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                var error = "_Email.cs SendByMsgsSync() failed: " + ex.InnerException.Message;
-                _Log.Error(error);    //false here, not mailRoot, or endless roop !!
+                //var error = "_Email.cs SendByMsgsSync() failed: " + ex.InnerException.Message;
+                var error = !string.IsNullOrEmpty(ex.Message) ? ex.Message :
+                    (ex.InnerException != null) ? ex.InnerException.Message :
+                    "Email Error !!";
+                _Log.Error("_Email.cs SendByMsgsSync() failed: " + error);    //false here, not mailRoot, or endless roop !!
             }
         }
 

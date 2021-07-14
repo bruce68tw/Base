@@ -15,16 +15,18 @@ namespace BaseWeb.Services
         //server side fid for file input collection, must pre '_'
         //key-value of file serverFid vs row key
         public const string FileJson = "_fileJson";
+        public static string DirWeb = _Fun.DirRoot + "wwwroot/";
 
         //public const string SessionFid = "ASP.NET_SessionId";
         //public const string SessionFid = "_SessionId_";
         //public const string LocaleFid = "_Locale_";     //cookie field id for locale
-        public static string LocaleFid = CookieRequestCultureProvider.DefaultCookieName;     //cookie field id for locale
+        //public static string LocaleFid = CookieRequestCultureProvider.DefaultCookieName;     //cookie field id for locale
+
+        public static string NoImagePath = DirWeb + "image/noImage.jpg";
 
         public static HttpContext GetHttp()
         {
-            var service = (IHttpContextAccessor)_Fun.GetDiBox()
-                .GetService(typeof(IHttpContextAccessor));
+            var service = (IHttpContextAccessor)_Fun.DiBox.GetService(typeof(IHttpContextAccessor));
             return service.HttpContext;
         }
 
@@ -54,11 +56,11 @@ namespace BaseWeb.Services
         }
 
         /// <summary>
-        /// response stream to screen
+        /// export/response file by stream
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="fileName"></param>
-        public static void StreamToScreen(Stream stream, string fileName)
+        public static void ExportByStream(Stream stream, string fileName)
         {
             //response to client, must close docx first, 
             //so put code here, or docx file will get wrong !!
@@ -73,13 +75,16 @@ namespace BaseWeb.Services
                 resp.Headers.Append("Content-Disposition", "attachment; filename=\"" + HttpUtility.UrlPathEncode(fileName) + "\"");
 
             var ext = _File.GetFileExt(fileName);
+            resp.ContentType = GetContentTypeByExt(ext);
+            /*
             //resp.ContentType = "application/vnd.ms-word.document";
-            if (ext == ".doc" || ext == ".docx")
+            if (ext == "doc" || ext == "docx")
                 resp.ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-            else if(ext == ".xls" || ext == ".xlsx")
+            else if(ext == "xls" || ext == "xlsx")
                 resp.ContentType = "application/ms-excel";
             else
                 resp.ContentType = "text/plain";
+            */
 
             //stream.Flush();
             stream.Position = 0;
@@ -88,6 +93,15 @@ namespace BaseWeb.Services
             resp.Body.FlushAsync();
             //resp.End();
             //resp.Body..EndWrite();
+        }
+
+        public static string GetContentTypeByExt(string ext)
+        {
+            //var ext = _File.GetFileExt(path);
+            return (ext == "doc" || ext == "docx") ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" :
+                (ext == "xls" || ext == "xlsx") ? "application/ms-excel" :
+                (ext == "pdf") ? "application/pdf" :
+                "text/plain";
         }
 
         /// <summary>
@@ -104,7 +118,7 @@ namespace BaseWeb.Services
 
             //get list
             var list = new List<string>();
-            switch (_Fun.GetAuthType())
+            switch (_Fun.AuthType)
             {
                 case AuthTypeEnum.Ctrl:
                     //do nothing

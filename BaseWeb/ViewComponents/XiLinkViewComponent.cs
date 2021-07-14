@@ -13,16 +13,15 @@ namespace BaseWeb.ViewComponents
     {
         public HtmlString Invoke(XiLinkDto dto)
         {
-            if (string.IsNullOrEmpty(dto.FnOnClick))
-                dto.FnOnClick = $"_me.onViewFile(\"{dto.Fid}\", this)";
-            dto.FnOnClick = _Helper.GetLinkFn(dto.FnOnClick);
+            if (string.IsNullOrEmpty(dto.FnOnViewFile))
+                dto.FnOnViewFile = $"_me.onViewFile(\"{dto.Table}\", \"{dto.Fid}\", this)";
+            dto.FnOnViewFile = _Helper.GetLinkFn(dto.FnOnViewFile);
 
-            var html = $@"
-<a href='#' data-fid='{dto.Fid}' data-type='linkFile' class='{dto.ExtClass}' 
-    style='height:32px; display:table-cell; vertical-align:middle;' 
-    onclick='{dto.FnOnClick}' {dto.ExtAttr}>{dto.Value}
-</a>
-";
+            var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.InputAttr) +
+                $" data-type='link' onclick='{dto.FnOnViewFile}'" +
+                " style='height:32px; display:table-cell; vertical-align:middle;'";
+            var html = $"<a href='#' {attr} class='{dto.BoxClass}'>{dto.Value}</a>";
+
             //add title if need
             if (!string.IsNullOrEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols);

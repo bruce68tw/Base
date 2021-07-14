@@ -8,6 +8,6 @@
         None,       //0
         Ctrl,       //1:controller
         Action,     //2:action
-        //Row,        //3:row
+        Row,        //3:row
     }
 }

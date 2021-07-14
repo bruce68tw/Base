@@ -1,0 +1,10 @@
+﻿using Base.Models;
+using Newtonsoft.Json.Linq;
+
+namespace BaseWeb.Services
+{
+    public interface ICrudRead
+    {
+        JObject GetPage(string ctrl, DtDto dt);
+    }
+}

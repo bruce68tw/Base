@@ -21,5 +21,10 @@ namespace Base.Models
         /// </summary>
         public string ErrorMsg = "";
 
+        /// <summary>
+        /// error js _BR fid
+        /// </summary>
+        public string ErrorBrFid = "";
+        
     }
 }

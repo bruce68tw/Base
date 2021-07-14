@@ -5,6 +5,7 @@
         public XiBaseDto()
         {
             //Edit = "";
+            Value = "";
             InRow = false;
             //LabelTip = "";
             //InputTip = "";
@@ -14,7 +15,6 @@
             /*
             Title = "";
             Fid = "";
-            Value = "";
             Required = false;
             Cols = "";
             */
@@ -28,8 +28,8 @@
         public bool Required  { get; set; }
         public string LabelTip  { get; set; }
         public string InputTip  { get; set; }
-        public string ExtAttr  { get; set; }
-        public string ExtClass  { get; set; }
+        public string InputAttr  { get; set; }
+        public string BoxClass  { get; set; }
         public string Cols { get; set; }
         public string Width { get; set; }
     }

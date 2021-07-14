@@ -8,6 +8,7 @@ using System.Linq;
 
 namespace BaseWeb.Services
 {
+    //for web system only
     public static class _Locale
     {
         public static string CookieName = CookieRequestCultureProvider.DefaultCookieName;     //cookie field id for locale
@@ -33,7 +34,7 @@ namespace BaseWeb.Services
                 }
             }
 
-            //set default language, .net 4.5後設定DefaultThread即可
+            //set default language, after .net 4.5 ver just set DefaultThread
             if (CultureInfo.CurrentCulture.Name != locale)
             {
                 var culture = new CultureInfo(locale);
@@ -52,6 +53,19 @@ namespace BaseWeb.Services
         }
 
         /// <summary>
+        /// get locale code
+        /// </summary>
+        /// <returns></returns>
+        public static string GetLocaleByUser(bool dash = true)
+        {
+            var br = _Fun.GetBaseUser();
+            var locale = (br == null) ? _Fun.Config.Locale : br.Locale;
+            if (!dash)
+                locale = locale.Replace("-", "");
+            return locale;
+        }
+
+        /// <summary>
         /// get locale by cookie
         /// </summary>
         /// <returns></returns>
@@ -61,10 +75,15 @@ namespace BaseWeb.Services
             return (cookie == null) ? "" : cookie.ToString();
         }
 
+        /// <summary>
+        /// get base resource
+        /// </summary>
+        /// <param name="locale">default to user locale</param>
+        /// <returns></returns>
         public static BaseResDto GetBaseRes(string locale = "")
         {
             if (string.IsNullOrEmpty(locale))
-                locale = _Fun.GetLocaleByUser();
+                locale = GetLocaleByUser();
 
             var dict = _brList.FirstOrDefault(a => a.Key == locale);
             return dict.Equals(default(Dictionary<string, BaseResDto>)) 
@@ -73,7 +92,7 @@ namespace BaseWeb.Services
 
         private static BaseResDto ReadBaseRes(string locale)
         {
-            var file = _Fun.DirWeb + "Locale/" + locale + "/BR.json";
+            var file = _Web.DirWeb + "locale/" + locale + "/BR.json";
             if (!File.Exists(file))
             {
                 _Log.Error("no file: " + file);
@@ -87,6 +106,8 @@ namespace BaseWeb.Services
             return br;
         }
 
+        #region remark code
+        /*
         /// <summary>
         /// get locale file path
         /// </summary>
@@ -94,11 +115,9 @@ namespace BaseWeb.Services
         /// <returns></returns>
         public static string GetPath(string fileName)
         {
-            return _Fun.DirWeb + "Locale\\" + _Fun.GetLocaleByUser() + "\\" + fileName;
+            return _Web.DirWeb + "locale\\" + GetLocaleByUser() + "\\" + fileName;
         }
 
-        #region remark code
-        /*
         /// <summary>
         /// frontEnd datetime string to backEnd datetime, consider different locale
         /// </summary>

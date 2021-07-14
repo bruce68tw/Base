@@ -18,7 +18,7 @@ namespace Base.Models
         public string ReadSql = "";
 
         /// <summary>
-        /// sql string for export excel, if empty, system will use Sql field for export.
+        /// sql string for export excel, default to ReadSql.
         /// </summary>
         public string ExportSql = "";
 
@@ -29,9 +29,19 @@ namespace Base.Models
         public bool UseSquare = false;
 
         /// <summary>
-        /// default table alias
+        /// default table alias name
         /// </summary>
         public string TableAs = "";
+
+        /// <summary>
+        /// (for AuthType = Row) user fid, default to _Fun.FindUserFid
+        /// </summary>
+        public string FindUserFid = "";
+
+        /// <summary>
+        /// (for AuthType = Row) dept fid, default to _Fun.FindDeptFid
+        /// </summary>
+        public string FindDeptFid = "";
 
         /// <summary>
         /// for quick search, include table alias, will get like xx% query
@@ -44,7 +54,7 @@ namespace Base.Models
         public List<List<string>> OrGroups;
 
         /// <summary>
-        /// query fields
+        /// query condition fields
         /// </summary>
         public QitemDto[] Items;
 

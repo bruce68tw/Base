@@ -10,8 +10,6 @@
         public BaseResDto()
         {
             //PlsSelect = "-Select-";
-            //FrontDateFormat = "yyyy/M/d";
-            //FrontDtFormat = "yyyy/M/d HH:mm:ss";   //24hour
         }
         */
 
@@ -31,21 +29,17 @@
         public string BtnCancel { get; set; }
         public string BtnClose { get; set; }
 
-        //front dt format pass to c#
-        public string FrontDtFormat { get; set; }
-
         //select input
         public string PlsSelect { get; set; }
 
         //tip delete row
         public string TipDeleteRow { get; set; }
 
-        //for sql read datetime column to front
-        //public string FrontDateFormat { get; set; }
-        //public string FrontDtFormat { get; set; }
-
         //no access right for program
-        public string NoProgAuth { get; set; }
+        public string NoAuthProg { get; set; }
+
+        //no auth for row
+        //public string NoAuthRow { get; set; }
 
         //not login
         public string NotLogin { get; set; }

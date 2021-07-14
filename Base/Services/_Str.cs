@@ -43,6 +43,18 @@ namespace Base.Services
             return (data == null || data.ToString() == "");
         }
 
+        public static bool IsInList(string longStr, string shortStr, string sep = ",")
+        {
+            return ((sep + longStr + sep).IndexOf(sep + shortStr + sep) >= 0);
+        }
+
+
+        public static string EmptyToValue(string data, string value)
+        {
+            return _Str.IsEmpty(data)
+                ? value : data;
+        }
+
         /// <summary>
         /// add anti slash for path if need
         /// </summary>
@@ -427,8 +439,10 @@ namespace Base.Services
         public static string GetMid(string source, string left, string right)
         {
             var pos1 = source.IndexOf(left);
-            if (pos1 > 0)
-                source = source.Substring(pos1 + 1);
+            if (pos1 < 0)
+                return "";
+
+            source = source.Substring(left.Length + pos1);
             pos1 = source.IndexOf(right);
             if (pos1 > 0)
                 source = source.Substring(0, pos1);

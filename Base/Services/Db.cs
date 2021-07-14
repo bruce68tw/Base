@@ -18,7 +18,7 @@ namespace Base.Services
         private DbConnection _conn = null;   //or will compile error !!
         private DbCommand _cmd = null;
         private DbTransaction _tran;
-        private IServiceProvider _di;       //DI
+        //private IServiceProvider _di;       //DI
 
         //column mapping for update/insert, key-type-欄位序號
         private List<IdNumDto> _colMap = new List<IdNumDto>();
@@ -45,7 +45,7 @@ namespace Base.Services
             //_dbStr: db field name at config, if length > 30, it will be connection string !!
             _dbStr = (dbStr == "") ? _Fun.Config.Db : dbStr;
             //_DI = (di == null) ? _Fun.GetDI() : (ServiceContainer)di;
-            _di = _Fun.GetDiBox();
+            //_di = _Fun.GetDiBox();
 
             //_userDataService = new UserDataService();
             //_userInfo = _Session.Read();
@@ -84,7 +84,7 @@ namespace Base.Services
             //_sqlDb = new T();
             //_conn = new IDbConnection(connStr);
             //_conn = _DI.GetService<string, DbConnection>(connStr);
-            _conn = (DbConnection)_di.GetService(typeof(DbConnection));
+            _conn = (DbConnection)_Fun.DiBox.GetService(typeof(DbConnection));
             //set connect string will get error when connecting state
             if (_conn.ConnectionString == null || _conn.ConnectionString != _dbStr)
                 _conn.ConnectionString = _dbStr;
@@ -150,7 +150,7 @@ namespace Base.Services
             if (_cmd == null)
             {
                 //_cmd = new SqlCommand();
-                _cmd = (DbCommand)_di.GetService(typeof(DbCommand));
+                _cmd = (DbCommand)_Fun.DiBox.GetService(typeof(DbCommand));
                 _cmd.Connection = _conn;
             }
             _cmd.CommandType = CommandType.Text;
@@ -225,7 +225,7 @@ namespace Base.Services
             if (_cmd == null)
             {
                 //_cmd = new IDbCommand();
-                _cmd = (DbCommand)_di.GetService(typeof(DbCommand));
+                _cmd = (DbCommand)_Fun.DiBox.GetService(typeof(DbCommand));
                 _cmd.Connection = _conn;
                 _cmd.CommandTimeout = _dbSec;
             }
@@ -409,20 +409,11 @@ namespace Base.Services
             }
         }
 
-        /*
-        private string GetFrontDtFormat()
-        {
-            var baseU = _Fun.GetBaseUser();
-            return (baseU == null)
-                ? _Fun.Config.FrontDtFormat
-                : baseU.FrontDtFormat;
-        }
-        */
-
         //called outside
         public JObject ReaderGetJson(IDataReader reader)
         {
-            var dtFormat = _Fun.DbDtFormat;
+            //var dtFormat = _Fun.DbDtFormat;
+            var dtFormat = _Fun.CsDtFmt;
             var row = new JObject();
             for (var i = 0; i < _colMap.Count; i++)
             {

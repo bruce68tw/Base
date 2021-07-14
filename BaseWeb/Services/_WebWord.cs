@@ -51,36 +51,39 @@ namespace BaseWeb.Services
         }
 
         /// <summary>
-        /// echo word template to screen
+        /// export file by template and row
         /// </summary>
-        /// <param name="tplPath"></param>
+        /// <param name="tplPath">tpl path</param>
+        /// <param name="fileName">export file name</param>
         /// <param name="row"></param>
         /// <param name="childs">IEnumerable for anonymous type</param>
         /// <param name="images"></param>
         public static void ExportByTplRow(string tplPath, string fileName, dynamic row,
             List<IEnumerable<dynamic>> childs = null, List <WordImageDto> images = null)
         {
-            //check template file
+            #region 1.check template file
             if (!File.Exists(tplPath))
             {
-                _Log.Error($"_WebWord.cs TplRowToScreen() no tpl file ({tplPath})");
+                _Log.Error($"_WebWord.cs ExportByTplRow() no tpl file ({tplPath})");
                 return;
             }
+            #endregion
 
-            #region ms stream for echo
+            #region 2.prepare memory stream
             var ms = new MemoryStream();
             var tplBytes = File.ReadAllBytes(tplPath);
             ms.Write(tplBytes, 0, tplBytes.Length);
+            #endregion
 
-            //binding stream && docx
+            //3.binding stream && docx
             var fileStr = "";
             using (var docx = WordprocessingDocument.Open(ms, true))
             {
                 //initial 
                 var wordSet = new WordSetService(docx);
-                var mainTpl = wordSet.GetMainStr();
+                var mainTpl = wordSet.GetMainPartStr();
 
-                //replace images first
+                //4.add images first
                 if (images != null)
                     wordSet.AddImages(ref mainTpl, images);
 
@@ -88,7 +91,7 @@ namespace BaseWeb.Services
                 int bodyStart = 0, bodyEnd = 0; //no start/end tag
                 var bodyTpl = wordSet.GetBodyTpl(mainTpl, ref bodyStart, ref bodyEnd);
 
-                #region fill childs rows
+                #region 5.fill row && childs rows
                 var hasChild = (childs != null && childs.Count > 0);
                 if (hasChild)
                 {
@@ -100,12 +103,6 @@ namespace BaseWeb.Services
                         var rowTpl = wordSet.GetRowTpl(bodyTpl, ref rowStart, ref rowEnd, i);
                         if (rowTpl == "")
                             continue;
-                        /*
-                        {
-                            error = "can not find rowTpl String.";
-                            goto lab_error;
-                        }
-                        */
 
                         //set head or add left string of rows
                         if (i == 0)
@@ -136,21 +133,16 @@ namespace BaseWeb.Services
                 }
                 #endregion
 
-                //write string into docx
-                wordSet.WriteMainStr(fileStr);
+                //write into docx
+                wordSet.SetMainPartStr(fileStr);
 
                 //check (for debug)
                 //_Word.IsDocxValid(docx);
             }
 
-            //echo stream to file
-            _Web.StreamToScreen(ms, fileName);
+            //6.export file by stream
+            _Web.ExportByStream(ms, fileName);
             return;
-            #endregion
-
-        //lab_error:
-            //_Log.Error("GenDocuService.cs Run() failed: " + error);
-            //return;
         }
 
 

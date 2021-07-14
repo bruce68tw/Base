@@ -13,13 +13,13 @@ namespace Base.Services
     public class CrudRead
     {
         //search field name for sql args
-        private const string _FindId = "_find";
+        private const string _FindFid = "_find";
 
         //db str in config file
         private string _dbStr;
 
         //jQuery dataTables input arg
-        private DtDto _dtIn;
+        private DtDto _dtDto;
 
         //sql args, (id, value)
         private List<object> _sqlArgs = new List<object>();
@@ -38,30 +38,31 @@ namespace Base.Services
         /// <summary>
         /// get page rows for dataTables(json)
         /// </summary>
-        /// <param name="read"></param>
-        /// <param name="dt"></param>
+        /// <param name="ctrl">controller name</param>
+        /// <param name="readDto"></param>
+        /// <param name="dtDto"></param>
         /// <param name="findJson">if not null, will query by this and not from dtIn.findJson</param>
         /// <returns>jquery dataTables object</returns>
-        public JObject GetPage(ReadDto read, DtDto dt, JObject findJson = null)
+        public JObject GetPage(string ctrl, ReadDto readDto, DtDto dtDto, JObject findJson = null)
         {
             #region 1.check input
             //adjust page rows if need
-            if (dt.length < 10)
-                dt.length = 10;
+            if (dtDto.length < 10)
+                dtDto.length = 10;
 
             //set instance variables from input args
-            _dtIn = dt;
+            _dtDto = dtDto;
             if (findJson == null)
-                findJson = string.IsNullOrEmpty(dt.findJson) ? null : _Json.StrToJson(dt.findJson);
+                findJson = string.IsNullOrEmpty(dtDto.findJson) ? null : _Json.StrToJson(dtDto.findJson);
             #endregion
 
             #region 2.get sql
-            var sqlDto = _Sql.SqlToDto(read.ReadSql, read.UseSquare);
+            var sqlDto = _Sql.SqlToDto(readDto.ReadSql, readDto.UseSquare);
             if (sqlDto == null)
                 return null;
 
             //prepare sql where & set sql args by user input condition
-            var where = GetWhere(read, findJson, _dtIn.search.value);
+            var where = GetWhere(ctrl, readDto, findJson, CrudEnum.Read, _dtDto.search.value);
             if (where != "")
                 sqlDto.Where = (sqlDto.Where == "") 
                     ? "Where " + where : sqlDto.Where + " And " + where;
@@ -70,7 +71,7 @@ namespace Base.Services
             #region 3.get rows count if need
             JArray rows = null;
             var db = GetDb();
-            var rowCount = dt.recordsFiltered;
+            var rowCount = dtDto.recordsFiltered;
             var sql = "";
             var group = (sqlDto.Group == "") ? "" : " " + sqlDto.Group; //remove last space
             if (rowCount < 0)
@@ -92,12 +93,12 @@ namespace Base.Services
             #endregion
 
             #region 4.sql add sorting
-            var orderColumn = (dt.order == null || dt.order.Count == 0) 
-                ? -1 : dt.order[0].column;
+            var orderColumn = (dtDto.order == null || dtDto.order.Count == 0) 
+                ? -1 : dtDto.order[0].column;
             if (orderColumn >= 0)
                 sqlDto.Order = "Order By " + 
                     sqlDto.Columns[orderColumn].Trim() + 
-                    (dt.order[0].dir == OrderTypeEnum.Asc ? "" : " Desc");
+                    (dtDto.order[0].dir == OrderTypeEnum.Asc ? "" : " Desc");
             #endregion
 
             #region 5.get page rows 
@@ -107,14 +108,14 @@ namespace Base.Services
                 sqlDto.Where + group;
 
             //get data
-            sql = string.Format(_Fun.ReadPageSql, sql, sqlDto.Order, dt.start, dt.length).Replace("  ", " ");   //2012
+            sql = string.Format(_Fun.ReadPageSql, sql, sqlDto.Order, dtDto.start, dtDto.length).Replace("  ", " ");   //2012
             rows = db.GetJsons(sql, _sqlArgs);
             #endregion
 
         lab_exit:
             var result = JObject.FromObject(new
             {
-                dt.draw,
+                dtDto.draw,
                 data = rows,
                 //recordsTotal = 0,
                 recordsFiltered = rowCount,
@@ -144,23 +145,24 @@ namespace Base.Services
         /// <summary>
         /// get all rows for export excel
         /// </summary>
-        /// <param name="crud"></param>
-        /// <param name="cond"></param>
+        /// <param name="readDto"></param>
+        /// <param name="findJson"></param>
         /// <param name="exportSqlFirst">true:先考慮ExcelSql, false: 只考慮Sql</param>
         /// <returns></returns>
-        public JArray GetAllRows(ReadDto crud, JObject cond, bool exportSqlFirst)
+        public JArray GetExportRows(string ctrl, ReadDto readDto, JObject findJson)
         {
             //convert sql to model
-            var sql = (exportSqlFirst && !string.IsNullOrEmpty(crud.ExportSql))
-                ? crud.ExportSql : crud.ReadSql;
-            var sqlModel = _Sql.SqlToDto(sql, crud.UseSquare);
+            var sql = string.IsNullOrEmpty(readDto.ExportSql)
+                ? readDto.ReadSql 
+                : readDto.ExportSql;
+            var sqlModel = _Sql.SqlToDto(sql, readDto.UseSquare);
             //if (sqlModel0 == null)
             //    return null;
 
             //prepare sql where, also set _sqlArgs
             //var where = GetWhere(crud.TableAlias, crud.Items, crud.FindCols);
             //var sqlModel = sqlModel0.Value;
-            var where = GetWhere(crud, cond);
+            var where = GetWhere(ctrl, readDto, findJson, CrudEnum.Export);
             if (where != "")
                 sqlModel.Where = (sqlModel.Where == "") ? "Where " + where : sqlModel.Where + " And " + where;
 
@@ -191,31 +193,30 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// TODO: change to return SqlArgModel !!
         /// can directly call(no need to set Crud.Sql !!), return where string
         /// set sql args same time
         /// date field must change format
         /// </summary>
-        /// <param name="cond">query condition</param>
+        /// <param name="findJson">query condition</param>
         /// <param name="inputSearch">quick search string</param>
         /// <returns></returns>
-        public string GetWhere(ReadDto crud, JObject cond, string inputSearch = "")
+        private string GetWhere(string ctrl, ReadDto readDto, JObject findJson, CrudEnum crudEnum, string inputSearch = "")
         {
-            #region variables
-            var groupLen = (crud.OrGroups == null || crud.OrGroups.Count == 0) ? 0 : crud.OrGroups.Count;
+            #region set variables
+            var groupLen = (readDto.OrGroups == null || readDto.OrGroups.Count == 0) ? 0 : readDto.OrGroups.Count;
             var orWheres = new string[groupLen == 0 ? 1 : groupLen];
-            var where = "";
-            var thisWhere = "";
-            var and = "";
             var okDates = new List<string>();     //date field be done(date always has start/end)
-            var items = crud.Items;
+            var items = readDto.Items;
+            var itemWhere = "";
             #endregion
 
             #region 1.where add condition
-            if (items != null && items.Length > 0 && cond != null)
+            var where = "";
+            var and = "";
+            if (items != null && items.Length > 0 && findJson != null)
             {
-                var table = string.IsNullOrEmpty(crud.TableAs) ? "" : (crud.TableAs + ".");
-                foreach (var prop in cond)
+                var table = string.IsNullOrEmpty(readDto.TableAs) ? "" : (readDto.TableAs + ".");
+                foreach (var prop in findJson)
                 {
                     //skip if empty
                     object value = prop.Value;
@@ -249,8 +250,6 @@ namespace Base.Services
                                 _Log.Error("CrudRead.cs GetWhere() failed: no Fid = " + key2);
                                 continue;
                             }
-
-                            //continue
                         }
                         else
                         {
@@ -260,24 +259,6 @@ namespace Base.Services
                         }
                     }
                     #endregion
-
-                    /*
-                    //check empty ??
-                    var checkFlag = 0;
-                    var checkValue = value.ToString().Replace(" ", "").Split(',');
-                    for (var i = 0; i < checkValue.Length; i++)
-                    {
-                        if (checkValue[i] == "")
-                        {
-                            checkFlag = 1;
-                            break;
-                        }
-                        else
-                            checkFlag = 0;
-                    }
-                    if (checkFlag == 1)
-                        continue;
-                    */
 
                     #region set where & add argument
                     //var item = item0.Value;
@@ -300,16 +281,16 @@ namespace Base.Services
                         }
                         if (names.Count == 0)
                             continue;
-                        thisWhere = col + " in (" + string.Join(",", names) + ")";
+                        itemWhere = col + " in (" + string.Join(",", names) + ")";
                     }
                     else if (item.Op == ItemOpEstr.Like2)
                     {
                         AddArg(item.Fid, "%" + value.ToString() + "%");
-                        thisWhere = col + " Like @" + item.Fid;
+                        itemWhere = col + " Like @" + item.Fid;
                     }
                     else if (item.Op == ItemOpEstr.LikeList)
                     {
-                        var itemWhere = "";
+                        var where2 = "";
                         var or = "";
                         var values = value.ToString().Replace(" ", "").Split(',');
                         for (var i = 0; i < values.Length; i++)
@@ -318,18 +299,18 @@ namespace Base.Services
                                 continue;
 
                             var fid = item.Fid + i;
-                            itemWhere += or + col + " Like @" + fid;
+                            where2 += or + col + " Like @" + fid;
                             or = " Or ";
                             AddArg(fid, values[i] + "%");
                         }
-                        if (itemWhere == "")
+                        if (where2 == "")
                             continue;
-                        thisWhere = "(" + itemWhere + ")";
+                        itemWhere = "(" + where2 + ")";
                     }
                     else if (item.Op == ItemOpEstr.LikeCols || item.Op == ItemOpEstr.Like2Cols)
                     {
                         var pre = (item.Op == ItemOpEstr.Like2Cols) ? "%" : "";
-                        var itemWhere = "";
+                        var where2 = "";
                         var or = "";
                         var cols = col.Replace(" ", "").Split(',');
                         foreach (var col2 in cols)
@@ -337,73 +318,63 @@ namespace Base.Services
                             if (_Str.IsEmpty(col2))
                                 continue;
 
-                            itemWhere += or + col2 + " Like @" + item.Fid;
+                            where2 += or + col2 + " Like @" + item.Fid;
                             or = " Or ";
                         }
-                        if (itemWhere == "")
+                        if (where2 == "")
                             continue;
 
                         AddArg(item.Fid, pre + value + "%");
-                        thisWhere = "(" + itemWhere + ")";
+                        itemWhere = "(" + where2 + ")";
                     }
                     else if (item.Op == ItemOpEstr.Is)
                     {
                         if (value.ToString() != "1")
-                            thisWhere = col + " is Null";
+                            itemWhere = col + " is Null";
                         else if (value.ToString() != "0")
-                            thisWhere = col + " is not Null";
+                            itemWhere = col + " is not Null";
                         else
-                            thisWhere = col + " is " + value;
+                            itemWhere = col + " is " + value;
                     }
                     else if (item.Op == ItemOpEstr.IsNull)
                     {
                         if (value.ToString() != "1")
                             continue;
-                        thisWhere = col + " is Null";
+                        itemWhere = col + " is Null";
                     }
                     else if (item.Op == ItemOpEstr.NotNull)
                     {
                         if (value.ToString() != "1")
                             continue;
-                        thisWhere = col + " is not Null";
+                        itemWhere = col + " is not Null";
                     }
                     else if (item.Op == ItemOpEstr.UserDefined)
                     {
-                        //add () sign
-                        thisWhere = "(" + col + " " + value.ToString() + ")";
+                        itemWhere = "(" + col + " " + value.ToString() + ")";
                     }
                     else if (item.Op == ItemOpEstr.InRange)
                     {
                         var fid2 = item.Fid + "2";
-                        var hasNum1 = !_Str.IsEmpty(cond[item.Fid]);
-                        var hasNum2 = !_Str.IsEmpty(cond[fid2]);
+                        var hasNum1 = !_Str.IsEmpty(findJson[item.Fid]);
+                        var hasNum2 = !_Str.IsEmpty(findJson[fid2]);
 
                         okDates.Add(item.Fid);
 
                         if (hasNum1 && hasNum2)
                         {
-                            //thisWhere = string.Format("({0} >= @{1} And {0} <= @{2})", col, item.Fid, fid2);
-                            thisWhere = $"({col} >= @{item.Fid} And {col} <= @{fid2})";
-
-                            //add arg
+                            itemWhere = $"({col} >= @{item.Fid} And {col} <= @{fid2})";
                             AddArg(item.Fid, value.ToString());
-                            AddArg(fid2, cond[fid2].ToString());
+                            AddArg(fid2, findJson[fid2].ToString());
                         }
                         else if (hasNum1)
                         {
-                            //thisWhere = string.Format("({0} >= @{1})", col, item.Fid);
-                            thisWhere = $"({col} >= @{item.Fid})";
-
-                            //add arg
+                            itemWhere = $"({col} >= @{item.Fid})";
                             AddArg(item.Fid, value.ToString());
                         }
                         else if (hasNum2)
                         {
-                            //thisWhere = string.Format("({0} <= @{1})", col, fid2);
-                            thisWhere = $"({col} <= @{fid2})";
-
-                            //add arg
-                            AddArg(fid2, cond[fid2].ToString());
+                            itemWhere = $"({col} <= @{fid2})";
+                            AddArg(fid2, findJson[fid2].ToString());
                         }
                     }
                     /*
@@ -419,7 +390,7 @@ namespace Base.Services
                     else if (item.Type == QitemTypeEnum.Date)
                     {
                         //if date2 is done, just skip
-                        var len = item.Fid.Length;
+                        //var len = item.Fid.Length;
                         //var fid = item.Fid.Substring(0, len - 1);
                         //if (item.Fid.Substring(len - 1, 1) == "2" && okDates.Contains(fid))
                         //    continue;
@@ -429,38 +400,25 @@ namespace Base.Services
 
                         //get where
                         var fid2 = item.Fid + "2";
-                        var hasDate1 = !_Str.IsEmpty(cond[item.Fid]);
-                        var hasDate2 = !_Str.IsEmpty(cond[fid2]);
+                        var hasDate1 = !_Str.IsEmpty(findJson[item.Fid]);
+                        var hasDate2 = !_Str.IsEmpty(findJson[fid2]);
                         if (hasDate1 && hasDate2)  //case of has 2nd field, then query start/end
                         {
-                            //thisWhere = "(" + col + " Between @" + item.Fid + " And @" + fid2 + ")";
-                            //thisWhere = string.Format("({0} is Null Or {0} Between @{1} And @{2})", col, item.Fid, fid2);
-                            thisWhere = $"({col} is Null Or {col} Between @{item.Fid} And @{fid2})";
-
-                            //add arg
+                            itemWhere = $"({col} is Null Or {col} Between @{item.Fid} And @{fid2})";
                             AddArg(item.Fid, _Date.CsToDt(value.ToString() + " 00:00:00"));
-                            AddArg(fid2, _Date.CsToDt(cond[fid2].ToString() + " 23:59:59"));
+                            AddArg(fid2, _Date.CsToDt(findJson[fid2].ToString() + " 23:59:59"));
                         }
                         else if (hasDate1)  //has start date, then query this date after
                         {
-                            //get where
-                            //thisWhere = "(" + col + " >= @" + item.Fid + " And " + col + " < @" + fid2 + ")";
-                            //thisWhere = "(" + col + " >= @" + item.Fid + ")";
-                            //thisWhere = string.Format("({0} is Null Or {0} >= @{1})", col, item.Fid);
-                            thisWhere = $"({col} is Null Or {col} >= @{item.Fid})";
+                            itemWhere = $"({col} is Null Or {col} >= @{item.Fid})";
 
                             //Datetime only read date part, type is string
                             var date1 = _Date.CsToDt(value.ToString());
                             AddArg(item.Fid, _Str.GetLeft(date1.ToString(), " "));
-                            //AddArg(fid2, _Str.RemovePart(date1.AddDays(1).ToString(), " "));
                         }
                         else if (hasDate2)  //has end date, then query this date before
                         {
-                            //get where
-                            //thisWhere = "(" + col + " >= @" + item.Fid + " And " + col + " < @" + fid2 + ")";
-                            //thisWhere = "(" + col + " <= @" + fid2 + ")";
-                            //thisWhere = string.Format("({0} is Null Or {0} <= @{1})", col, fid2);
-                            thisWhere = $"({col} is Null Or {col} <= @{fid2})";
+                            itemWhere = $"({col} is Null Or {col} <= @{fid2})";
 
                             //Datetime field only get date part, type is string
                             var date1 = _Date.CsToDt(value.ToString());
@@ -472,10 +430,9 @@ namespace Base.Services
                     else if (item.Type == QitemTypeEnum.Date2)
                     {
                         //if Date2 field not set "Other", log error & skip
-                        //var item2 = new ReadItemCrud();
                         var fid2 = item.Fid + "2";
                         var col2 = item.Other;
-                        if (String.IsNullOrEmpty(col2))
+                        if (string.IsNullOrEmpty(col2))
                         {
                             _Log.Error("CrudRead.cs GetWhere() failed: no Other field for Date2 (" + item.Fid + ")");
                             continue;
@@ -483,7 +440,7 @@ namespace Base.Services
                         /*
                         else 
                         {
-                            //fid2 must existed須存在
+                            //fid2 must existed
                             item2 = (items.FirstOrDefault(a => a.Fid == fid2));
                             if (item2 == null)
                             {
@@ -497,63 +454,50 @@ namespace Base.Services
                         okDates.Add(item.Fid);
 
                         //get where
-                        //var col2 = _Str.IsEmpty(item2.Col) ? (table + item2.Fid) : item2.Col;
-                        var hasDate1 = !_Str.IsEmpty(cond[item.Fid]);
-                        var hasDate2 = !_Str.IsEmpty(cond[fid2]);
+                        var hasDate1 = !_Str.IsEmpty(findJson[item.Fid]);
+                        var hasDate2 = !_Str.IsEmpty(findJson[fid2]);
                         if (hasDate1 && hasDate2)  //case of 2nd field, then query start/end
                         {
-                            //thisWhere = "(" + col + " <= @" + fid2 + " And " + col2 + " >= @" + item.Fid + ")";
-                            //thisWhere = string.Format("(({0} is Null Or {0} <= @{1}) And ({2} is Null Or {2} >= @{3}))", col, fid2, col2, item.Fid);
-                            thisWhere = $"(({col} is Null Or {col} <= @{fid2}) And ({col2} is Null Or {col2} >= @{item.Fid}))";
-
-                            //add arg
-                            AddArg(fid2, _Str.GetLeft(_Date.CsToDt(cond[fid2].ToString()).ToString(), " ") + " 23:59:59");
+                            itemWhere = $"(({col} is Null Or {col} <= @{fid2}) And ({col2} is Null Or {col2} >= @{item.Fid}))";
+                            AddArg(fid2, _Str.GetLeft(_Date.CsToDt(findJson[fid2].ToString()).ToString(), " ") + " 23:59:59");
                             AddArg(item.Fid, _Str.GetLeft(_Date.CsToDt(value.ToString()).ToString(), " "));
                         }
                         else if (hasDate1)  //only start date, then query bigger than this date
                         {
-                            //get where
-                            //"(" + col2 + " >= @" + item.Fid + ")";
-                            //thisWhere = string.Format("({0} is Null or {0} >= @{1})", col2, item.Fid);
-                            thisWhere = $"({col2} is Null or {col2} >= @{item.Fid})";
+                            itemWhere = $"({col2} is Null or {col2} >= @{item.Fid})";
 
                             //get date part of Datetime
                             var date1 = _Date.CsToDt(value.ToString());
                             AddArg(item.Fid, _Str.GetLeft(date1.ToString(), " "));
-                            //AddArg(fid2, _Str.RemovePart(date1.AddDays(1).ToString(), " "));
                         }
                         else if (hasDate2)  //only end date, then query small than this date
                         {
-                            //get where
-                            //thisWhere = "(" + col + " <= @" + fid2 + ")";
-                            //thisWhere = string.Format("({0} is Null Or {0} <= @{1})", col, fid2);
-                            thisWhere = $"({col} is Null Or {col} <= @{fid2})";
+                            itemWhere = $"({col} is Null Or {col} <= @{fid2})";
 
                             //get date part of Datetime
                             var date1 = _Date.CsToDt(value.ToString());
                             AddArg(fid2, _Str.GetLeft(date1.ToString(), " ") + " 23:59:59");
-                            //AddArg(fid2, _Str.RemovePart(date1.AddDays(1).ToString(), " "));
                         }
                     }
                     else if (item.Op == ItemOpEstr.Equal)
                     {
-                        thisWhere = col + " = @" + item.Fid;
+                        itemWhere = col + " = @" + item.Fid;
                         AddArg(item.Fid, value);
                     }
                     else if (item.Op == ItemOpEstr.Like)
                     {
-                        thisWhere = col + " like @" + item.Fid;
+                        itemWhere = col + " like @" + item.Fid;
                         AddArg(item.Fid, value + "%");
                     }
                     else if (item.Op == ItemOpEstr.NotLike)
                     {
-                        thisWhere = col + " not like @" + item.Fid;
+                        itemWhere = col + " not like @" + item.Fid;
                         AddArg(item.Fid, value + "%");
                     }
                     else
                     {
-                        //直接讓它產生查詢錯誤!!
-                        thisWhere = col + " " + item.Op + " @" + item.Fid;
+                        //let it sql wrong!!
+                        itemWhere = col + " " + item.Op + " @" + item.Fid;
                         AddArg(item.Fid, value);
                     }
                     #endregion
@@ -564,7 +508,7 @@ namespace Base.Services
                     {
                         for (var i = 0; i < groupLen; i++)
                         {
-                            var group = crud.OrGroups[i];
+                            var group = readDto.OrGroups[i];
                             if (group.Contains(item.Fid))
                             {
                                 findGroup = i;
@@ -573,17 +517,15 @@ namespace Base.Services
                         }
                     }
                     if (findGroup >= 0)
-                        orWheres[findGroup] += thisWhere + " Or ";
+                        orWheres[findGroup] += itemWhere + " Or ";
                     else
                     {
-                        where += and + thisWhere;
+                        where += and + itemWhere;
                         and = " And ";
                     }
                     #endregion
 
-                    //set others variables
-                    //wheres.Add(col);
-                } //foreach
+                } //foreach findJson
 
                 //add orWheres[] into where
                 if (groupLen > 0)
@@ -597,25 +539,45 @@ namespace Base.Services
                         }
                     }
                 }
+            }//if
+            #endregion
+
+            #region 2.where add for AuthType=Row if need
+            if (_Fun.IsAuthRow())
+            {
+                var fid = "";
+                var baseUser = _Fun.GetBaseUser();
+                var range = _XpProg.GetAuthRange(ctrl, crudEnum, baseUser.ProgAuthStrs);
+                if (range == AuthRangeEnum.User)
+                {
+                    //by user
+                    fid = string.IsNullOrEmpty(readDto.FindUserFid) ? _Fun.FindUserFid : readDto.FindUserFid;
+                    where += and + string.Format(fid, baseUser.UserId);
+                    and = " And ";
+                }
+                else if (range == AuthRangeEnum.Dept)
+                {
+                    //by depart
+                    fid = string.IsNullOrEmpty(readDto.FindDeptFid) ? _Fun.FindDeptFid : readDto.FindDeptFid;
+                    where += and + string.Format(fid, baseUser.DeptId);
+                    and = " And ";
+                }
             }
             #endregion
 
-            #region 2.where add quick search
+            #region 3.where add quick search
             //var search = (_dtIn.search == null) ? "" : _dtIn.search.value;
             var search = inputSearch;
             if (!_Str.IsEmpty(search))
             {
                 //by finding string
-                var itemWhere = "";
+                itemWhere = "";
                 and = "";
-                foreach (var col2 in crud.FindCols)
+                foreach (var col2 in readDto.FindCols)
                 {
                     //_stCache.readFids.Add(_list.findCols[i]);
-                    itemWhere += and + col2 + " Like @" + _FindId;
+                    itemWhere += and + col2 + " Like @" + _FindFid;
                     and = " Or ";
-
-                    //add wheres[]
-                    //wheres.Add(col2);
                 }
 
                 //add where
@@ -626,7 +588,7 @@ namespace Base.Services
                     where += " And " + itemWhere;
 
                 //add argument
-                AddArg(_FindId, "%" + search + "%");
+                AddArg(_FindFid, "%" + search + "%");
             }
             #endregion
 

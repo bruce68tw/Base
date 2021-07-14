@@ -1,5 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,26 +12,49 @@ namespace Base.Services
         /// <summary>
         /// check program access right
         /// </summary>
-        /// <param name="progList">program list</param>
+        /// <param name="authStrs">program auth string list</param>
         /// <param name="prog">program id</param>
-        /// <param name="crudFun">crud function, see CrudFunEstr, empty for controller, value for action</param>
+        /// <param name="crudEnum">crud function, see CrudFunEstr, empty for controller, value for action</param>
         /// <returns>bool</returns>
-        public static bool CheckAuth(string progList, string prog, CrudFunEnum crudFun)
+        public static bool CheckAuth(string authStrs, string prog, CrudEnum crudEnum)
         {
-            var comma = ",";
-            progList = comma + progList + comma;
-            if (crudFun == CrudFunEnum.Empty)
-            {
-                //prog add tail of ','
-                return progList.Contains(comma + prog + comma);
-            }
-            else
-            {
-                //prog add tail of ':'
-                var funList = _Str.GetMid(progList, comma + prog + ":", comma);
-                var funPos = (int)crudFun;
-                return (funList.Length > funPos && funList.Substring(funPos, 1) == "1");
-            }
+            return (crudEnum == CrudEnum.Empty)
+                ? _Str.IsInList(authStrs, prog)
+                : (GetAuthRange(prog, crudEnum, authStrs) != AuthRangeEnum.None);
+        }
+
+        /// <summary>
+        /// check Create Auth for CRUD Create button
+        /// </summary>
+        /// <param name="prog"></param>
+        /// <returns></returns>
+        public static bool CheckCreate(string prog)
+        {
+            return (_Fun.AuthType != AuthTypeEnum.Action && _Fun.AuthType != AuthTypeEnum.Row)
+                ? true
+                : CheckAuth(_Fun.GetBaseUser().ProgAuthStrs, prog, CrudEnum.Create);
+        }
+
+        /// <summary>
+        /// get auth range of crud fun
+        /// </summary>
+        /// <param name="prog"></param>
+        /// <param name="crudEnum"></param>
+        /// <param name="authStrs"></param>
+        /// <returns></returns>
+        public static AuthRangeEnum GetAuthRange(string prog, CrudEnum crudEnum, string authStrs = null)
+        {
+            if (authStrs == null)
+                authStrs = _Fun.GetBaseUser().ProgAuthStrs;
+            var sep = ",";
+            var funList = _Str.GetMid(sep + authStrs + sep, sep + prog + ":", sep);
+            var funPos = (int)crudEnum;
+            if (funList.Length <= funPos)
+                return AuthRangeEnum.None;
+
+            var auth = (AuthRangeEnum)Convert.ToInt32(funList.Substring(funPos, 1));
+            return (funList.Substring((int)CrudEnum.AuthRow, 1) == "1") ? auth :
+                (auth == AuthRangeEnum.None) ? AuthRangeEnum.None : AuthRangeEnum.All;
         }
 
         /// <summary>
@@ -38,48 +62,56 @@ namespace Base.Services
         /// </summary>
         /// <param name="userId">user Id</param>
         /// <returns></returns>
-        public static List<ProgAuthDto> GetAuthList(string userId)
+        public static string GetAuthStrs(string userId)
         {
             string sql;
-            switch (_Fun.GetAuthType())
+            List<IdStrDto> rows;
+            switch (_Fun.AuthType)
             {
                 case AuthTypeEnum.Ctrl:
+                    //return format: code,...
                     sql = @"
 select distinct 
-    p.Code as ProgCode, p.Name as ProgName
+    p.Code as Id
 from XpRoleProg rp
 join XpUserRole ur on rp.RoleId=ur.RoleId
 join XpProg p on rp.ProgId=p.Id
 where ur.UserId=@UserId
 ";
-                    return _Db.GetModels<ProgAuthDto>(sql, new List<object>() { "UserId", userId });
+                    rows = _Db.GetModels<IdStrDto>(sql, new List<object>() { "UserId", userId });
+                    return (rows == null || rows.Count == 0)
+                        ? ""
+                        : _List.ToStr(rows.Select(a => a.Id).ToList(), false);
 
                 case AuthTypeEnum.Action:
+                case AuthTypeEnum.Row:
+                    //return format: code:xxx,...
                     //concat auth string list, consider different DB type
-                    var authList = _Sql.GetConcat(
-                            "cast((case max(p.FunCreate) when 1 then max(rp.FunCreate) else 0 end) as char(1))",
-                            "cast((case max(p.FunRead) when 1 then max(rp.FunRead) else 0 end) as char(1))",
-                            "cast((case max(p.FunUpdate) when 1 then max(rp.FunUpdate) else 0 end) as char(1))",
-                            "cast((case max(p.FunDelete) when 1 then max(rp.FunDelete) else 0 end) as char(1))",
-                            "cast((case max(p.FunPrint) when 1 then max(rp.FunPrint) else 0 end) as char(1))",
-                            "cast((case max(p.FunExport) when 1 then max(rp.FunExport) else 0 end) as char(1))",
-                            "cast((case max(p.FunView) when 1 then max(rp.FunView) else 0 end) as char(1))",
-                            "cast((case max(p.FunOther) when 1 then max(rp.FunOther) else 0 end) as char(1))"
+                    var authStr = _Sql.GetConcat(
+                        "cast(max(p.AuthRow) as char(1))",
+                        GetFunSql("FunCreate"),
+                        GetFunSql("FunRead", true),
+                        GetFunSql("FunUpdate", true),
+                        GetFunSql("FunDelete", true),
+                        GetFunSql("FunPrint", true),
+                        GetFunSql("FunExport", true),
+                        GetFunSql("FunView"),
+                        GetFunSql("FunOther", true)
                     );
 
                     sql = $@"
 select distinct 
-    p.Code as ProgCode, p.Name as ProgName, {authList} as AuthList
+    p.Code as Id, {authStr} as Str
 from XpRoleProg rp
 join XpUserRole ur on rp.RoleId=ur.RoleId
 join XpProg p on rp.ProgId=p.Id
 where ur.UserId=@UserId
+group by p.Code
 ";
-                    return _Db.GetModels<ProgAuthDto>(sql, new List<object>() { "UserId", userId });
-
-                //TODO: other case
-                //case AuthTypeEnum.Row:
-                //    return null;
+                    rows = _Db.GetModels<IdStrDto>(sql, new List<object>() { "UserId", userId });
+                    return (rows == null || rows.Count == 0)
+                        ? ""
+                        : _List.ToStr(rows.Select(a => a.Id + ":" + a.Str).ToList(), false);
 
                 //case else
                 default:
@@ -87,27 +119,11 @@ where ur.UserId=@UserId
             }
         }
 
-        /// <summary>
-        /// get auth string list for write session (check auth)
-        /// </summary>
-        /// <param name="authList"></param>
-        /// <returns></returns>
-        public static string GetAuthStrs(List<ProgAuthDto> authList)
+        private static string GetFunSql(string fid, bool authRow = false)
         {
-            if (authList == null || authList.Count == 0)
-                return "";
-
-            switch (_Fun.GetAuthType())
-            {
-                case AuthTypeEnum.Ctrl:
-                    return _List.ToStr(authList.Select(a => a.ProgCode).ToList(), false);
-
-                case AuthTypeEnum.Action:
-                    return _List.ToStr(authList.Select(a => a.ProgCode + ":" + a.AuthStr).ToList(), false);
-
-                default:
-                    return "";
-            }
+            return authRow
+                ? $"cast((case when max(p.{fid})=0 then 0 when max(p.AuthRow)=1 then max(rp.{fid}) else 1 end) as char(1))"
+                : $"cast((case max(p.{fid}) when 1 then max(rp.{fid}) else 0 end) as char(1))";
         }
 
     } //class

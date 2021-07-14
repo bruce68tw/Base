@@ -45,11 +45,11 @@ namespace BaseWeb.Services
         /// </summary>
         /// <param name="fid">if empty will not set name attribute</param>
         /// <param name="edit"></param>
-        /// <param name="extAttr"></param>
+        /// <param name="inputAttr"></param>
         /// <param name="setName">set name attribute or not</param>
         /// <returns></returns>
         public static string GetInputAttr(string fid,
-            string edit = "", bool required = false, string extAttr = "")
+            string edit = "", bool required = false, string inputAttr = "")
         {
             //set data-fid, name
             var attr = string.IsNullOrEmpty(fid)
@@ -59,8 +59,8 @@ namespace BaseWeb.Services
             attr += " " + GetDataEdit(edit);
             if (required)
                 attr += " required";
-            if (extAttr != "")
-                attr += " " + extAttr;
+            if (inputAttr != "")
+                attr += " " + inputAttr;
             return attr;
         }
 
@@ -118,13 +118,13 @@ namespace BaseWeb.Services
         /// get date view component html string
         /// </summary>
         /// <param name="fid"></param>
-        /// <param name="value">format: _Fun.Config.FrontDtFormat</param>
+        /// <param name="value">format: _Fun.CsDtFormat</param>
         /// <param name="type">data-type, empty for part field, ex:DateTime</param>
         /// <param name="required"></param>
         /// <returns></returns>
         public static string GetDateHtml(string fid, string value, string type, 
             bool required = false, string edit = "", string inputTip = "",             
-            string extAttr = "", string extClass = "")
+            string inputAttr = "", string boxClass = "")
         {
             //input field attribute
             string attr;
@@ -138,7 +138,7 @@ namespace BaseWeb.Services
                 //only fid
                 attr = GetInputAttr(fid, edit, required) +
                     $" data-type='{type}'";
-                extClass += " xi-box";
+                boxClass += " xi-box";
             }
             attr += GetPlaceHolder(inputTip);
 
@@ -148,7 +148,7 @@ namespace BaseWeb.Services
 
             //input-group & input-group-addon are need for datepicker !!
             return $@"
-<div class='input-group date {extClass}' data-provide='datepicker' {extAttr}>
+<div class='input-group date {boxClass}' data-provide='datepicker' {inputAttr}>
     <input{attr} value='{value}' type='text' class='form-control'>
     <div class='input-group-addon'></div>
     <span>
@@ -175,20 +175,20 @@ namespace BaseWeb.Services
         /// <param name="edit"></param>
         /// <param name="addEmptyRow"></param>
         /// <param name="inputTip"></param>
-        /// <param name="extAttr"></param>
-        /// <param name="extClass"></param>
+        /// <param name="inputAttr"></param>
+        /// <param name="boxClass"></param>
         /// <param name="fnOnChange"></param>
         /// <returns></returns>
         public static string GetSelectHtml(string fid, string value, 
             string type, List<IdStrDto> rows,
             bool required = false, string edit = "", bool addEmptyRow = true, 
-            string inputTip = "", string extAttr = "", string extClass = "",
+            string inputTip = "", string inputAttr = "", string boxClass = "",
             string fnOnChange = "")
         {
             var hasType = !string.IsNullOrEmpty(type);
             string attr = hasType
-                ? GetInputAttr(fid, edit, required, extAttr) + $" data-type='{type}'"
-                : GetInputAttr("", edit, required, extAttr);
+                ? GetInputAttr(fid, edit, required, inputAttr) + $" data-type='{type}'"
+                : GetInputAttr("", edit, required, inputAttr);
             attr += GetPlaceHolder(inputTip);
             if (!string.IsNullOrEmpty(fnOnChange))
                 attr += $" onchange='{fnOnChange}'";
@@ -196,7 +196,7 @@ namespace BaseWeb.Services
             //ext class
             //var extClass = required ? XdRequired : "";
             if (hasType)
-                extClass += " xi-box";
+                boxClass += " xi-box";
 
             //option item
             var optList = "";
@@ -217,7 +217,7 @@ namespace BaseWeb.Services
             //use class for multi columns !!
             //xg-select-col for dropdown inner width=100%, xg-select-colX for RWD width
             return $@"
-<select{attr} class='form-control {extClass}'>
+<select{attr} class='form-control {boxClass}'>
     {optList}
 </select>";            
         }
@@ -305,7 +305,7 @@ namespace BaseWeb.Services
         private static List<int> GetCols(string cols)
         {
             var values = _Str.ToIntList(cols);
-            return (values == null) ? _Fun.DefHCols : values;
+            return (values == null) ? _Fun.DefHoriCols : values;
             /*
             var len = values.Count;
             if (len == 1)

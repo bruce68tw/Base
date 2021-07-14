@@ -24,7 +24,8 @@ namespace Base.Services
         private const string IsNew = "_isNew";      //crud field for is new row or not
 
         //master edit
-        private EditDto _edit;
+        private string _ctrl;
+        private EditDto _editDto;
         private int _saveRows = 0;    //changed(new/edit) rows count
 
         //db str in config file
@@ -42,9 +43,10 @@ namespace Base.Services
         private JObject _newKeyJson = new JObject();
 
         //constructor
-        public CrudEdit(EditDto edit, string dbStr = "")
+        public CrudEdit(string ctrl, EditDto editDto, string dbStr = "")
         {
-            _edit = edit;
+            _ctrl = ctrl;
+            _editDto = editDto;
             _dbStr = dbStr;
         }
 
@@ -144,6 +146,15 @@ namespace Base.Services
             return row;
         }
 
+        public JObject GetUpdateJson(string key)
+        {
+            return GetJson(CrudEnum.Update, key);
+        }
+        public JObject GetViewJson(string key)
+        {
+            return GetJson(CrudEnum.View, key);
+        }
+
         /// <summary>
         /// get rows for multi tables (1 to many)
         /// include: collumns、_childs
@@ -151,7 +162,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="key">table primary key value</param>
         /// <returns></returns>
-        public JObject GetJson(string key)
+        private JObject GetJson(CrudEnum crudEnum, string key)
         {
             if (!_Str.CheckKeyRule(key))
             {
@@ -160,12 +171,20 @@ namespace Base.Services
             }
 
             var db = GetDb();
-            var data = GetDbRow(_edit, key, db);    //return data
+            var data = GetDbRow(_editDto, key, db);    //return data
             if (data == null)
                 goto lab_exit;
 
+            //check for AuthType=Row if need
+            if (_Fun.IsAuthRow())
+            {
+                var errorBr = CheckAuthRow(data, crudEnum);
+                if (!string.IsNullOrEmpty(errorBr))
+                    return _Json.GetErrorBR(errorBr);
+            }
+
             //get child rows (recursive)
-            var editChilds = _edit.Childs;
+            var editChilds = _editDto.Childs;
             if (editChilds != null && editChilds.Length > 0)
             {
                 var childs = new JArray();
@@ -178,6 +197,28 @@ namespace Base.Services
         lab_exit:
             db.Dispose();
             return data;
+        }
+
+        /// <summary>
+        /// check authType=Row if need
+        /// </summary>
+        /// <returns>error code if any</returns>
+        private string CheckAuthRow(JObject data, CrudEnum crudEnum)
+        {
+            var range = _XpProg.GetAuthRange(_ctrl, crudEnum);
+            if (range == AuthRangeEnum.User)
+            {
+                if (!_Json.IsFidEqual(data, _Fun.UserFid, _Fun.UserId()))
+                    return "NoAuthUser";
+            }
+            else if (range == AuthRangeEnum.Dept)
+            {
+                if (!_Json.IsFidEqual(data, _Fun.DeptFid, _Fun.DeptId()))
+                    return "NoAuthDept";
+            }
+
+            //case else
+            return "";            
         }
 
         /// <summary>
@@ -750,8 +791,8 @@ namespace Base.Services
         private bool IsTrans(EditDto edit)
         {
             var childLen = GetEditChildLen(edit);
-            return (_edit.Transaction != null)
-                ? _edit.Transaction.Value
+            return (_editDto.Transaction != null)
+                ? _editDto.Transaction.Value
                 : (childLen > 0);
         }
 
@@ -779,10 +820,16 @@ namespace Base.Services
         {
             //return error if empty key
             if (string.IsNullOrEmpty(key))
-                return new ResultDto()
-                {
-                    ErrorMsg = "CrudEdit.cs Update() failed: key is empty."
-                };
+                return _Model.GetError("CrudEdit.cs Update() failed: key is empty.");
+
+            //check for AuthType=Row if need
+            if (_Fun.IsAuthRow())
+            {
+                var data = GetDbRow(_editDto, key);    //return data
+                var errorBr = CheckAuthRow(data, CrudEnum.Update);
+                if (!string.IsNullOrEmpty(errorBr))
+                    return _Model.GetErrorBR(errorBr);
+            }
 
             return SaveJson(key, json, fnSetNewKey, fnAfterSave);
         }
@@ -801,7 +848,7 @@ namespace Base.Services
             //check input & set fidNos same time
             Db db = null;
             var error = string.Empty;
-            var trans = IsTrans(_edit);
+            var trans = IsTrans(_editDto);
             if (inputJson == null)
             {
                 error = "input json is null";
@@ -810,7 +857,7 @@ namespace Base.Services
 
             //check main row
             //SetFidNo(_edit);
-            if (!ValidJson(0, _edit, inputJson))
+            if (!ValidJson(0, _editDto, inputJson))
             {
                 error = "ValidJson() failed.";
                 goto lab_error;
@@ -818,8 +865,8 @@ namespace Base.Services
 
             //set new key
             var status = (fnSetNewKeyJson == null)
-                ? SetNewKeyJson(inputJson, _edit)
-                : fnSetNewKeyJson(this, inputJson, _edit);
+                ? SetNewKeyJson(inputJson, _editDto)
+                : fnSetNewKeyJson(this, inputJson, _editDto);
             if (!status)
             {
                 error = "SetNewKey() failed.";
@@ -834,9 +881,8 @@ namespace Base.Services
             //set current time(_now)
             SetNow();
 
-            //改用 DB自行delete
-            //var json = new JObject() { [Rows] = new JArray() { row } };
-            if (!SaveJson2(_edit.HasFKey, "0", null, inputJson, _edit, db))
+            //save db recursive
+            if (!SaveJson2(_editDto.HasFKey, "0", null, inputJson, _editDto, db))
                 goto lab_error;
 
             //call afterSave() if need
@@ -871,7 +917,7 @@ namespace Base.Services
             }
 
             if (error == string.Empty)
-                return _Fun.GetSystemError();
+                return _Model.GetError();
             else
             {
                 _Log.Error("CrudEdit Save() failed: " + error);
@@ -1154,6 +1200,15 @@ namespace Base.Services
         /// <returns></returns>
         public ResultDto Delete(string key)
         {
+            //check for AuthType=Row if need
+            if (_Fun.IsAuthRow())
+            {
+                var data = GetDbRow(_editDto, key);    //return data
+                var errorBr = CheckAuthRow(data, CrudEnum.Delete);
+                if (!string.IsNullOrEmpty(errorBr))
+                    return _Model.GetErrorBR(errorBr);
+            }
+
             return DeleteByKeys(new List<string>() { key });
         }
 
@@ -1166,10 +1221,10 @@ namespace Base.Services
         {
             //check input
             if (!_List.IsAlphaNum(keys, "CrudEdit"))
-                return _Fun.GetSystemError();
+                return _Model.GetError();
 
             //transaction or not
-            var trans = IsTrans(_edit);
+            var trans = IsTrans(_editDto);
             var db = GetDb();
             if (trans)
                 db.BeginTran();
@@ -1178,7 +1233,7 @@ namespace Base.Services
             SetNow();
 
             var json = new JObject() { [Deletes] = _List.ToStr(keys, false) };
-            if (!SaveJson2(_edit.HasFKey, "0", null, json, _edit, db))
+            if (!SaveJson2(_editDto.HasFKey, "0", null, json, _editDto, db))
                 goto lab_error;
 
             if (trans)
@@ -1190,7 +1245,7 @@ namespace Base.Services
             if (trans)
                 db.Rollback();
             db.Dispose();
-            return _Fun.GetSystemError();
+            return _Model.GetError();
         }
 
         /// <summary>

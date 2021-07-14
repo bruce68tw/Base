@@ -3,8 +3,8 @@
     //format type for iread field, map to fid of _BR.js !!
     public static class BrFormatEstr
     {
-        public const string Date = "UiDateFormat";
-        public const string Dt = "UiDtFormat";      //datetime
-        public const string Dt2 = "UiDt2Format";    //datetime without second
+        public const string Date = "MmUiDateFmt";
+        public const string Dt = "MmUiDtFmt";      //datetime
+        public const string Dt2 = "MmUiDt2Fmt";    //datetime without second
     }
 }

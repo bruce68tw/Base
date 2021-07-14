@@ -9,7 +9,7 @@
         public string ProgCode { get; set; }
 
         //program name
-        public string ProgName { get; set; }
+        //public string ProgName { get; set; }
 
         public string AuthStr { get; set; }
     }

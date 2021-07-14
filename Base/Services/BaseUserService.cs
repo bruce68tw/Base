@@ -16,7 +16,6 @@ namespace Base.Services
                 UserName = "System",
                 //DeptId = "D01",
                 //DeptName = "D01 name",
-                //FrontDtFormat = _Fun.Config.FrontDtFormat,
                 //HourDiff = 0,
             };
         }

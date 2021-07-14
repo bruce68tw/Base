@@ -9,10 +9,10 @@ namespace BaseWeb.ViewComponents
     {
         public HtmlString Invoke(XiReadDto dto)
         {
-            var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.ExtAttr);
+            var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.InputAttr);
             if (!string.IsNullOrEmpty(dto.Format))
                 attr += $" data-format='{dto.Format}'";
-            var html = $"<label{attr} data-type='read' class='form-control xi-read {dto.ExtClass}'>{dto.Value}</label>";
+            var html = $"<label{attr} data-type='read' class='form-control xi-read {dto.BoxClass}'>{dto.Value}</label>";
 
             if (!string.IsNullOrEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols);

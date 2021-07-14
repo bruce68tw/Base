@@ -47,9 +47,18 @@ namespace BaseWeb.Services
             }
             catch (Exception ex)
             {
-                _Log.Error("_WebFile.cs SaveUploadFile() failed: " + ex.Message);
+                _Log.Error("_WebFile.cs SaveFileAsync() failed: " + ex.Message);
                 return false;
             }
+        }
+
+        public static async Task<string> SaveHtmlImage(IFormFile file, string prog, string dir = "")
+        {
+            dir = _Str.EmptyToValue(dir, _Web.DirWeb + "image");
+            var fileName = _Str.NewId() + Path.GetExtension(file.FileName);
+            var path = _Str.AddSlash(dir) + prog + "/" + fileName;
+            await SaveFileAsync(file, path);
+            return fileName;
         }
 
         //return related path for save file
@@ -242,9 +251,40 @@ namespace BaseWeb.Services
             }
         }
 
+        /*
         public static FileContentResult EchoImage(string path)
         {
             return new FileContentResult(File.ReadAllBytes(path), "image/jpg");
+        }
+        */
+
+        /// <summary>
+        /// view image file or download file
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="downFileName">download file name</param>
+        /// <returns></returns>
+        public static FileContentResult ViewFile(string path, string downFileName = "")
+        {
+            var hasFile = File.Exists(path);
+            var ext = _File.GetFileExt(path);
+            //var isImage = ;
+            if (_File.IsImageExt(ext))
+            {
+                if (!hasFile)
+                    path = _Web.NoImagePath;
+                return new FileContentResult(File.ReadAllBytes(path), "image/jpg");
+            }
+
+            //var fileName = "myfileName.txt";
+            var contentType = _Web.GetContentTypeByExt(ext);
+            //if (string.IsNullOrEmpty(contentType))
+
+            return new FileContentResult(File.ReadAllBytes(path), contentType)
+            {
+                FileDownloadName = string.IsNullOrEmpty(downFileName)
+                    ? _File.GetFileName(path) : downFileName
+            };
         }
 
         #region remark code

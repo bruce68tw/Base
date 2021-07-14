@@ -4,9 +4,11 @@ using Newtonsoft.Json.Linq;
 
 namespace BaseWeb.Services
 {
-    public class XpFlowEdit
+    public class XpFlowEdit : MyEdit
     {
-        private EditDto GetDto()
+        public XpFlowEdit(string ctrl) : base(ctrl) { }
+
+        override public EditDto GetDto()
         {
             return new EditDto()
             {
@@ -62,16 +64,6 @@ namespace BaseWeb.Services
             };
         }
 
-        private CrudEdit Service()
-        {
-            return new CrudEdit(GetDto());
-        }
-
-        public JObject GetJson(string key)
-        {
-            return Service().GetJson(key);
-        }
-
         public ResultDto Create(JObject json, FnSetNewKeyJson fnSetNewKey)
         {
             return Service().Create(json, fnSetNewKey);
@@ -80,11 +72,6 @@ namespace BaseWeb.Services
         public ResultDto Update(string key, JObject json, FnSetNewKeyJson fnSetNewKey)
         {
             return Service().Update(key, json, fnSetNewKey);
-        }
-
-        public ResultDto Delete(string key)
-        {
-            return Service().Delete(key);
         }
 
     } //class

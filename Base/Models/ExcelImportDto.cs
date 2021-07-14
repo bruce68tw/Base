@@ -1,60 +1,59 @@
 ﻿using Base.Services;
-using System.Collections.Generic;
 
 namespace Base.Models
 {
-    //匯入excel時的欄位屬性設定
-    //來源的excel檔名為 Id + "_source.xlsx"
-    //匯入失敗的excel檔名為 Id + "_fail.xlsx"
+    //for excel import function
+    //import source file name: Id + ".xlsx"
+    //import failed file name: Id + "_fail.xlsx"
     public class ExcelImportDto<T> where T : class, new()
     {
-        public FnCheckImportRow<T> FnCheckImportRow = null;
+        //public FnCheckImportRow<T> FnCheckImportRow = null;
+
+        /// <summary>
+        /// (delegate) save imported rows into DB 
+        /// ex: private List<string> SaveImportRows(List<T> okRows)
+        /// </summary>
         public FnSaveImportRows<T> FnSaveImportRows;
 
-        //public string SaveFilePath;
-        //public string ErrorFilePath;
-        public string TplPath;
-
-        /// <summary>
-        /// 如果空白, 表示excel第一列為欄位Id, 欄位順序必須與excel檔案相同
-        /// </summary>
-        public List<string> ExcelFids = new List<string>();
-
-        /// <summary>
-        /// 內容為excel欄位代號, ex:A,B.., 如果不為空白, 則內容/順序必須與excelFids對應
-        /// </summary>
-        //public List<string> ExcelColNames = new List<string>();
-
-        /// <summary>
-        /// base 1, excel資料開始列數, default 2
-        /// </summary>
-        public int ExcelStartRow = 2;
-
-        /// <summary>
-        /// base 0, 要匯入的 excel sheet no, default 0
-        /// </summary>
-        public int SheetNo = 0;
-
-        /// <summary>
-        /// Row Id, set to _Str.NewId() if empty
-        /// </summary>
-        public string LogRowId;
-
-        //mandatory fields
         /// <summary>
         /// map to ImportLog.Type
         /// </summary>
         public string ImportType;
 
         /// <summary>
-        /// file save dir
+        /// template file path
         /// </summary>
-        public string SaveDir;
+        public string TplPath;
 
         /// <summary>
-        /// upload file name
+        /// directory for save excel file(source & failed)
         /// </summary>
-        //public string UploadFileName;
+        //public string DirSaveFile;
+
+        /// <summary>
+        /// empty means excel row0 is fid, order should same to imported file
+        /// </summary>
+        //public List<string> ExcelFids = new List<string>();
+
+        /// <summary>
+        /// excel col name, ex:A,B.., if not empty then array/order should map th ExcelFids
+        /// </summary>
+        //public List<string> ExcelColNames = new List<string>();
+
+        /// <summary>
+        /// excel data sheet no(base 0), default 0
+        /// </summary>
+        public int SheetNo = 0;
+
+        /// <summary>
+        /// excel fid start row(base 1), default 1
+        /// </summary>
+        public int FidRowNo = 1;
+
+        /// <summary>
+        /// ImportLog table row Id, set to _Str.NewId() if empty
+        /// </summary>
+        public string LogRowId;
 
         /// <summary>
         /// creator name

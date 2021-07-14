@@ -31,10 +31,12 @@ namespace BaseWeb.ViewComponents
             string fnOnDeleteFile = "_ifile.onDeleteFile(this)"
              */
             if (string.IsNullOrEmpty(dto.FnOnViewFile))
-                dto.FnOnViewFile = $"_me.onViewFile(\"{dto.Fid}\", this)";
+                dto.FnOnViewFile = $"_me.onViewFile(\"{dto.Table}\", \"{dto.Fid}\", this)";
             dto.FnOnViewFile = _Helper.GetLinkFn(dto.FnOnViewFile);
 
-            var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required);
+            //attr, add data-table for onViewFile()
+            var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr);
+
             if (dto.MaxSize <= 0)
                 dto.MaxSize = _Fun.Config.UploadFileMax;
 
@@ -43,18 +45,19 @@ namespace BaseWeb.ViewComponents
             var dataEdit = _Helper.GetDataEdit(dto.Edit);
 
             //if container is label, inside element onclick will trigger when click inside !!
+            //data-max/exts for input file for checking, others for input hide !!
             //hidden input text for validate msg placement
             //data-max, data-exts is checking when change file, so put in input file.
             //button open/delete will be handled by status, but link(view) is not.
             var html = $@"
-<div class='form-control xi-box {dto.ExtClass}' style='margin-bottom:0' {dto.ExtAttr}>
+<div class='form-control xi-box {dto.BoxClass}' style='margin-bottom:0'>
     <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' onchange='_ifile.onChangeFile(this)' style='display:none'>
     <input{attr} data-type='file' type='hidden'>
 
-    <button type='button' class='btn btn-link' onclick='{dto.FnOnOpenFile}' {dataEdit}>
+    <button type='button' class='btn btn-link' onclick='_ifile.onOpenFile(this)' {dataEdit}>
         <i class='ico-open'></i>
     </button>
-    <button type='button' class='btn btn-link' onclick='{dto.FnOnDeleteFile}' {dataEdit}>
+    <button type='button' class='btn btn-link' onclick='_ifile.onDeleteFile(this)' {dataEdit}>
         <i class='ico-delete'></i>
     </button>
     <a href='#' onclick='{dto.FnOnViewFile}'>{dto.Value}</a>

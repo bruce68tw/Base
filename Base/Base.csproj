@@ -22,6 +22,7 @@
     <None Remove="Models\ErrorFieldDto.cs_old" />
     <None Remove="Models\ExcelRowModel.cs_old" />
     <None Remove="Models\ExcelSheetModel.cs_old" />
+    <None Remove="Models\ProgAuthDto.cs_old" />
     <None Remove="Models\PropBaseDto.c_old" />
     <None Remove="Models\PropCheckDto.c_old" />
     <None Remove="Models\PropDateDto.c_old" />
@@ -36,6 +37,7 @@
     <None Remove="Models\SqlArgModel.cs_old" />
     <None Remove="Models\UserProfile0Model.cs_old" />
     <None Remove="Models\WordRowsDto.cs_old" />
+    <None Remove="Services\ACrudEdit.cs_old" />
     <None Remove="Services\BaseResService.cs_old" />
     <None Remove="Services\Cache.cs_old" />
     <None Remove="Services\Date2.cs_old" />

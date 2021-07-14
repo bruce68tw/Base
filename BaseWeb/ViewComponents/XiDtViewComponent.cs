@@ -29,10 +29,10 @@ namespace BaseWeb.Helpers
     <span>:</span>
     {5}
 </div>",
-dto.Fid, dto.ExtClass, dto.ExtAttr,
-_Helper.GetDateHtml("", date, "", dto.Required, dto.Edit, dto.InputTip, extClass: "xg-inline"),
-_Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, dto.Edit, false, extAttr: width, extClass: "xg-inline"),
-_Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit, false, extAttr: width, extClass: "xg-inline")
+dto.Fid, dto.BoxClass, dto.InputAttr,
+_Helper.GetDateHtml("", date, "", dto.Required, dto.Edit, dto.InputTip, boxClass: "xg-inline"),
+_Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, dto.Edit, false, inputAttr: width, boxClass: "xg-inline"),
+_Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit, false, inputAttr: width, boxClass: "xg-inline")
 );
 
             if (!string.IsNullOrEmpty(dto.Title))

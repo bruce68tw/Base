@@ -17,6 +17,8 @@
     <None Remove="Attributes\XgRB0Attribute.cs_old" />
     <None Remove="Attributes\XgRBAttribute.cs_old" />
     <None Remove="Services\ActionResultExt.cs_tmp" />
+    <None Remove="Services\ICrudEdit.cs_old" />
+    <None Remove="Services\ICrudRead.cs_old" />
     <None Remove="Services\ImageData.cs_old" />
     <None Remove="Services\ISession.cs_old" />
     <None Remove="Services\Session0Service.cs_old" />

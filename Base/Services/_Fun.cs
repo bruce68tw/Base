@@ -16,57 +16,49 @@ namespace Base.Services
         public const string BaseUser = "_BaseUser";         //base user info
         public const string ProgAuthStrs = "_ProgAuthStrs"; //program autu string list
 
-        //c# datetime format, when front pass to c#, match to _fun.JsDtFormat
-        public const string CsDtFormat = "yyyy/MM/dd HH:mm:ss";
-        //moment js datetime format from db
-        //public const string JsDtFormat = "yyyy/M/d HH:mm:ss";
+        //c# datetime format, when js send to c#, match to _fun.MmDtFmt
+        public const string CsDtFmt = "yyyy/MM/dd HH:mm:ss";
 
         //carrier
         public const string TextCarrier = "\r\n";     //for string
         public const string HtmlCarrier = "<br>";     //for html
 
-        //null string for checking ??
-        //public const string NullString = "_null";
+        //??
+        //crud read for AuthType = Row
+        public const string FindUserFid = "u.Id='{0}'";
+        public const string FindDeptFid = "u.DeptId='{0}'";
+        //crud update/view for AuthType = Row
+        public const string UserFid = "_userId";
+        public const string DeptFid = "_deptId";
 
         //default view cols for layout(row div, label=2, input=3)(水平) 
-        public static List<int> DefHCols = new List<int>() { 2, 3 };
+        public static List<int> DefHoriCols = new List<int>() { 2, 3 };
         #endregion
 
         #region input parameters
-
-        private static bool _isDebug;
+        public static bool IsDebug;
 
         //private static ServiceContainer _DI;
-        private static IServiceProvider _diBox;
+        public static IServiceProvider DiBox;
 
         //database type
-        private static DbTypeEnum _dbType;
+        public static DbTypeEnum DbType;
 
         //program auth type
-        private static AuthTypeEnum _authType;
-
-        //dynamic locale or not
-        //private static bool _dynamicLocale;
+        public static AuthTypeEnum AuthType;
         #endregion
 
         #region base varibles
-        //debug mode or not
-        //public static bool IsDebug = true;
-
         //ap physical path, has right slash
         public static string DirRoot = _Str.GetLeft(AppDomain.CurrentDomain.BaseDirectory, "bin\\");
 
         //temp folder
         public static string DirTemp = DirRoot + "_temp\\";
-        public static string DirWeb = DirRoot + "wwwroot\\";
         #endregion
 
         #region Db variables
-        //datetime format for read/write db, match to js _date.JsDtFormat
-        public static string DbDtFormat;
-
-        //moment js datetime format from db
-        //public static string JsDtFormat;
+        //datetime format for read/write db
+        public static string DbDtFmt;
 
         //for read page rows
         public static string ReadPageSql;
@@ -102,10 +94,10 @@ namespace Base.Services
             AuthTypeEnum authType = AuthTypeEnum.None)
         {
             //set instance variables
-            _isDebug = isDebug;
-            _diBox = diBox;
-            _dbType = dbType;
-            _authType = authType;
+            IsDebug = isDebug;
+            DiBox = diBox;
+            DbType = dbType;
+            AuthType = authType;
             //_dynamicLocale = dynamicLocale;
 
             #region set smtp
@@ -135,11 +127,10 @@ namespace Base.Services
 
             #region set DB variables
             //0:select, 1:order by, 2:start row(base 0), 3:rows count
-            switch (_dbType)
+            switch (dbType)
             {
                 case DbTypeEnum.MSSql:
-                    DbDtFormat = "yyyy-MM-dd HH:mm:ss";
-                    //JsDtFormat = "yyyy/M/d HH:mm:ss";
+                    DbDtFmt = "yyyy-MM-dd HH:mm:ss";
 
                     //for sql 2012, more easy
                     //note: offset/fetch not sql argument
@@ -151,7 +142,7 @@ offset {2} rows fetch next {3} rows only
                     break;
 
                 case DbTypeEnum.MySql:
-                    DbDtFormat = "YYYY-MM-DD HH:mm:SS";
+                    DbDtFmt = "YYYY-MM-DD HH:mm:SS";
 
                     ReadPageSql = @"
 select {0} {1}
@@ -162,7 +153,7 @@ limit {2},{3}
                     break;
 
                 case DbTypeEnum.Oracle:
-                    DbDtFormat = "YYYY/MM/DD HH24:MI:SS";                    
+                    DbDtFmt = "YYYY/MM/DD HH24:MI:SS";                    
 
                     //for Oracle 12c after(same as mssql)
                     ReadPageSql = @"
@@ -176,6 +167,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
             #endregion
         }
 
+        /*
         //get DI
         public static IServiceProvider GetDiBox()
         {
@@ -185,12 +177,6 @@ Offset {2} Rows Fetch Next {3} Rows Only
         public static bool IsDebug()
         {
             return _isDebug;
-        }
-
-        //get current userId
-        public static string UserId()
-        {
-            return GetBaseUser().UserId;
         }
 
         //get db type
@@ -205,7 +191,6 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return _authType;
         }
 
-        /*
         //get _dynamicLocale
         public static bool IsDynamicLocale()
         {
@@ -213,10 +198,28 @@ Offset {2} Rows Fetch Next {3} Rows Only
         }
         */
 
+        //get current userId
+        public static string UserId()
+        {
+            return GetBaseUser().UserId;
+        }
+
+        public static string DeptId()
+        {
+            return GetBaseUser().DeptId;
+        }
+
+        /*
         //get system error string
         public static ResultDto GetSystemError()
         {
             return new ResultDto() { ErrorMsg = "System Error, Please check admin !" };
+        }
+        */
+
+        public static bool IsAuthRow()
+        {
+            return (AuthType == AuthTypeEnum.Row);
         }
 
         /*
@@ -236,21 +239,8 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// <returns>BaseUserInfoDto</returns>
         public static BaseUserDto GetBaseUser()
         {
-            var service = (IBaseUserService)_diBox.GetService(typeof(IBaseUserService));
+            var service = (IBaseUserService)DiBox.GetService(typeof(IBaseUserService));
             return service.GetData();
-        }
-
-        /// <summary>
-        /// get locale code
-        /// </summary>
-        /// <returns></returns>
-        public static string GetLocaleByUser(bool dash = true)
-        {
-            var br = GetBaseUser();
-            var locale = (br == null) ? _Fun.Config.Locale : br.Locale;
-            if (!dash)
-                locale = locale.Replace("-", "");
-            return locale;
         }
 
         /// <summary>

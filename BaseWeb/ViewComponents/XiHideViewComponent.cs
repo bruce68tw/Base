@@ -12,9 +12,9 @@ namespace BaseWeb.ViewComponents
         /// </summary>
         public HtmlString Invoke(XiHideDto dto)
         {
-            var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.ExtAttr);
-            if (!string.IsNullOrEmpty(dto.ExtClass))
-                attr += $" class='{dto.ExtClass}'";
+            var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.InputAttr);
+            if (!string.IsNullOrEmpty(dto.BoxClass))
+                attr += $" class='{dto.BoxClass}'";
 
             var html = $"<input{attr} data-type='text' type='hidden' value='{dto.Value}'>";
             return new HtmlString(html);

@@ -21,7 +21,7 @@ namespace BaseWeb.ViewComponents
             //box & ext class
             //var boxClass = "xi-box"; 
             if (dto.IsHori)
-                dto.ExtClass += " xg-inline";
+                dto.BoxClass += " xg-inline";
             //if (extClass != "")
             //    extClass = " " + extClass;
 
@@ -44,7 +44,7 @@ namespace BaseWeb.ViewComponents
                     row.Str = "&nbsp;";
 
                 //get attr, value attr will disappear, use data-value instead !!
-                var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, false) +
+                var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, false, dto.InputAttr) +
                     $" name='{dto.Fid}' data-value='{row.Id}' data-type='radio'" +
                     (string.IsNullOrEmpty(dto.FnOnChange) ? "" : $" onclick='{dto.FnOnChange}'") +
                     (row.Id == dto.Value ? " checked" : "");
@@ -52,10 +52,8 @@ namespace BaseWeb.ViewComponents
             }
 
             //get html
-            var html = $@"
-<div class='xi-box {dto.ExtClass}' {dto.ExtAttr}>
-    {list}
-</div>";
+            var html = $"<div class='xi-box {dto.BoxClass}'>{list}</div>";
+
             //add title outside
             //consider this field could in datatable(no title) !!
             if (!string.IsNullOrEmpty(dto.Title))

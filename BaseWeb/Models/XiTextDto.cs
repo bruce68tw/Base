@@ -5,10 +5,10 @@
         public XiTextDto()
         {
             MaxLen = 0;
-            Type = "text";
+            IsPwd = false;
         }
 
         public int MaxLen { get; set; }
-        public string Type { get; set; }
+        public bool IsPwd { get; set; }
     }
 }

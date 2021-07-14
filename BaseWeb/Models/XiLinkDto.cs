@@ -2,6 +2,7 @@
 {
     public class XiLinkDto : XiBaseDto
     {
-        public string FnOnClick { get; set; }
+        public string Table { get; set; }
+        public string FnOnViewFile { get; set; }
     }
 }

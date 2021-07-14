@@ -26,6 +26,7 @@ namespace Base.Services
             return _Str.IsEmpty(str) ? null : JArray.Parse(str);
         }
 
+        /*
         public static JObject SystemError(string error)
         {
             return new JObject
@@ -33,12 +34,26 @@ namespace Base.Services
                 ["SystemError"] = error
             };
         }
+        */
 
         public static JObject GetError(string error)
         {
             return new JObject
             {
                 ["ErrorMsg"] = error
+            };
+        }
+
+        /// <summary>
+        /// get js _BR error
+        /// </summary>
+        /// <param name="fid">_BR fid</param>
+        /// <returns></returns>
+        public static JObject GetErrorBR(string fid)
+        {
+            return new JObject
+            {
+                ["ErrorBrFid"] = fid
             };
         }
 
@@ -236,6 +251,11 @@ namespace Base.Services
 
             var rows = inputJson[fid] as JArray;
             return rows[0] as JObject;
+        }
+
+        public static bool IsFidEqual(JObject json, string fid, string value)
+        {
+            return _Str.IsInList(json[fid].ToString(), value);
         }
 
         /*

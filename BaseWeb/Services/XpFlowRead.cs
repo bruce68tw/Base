@@ -15,9 +15,9 @@ order by Id
 ",
         };
 
-        public JObject GetPage(DtDto dt)
+        public JObject GetPage(string ctrl, DtDto dt)
         {
-            return new CrudRead().GetPage(dto, dt);
+            return new CrudRead().GetPage(ctrl, dto, dt);
         }
 
     } //class

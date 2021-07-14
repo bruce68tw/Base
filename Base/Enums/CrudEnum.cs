@@ -4,8 +4,9 @@ namespace Base.Enums
     /// <summary>
     /// crud fun type
     /// </summary>
-    public enum CrudFunEnum
+    public enum CrudEnum
     {
+        AuthRow,
         Create,
         Read,
         Update,

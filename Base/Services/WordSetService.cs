@@ -3,16 +3,15 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
-using System.Linq;
 
 //for docx image
 using D = DocumentFormat.OpenXml.Drawing;
-using WP = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using P = DocumentFormat.OpenXml.Drawing.Pictures;
-using System;
-using System.Drawing;
+using WP = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 
 namespace Base.Services
 {
@@ -27,15 +26,10 @@ namespace Base.Services
         public const int Radio = 2;     //radio
         public const int CharV = 3;     //V char
 
-        //public const string ImageTpl = "ImageTpl.png";     //V char
-        //WordprocessingDocument
-
+        //instance variables
         private WordprocessingDocument _docx;
 
-        /// <summary>
-        /// constructor
-        /// </summary>
-        /// <param name="docx"></param>
+        //constructor
         public WordSetService(WordprocessingDocument docx)
         {
             _docx = docx;
@@ -54,7 +48,7 @@ namespace Base.Services
         /// read docx MainDocumentPart to string
         /// </summary>
         /// <returns></returns>
-        public string GetMainStr()
+        public string GetMainPartStr()
         {
             using (var sr = new StreamReader(_docx.MainDocumentPart.GetStream()))
             {
@@ -65,7 +59,7 @@ namespace Base.Services
         /// <summary>
         /// write string into docx mainpart
         /// </summary>
-        public void WriteMainStr(string str)
+        public void SetMainPartStr(string str)
         {
             //string to docx stream, must use FileMode.Create, or target file can not open !!
             using (var sw = new StreamWriter(_docx.MainDocumentPart.GetStream(FileMode.Create)))
@@ -75,94 +69,17 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// template string fill json row
-        /// </summary>
-        /// <param name="str"></param>
-        /// <param name="row"></param>
-        /// <returns></returns>
-        public string StrFillRow(string str, JObject row)
-        {
-            foreach (var item in row)
-                str = str.Replace("[" + item.Key + "]", item.Value.ToString());
-            return str;
-        }
-
-        /*
-        /// <summary>
-        /// write into docx stream, consider multiple rows(copy from _WebWord.cs Output())
-        /// </summary>
-        /// <param name="row"></param>
-        /// <param name="stream"></param>
-        /// <param name="images"></param>
-        /// <param name="rows">"multiple" rows</param>
-        public bool StreamFillData(JObject row, Stream stream, List<WordImageDto> images = null, List<WordRowsDto> wordRows = null)
-        {
-            //stream -> docx
-            using (var docx = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document))
-            {
-                //call delegate if need
-                //var mainPart = docx.MainDocumentPart;
-
-                //=== 2.do single row start ===
-                //read template file
-                var mainTpl = GetMainPartStr();
-
-                //add image first
-                if (images != null)
-                    DocxAddImage(docx, ref mainTpl, images);
-
-                //fill master row
-                mainTpl = StrFillRow(mainTpl, row);
-                //foreach (var item in row)
-                //    mainTpl = mainTpl.Replace("[" + item.Key + "]", item.Value.ToString());
-
-                //multiple rows
-                if (wordRows != null)
-                {
-                    foreach(var wordRow in wordRows)
-                    {
-                        //find tag name
-                        //find box tag & row -> template string
-                        var tplStart = 0;
-                        var tplEnd = 0;
-                        var rowTpl = "";
-                        var rowList = "";
-                        foreach(JObject row2 in wordRow.Rows)
-                        {
-                            var rowStr = rowTpl;
-                            foreach (var item in row2)
-                                rowStr = rowStr.Replace("[" + item.Key + "]", item.Value.ToString());
-                            rowList += rowStr;
-                        }
-
-                        mainTpl = mainTpl.Substring(0, tplStart) + rowList + mainTpl.Substring(0, tplEnd);
-                    }
-                }
-
-                StrToDocxMain(mainTpl, docx);
-
-                //Debug.Assert(IsDocxValid(doc), "Invalid File!");
-
-                //no save, but can debug !!
-                //mainPart.Document.Save();
-                //=== 2. end ===
-                return true;
-            }
-        }
-        */
-
-        /// <summary>
-        /// word doc add images
+        /// word docx add images
         /// </summary>
         /// <param name="srcTpl">(ref) source template string</param>
-        /// <param name="imageInfos"></param>
-        public void AddImages(ref string srcTpl, List<WordImageDto> imageInfos)
+        /// <param name="imageDtos"></param>
+        public void AddImages(ref string srcTpl, List<WordImageDto> imageDtos)
         {
-            if (imageInfos == null || imageInfos.Count == 0)
+            if (imageDtos == null || imageDtos.Count == 0)
                 return;
 
             var mainPart = _docx.MainDocumentPart;
-            foreach (var imageInfo in imageInfos)
+            foreach (var imageInfo in imageDtos)
             {
                 //get image info
                 var runDto = GetImageRunDto(imageInfo.FilePath);
@@ -192,35 +109,6 @@ namespace Base.Services
                     //newRun.Descendants<D.Graphic>().First().InnerXml +    //.docx open failed !!
                     newGraph + 
                     srcTpl.Substring(drawStart + graphEnd + 1);
-            }
-        }
-
-        /// <summary>
-        /// ?? if multiple area has fixed rows, can treat as single row
-        /// table field id add pre a,b,c(for multiple tables), add tail 0,1,2 for row no
-        /// </summary>
-        /// <param name="rows">multiple rows, nullable</param>
-        /// <param name="row">single row to write into</param>
-        /// <param name="preTable">table field id pre a,b,c</param>
-        /// <param name="maxRows">multiple area with fixed rows</param>
-        /// <param name="cols">table column list, no pre/tail char (rows could be null, so this input is need)</param>
-        public void FixedRowsToRow(JArray rows, JObject row, string preTable, int maxRows, List<string> cols)
-        {
-            //write row
-            //if (extCols != null)
-            //    cols.AddRange(extCols);
-            var colLen = cols.Count;
-            var rowLen = (rows == null) ? 0 : rows.Count;
-            for (var i = 0; i < maxRows; i++)
-            {
-                //reset table column or write into
-                if (rowLen > i)
-                    for (var j = 0; j < colLen; j++)
-                        row[preTable + cols[j] + i] = rows[i][cols[j]].ToString();
-                else
-                    for (var j = 0; j < colLen; j++)
-                        row[preTable + cols[j] + i] = "";
-
             }
         }
 
@@ -451,6 +339,114 @@ namespace Base.Services
                      });
             return new D.Run(element);
         }
+
+        #region remark code
+        /*
+        /// <summary>
+        /// template string fill json row
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        public string StrFillRow(string str, JObject row)
+        {
+            foreach (var item in row)
+                str = str.Replace("[" + item.Key + "]", item.Value.ToString());
+            return str;
+        }
+
+        /// <summary>
+        /// write into docx stream, consider multiple rows(copy from _WebWord.cs Output())
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="stream"></param>
+        /// <param name="images"></param>
+        /// <param name="rows">"multiple" rows</param>
+        public bool StreamFillData(JObject row, Stream stream, List<WordImageDto> images = null, List<WordRowsDto> wordRows = null)
+        {
+            //stream -> docx
+            using (var docx = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document))
+            {
+                //call delegate if need
+                //var mainPart = docx.MainDocumentPart;
+
+                //=== 2.do single row start ===
+                //read template file
+                var mainTpl = GetMainPartStr();
+
+                //add image first
+                if (images != null)
+                    DocxAddImage(docx, ref mainTpl, images);
+
+                //fill master row
+                mainTpl = StrFillRow(mainTpl, row);
+                //foreach (var item in row)
+                //    mainTpl = mainTpl.Replace("[" + item.Key + "]", item.Value.ToString());
+
+                //multiple rows
+                if (wordRows != null)
+                {
+                    foreach(var wordRow in wordRows)
+                    {
+                        //find tag name
+                        //find box tag & row -> template string
+                        var tplStart = 0;
+                        var tplEnd = 0;
+                        var rowTpl = "";
+                        var rowList = "";
+                        foreach(JObject row2 in wordRow.Rows)
+                        {
+                            var rowStr = rowTpl;
+                            foreach (var item in row2)
+                                rowStr = rowStr.Replace("[" + item.Key + "]", item.Value.ToString());
+                            rowList += rowStr;
+                        }
+
+                        mainTpl = mainTpl.Substring(0, tplStart) + rowList + mainTpl.Substring(0, tplEnd);
+                    }
+                }
+
+                StrToDocxMain(mainTpl, docx);
+
+                //Debug.Assert(IsDocxValid(doc), "Invalid File!");
+
+                //no save, but can debug !!
+                //mainPart.Document.Save();
+                //=== 2. end ===
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// ?? if multiple area has fixed rows, can treat as single row
+        /// table field id add pre a,b,c(for multiple tables), add tail 0,1,2 for row no
+        /// </summary>
+        /// <param name="rows">multiple rows, nullable</param>
+        /// <param name="row">single row to write into</param>
+        /// <param name="preTable">table field id pre a,b,c</param>
+        /// <param name="maxRows">multiple area with fixed rows</param>
+        /// <param name="cols">table column list, no pre/tail char (rows could be null, so this input is need)</param>
+        public void FixedRowsToRow(JArray rows, JObject row, string preTable, int maxRows, List<string> cols)
+        {
+            //write row
+            //if (extCols != null)
+            //    cols.AddRange(extCols);
+            var colLen = cols.Count;
+            var rowLen = (rows == null) ? 0 : rows.Count;
+            for (var i = 0; i < maxRows; i++)
+            {
+                //reset table column or write into
+                if (rowLen > i)
+                    for (var j = 0; j < colLen; j++)
+                        row[preTable + cols[j] + i] = rows[i][cols[j]].ToString();
+                else
+                    for (var j = 0; j < colLen; j++)
+                        row[preTable + cols[j] + i] = "";
+
+            }
+        }
+        */
+        #endregion
 
     }//class
 }

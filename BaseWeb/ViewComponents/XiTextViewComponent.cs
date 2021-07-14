@@ -20,14 +20,15 @@ namespace BaseWeb.ViewComponents
             //prop ??= new PropTextDto();
 
             //base attr: fid,name,readonly,ext attr
-            var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.ExtAttr) +
-                $" type='{dto.Type}' value='{dto.Value}' style='width:{dto.Width}'" +     //default 100%
+            var type = dto.IsPwd ? "password" : "text";
+            var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
+                $" type='{type}' value='{dto.Value}' style='width:{dto.Width}'" +     //default 100%
                 _Helper.GetPlaceHolder(dto.InputTip) +
                 _Helper.GetRequired(dto.Required) +
                 _Helper.GetMaxLength(dto.MaxLen);
 
             //get input html
-            var html = $"<input{attr} data-type='text' class='form-control xi-box {dto.ExtClass}'>";
+            var html = $"<input{attr} data-type='text' class='form-control xi-box {dto.BoxClass}'>";
 
             //add title,required,tip,cols for single form
             //consider this field could in datatable(no title) !!

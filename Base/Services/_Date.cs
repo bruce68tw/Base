@@ -174,9 +174,9 @@ namespace Base.Services
         /// <returns>datetime string</returns>
         public static string ToDbStr(DateTime dt)
         {
-            var dbType = _Fun.GetDbType();
+            var dbType = _Fun.DbType;
             return (dbType == DbTypeEnum.MSSql || dbType == DbTypeEnum.MySql)
-                ? dt.ToString(_Fun.DbDtFormat)
+                ? dt.ToString(_Fun.DbDtFmt)
                 : "";
         }
 
@@ -280,7 +280,7 @@ namespace Base.Services
             if (string.IsNullOrEmpty(dt))
                 return null;
 
-            DateTime.TryParseExact(dt, _Fun.CsDtFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt2);
+            DateTime.TryParseExact(dt, _Fun.CsDtFmt, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt2);
             return dt2;
         }
 
@@ -291,19 +291,6 @@ namespace Base.Services
             return (dt2 == null)
                 ? (DateTime?)null : dt2.Value.Date;
         }
-
-        /// <summary>
-        /// js datetime format string to datetime
-        /// </summary>
-        /// <param name="dt">datetime string</param>
-        /// <returns></returns>
-        /*
-        public static DateTime CsToDt(string dt)
-        {
-            DateTime.TryParseExact(dt, _Fun.CsDtFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt2);
-            return dt2;
-        }
-        */
 
         /// <summary>
         /// get date part string
@@ -328,43 +315,6 @@ namespace Base.Services
             return (ymd.Length == 8)
                 ? ymd.Substring(0, 4) + "/" + ymd.Substring(4, 2) + "/" + ymd.Substring(6, 2)
                 : "";
-        }
-        */
-        #endregion
-
-        #region db related
-        /*
-        //to date+hm string ??
-        public static string ToDateHmStr(DateTime? dt, DbFormatDto dbFormat)
-        {
-            return (dt == null)
-                ? ""
-                : dt.Value.ToString(dbFormat.FrontDtNoSec);
-        }
-
-        //datetime string to date string
-        public static string StrToDateStr(string dt, string format)
-        {
-            return string.IsNullOrEmpty(dt)
-                ? ""
-                : ToDateStr(DateTime.Parse(dt), format);
-        }
-
-        //to date string
-        public static string ToDateStr(DateTime? dt, string format)
-        {
-            return (dt == null)
-                ? ""
-                : dt.Value.ToString(format);
-        }
-
-        //to front datetime string
-        public static string ToFrontStr(DateTime? dt, DbFormatDto dbFormat)
-        {
-            return (dt == null)
-                ? ""
-                : dt.Value.ToString(dbFormat.FrontDt);
-            //: Convert.ToString(dt, new CultureInfo("ja-JP")).Trim();
         }
         */
         #endregion

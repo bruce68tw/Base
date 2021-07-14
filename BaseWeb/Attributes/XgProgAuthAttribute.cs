@@ -14,46 +14,43 @@ namespace BaseWeb.Attributes
         /// <summary>
         /// crud function type
         /// </summary>
-        private CrudFunEnum _funType;
+        private CrudEnum _crudEnum;
 
-        public XgProgAuthAttribute(CrudFunEnum funType = CrudFunEnum.Empty)
+        public XgProgAuthAttribute(CrudEnum crudEnum = CrudEnum.Empty)
         {
-            _funType = funType;
+            _crudEnum = crudEnum;
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            //get controller name
-            var ctrl = (string)context.RouteData.Values["Controller"];
-            //var ctrl = context.Controller.ActionDescriptor.ControllerDescriptor.ControllerName;
-
-            //=== check program right ===
+            //1.check program right
+            var ctrl = (string)context.RouteData.Values["Controller"];  //ctrl name
             var userInfo = _Fun.GetBaseUser();
             var isLogin = userInfo.IsLogin;
-            if (isLogin && _XpProg.CheckAuth(userInfo.ProgAuthStrs, ctrl, _funType))
+            if (isLogin && _XpProg.CheckAuth(userInfo.ProgAuthStrs, ctrl, _crudEnum))
             {
                 //case of ok
                 base.OnActionExecuting(context);
                 return;
             }
 
-            //=== not login or no access right below ===
+            #region 2.set variables
             //_Log.Error("No Permission: " + Prog + "->" + filterContext.ActionDescriptor.ActionName);
-
             //error msg when need
-            //var msg = "您尚未有後台相關權限，請洽人事處進行權限申請。";
             var error = isLogin
-                ? _Locale.GetBaseRes().NoProgAuth
+                ? _Locale.GetBaseRes().NoAuthProg
                 : _Locale.GetBaseRes().NotLogin;
 
             //get return type
-            var returnType = "ActionResult";    //default
-            if (context.ActionDescriptor is ControllerActionDescriptor controllerActionDescriptor)
-                returnType = controllerActionDescriptor.MethodInfo.ReturnType.Name;
+            var returnType = (context.ActionDescriptor is ControllerActionDescriptor controllerActionDescriptor)
+                ? controllerActionDescriptor.MethodInfo.ReturnType.Name
+                : "ActionResult";    //default
+            #endregion
 
-            //1.return view
+            //return error
             if (returnType == "ActionResult")
             {
+                #region 3.return view: Login/NoProgAuth
                 if (!isLogin)
                 {
                     //redirect to Home/Login action
@@ -72,20 +69,19 @@ namespace BaseWeb.Attributes
                         ViewName = "~/Views/Shared/NoProgAuth.cshtml",
                     };
                 }
+                #endregion
             }
-            //2.return model
             else if (returnType == "JsonResult")
             {
+                //4.return error model
                 context.Result = new JsonResult(new
                 {
                     Value = new ResultDto() { ErrorMsg = error }
                 });
             }
-            //3.return others
-            //else if (type == typeof(ContentResult))
             else
             {
-                //return error msg for client side
+                //5.return error json(ContentResult)
                 var json = _Json.GetError(error);
                 context.Result = new ContentResult()
                 {
@@ -93,6 +89,5 @@ namespace BaseWeb.Attributes
                 };
             }
         }
-
     } //class
 }

@@ -416,7 +416,7 @@ where Id='{sourceId}'
                 db.Dispose();
             }
             _Log.Error("_XpFlow.cs SignRow() failed: " + error);
-            return _Fun.GetSystemError();
+            return _Model.GetError();
         }
 
     }//class

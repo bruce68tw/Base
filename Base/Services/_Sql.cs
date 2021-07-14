@@ -141,7 +141,7 @@ namespace Base.Services
 
             string op;
             string sql = "";
-            switch (_Fun.GetDbType())
+            switch (_Fun.DbType)
             {
                 case DbTypeEnum.MSSql:
                     op = " + ";
@@ -161,7 +161,7 @@ namespace Base.Services
             for (int i = 0; i < len; i++)
                 list += values[i] + op;
 
-            return sql + "(" + list + ")";
+            return sql + "(" + list.Substring(0, list.Length - op.Length) + ")";
         }
 
     }//class

@@ -1,8 +1,8 @@
 ﻿namespace BaseWeb.Models
 {
-    public class XiTaDto : XiBaseDto
+    public class XiTextareaDto : XiBaseDto
     {
-        public XiTaDto()
+        public XiTextareaDto()
         {
             MaxLen = 0;
             RowsCount = 3;
