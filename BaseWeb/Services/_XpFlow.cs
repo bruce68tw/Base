@@ -10,7 +10,7 @@ namespace BaseWeb.Services
 {
     public class _XpFlow
     {
-        //match to Code.Type="AndOr" && Flow.js
+        //match to XpCode.Type="AndOr" && Flow.js
         private const string OrSep = "{O}";
         private const string AndSep = "{A}";
         private const string ColSep = ",";

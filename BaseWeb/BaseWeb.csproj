@@ -26,6 +26,7 @@
     <None Remove="Services\SessionRedisService.cs_old" />
     <None Remove="Services\SessionService.cs_old" />
     <None Remove="Services\XpResourceService.c_old" />
+    <None Remove="Services\_ActionResult.cs_old" />
     <None Remove="Services\_ActionResult.cs_tmp" />
     <None Remove="Services\_Http.cs_tmp" />
     <None Remove="Services\_Session.cs_old" />

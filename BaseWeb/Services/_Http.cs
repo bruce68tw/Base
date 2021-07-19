@@ -142,8 +142,13 @@ namespace BaseWeb.Services
             return result;
         }
 
-        //sync call remote service
-        //public static string Sync(HttpWebRequest request, byte[] byteArray)
+        /// <summary>
+        /// sync call remote service
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="isPost"></param>
+        /// <param name="arg"></param>
+        /// <returns></returns>
         public static string Sync(string url, bool isPost = true, string arg = "")
         {
             //set request

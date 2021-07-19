@@ -1,4 +1,5 @@
 ﻿using Base.Services;
+using BaseWeb.Models;
 using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
@@ -16,14 +17,15 @@ namespace BaseWeb.ViewComponents
         /// <param name="tip"></param>
         /// <param name="required"></param>
         /// <returns></returns>
-        public HtmlString Invoke(string title, string tip = "", bool required = false, string extClass = "")
+        public HtmlString Invoke(XgThDto dto)
         {
-            title = _Helper.GetRequiredSpan(required) + title;
-            var html = (tip == "")
+            var title = _Helper.GetRequiredSpan(dto.Required) + dto.Title;
+            var html = (dto.Tip == "")
                 ? "<th{0}>" + title + "</th>"
-                : "<th{0} title='" + tip + "'>" + title + "<i class='ico-info'></i></th>";
-            if (!string.IsNullOrEmpty(extClass))
-                extClass = " class='" + extClass + "'";
+                : "<th{0} title='" + dto.Tip + "'>" + title + "<i class='ico-info'></i></th>";
+            var extClass = string.IsNullOrEmpty(dto.ExtClass)
+                ? "" 
+                : " class='" + dto.ExtClass + "'";
             return new HtmlString(string.Format(html, extClass));
         }
 

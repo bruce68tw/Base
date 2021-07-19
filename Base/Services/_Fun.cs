@@ -31,7 +31,7 @@ namespace Base.Services
         public const string UserFid = "_userId";
         public const string DeptFid = "_deptId";
 
-        //default view cols for layout(row div, label=2, input=3)(水平) 
+        //default view cols for layout(row div, label=2, input=3)(horizontal) 
         public static List<int> DefHoriCols = new List<int>() { 2, 3 };
         #endregion
 
@@ -65,9 +65,6 @@ namespace Base.Services
 
         //for delete rows
         public static string DeleteRowsSql;
-
-        //db status, when db get error, it will change to false
-        //public static bool DbStatus = true;
         #endregion
 
         #region others variables
@@ -75,9 +72,6 @@ namespace Base.Services
         public static ConfigDto Config;
 
         public static SmtpDto Smtp = default(SmtpDto);
-
-        //session type(web only), 1:session, 2:redis, 3:custom(config must set SessionService field, use Activator)
-        //public static int SessionServiceType = 1;
         #endregion
 
         /*
@@ -98,7 +92,6 @@ namespace Base.Services
             DiBox = diBox;
             DbType = dbType;
             AuthType = authType;
-            //_dynamicLocale = dynamicLocale;
 
             #region set smtp
             var smtp = Config.Smtp;
@@ -167,37 +160,6 @@ Offset {2} Rows Fetch Next {3} Rows Only
             #endregion
         }
 
-        /*
-        //get DI
-        public static IServiceProvider GetDiBox()
-        {
-            return _diBox;
-        }
-
-        public static bool IsDebug()
-        {
-            return _isDebug;
-        }
-
-        //get db type
-        public static DbTypeEnum GetDbType()
-        {
-            return _dbType;
-        }
-
-        //get auth type
-        public static AuthTypeEnum GetAuthType()
-        {
-            return _authType;
-        }
-
-        //get _dynamicLocale
-        public static bool IsDynamicLocale()
-        {
-            return _dynamicLocale;
-        }
-        */
-
         //get current userId
         public static string UserId()
         {
@@ -209,29 +171,10 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return GetBaseUser().DeptId;
         }
 
-        /*
-        //get system error string
-        public static ResultDto GetSystemError()
-        {
-            return new ResultDto() { ErrorMsg = "System Error, Please check admin !" };
-        }
-        */
-
         public static bool IsAuthRow()
         {
             return (AuthType == AuthTypeEnum.Row);
         }
-
-        /*
-        /// <summary>
-        /// get base resource for base component
-        /// </summary>
-        /// <returns>BaseResourceDto</returns>
-        public static BaseResDto GetBaseRes(string locale = "")
-        {
-            return _Locale.GetBaseRes(locale);
-        }
-        */
 
         /// <summary>
         /// get base user info for base component

@@ -12,7 +12,6 @@ namespace BaseWeb.Services
         /// <returns></returns>
         public static string Encode(string data)
         {
-            //return "";  //TODO HttpContext.Current.Server.HtmlEncode(data);
             return HttpUtility.HtmlEncode(data);
         }
 
@@ -30,10 +29,10 @@ namespace BaseWeb.Services
         {
             if (!string.IsNullOrEmpty(html))
             {
-                //移除  javascript code.
+                //remove js code.
                 html = Regex.Replace(html, @"<script[\d\D]*?>[\d\D]*?</script>", string.Empty);
 
-                //移除html tag.
+                //remove html tag.
                 html = Regex.Replace(html, @"<[^>]*>", string.Empty);
             }            
 

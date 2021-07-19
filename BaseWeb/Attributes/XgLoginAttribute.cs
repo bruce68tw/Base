@@ -11,8 +11,8 @@ namespace BaseWeb.Attributes
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            var baseU = _Fun.GetBaseUser();
-            if (baseU != null && baseU.IsLogin)
+            var br = _Fun.GetBaseUser();
+            if (br != null && br.IsLogin)
             {
                 //case of ok
                 base.OnActionExecuting(context);

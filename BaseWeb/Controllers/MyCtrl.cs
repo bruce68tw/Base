@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BaseWeb.Controllers
 {
-    public class MyController : Controller 
+    public class MyCtrl : Controller 
     {
         //controller name
         public string Ctrl;
@@ -17,6 +17,7 @@ namespace BaseWeb.Controllers
             base.OnActionExecuting(context);
         }
 
+        //json to content
         protected ContentResult JsonToCnt(JObject json)
         {
             return Content(json.ToString(), ContentTypeEstr.Json);
