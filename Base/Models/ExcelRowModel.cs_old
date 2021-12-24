@@ -1,0 +1,16 @@
+﻿using System.Collections.Generic;
+
+namespace Base.Models
+{
+    /// <summary>
+    /// Row
+    /// </summary>
+    public class ExcelRowModel
+    {
+        public ExcelRowModel()
+        {
+            Cells = new List<string>();
+        }
+        public List<string> Cells { get; set; }
+    }
+}

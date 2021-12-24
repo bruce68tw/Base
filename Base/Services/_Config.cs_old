@@ -1,0 +1,58 @@
+﻿using System;
+using System.Configuration;
+
+namespace Base.Services
+{
+    public class _Config
+    {
+        /// <summary>
+        /// get db connection string in web.config
+        /// </summary>
+        /// <param name="field"></param>
+        /// <returns></returns>
+        public static string GetDbStr(string field)
+        {
+            if (ConfigurationManager.ConnectionStrings[field] != null)
+                return ConfigurationManager.ConnectionStrings[field].ConnectionString;
+
+            _Log.Error("config no db connection field. (" + field + ")");
+            return "";
+        }
+
+        /// <summary>
+        /// get config string value
+        /// </summary>
+        /// <param name="field">field name</param>
+        /// <param name="value">default value</param>
+        /// <param name="log">log error or not, default yes</param>
+        /// <returns>變數值</returns>
+        public static string GetStr(string field, string value = "", bool log = true)
+        {
+            if (ConfigurationManager.AppSettings[field] != null)
+                return ConfigurationManager.AppSettings[field];
+
+            if (log)
+                _Log.Error("config file has no field. (" + field + ")");
+            return value;
+        }
+
+        public static bool GetBool(string field, bool value = false, bool log = true)
+        {
+            var data = GetStr(field, "", log).ToLower();
+            return (data == "")
+                ? value
+                : (data == "true");
+        }
+
+        public static int GetInt(string field, int value = 0, bool log = true)
+        {
+            //int value;
+            if (Int32.TryParse(GetStr(field, "", log), out value))
+                return value;
+
+            _Log.Error("config file int field wrong. (" + field + ")");
+            return value;
+        }
+
+    }//class
+}

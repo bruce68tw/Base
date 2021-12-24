@@ -1,0 +1,73 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Configurations>Debug;Release;Debug-Local</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Interfaces2\**" />
+    <Compile Remove="Models\old\**" />
+    <EmbeddedResource Remove="Interfaces2\**" />
+    <EmbeddedResource Remove="Models\old\**" />
+    <None Remove="Interfaces2\**" />
+    <None Remove="Models\old\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Enums\EnumCacheDb.cs_old" />
+    <None Remove="Enums\EnumCacheStatus.cs_old" />
+    <None Remove="Enums\zz_EnumOrderDir.cs_old" />
+    <None Remove="Models\CacheReadModel.cs_old" />
+    <None Remove="Models\DbFormatDto.cs_old" />
+    <None Remove="Models\ErrorFieldDto.cs_old" />
+    <None Remove="Models\ExcelRowModel.cs_old" />
+    <None Remove="Models\ExcelSheetModel.cs_old" />
+    <None Remove="Models\ProgAuthDto.cs_old" />
+    <None Remove="Models\PropBaseDto.c_old" />
+    <None Remove="Models\PropCheckDto.c_old" />
+    <None Remove="Models\PropDateDto.c_old" />
+    <None Remove="Models\PropFileDto.c_old" />
+    <None Remove="Models\PropNumDto.c_old" />
+    <None Remove="Models\PropRadioDto.c_old" />
+    <None Remove="Models\PropSelectDto.c_old" />
+    <None Remove="Models\PropTextAreaDto.c_old" />
+    <None Remove="Models\PropTextDto.c_old" />
+    <None Remove="Models\RBDto.cs_old" />
+    <None Remove="Models\Select2PropModel.cs_old" />
+    <None Remove="Models\SqlArgModel.cs_old" />
+    <None Remove="Models\UserProfile0Model.cs_old" />
+    <None Remove="Models\WordRowsDto.cs_old" />
+    <None Remove="Services\ACrudEdit.cs_old" />
+    <None Remove="Services\BaseResService.cs_old" />
+    <None Remove="Services\Cache.cs_old" />
+    <None Remove="Services\CrudEdit.cs_bak" />
+    <None Remove="Services\Date2.cs_old" />
+    <None Remove="Services\Db0Service.cs_old" />
+    <None Remove="Services\Extension.cs_old" />
+    <None Remove="Services\IBaseResService.cs_old" />
+    <None Remove="Services\LogError.cs_old" />
+    <None Remove="Services\UserDataService.cs_old" />
+    <None Remove="Services\UserProfile0Service.cs_old" />
+    <None Remove="Services\zz_CacheDb.cs_old" />
+    <None Remove="Services\_Ad.cs_old" />
+    <None Remove="Services\_Cache.cs_old" />
+    <None Remove="Services\_Cache.cs_old2" />
+    <None Remove="Services\_Cast.cs_old" />
+    <None Remove="Services\_Config.cs_old" />
+    <None Remove="Services\_Error.cs_old" />
+    <None Remove="Services\_Locale.cs_old" />
+    <None Remove="Services\_Msg.cs_old" />
+    <None Remove="Services\_Multi.cs_old" />
+    <None Remove="Services\_Word.cs_old" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.14.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="StackExchange.Redis" Version="2.2.88" />
+    <PackageReference Include="System.Data.OleDb" Version="6.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+  </ItemGroup>
+
+</Project>

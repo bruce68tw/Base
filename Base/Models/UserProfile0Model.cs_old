@@ -1,0 +1,24 @@
+﻿using Base.Services;
+using System;
+
+namespace Base.Models
+{
+    /// <summary>
+    /// basic user profile data for base class
+    /// </summary>
+    public class UserProfile0Model
+    {
+        //user id
+        public string UserId = "";
+
+        //user id
+        public string DeptId = "";
+
+        //locale code
+        public string Locale = _Fun.Locale;
+
+        //diffence hours to GMT for Db saving
+        public Double DiffHour = 0;
+        
+    }//class
+}

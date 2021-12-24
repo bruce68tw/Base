@@ -1,0 +1,1291 @@
+﻿using Base.Enums;
+using Base.Models;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+/// <summary>
+/// 1.remove cache function
+/// 2.add read/write multiple table fun
+/// </summary>
+namespace Base.Services
+{
+    /// <summary>
+    /// for Crud Edit Service
+    /// </summary>
+    public class CrudEdit
+    {
+        //constant
+        //front end input json fields:
+        private const string Rows = "_rows";        //multiple rows
+        private const string Deletes = "_deletes";  //delete key string list
+        private const string Childs = "_childs";    //child json list
+        private const string FkeyFid = "_fkeyfid";  //foreign key fid
+        private const string IsNew = "_isNew";      //crud field for is new row or not
+
+        //master edit
+        private readonly EditDto _editDto;
+        private readonly string _ctrl;       //controll name
+        private int _saveRows = 0;  //changed(new/edit) rows count
+
+        //db str in config file
+        private readonly string _dbStr;
+
+        //sql args pair(fid,value)
+        private List<object> _sqlArgs = new();
+
+        //now time
+        private DateTime _now;
+
+        //new key json, format: t + levelStr = json, 
+        //ex: t02 = { fxx = key1, fxx = key2}, xx is row index(base 1 !!)
+        private JObject _newKeyJson = new();
+
+        //constructor
+        public CrudEdit(string ctrl, EditDto editDto, string dbStr = "")
+        {
+            _ctrl = ctrl;
+            _editDto = editDto;
+            _dbStr = dbStr;
+        }
+
+        private Db GetDb()
+        {
+            return new Db(_dbStr);
+        }
+
+        //add argument into _argFids, _argValues
+        private void AddArg(string fid, object value)
+        {
+            _sqlArgs.Add(fid);
+            _sqlArgs.Add(value);
+        }
+
+        //clear argument
+        private void ResetArg()
+        {
+            _sqlArgs = new List<object>();
+        }
+
+        //set _now
+        private void SetNow()
+        {
+            _now = DateTime.Now;
+        }
+
+        //get where by pkey for query 1st table & updata tables, set sql args at the same time
+        //for getRow & update
+        private string GetWhereAndArg(EditDto edit, string key)
+        {
+            //kid add "_" for avoid conflict when update
+            var kid = "_" + edit.PkeyFid;  
+            AddArg(kid, key);
+            return edit.PkeyFid + "=@" + kid;
+        }
+
+        //get select sql 
+        private string GetSql(EditDto edit, string key)
+        {
+            ResetArg();
+            var where = GetWhereAndArg(edit, key);
+            return GetSqlByWhere(edit, where);
+        }
+
+        private string GetSqlByField(EditDto edit, string key)
+        {
+            return string.Format(edit.ReadSql, key);
+            /*
+            return _Str.CheckKeyRule(key, edit.ReadSql)
+                 ? string.Format(edit.ReadSql, key)
+                 : "";
+            */
+        }
+
+        private string GetSqlByWhere(EditDto edit, string where)
+        {
+            //add columns list
+            var list = "";
+            foreach (var item in edit.Items)
+                list += (item.Col == "" ? item.Fid : (item.Col + " as " + item.Fid)) + ",";
+
+            list = list[0..^1];
+
+            //get sql
+            var order = _Str.IsEmpty(edit.OrderBy) ? "" : " Order By " + edit.OrderBy;
+            return "Select " + list + " From " + edit.Table + " Where " + where + order;
+        }
+
+        /*
+        //get key value of row
+        public string GetKey(EditDto edit, JObject row)
+        {
+            return row[edit.PkeyFid].ToString();
+        }
+        */
+
+        /// <summary>
+        /// has _hideKey for CSRF issue, check this field before update row
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public async Task<JObject> GetDbRowAsync(EditDto edit, string key, Db db = null)
+        {
+            //reset sqlArgs first
+            //ResetArg();
+
+            //connect db if need
+            var hasDb = false;
+            _Fun.CheckOpenDb(ref db, ref hasDb, _dbStr);
+
+            //return row & close db if need
+            var sql = _Str.IsEmpty(edit.ReadSql)
+                ? GetSql(edit, key)
+                : GetSqlByField(edit, key);
+            var row = await db.GetJsonAsync(sql, _sqlArgs);
+            await _Fun.CheckCloseDb(db, hasDb);
+            return row;
+        }
+
+        public async Task<JObject> GetUpdJsonAsync(string key)
+        {
+            return await GetJsonByFunAsync(CrudEnum.Update, key);
+        }
+        public async Task<JObject> GetViewJsonAsync(string key)
+        {
+            return await GetJsonByFunAsync(CrudEnum.Update, key);
+        }
+        private async Task<JObject> GetJsonByFunAsync(CrudEnum fun, string key)
+        {
+            return  await GetJsonAsync(CrudEnum.View, key);
+        }
+
+        /// <summary>
+        /// get rows for multi tables (1 to many)
+        /// include: collumns、_childs
+        /// note: 1.master table must relat to child table
+        /// </summary>
+        /// <param name="key">table primary key value</param>
+        /// <returns></returns>
+        private async Task<JObject> GetJsonAsync(CrudEnum crudEnum, string key)
+        {
+            if (!_Str.CheckKeyRule(key))
+            {
+                await _Log.ErrorAsync("CrudEdit.cs GetJson() failed, key wrong: " + key);
+                return null;
+            }
+
+            var db = GetDb();
+            var data = await GetDbRowAsync(_editDto, key, db);    //return data
+            if (data == null)
+                goto lab_exit;
+
+            //check for AuthType=Row if need
+            if (_Fun.IsAuthTypeData())
+            {
+                var brError = CheckAuthTypeData(data, crudEnum);
+                if (_Str.NotEmpty(brError))
+                {
+                    data = _Json.GetBrError(brError);
+                    goto lab_exit;
+                }
+            }
+
+            //get child rows (recursive)
+            var editChilds = _editDto.Childs;
+            if (editChilds != null && editChilds.Length > 0)
+            {
+                var childs = new JArray();
+                var keys = new List<string>() { key };
+                for (var i = 0; i < editChilds.Length; i++)
+                    childs.Add(await GetChildDbJsonAsync(1, editChilds[i], keys, db));
+                data[Childs] = childs;
+            }
+            
+        lab_exit:
+            await db.DisposeAsync();
+            return data;
+        }
+
+        /// <summary>
+        /// check AuthType=Data if need
+        /// </summary>
+        /// <returns>BR error code if any</returns>
+        private string CheckAuthTypeData(JObject data, CrudEnum crudEnum)
+        {
+            var range = _XpProg.GetAuthRange(_ctrl, crudEnum);
+            if (range == AuthRangeEnum.User)
+            {
+                if (!_Json.IsFidEqual(data, _Fun.UserFid, _Fun.UserId()))
+                    return "NoAuthUser";
+            }
+            else if (range == AuthRangeEnum.Dept)
+            {
+                if (!_Json.IsFidEqual(data, _Fun.DeptFid, _Fun.DeptId()))
+                    return "NoAuthDept";
+            }
+
+            //case else
+            return "";            
+        }
+
+        /// <summary>
+        /// get childs rows(json) from db (recursive)
+        /// </summary>
+        /// <param name="editLevel">base 0, 傳入值會從1開始</param>
+        /// <param name="edit"></param>
+        /// <param name="keys"></param>
+        /// <param name="db"></param>
+        /// <returns>JObject with prop: _rows, _childs</returns>
+        private async Task<JObject> GetChildDbJsonAsync(int editLevel, EditDto edit, List<string> keys, Db db)
+        {
+            //get this rows
+            var keyList = _List.ToStr(keys, true);
+            var sql = _Str.IsEmpty(edit.ReadSql)
+                ? GetSqlByWhere(edit, edit.FkeyFid + " in (" + keyList + ")")
+                : GetSqlByField(edit, keyList);
+            var rows = await db.GetJsonsAsync(sql);
+            if (rows == null)
+                return null;
+
+            //prepare return data
+            var data = new JObject() { [Rows] = rows };
+
+            //get childs json list(recursive)
+            var editChilds = edit.Childs;
+            if (editChilds != null && editChilds.Length > 0)
+            {
+                keys = _Json.ArrayToListStr(rows, edit.PkeyFid);
+                var childs = new JArray();
+                for (var i = 0; i < editChilds.Length; i++)
+                    childs.Add(await GetChildDbJsonAsync(editLevel + 1, editChilds[i], keys, db));
+                data[Childs] = childs;
+            }
+            return data;
+        }
+
+        private int GetEditChildLen(EditDto edit)
+        {
+            return (edit.Childs == null) ? 0 : edit.Childs.Length;
+        }
+
+        /// <summary>
+        /// get json rows
+        /// </summary>
+        /// <param name="json">input row</param>
+        /// <returns>JArray</returns>
+        private JArray JsonToRows(JObject json)
+        {
+            if (json == null || json[Rows] == null)
+                return null;
+
+            var rows = json[Rows] as JArray;
+            return (rows.Count == 0)
+                ? null
+                : rows;
+        }
+
+        /// <summary>
+        /// get child rows from upJson
+        /// </summary>
+        /// <param name="upJson">input row</param>
+        /// <param name="childIdx">child index</param>
+        /// <returns>JArray</returns>
+        private JArray GetChildRows(JObject upJson, int childIdx)
+        {
+            var child = GetChildJson(upJson, childIdx);
+            return (child == null || child[Rows] == null)
+                ? null
+                : child[Rows] as JArray;
+        }
+
+        /// <summary>
+        /// get child json from upJson
+        /// </summary>
+        /// <param name="upJson"></param>
+        /// <param name="childIdx"></param>
+        /// <returns></returns>
+        private JObject GetChildJson(JObject upJson, int childIdx)
+        {
+            if (upJson == null || upJson[Childs] == null)
+                return null;
+
+            //JArray childs = upJson[Childs] as JArray;
+            return (upJson[Childs].Count() <= childIdx
+                    || _Json.IsEmpty(upJson[Childs][childIdx] as JObject))
+                ? null
+                : upJson[Childs][childIdx] as JObject;
+        }
+
+        //parse foreign key
+        private int ParseFkey(JObject row)
+        {
+            return ParseCol(row, FkeyFid);
+        }
+
+        /// <summary>
+        /// parse column for PkCol, FkCol
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="col"></param>
+        /// <returns>-1(error), 0(right key), n(new key)</returns>
+        private int ParseCol(JObject row, string col)
+        {
+            return _Object.IsEmpty(row[col]) ? -1 :
+                Int32.TryParse(row[col].ToString(), out int num) ? num : 
+                0;
+        }
+
+        /// <summary>
+        /// check is new key or not by kid
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="kid"></param>
+        /// <returns></returns>
+        private bool IsNewKey(JObject row, string kid)
+        {
+            return ParseCol(row, kid) > 0;
+        }
+
+        /// <summary>
+        /// check is new row or not by IsNew field
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        private bool IsNewRow(JObject row)
+        {
+            return (row[IsNew] != null && row[IsNew].ToString() == "1");
+        }
+
+        private bool HasField(JObject row, string kid)
+        {
+            if (row == null)
+                return false;
+
+            foreach (var field in row)
+            {
+                //skip under line field
+                var fid = field.Key;
+                if (fid != kid && !IsSpecEditFid(fid))
+                    return true;
+            }
+
+            //case of none
+            return false;
+        }
+
+        //is special fid or not
+        private bool IsSpecEditFid(string fid)
+        {
+            return (fid.Substring(0, 1) == "_");
+        }
+
+        /// <summary>
+        /// insert one row
+        /// </summary>
+        /// <param name="edit"></param>
+        /// <param name="inputRow"></param>
+        /// <param name="db"></param>
+        /// <returns>error msg if any</returns>
+        private async Task<bool> InsertRowAsync(EditDto edit, JObject inputRow, Db db)
+        {
+            //set key & map field
+
+            #region insert row if need
+            var error = "";
+            //reset sqlArgs first
+            ResetArg();
+
+            //set default value
+            edit.Items
+                .Where(a => a.Value != null)
+                .ToList()
+                .ForEach(a =>
+                {
+                    inputRow[a.Fid] = a.Value.ToString();
+                });
+
+            //prepare sql
+            var fids = "";
+            var values = "";
+            var userId = _Fun.UserId();   //get userId from child class
+            foreach (var field in inputRow)
+            {
+                //skip under line field
+                var fid = field.Key;
+                if (IsSpecEditFid(fid))
+                    continue;
+
+                //if no fid then log error !!
+                if (edit._FidNo[fid] == null)
+                {
+                    error = "CrudEdit.cs InsertRow() field not existed(" + edit.Table + "." + fid + ")";
+                    goto lab_error;
+                }
+
+                //skip not created field
+                var itemNo = Convert.ToInt32(edit._FidNo[fid]);
+                if (!edit.Items[itemNo].Create)
+                    continue;
+
+                //get value and check EmptyToNulls
+                var value = (inputRow[fid].ToString() == "" && edit.EmptyToNulls.Contains(fid))
+                    ? null
+                    : inputRow[fid].ToString();
+
+                //add keys & values
+                fids += fid + ",";
+                values += "@" + fid + ",";
+                AddArg(fid, value);
+            }
+
+            //return false if no fields
+            if (fids == "")
+            {
+                error = "CrudEdit.cs InsertRow() fields are empty.";
+                goto lab_error;
+            }
+
+            //set creator, created if need
+            //var setCol4 = "";
+            if (edit.Col4 != null && edit.Col4.Length >= 2)
+            {
+                var fldUser = edit.Col4[0];
+                var fldDate = edit.Col4[1];
+                if (fldUser != null && fldDate != null)
+                {
+                    fids += fldUser + "," + fldDate + ",";
+                    values += string.Format("'{0}','{1}',", userId, _Date.ToDbStr(_now));
+                }
+                else if (fldUser != null)
+                {
+                    fids += fldUser + ",";
+                    values += string.Format("'{0}',", userId);
+                }
+                else
+                {
+                    fids += fldDate + ",";
+                    values += string.Format("'{0}',", _Date.ToDbStr(_now));
+                }
+            }
+
+            //insert db
+            var sql = "Insert Into " + edit.Table + 
+                " (" + fids[0..^1] + ") Values (" + 
+                values[0..^1] + ")";
+            if (await db.ExecSqlAsync(sql, _sqlArgs) == 0)
+            {
+                error = "CrudEdit.cs InsertRow() failed, insert no row.(" + sql + ")";
+                goto lab_error;
+            }
+            #endregion
+
+            //case of ok
+            _saveRows++;
+            return true;
+
+        lab_error:
+            await _Log.ErrorAsync(error);
+            return false;
+                
+        }
+
+        //update one row, recursive!!
+        //return error msg if any
+        private async Task<bool> UpdateRowAsync(EditDto edit, JObject inputRow, Db db)
+        {
+            //skip if empty
+            if (_Json.IsEmpty(inputRow))
+                return true;
+
+            /* not read db, just update
+            #region get existed db row
+            //var edit = _edit;
+            var rowKey = inputRow[edit.PkeyFid].ToString();
+            var sql = GetSql(edit, rowKey);
+            var dbRow = db.GetJson(sql, _sqlArgs);
+            if (dbRow == null)
+            {
+                _Log.Error("CrudEdit.cs UpdateRow() found no row: " + sql + db.GetArgsText(_sqlArgs));
+                return false;
+            }
+            #endregion
+            */
+
+            #region update this row
+            //reset sql arguments first
+            ResetArg();
+
+            //get updated sql, compare db/input row
+            var sql = "";
+            var rowKey = inputRow[edit.PkeyFid].ToString();
+            foreach (var field in inputRow)
+            {
+                //if no fid then log error !!
+                var fid = field.Key;
+                if (IsSpecEditFid(fid))
+                    continue;
+
+                if (edit._FidNo[fid] == null)
+                {
+                    await _Log.ErrorAsync("CrudEdit.cs UpdateRow() field not existed(" + edit.Table + "." + fid + ")");
+                    return false;
+                }
+
+                //key is not updated
+                if (fid == edit.PkeyFid)
+                    continue;
+
+                //skip un-update fid
+                var fidNo = Convert.ToInt32(edit._FidNo[fid]);
+                if (!edit.Items[fidNo].Update
+                    //|| inputRow[fid] == null
+                    //|| inputRow[fid].ToString() == dbRow[fid].ToString()
+                    )
+                    continue;
+
+                //set empty date to null, or will be 1900/1/1 !!
+                //object value = (inputRow[key].ToString() == "" && (type == EnumDataType.Datetime || type == EnumDataType.Date))
+                object value = (inputRow[fid].ToString() == "" && edit.EmptyToNulls.Contains(fid))
+                    ? value = null
+                    : inputRow[fid].ToString();
+
+                //add into sql
+                sql += fid + "=@" + fid + ",";
+                AddArg(fid, value);
+            }
+
+            //set sql, emtpy sql means no column is changed !!
+            if (sql == "")
+                return true;
+
+            //set reviser, revised
+            var setCol4 = "";
+            if (edit.Col4 != null && edit.Col4.Length == 4)
+            {
+                var fldUser = edit.Col4[2];
+                var fldDate = edit.Col4[3];
+                setCol4 = (fldUser != null && fldDate != null)
+                    ? string.Format(",{0}='{1}',{2}='{3}'", fldUser, _Fun.UserId(), fldDate, _Date.ToDbStr(_now)) :
+                (fldUser != null)
+                    ? string.Format(",{0}='{1}'", fldUser, _Fun.UserId()) :
+                (fldDate != null)
+                    ? string.Format(",{0}='{1}'", fldDate, _Date.ToDbStr(_now)) : "";
+            }
+
+            //update db
+            sql = "Update " + edit.Table + " Set " + sql[0..^1] + setCol4 + " Where " + GetWhereAndArg(edit, rowKey);
+            if (await db.ExecSqlAsync(sql, _sqlArgs) == 0)
+            {
+                await _Log.ErrorAsync("CrudEdit.cs UpateRow() failed, update 0 row.(" + sql + ")");
+                return false;
+            }
+
+            //case of ok
+            _saveRows++;
+            return true;
+            #endregion
+        }
+
+        /// <summary>
+        /// set edit validate variables: _FidNo, _FidRequires
+        /// //(recursive)
+        /// </summary>
+        /// <param name="edit"></param>
+        private void SetValidVar(EditDto edit)
+        {
+            //set this
+            //_FidNo
+            edit._FidNo = new JObject();
+            var fidNo = edit._FidNo;
+            var items = edit.Items;
+            for (var i = 0; i < items.Length; i++)
+                fidNo[items[i].Fid] = i;
+
+            //_FidRequires
+            edit._FidRequires = edit.Items
+                .Where(a => a.Required == true)
+                .Select(a => a.Fid)
+                .ToList();
+        }
+
+        /// <summary>
+        /// validate json (recursive)
+        /// </summary>
+        /// <param name="editLevel">for debug</param>
+        /// <param name="edit"></param>
+        /// <param name="json"></param>
+        /// <returns>error msg if any</returns>
+        private string ValidJson(int editLevel, EditDto edit, JObject json)
+        {
+            if (json == null)
+                return "";
+
+            //validate this
+            string error;
+            JArray rows = JsonToRows(json);
+            if (rows != null)
+            {
+                //prepare edit validate variables
+                SetValidVar(edit);
+
+                foreach(var row in rows)
+                {
+                    if (row == null)
+                        continue;
+                    error = ValidRow(edit, row as JObject);
+                    if (!_Str.IsEmpty(error))
+                        return error;
+                }
+            }
+
+            //validate this
+            error = ValidRow(edit, json);
+            if (!_Str.IsEmpty(error))
+                return error;
+
+            //validate childs (recursive)
+            var childLen = GetEditChildLen(edit);
+            for(var i=0; i<childLen; i++)
+            {
+                var json2 = GetChildJson(json, i);
+                error = ValidJson(editLevel + 1, edit.Childs[i], json2);
+                if (!_Str.IsEmpty(error))
+                    return error;
+            }
+
+            //case of ok
+            return "";
+        }
+
+        //validate one  row
+        //return error msg if any
+        private string ValidRow(EditDto edit, JObject row)
+        {
+            if (_Json.IsEmptyBySkipUnderLine(row))
+                return "";
+
+            #region check required & fid existed
+            if (IsNewKey(row, edit.PkeyFid))
+            {
+                //check required
+                foreach (var fid in edit._FidRequires)
+                {
+                    if (_Object.IsEmpty(row[fid]))
+                        return "field is required for insert.(" + edit.Table + "." + fid + ")";
+                }
+            }
+            else
+            {
+                //check required
+                foreach (var item in row)
+                {
+                    //底線欄位不檢查是否存在DB
+                    var fid = item.Key;
+                    if (IsSpecEditFid(fid))
+                        continue;
+
+                    //log error if fid not existed
+                    if (edit._FidNo[fid] == null)
+                        return string.Format("input field is wrong ({0}.{1})", edit.Table, fid);
+
+                    //check required
+                    if (_Object.IsEmpty(row[fid]) && edit._FidRequires.Contains(fid))
+                        return "field is required for update.(" + edit.Table + "." + fid + ")";
+                }
+            }
+            #endregion
+
+            #region field value validation by data type
+            var typeName = "";
+            try
+            {
+                foreach (var col in row)
+                {
+                    var fid = col.Key;
+                    if (IsSpecEditFid(fid))
+                        continue;
+
+                    var value = row[fid].ToString();
+                    var itemNo = Convert.ToInt32(edit._FidNo[fid]);
+                    var item = edit.Items[itemNo];
+                    switch (item.CheckType)
+                    {
+                        //TODO: add others checkType
+                        case CheckTypeEstr.None:
+                            continue;
+                        case CheckTypeEstr.Email:
+                            typeName = "Email";
+                            if (!_Valid.IsEmail(value))
+                                return "not email: " + value;
+                            break;
+                        case CheckTypeEstr.Url:
+                            typeName = "Url";
+                            continue;
+                        /*
+                        case CheckTypeEstr.CreditCard:
+                            typeName = "CreditCard";
+                            continue;
+                        case CheckTypeEstr.Digits:
+                            typeName = "Digits";
+                            if (!_Valid.IsDigits(value))
+                            {
+                                _Log.Error("not digits: " + value);
+                                return false;
+                            }
+                            break;
+                        case CheckTypeEstr.Number:
+                            typeName = "Number";
+                            if (!_Valid.IsNumber(value))
+                            {
+                                _Log.Error("not number: " + value);
+                                return false;
+                            }
+                            break;
+                        */
+                        case CheckTypeEstr.Min:
+                            typeName = "Min";
+                            if (Convert.ToDecimal(value) > Convert.ToDecimal(item.CheckData))
+                                return "min not match: " + value + ", " + item.CheckData;
+                            break;
+                        case CheckTypeEstr.Max:
+                            typeName = "Max";
+                            if (Convert.ToDecimal(value) < Convert.ToDecimal(item.CheckData))
+                                return "max not match: " + value + ", " + item.CheckData;
+                            break;
+                        case CheckTypeEstr.Range:
+                            typeName = "Range";
+                            var values = item.CheckData.Split(',');
+                            var value2 = Convert.ToDecimal(value);
+                            if (value2 < Convert.ToDecimal(values[0]) || value2 > Convert.ToDecimal(values[1]))
+                                return "range not match: " + value + ", " + values[0] + ", " + values[1];
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return "CrudEdit.cs CheckRow() failed: CheckType=" + typeName + ", msg=" + ex.Message;
+            }
+
+            /*
+            //check childs
+            var childLen = GetChildLen(edit);
+            for(var i=0; i<childLen; i++)
+            {
+                var edit2 = edit.Childs[i];
+                if (!CheckRows(edit2, fidNo, null))
+                    return false;
+            }
+            */
+
+            //case of ok
+            return "";
+            #endregion
+        }
+
+        //is transaction or not
+        private bool IsTrans(EditDto edit)
+        {
+            var childLen = GetEditChildLen(edit);
+            return (_editDto.Transaction != null)
+                ? _editDto.Transaction.Value
+                : (childLen > 0);
+        }
+
+        /// <summary>
+        /// save new rows, use transaction
+        /// </summary>
+        /// <param name="json"></param>
+        /// <param name="fnAfterSave"></param>
+        /// <returns>ResultDto</returns>
+        public async Task<ResultDto> CreateAsync(JObject json,
+            FnSetNewKeyJson fnSetNewKey = null, FnAfterSaveAsync fnAfterSave = null)
+        {
+            return await SaveJsonAsync(json, fnSetNewKey, fnAfterSave);
+        }
+
+        /// <summary>
+        /// save updated rows(including delete rows), use transaction
+        /// </summary>
+        /// <param name="key">key of master table</param>
+        /// <param name="json"></param>
+        /// <param name="fnAfterSave"></param>
+        /// <returns>ResultDto</returns>
+        public async Task<ResultDto> UpdateAsync(string key, JObject json,
+            FnSetNewKeyJson fnSetNewKey = null, FnAfterSaveAsync fnAfterSave = null)
+        {
+            //return error if empty key
+            if (_Str.IsEmpty(key))
+                return _Model.GetError("CrudEdit.cs Update() failed: key is empty.");
+
+            //check for AuthType=Row if need
+            if (_Fun.IsAuthTypeData())
+            {
+                var data = await GetDbRowAsync(_editDto, key);    //return data
+                var errorBr = CheckAuthTypeData(data, CrudEnum.Update);
+                if (!_Str.IsEmpty(errorBr))
+                    return _Model.GetBrError(errorBr);
+            }
+
+            return await SaveJsonAsync(json, fnSetNewKey, fnAfterSave);
+        }
+
+        /// <summary>
+        /// save rows including delete rows, use transaction
+        /// called by Create(), Update()
+        /// </summary>
+        /// <param name="inputJson">input json</param>
+        /// <param name="fnSetNewKeyJson">custom function for set newKeyJson</param>
+        /// <param name="fnAfterSaveAsync"></param>
+        /// <returns></returns>
+        private async Task<ResultDto> SaveJsonAsync(JObject inputJson, 
+            FnSetNewKeyJson fnSetNewKeyJson = null, FnAfterSaveAsync fnAfterSaveAsync = null)
+        {
+            //check input & set fidNos same time
+            var log = false;
+            Db db = null;
+            string error;
+            var trans = IsTrans(_editDto);
+            if (inputJson == null)
+            {
+                log = true;
+                error = "input json is null";
+                goto lab_error;
+            }
+
+            //check main row
+            //SetFidNo(_edit);
+            error = ValidJson(0, _editDto, inputJson);
+            if (_Str.NotEmpty(error))
+            {
+                log = true;
+                goto lab_error;
+            }
+
+            //set new key
+            //addFunName = false;
+            error = (fnSetNewKeyJson == null)
+                ? SetNewKeyJson(inputJson, _editDto)
+                : fnSetNewKeyJson(this, inputJson, _editDto);
+            if (_Str.NotEmpty(error))
+                goto lab_error;
+
+            //transaction if need
+            db = GetDb();
+            if (trans)
+                await db.BeginTranAsync();
+
+            //set current time(_now)
+            SetNow();
+
+            //save db recursive
+            if (!await SaveJson2Async(_editDto.HasFKey, "0", null, inputJson, _editDto, db))
+                goto lab_error;
+
+            //call afterSave() if need
+            if (fnAfterSaveAsync != null)
+            {
+                try
+                {
+                    error = await fnAfterSaveAsync(db, _newKeyJson);
+                    if (_Str.NotEmpty(error))
+                        goto lab_error;
+                }
+                catch (Exception ex)
+                {
+                    log = true;
+                    error = "AfterSave error: " + ex.Message;
+                    goto lab_error;
+                }
+            }
+
+            //case of ok
+            if (trans)
+                await db.CommitAsync();
+            await db.DisposeAsync();
+            return new ResultDto() { Value = _saveRows.ToString() };
+
+        lab_error:
+            if (db != null)
+            {
+                if (trans)
+                    await db.RollbackAsync();
+                await db.DisposeAsync();
+            }
+
+            if (log)
+                await _Log.ErrorAsync("CrudEdit.cs SaveJsonAsync() failed: " + error);
+            return _Model.GetError();
+        }
+
+        /// <summary>
+        /// validate and save(recursive)
+        /// </summary>
+        /// <param name="hasFkey">table has foreign key or not</param>
+        /// <param name="levelStr">level concat string, ex:0,00,012</param>
+        /// <param name="upDeletes">empty for level0</param>
+        /// <param name="edit"></param>
+        /// <param name="inputJson">JObject for level0, JArray for level1/2</param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        private async Task<bool> SaveJson2Async(bool hasFkey, string levelStr, List<string> upDeletes, 
+            JObject inputJson, EditDto edit, Db db)
+        {
+            if (inputJson == null)
+                return true;
+
+            var levelLen = levelStr.Length;
+            var isLevel0 = (levelLen == 1);
+
+            #region delete first & get deleted list for child(if need)
+            List<string> deletes = (inputJson[Deletes] == null)
+                ? null : _Str.ToList(inputJson[Deletes].ToString());
+            if (deletes != null)
+            {
+                //deleted key, no special char !!
+                if (isLevel0 && !_List.IsAlphaNum(deletes))
+                {
+                    await _Log.ErrorAsync("CrudEdit.cs SaveJsons() failed, key is not AlphaNum.");
+                    return false;
+                }
+
+                //if no Fkey, use deleted key for child's upKey
+                if (!hasFkey)
+                    deletes = _List.Concat(deletes, await GetKeysByUpKeysAsync(edit, upDeletes, db));
+
+                if (!await DeleteRowsByKeysAsync(edit, deletes, db))
+                    return false;
+            }
+            #endregion
+
+            #region insert/update this rows
+            var inputRows = (inputJson[Rows] == null)
+                ? null : inputJson[Rows] as JArray;
+            JObject upNewKey2 = new(); //new pkey for childs fkey
+            if (inputRows != null)
+            {
+                var kid = edit.PkeyFid;
+                foreach (var inputRow0 in inputRows)
+                {
+                    //inputRow0 could be null, save to var first, or will error
+                    if (inputRow0 == null || !inputRow0.HasValues)
+                        continue;
+
+                    //insert/update this
+                    var inputRow = inputRow0 as JObject;
+                    if (!HasField(inputRow, kid))
+                        continue;
+
+                    if (IsNewRow(inputRow))
+                    {
+                        if (!await InsertRowAsync(edit, inputRow, db))
+                            return false;
+                    }
+                    else
+                    {
+                        if (!await UpdateRowAsync(edit, inputRow, db))
+                            return false;
+                    }
+                }//for rows
+            }//if
+            #endregion
+
+            #region insert/update childs(recursive)
+            var childLen = GetEditChildLen(edit);
+            for (var i = 0; i < childLen; i++)
+            {
+                //recursive call
+                var childJson = GetChildJson(inputJson, i);
+                if (!await SaveJson2Async(hasFkey, levelStr + i, deletes, childJson, edit.Childs[i], db))
+                    return false;
+            }//for childs
+            #endregion
+
+            //case of ok
+            return true;
+        }
+
+        public JObject GetNewKeyJson()
+        {
+            return _newKeyJson;
+        }
+
+        //return error msg if any
+        public string SetNewKeyJson(JObject inputJson, EditDto edit)
+        {
+            return SetNewKeyJson2("0", null, inputJson, edit);
+        }
+
+        /// <summary>
+        /// (recursive)set new key json(_newKeyJson), called by SetNewKey()
+        /// </summary>
+        /// <param name="levelStr">level concat string, ex:0,00,012</param>
+        /// <param name="upNewKey">empty for level0, string for level1, JObject for level2...
+        /// <param name="edit"></param>
+        /// <param name="inputJson">JObject for level0, JArray for level1/2</param>
+        /// <returns>error msg if any</returns>
+        private string SetNewKeyJson2(string levelStr, JObject upNewKey, JObject inputJson, EditDto edit)
+        {
+            if (inputJson == null)
+                return "";
+
+            var levelLen = levelStr.Length;
+            var isLevel0 = (levelLen == 1);
+
+            #region insert/update this rows
+            var error = "";
+            var inputRows = (inputJson[Rows] == null)
+                ? null : inputJson[Rows] as JArray;
+            JObject upNewKey2 = new(); //new pkey for childs fkey
+            if (inputRows != null)
+            {
+                var kid = edit.PkeyFid;
+                foreach (var inputRow0 in inputRows)
+                {
+                    //inputRow0 could be null, save to var first, or will error
+                    if (inputRow0 == null || !inputRow0.HasValues)
+                        continue;
+
+                    //insert/update this
+                    var inputRow = inputRow0 as JObject;
+                    if (HasField(inputRow, kid))
+                    {
+                        //adjust pkeyIdx if need
+                        var pkeyIdx = ParseCol(inputRow, kid);
+                        if (pkeyIdx < 0)
+                        {
+                            //< 0 means empty pkey, main edit allows empty pkey
+                            if (isLevel0 && inputRows.Count == 1)
+                                pkeyIdx = 1;    //adjust, let it be new
+                            else
+                            {
+                                error = $"can not get PkeyFid ({edit.PkeyFid})";
+                                goto lab_error;
+                            }
+                        }
+
+                        //case of insert row
+                        if (pkeyIdx != 0)
+                        {
+                            #region set foreign key value for not level0
+                            if (!isLevel0)
+                            {
+                                var fkeyIdx = ParseFkey(inputRow);
+                                if (fkeyIdx < 0)
+                                {
+                                    if (levelLen == 2)
+                                        fkeyIdx = 1;    //adjust
+                                    else
+                                    {
+                                        error = $"can not get FkeyFid ({edit.FkeyFid})";
+                                        goto lab_error;
+                                    }
+                                }
+
+                                if (fkeyIdx == 0)
+                                    inputRow[edit.FkeyFid] = inputRow[FkeyFid].ToString();
+                                else if (upNewKey == null)
+                                {
+                                    error = $"can not get upNewKey by FkeyFid ({edit.FkeyFid})";
+                                    goto lab_error;
+                                }
+                                else
+                                {
+                                    //now upKeyData is key json (levelLen >= 3)
+                                    inputRow[edit.FkeyFid] = upNewKey["f" + fkeyIdx];
+                                }
+                            }
+                            #endregion
+
+                            //get new key
+                            var key = _Str.NewId();
+                            inputRow[kid] = key;
+                            inputRow[IsNew] = "1";  //string
+
+                            //set upKeyData for child 
+                            upNewKey2["f" + pkeyIdx] = key;
+                        }
+                    }//if row has fields
+                }//for rows
+            }//if has rows
+            #endregion
+
+            #region set childs new key (recursive)
+            var childLen = GetEditChildLen(edit);
+            for (var i = 0; i < childLen; i++)
+            {
+                //recursive call
+                var childJson = GetChildJson(inputJson, i);
+                error = SetNewKeyJson2(levelStr + i, upNewKey2, childJson, edit.Childs[i]);
+                if (_Str.NotEmpty(error))
+                    return error;
+            }
+            #endregion
+
+            //set instance variables & return
+            _newKeyJson["t" + levelStr] = upNewKey2;
+            return "";
+
+        lab_error:
+            return "CrudEdit.cs SetNewKeyJson2() failed: " + error;
+        }
+
+        /// <summary>
+        /// set child foreign key value
+        /// called by FnSetNewKey()
+        /// </summary>
+        /// <param name="levelStr"></param>
+        /// <returns>error msg if any</returns>
+        public string SetChildFkey(JObject inputJson, int childIdx, string fid, string fromLevelStr)
+        {
+            //get child rows
+            string error;
+            var rows = GetChildRows(inputJson, childIdx);
+            if (rows == null)
+                return "";
+
+            //get table json first by levelStr
+            var jsonFid = "t" + fromLevelStr;
+            var json = (_newKeyJson[jsonFid] == null)
+                ? null : (JObject)_newKeyJson[jsonFid];
+
+            foreach (var row0 in rows)
+            {
+                if (row0 == null || !row0.HasValues)
+                    continue;
+
+                //has row need set or not
+                var row = row0 as JObject;
+                var keyIndex = ParseCol(row, fid);
+                if (keyIndex > 0)
+                {
+                    if (json == null)
+                    {
+                        error = $"no _newKeyJson[{jsonFid}]";
+                        goto labError;
+                    }
+
+                    row[fid] = json["f" + keyIndex].ToString();
+                }
+            }
+
+            //case ok ok
+            return "";
+
+        labError:
+            return "CrudEdit.cs SetRelatId() failed: " + error;
+        }
+
+        /// <summary>
+        /// delete row for single table
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public async Task<ResultDto> DeleteAsync(string key)
+        {
+            //check for AuthType=Row if need
+            if (_Fun.IsAuthTypeData())
+            {
+                var data = await GetDbRowAsync(_editDto, key);    //return data
+                var brError = CheckAuthTypeData(data, CrudEnum.Delete);
+                if (_Str.NotEmpty(brError))
+                    return _Model.GetBrError(brError);
+            }
+
+            return await DeleteByKeysAsync(new List<string>() { key });
+        }
+
+        /// <summary>
+        /// delete rows of table
+        /// </summary>
+        /// <param name="keys">row key list</param>
+        /// <returns></returns>
+        public async Task<ResultDto> DeleteByKeysAsync(List<string> keys)
+        {
+            //check input
+            if (!_List.IsAlphaNum(keys))
+                return _Model.GetError();
+
+            //transaction or not
+            var trans = IsTrans(_editDto);
+            var db = GetDb();
+            if (trans)
+                await db.BeginTranAsync();
+
+            //set current time(_now)
+            SetNow();
+
+            var json = new JObject() { [Deletes] = _List.ToStr(keys) };
+            if (!await SaveJson2Async(_editDto.HasFKey, "0", null, json, _editDto, db))
+                goto lab_error;
+
+            if (trans)
+                await db.CommitAsync();
+            await db.DisposeAsync();
+            return new ResultDto();
+
+        lab_error:
+            if (trans)
+                await db.RollbackAsync();
+            await db.DisposeAsync();
+            //TODO
+            return _Model.GetError();
+        }
+
+        /// <summary>
+        /// delete rows of one table, input pkey list
+        /// </summary>
+        /// <param name="edit"></param>
+        /// <param name="keys">can be multi pkey value(consider seperator)</param>
+        /// <param name="db"></param>
+        /// <returns>error msg if any</returns>
+        private async Task<bool> DeleteRowsByKeysAsync(EditDto edit, List<string> keys, Db db = null)
+        {
+            //check input
+            if (keys == null || keys.Count == 0)
+                return true;
+
+            //reset
+            ResetArg();
+
+            var emptyDb = false;
+            _Fun.CheckOpenDb(ref db, ref emptyDb);
+
+            //delete rows
+            var values = "";
+            //=== case of single pkey ===
+            //set sql args
+            var kid = edit.PkeyFid;
+            for (var i = 0; i < keys.Count; i++)
+            {
+                var fid = edit.PkeyFid + i;
+                AddArg(fid, keys[i].ToString());
+                values += "@" + fid + ",";
+            }
+
+            //update db
+            var sql = string.Format(_Fun.DeleteRowsSql, edit.Table, kid, values[0..^1]);
+            var count = await db.ExecSqlAsync(sql, _sqlArgs);
+            //if (count == 0)
+            //    goto lab_error;
+            await _Fun.CheckCloseDb(db, emptyDb);
+
+            //case of ok
+            _saveRows += count;
+            return true;
+        }
+
+        private async Task<List<string>> GetKeysByUpKeysAsync(EditDto edit, List<string> upKeys, Db db)
+        {
+            if (upKeys == null || upKeys.Count == 0)
+                return null;
+
+            var sql = string.Format("select {0} from {1} where {2} in ({3})", edit.PkeyFid, edit.Table, edit.FkeyFid, _List.ToStr(upKeys, true));
+            return await db.GetStrsAsync(sql);
+        }
+
+    }//class
+}

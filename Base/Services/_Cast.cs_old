@@ -1,0 +1,14 @@
+﻿using System;
+
+namespace Base.Services
+{
+    //move to _Str
+    public class _Cast
+    {
+        //convert string to enum type
+        public static T StrToEnum<T>(string value)
+        {
+            return (T) Enum.Parse(typeof(T), value, true);
+        }
+    }
+}

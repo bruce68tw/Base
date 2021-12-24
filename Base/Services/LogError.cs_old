@@ -1,0 +1,13 @@
+﻿namespace Base.Services
+{
+    //parent class for Log Error function
+    public class LogError
+    {
+        public string Error { get; set; }
+
+        public bool IsError()
+        {
+            return !_Str.IsEmpty(Error);
+        }
+    }
+}

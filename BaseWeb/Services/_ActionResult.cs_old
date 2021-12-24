@@ -1,0 +1,34 @@
+﻿using System;
+using System.Web.Mvc;
+using Base.Services;
+
+namespace BaseWeb.Services
+{
+    public static class _ActionResult
+    {
+        /// <summary>
+        /// ??
+        /// get partialView htmlString
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="controllerContext"></param>
+        /// <returns></returns>
+        public static string PartialView(this ActionResult result, ControllerContext controllerContext)
+        {
+            using (var ext = new ActionResultExt(controllerContext.RequestContext.HttpContext.Response))
+            {
+                try
+                {
+                    result.ExecuteResult(controllerContext);
+                    return ext.ToString();
+                }
+                catch (Exception ex)
+                {
+                    _Log.Error("_ActionResult.cs PartialView() failed: " + ex.Message);
+                    return ex.Message;
+                }
+            }
+        }
+
+    } //class
+} //namespace
