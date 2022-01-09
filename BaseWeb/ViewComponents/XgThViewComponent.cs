@@ -23,10 +23,14 @@ namespace BaseWeb.ViewComponents
             var html = (dto.Tip == "")
                 ? "<th{0}>" + title + "</th>"
                 : "<th{0} title='" + dto.Tip + "'>" + title + "<i class='ico-info'></i></th>";
-            var extClass = _Str.IsEmpty(dto.ExtClass)
-                ? "" 
-                : " class='" + dto.ExtClass + "'";
-            return new HtmlString(string.Format(html, extClass));
+            var attr = dto.ExtClass;
+            if (dto.HideRwd)
+                attr += " " + _Fun.HideRwd;
+            if (!string.IsNullOrEmpty(attr))
+                attr = " class='" + attr + "'";
+            if (dto.MinWidth > 0)
+                attr += $" style='min-width:{dto.MinWidth}px'";
+            return new HtmlString(string.Format(html, attr));
         }
 
     } //class

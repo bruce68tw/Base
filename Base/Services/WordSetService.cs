@@ -86,33 +86,32 @@ namespace Base.Services
             var mainPart = _docx.MainDocumentPart;
             foreach (var imageInfo in imageDtos)
             {
-                //get image info
+                //get image file info
                 var runDto = GetImageRunDto(imageInfo.FilePath);
                 ImagePart imagePart = mainPart.AddImagePart(ImagePartType.Jpeg);
                 var imageId = mainPart.GetIdOfPart(imagePart);
                 imagePart.FeedData(runDto.DataStream);
                 var newRun = GetImageRun(imageId, runDto);
 
-                //find drawing object
+                //find drawing object from srcTpl
                 var drawTpl = await GetDrawTplAsync(srcTpl, imageInfo.Code);
                 if (drawTpl == null)
                     continue;
-                //int drawStart = _tplStartPos, drawEnd = _tplEndPos;
 
-                //find graphicData object(map to D.Graphic)
+                //find graphicData object(map to D.Graphic) from drawing object
                 var graphTpl = await GetGraphDataTplAsync(drawTpl.TplStr);
                 if (graphTpl == null)
                     continue;
-                //int graphStart = _tplStartPos, graphEnd = _tplEndPos;
 
                 //replace graphic section
                 //newRun.Descendants<D.Graphic>().First().InnerXml cause .docx open failed !!
                 var newGraph = await GetGraphDataTplAsync(newRun.InnerXml);
                 //int newStart = _tplStartPos, newEnd = _tplEndPos;
 
+                //update srcTpl string
                 srcTpl = srcTpl.Substring(0, drawTpl.StartPos + graphTpl.StartPos) +
                     //newRun.Descendants<D.Graphic>().First().InnerXml +    //.docx open failed !!
-                    newGraph + 
+                    newGraph.TplStr + 
                     srcTpl.Substring(drawTpl.StartPos + graphTpl.EndPos + 1);
             }
 
@@ -152,8 +151,6 @@ namespace Base.Services
         /// get drawing template string for one photo
         /// </summary>
         /// <param name="srcText"></param>
-        /// <param name="startPos"></param>
-        /// <param name="endPos"></param>
         /// <param name="imageCode"></param>
         /// <returns></returns>
         public async Task<WordSetTplDto> GetDrawTplAsync(string srcText, string imageCode)
@@ -169,12 +166,11 @@ namespace Base.Services
         /// <summary>
         /// get range string for word multiple rows
         /// </summary>
-        /// <param name="startPos">(ref)found start pos to return</param>
-        /// <param name="endPos">(ref)found end pos(include findEnd length) to return</param>
         /// <param name="srcText">source text</param>
-        /// <param name="findMid">find start string</param>
+        /// <param name="hasTag">result start/end pos include tag or not</param>
         /// <param name="findStart">find start string</param>
         /// <param name="findEnd">equal to startStr if empty</param>
+        /// <param name="findMid">find start string</param>
         /// <returns></returns>
         private async Task<WordSetTplDto> GetRangeTplAsync(string srcText, bool hasTag, string findStart, 
             string findEnd, string findMid = "")
@@ -182,7 +178,7 @@ namespace Base.Services
             //int midStartPos = -1, midEndPos = -1;
             //var result2 = new WordSetTplDto();
             //var tplStr = "";
-            int startPos = 0, endPos = 0;
+            int startPos, endPos;
             if (findMid == "")
             {
                 startPos = srcText.IndexOf(findStart);

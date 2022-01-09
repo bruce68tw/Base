@@ -42,6 +42,9 @@ namespace Base.Services
 
         //default view cols for layout(row div, label=2, input=3)(horizontal) 
         public static List<int> DefHoriCols = new() { 2, 3 };
+
+        //class name for hide element in RWD phone
+        public static string HideRwd = "xg-hide-rwd";
         #endregion
 
         #region variables which PG can change

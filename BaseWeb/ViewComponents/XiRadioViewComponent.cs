@@ -58,7 +58,7 @@ namespace BaseWeb.ViewComponents
             //add title outside
             //consider this field could in datatable(no title) !!
             if (!_Str.IsEmpty(dto.Title))
-                html = _Helper.InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols);
+                html = _Helper.InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols, true);
             return new HtmlString(html);
         }
 

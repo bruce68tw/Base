@@ -39,15 +39,15 @@ namespace BaseWeb.Services
             }
 
             //set default language, after .net 4.5 ver just set DefaultThread
-            if (CultureInfo.CurrentCulture.Name != locale)
-            {
+            //if (CultureInfo.CurrentCulture.Name != locale)
+            //{
                 var culture = new CultureInfo(locale);
                 CultureInfo.DefaultThreadCurrentCulture = culture;
                 CultureInfo.DefaultThreadCurrentUICulture = culture;
 
                 //Thread.CurrentThread.CurrentCulture = culture;
                 //Thread.CurrentThread.CurrentUICulture = culture;
-            }
+            //}
 
             return true;
             //cookie set locale code

@@ -29,7 +29,7 @@ namespace BaseWeb.ViewComponents
             if (dto.IsHori)
             {
                 //horizontal
-                html = "<span class='xg-find-tbar'>" + html + "</span>";
+                html = "<span class='col-md-3 xg-find-tbar'>" + html + "</span>";
             }
             else
             {

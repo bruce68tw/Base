@@ -258,9 +258,10 @@ namespace BaseWeb.Services
         /// <param name="required"></param>
         /// <param name="labelTip"></param>
         /// <param name="cols">ary0(是否含 row div), ary1,2(for 水平), ary1(for 垂直)</param>
+        /// <param name="labelHideRwd">RWD(phone) hide label</param>
         /// <returns></returns>
         public static string InputAddLayout(string html, string title, bool required, 
-            string labelTip, bool inRow, string cols)
+            string labelTip, bool inRow, string cols, bool labelHideRwd = false)
         {
             //cols = cols ?? _Fun.DefHCols;
             var colList = GetCols(cols);
@@ -273,27 +274,30 @@ namespace BaseWeb.Services
             }
             var reqSpan = GetRequiredSpan(required);
             string result;
+            var labelClass = "xg-label";
+            if (labelHideRwd)
+                labelClass += " " + _Fun.HideRwd;
             if (colList.Count > 1)
             {
                 //horizontal
                 result = string.Format(@"
-<div class='col-md-{0} xg-label'{2}>{3}</div>
+<div class='col-md-{0} {5}'{2}>{3}</div>
 <div class='col-md-{1} xg-input'>
     {4}
 </div>
-", colList[0], colList[1], labelTip2, (reqSpan + title + iconTip), html);
+", colList[0], colList[1], labelTip2, (reqSpan + title + iconTip), html, labelClass);
             }
             else
             {
                 //vertical
                 result = string.Format(@"
 <div class='col-md-{0} xg-row'>
-    <div class='xg-label'{1}>{2}</div>
+    <div class='{4}'{1}>{2}</div>
     <div class='xg-input'>
         {3}
     </div>
 </div>
-", colList[0], labelTip2, (reqSpan + title + iconTip), html);
+", colList[0], labelTip2, (reqSpan + title + iconTip), html, labelClass);
             }
 
             //if not in row, add row container
