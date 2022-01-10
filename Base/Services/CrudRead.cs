@@ -262,7 +262,100 @@ namespace Base.Services
                     #region set where & add argument
                     //var item = item0.Value;
                     var col = _Str.IsEmpty(item.Col) ? (table + item.Fid) : item.Col;
-                    if (item.Op == ItemOpEstr.Equal)
+                    //2 date fields, fid tail must be 2 !! ex:StartDate, StartDate2
+                    if (item.Type == QitemTypeEnum.Date)
+                    {
+                        //if date2 is done, just skip
+                        //var len = item.Fid.Length;
+                        //var fid = item.Fid.Substring(0, len - 1);
+                        //if (item.Fid.Substring(len - 1, 1) == "2" && okDates.Contains(fid))
+                        //    continue;
+
+                        //log date2 is done
+                        okDates.Add(item.Fid);
+
+                        //get where
+                        var fid2 = item.Fid + "2";
+                        var hasDate1 = _Object.NotEmpty(findJson[item.Fid]);
+                        var hasDate2 = _Object.NotEmpty(findJson[fid2]);
+                        if (hasDate1 && hasDate2)  //case of has 2nd field, then query start/end
+                        {
+                            itemWhere = $"({col} is Null Or {col} Between @{item.Fid} And @{fid2})";
+                            AddArg(item.Fid, _Date.CsToDt(value.ToString() + " 00:00:00"));
+                            AddArg(fid2, _Date.CsToDt(findJson[fid2].ToString() + " 23:59:59"));
+                        }
+                        else if (hasDate1)  //has start date, then query this date after
+                        {
+                            itemWhere = $"({col} is Null Or {col} >= @{item.Fid})";
+
+                            //Datetime only read date part, type is string
+                            var date1 = _Date.CsToDt(value.ToString());
+                            AddArg(item.Fid, _Str.GetLeft(date1.ToString(), " "));
+                        }
+                        else if (hasDate2)  //has end date, then query this date before
+                        {
+                            itemWhere = $"({col} is Null Or {col} <= @{fid2})";
+
+                            //Datetime field only get date part, type is string
+                            var date1 = _Date.CsToDt(value.ToString());
+                            AddArg(fid2, _Str.GetLeft(date1.ToString(), " ") + " 23:59:59");
+                        }
+                    }
+                    //2 date fields, if input one date then must in range, if input 2 dates, then must be intersection with start/end
+                    //ex: StartDate, EndDate, no consider item.Op !!
+                    else if (item.Type == QitemTypeEnum.Date2)
+                    {
+                        //if Date2 field not set "Other", log error & skip
+                        var fid2 = item.Fid + "2";
+                        var col2 = item.Other;
+                        if (_Str.IsEmpty(col2))
+                        {
+                            error = "no Other field for Date2 (" + item.Fid + ")";
+                            goto lab_error;
+                        }
+                        /*
+                        else 
+                        {
+                            //fid2 must existed
+                            item2 = (items.FirstOrDefault(a => a.Fid == fid2));
+                            if (item2 == null)
+                            {
+                                _Log.Error("CrudRead.cs GetWhere() failed: Other field not existed (" + fid2 + ")");
+                                continue;
+                            }
+                        }
+                        */
+
+                        //log date2 is done
+                        okDates.Add(item.Fid);
+
+                        //get where
+                        var hasDate1 = _Object.NotEmpty(findJson[item.Fid]);
+                        var hasDate2 = _Object.NotEmpty(findJson[fid2]);
+                        if (hasDate1 && hasDate2)  //case of 2nd field, then query start/end
+                        {
+                            itemWhere = $"(({col} is Null Or {col} <= @{fid2}) And ({col2} is Null Or {col2} >= @{item.Fid}))";
+                            AddArg(fid2, _Str.GetLeft(_Date.CsToDt(findJson[fid2].ToString()).ToString(), " ") + " 23:59:59");
+                            AddArg(item.Fid, _Str.GetLeft(_Date.CsToDt(value.ToString()).ToString(), " "));
+                        }
+                        else if (hasDate1)  //only start date, then query bigger than this date
+                        {
+                            itemWhere = $"({col2} is Null or {col2} >= @{item.Fid})";
+
+                            //get date part of Datetime
+                            var date1 = _Date.CsToDt(value.ToString());
+                            AddArg(item.Fid, _Str.GetLeft(date1.ToString(), " "));
+                        }
+                        else if (hasDate2)  //only end date, then query small than this date
+                        {
+                            itemWhere = $"({col} is Null Or {col} <= @{fid2})";
+
+                            //get date part of Datetime
+                            var date1 = _Date.CsToDt(value.ToString());
+                            AddArg(fid2, _Str.GetLeft(date1.ToString(), " ") + " 23:59:59");
+                        }
+                    }
+                    else if (item.Op == ItemOpEstr.Equal)
                     {
                         itemWhere = col + "=@" + item.Fid;
                         AddArg(item.Fid, value);
@@ -400,99 +493,6 @@ namespace Base.Services
                         where += and + GetWhereByDate(item, col, date1, date2);
                     }
                     */
-                    //2 date fields, fid tail must be 2 !! ex:StartDate, StartDate2
-                    else if (item.Type == QitemTypeEnum.Date)
-                    {
-                        //if date2 is done, just skip
-                        //var len = item.Fid.Length;
-                        //var fid = item.Fid.Substring(0, len - 1);
-                        //if (item.Fid.Substring(len - 1, 1) == "2" && okDates.Contains(fid))
-                        //    continue;
-
-                        //log date2 is done
-                        okDates.Add(item.Fid);
-
-                        //get where
-                        var fid2 = item.Fid + "2";
-                        var hasDate1 = _Object.NotEmpty(findJson[item.Fid]);
-                        var hasDate2 = _Object.NotEmpty(findJson[fid2]);
-                        if (hasDate1 && hasDate2)  //case of has 2nd field, then query start/end
-                        {
-                            itemWhere = $"({col} is Null Or {col} Between @{item.Fid} And @{fid2})";
-                            AddArg(item.Fid, _Date.CsToDt(value.ToString() + " 00:00:00"));
-                            AddArg(fid2, _Date.CsToDt(findJson[fid2].ToString() + " 23:59:59"));
-                        }
-                        else if (hasDate1)  //has start date, then query this date after
-                        {
-                            itemWhere = $"({col} is Null Or {col} >= @{item.Fid})";
-
-                            //Datetime only read date part, type is string
-                            var date1 = _Date.CsToDt(value.ToString());
-                            AddArg(item.Fid, _Str.GetLeft(date1.ToString(), " "));
-                        }
-                        else if (hasDate2)  //has end date, then query this date before
-                        {
-                            itemWhere = $"({col} is Null Or {col} <= @{fid2})";
-
-                            //Datetime field only get date part, type is string
-                            var date1 = _Date.CsToDt(value.ToString());
-                            AddArg(fid2, _Str.GetLeft(date1.ToString(), " ") + " 23:59:59");
-                        }
-                    }
-                    //2 date fields, if input one date then must in range, if input 2 dates, then must be intersection with start/end
-                    //ex: StartDate, EndDate, no consider item.Op !!
-                    else if (item.Type == QitemTypeEnum.Date2)
-                    {
-                        //if Date2 field not set "Other", log error & skip
-                        var fid2 = item.Fid + "2";
-                        var col2 = item.Other;
-                        if (_Str.IsEmpty(col2))
-                        {
-                            error = "no Other field for Date2 (" + item.Fid + ")";
-                            goto lab_error;
-                        }
-                        /*
-                        else 
-                        {
-                            //fid2 must existed
-                            item2 = (items.FirstOrDefault(a => a.Fid == fid2));
-                            if (item2 == null)
-                            {
-                                _Log.Error("CrudRead.cs GetWhere() failed: Other field not existed (" + fid2 + ")");
-                                continue;
-                            }
-                        }
-                        */
-
-                        //log date2 is done
-                        okDates.Add(item.Fid);
-
-                        //get where
-                        var hasDate1 = _Object.NotEmpty(findJson[item.Fid]);
-                        var hasDate2 = _Object.NotEmpty(findJson[fid2]);
-                        if (hasDate1 && hasDate2)  //case of 2nd field, then query start/end
-                        {
-                            itemWhere = $"(({col} is Null Or {col} <= @{fid2}) And ({col2} is Null Or {col2} >= @{item.Fid}))";
-                            AddArg(fid2, _Str.GetLeft(_Date.CsToDt(findJson[fid2].ToString()).ToString(), " ") + " 23:59:59");
-                            AddArg(item.Fid, _Str.GetLeft(_Date.CsToDt(value.ToString()).ToString(), " "));
-                        }
-                        else if (hasDate1)  //only start date, then query bigger than this date
-                        {
-                            itemWhere = $"({col2} is Null or {col2} >= @{item.Fid})";
-
-                            //get date part of Datetime
-                            var date1 = _Date.CsToDt(value.ToString());
-                            AddArg(item.Fid, _Str.GetLeft(date1.ToString(), " "));
-                        }
-                        else if (hasDate2)  //only end date, then query small than this date
-                        {
-                            itemWhere = $"({col} is Null Or {col} <= @{fid2})";
-
-                            //get date part of Datetime
-                            var date1 = _Date.CsToDt(value.ToString());
-                            AddArg(fid2, _Str.GetLeft(date1.ToString(), " ") + " 23:59:59");
-                        }
-                    }
                     else
                     {
                         //let it sql wrong!!
