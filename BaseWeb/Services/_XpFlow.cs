@@ -233,7 +233,7 @@ insert into dbo.XpFlowSign(
             //var list = [];
             //var k = 0;
             error = ""; //initial
-            bool match = false;
+            bool match; // = false;
             var orList = condStr.Split(OrSep);
             var orLen = orList.Length;
             //var hasOr = (orLen > 1);
@@ -344,9 +344,9 @@ insert into dbo.XpFlowSign(
             #region 1.check XpFlowSign row existed
             Db db = null;
             var error = "";
-            if (!_Str.CheckKeyRule(flowSignId))
+            if (!await _Str.CheckKeyAsync(flowSignId))
             {
-                error = $"key has wrong char.({flowSignId})";
+                //error = $"key has wrong char.({flowSignId})";
                 goto lab_error;
             }
 
