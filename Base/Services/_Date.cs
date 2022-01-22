@@ -78,7 +78,7 @@ namespace Base.Services
         }
         #endregion
         
-        #region check
+        #region check & compare
         //is dates same
         public static bool IsSameDate(DateTime start, DateTime end)
         {
@@ -108,9 +108,32 @@ namespace Base.Services
                 (start != null && start <= end2) ? true : 
                 (end != null && end >= start2);
         }
+
+        /// <summary>
+        /// is today between input start/end string 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        public static bool IsNowInRange(string start, string end)
+        {
+            var start2 = CsToDate(start);
+            if (start2 == null)
+                return false;
+            var end2 = CsToDate(end);
+            if (end2 == null)
+                return false;
+
+            return IsNowInRange(start2.Value, end2.Value);
+        }
+        public static bool IsNowInRange(DateTime start, DateTime end)
+        {
+            var now = DateTime.Now;
+            return (start <= now && end >= now);
+        }
         #endregion
-        
-        #region now/today
+
+        #region get now/today
         /*
         public static long NowTn()
         {
