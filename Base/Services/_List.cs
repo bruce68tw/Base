@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Base.Services
 {
@@ -32,9 +33,15 @@ namespace Base.Services
                 : result;
         }
 
-        public static bool IsAlphaNum(List<string> list)
+        /// <summary>
+        /// check key with rules
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="logError"></param>
+        /// <returns></returns>
+        public static async Task<bool> CheckKeyAsync(List<string> list, bool logError = true)
         {
-            return _Str.CheckKeyRule(ToStr(list));
+            return await _Str.CheckKeyAsync(ToStr(list), logError);
         }
 
         public static List<string> Concat(List<string> list1, List<string> list2)

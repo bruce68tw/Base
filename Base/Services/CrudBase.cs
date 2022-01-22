@@ -136,9 +136,9 @@ namespace Base.Services
         /// <returns></returns>
         protected async Task<JObject> GetJsonAsync(CrudEnum crudEnum, string key)
         {
-            if (!_Str.CheckKeyRule(key))
+            if (!await _Str.CheckKeyAsync(key))
             {
-                await _Log.ErrorAsync("CrudEdit.cs GetJson() failed, key wrong: " + key);
+                //await _Log.ErrorAsync("CrudEdit.cs GetJson() failed, key wrong: " + key);
                 return null;
             }
 

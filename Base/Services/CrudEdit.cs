@@ -756,9 +756,9 @@ namespace Base.Services
             if (deletes != null)
             {
                 //deleted key, no special char !!
-                if (isLevel0 && !_List.IsAlphaNum(deletes))
+                if (isLevel0 && !await _List.CheckKeyAsync(deletes))
                 {
-                    await _Log.ErrorAsync("CrudEdit.cs SaveJsons() failed, key is not AlphaNum.");
+                    //await _Log.ErrorAsync("CrudEdit.cs SaveJsons() failed, key is not AlphaNum.");
                     return false;
                 }
 
@@ -1019,7 +1019,7 @@ namespace Base.Services
         public async Task<ResultDto> DeleteByKeysAsync(List<string> keys)
         {
             //check input
-            if (!_List.IsAlphaNum(keys))
+            if (!await _List.CheckKeyAsync(keys))
                 return _Model.GetError();
 
             //transaction or not

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Linq;
 using Base.Models;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Base.Services
 {
@@ -139,7 +140,7 @@ namespace Base.Services
         {
             var str = obj.ToString();
             return (str.Length < len) ? new string('0', len - str.Length) + str :
-                matchLen ? str.Substring(0, len) :
+                matchLen ? str[..len] :
                 str;
         }
 
@@ -423,7 +424,7 @@ namespace Base.Services
         /// <param name="str"></param>
         /// <param name="logTail">optional, when wrong add log tail</param>
         /// <returns></returns>
-        public static bool CheckKeyRule(string str)
+        public static async Task<bool> CheckKeyAsync(string str, bool logError = true)
         {
             if (_Str.IsEmpty(str))
                 return true;
@@ -432,8 +433,8 @@ namespace Base.Services
             if (rg.IsMatch(str))
                 return true;
 
-            //if (!_Str.IsEmpty(logTail))
-            //    _Log.Error("_Str.IsAlphaNum() failed (" + logTail + ")");
+            if (logError)
+                await _Log.ErrorAsync($"_Str.CheckKeyRuleAsync() failed ({str})");
             return false;
         }
 
@@ -473,7 +474,7 @@ namespace Base.Services
             source = source[(left.Length + pos1)..];
             pos1 = source.IndexOf(right);
             if (pos1 > 0)
-                source = source.Substring(0, pos1);
+                source = source[..pos1];
             return source;
         }
 
@@ -486,7 +487,7 @@ namespace Base.Services
         public static string GetLeft(string source, string find)
         {
             var pos = source.IndexOf(find);
-            return (pos < 0) ? source : source.Substring(0, pos);
+            return (pos < 0) ? source : source[..pos];
         }
 
         /// <summary>
@@ -498,7 +499,7 @@ namespace Base.Services
         public static string GetLeft2(string source, string find)
         {
             var pos = source.LastIndexOf(find);
-            return (pos < 0) ? source : source.Substring(0, pos);
+            return (pos < 0) ? source : source[..pos];
         }
 
         /// <summary>
