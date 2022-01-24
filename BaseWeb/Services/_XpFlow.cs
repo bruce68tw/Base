@@ -27,6 +27,8 @@ where u.Id='{0}'
         public static string SqlUserName = "select Name from dbo.[User] where Id='{0}'";
         //get dept manager Id
         public static string SqlDeptMgr = "select MgrId from dbo.Dept where Id='{0}'";
+        //get first role member
+        public static string SqlRole = "select UserId from dbo.XpUserRole where RoleId='{0}'";
 
         /// <summary>
         /// create workflow signing rows
@@ -84,9 +86,12 @@ order by l.StartNode, l.Sort
             while (true)
             {
                 #region 4.get lines of current node
+                //CondStr with value will check first !!
                 var nodeLines = flowLines
                     .Where(a => a.StartNodeId == nowNodeId)
-                    .OrderBy(a => a.Sort)
+                    //.OrderByDescending(a => string.IsNullOrEmpty(a.CondStr))
+                    .OrderBy(a => string.IsNullOrEmpty(a.CondStr))
+                    .ThenBy(a => a.Sort)
                     .ToList();
                 #endregion
 
@@ -186,6 +191,11 @@ insert into dbo.{signTable}(
                             if (line.SignerValue != null)
                                 signerId = await db.GetStrAsync(string.Format(SqlDeptMgr, line.SignerValue));
                             break;
+                        case SignerTypeEstr.Role:
+                            userType = "Role";
+                            if (line.SignerValue != null)
+                                signerId = await db.GetStrAsync(string.Format(SqlRole, line.SignerValue));
+                            break;
                     }
                 }
 
@@ -251,7 +261,7 @@ insert into dbo.{signTable}(
             //var list = [];
             //var k = 0;
             error = ""; //initial
-            bool match; // = false;
+            var match = false;
             var orList = condStr.Split(OrSep);
             var orLen = orList.Length;
             //var hasOr = (orLen > 1);
@@ -340,7 +350,7 @@ insert into dbo.{signTable}(
             }//for or
 
             //case of not error
-            return true;
+            return match;
 
         //case of error
         lab_error:
