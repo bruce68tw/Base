@@ -37,8 +37,8 @@ where u.Id='{0}'
         /// <param name="sourceId">source row Id(key)</param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> CreateSignRowsAsync(JObject row, 
-            string userFid, string flowCode, string sourceId, Db db)
+        public static async Task<string> CreateSignRowsAsync(JObject row, string userFid, string flowCode,
+            string sourceId, bool isTest, Db db)
         {
             #region 1.get flow lines by flow code
             var error = string.Empty;
@@ -79,7 +79,8 @@ order by l.StartNode, l.Sort
             #endregion
 
             //3.get matched lines
-            var findIdxs = new List<int>(); //found lines for insert XpFlowSign
+            var signTable = GetSignTable(isTest);
+            var findIdxs = new List<int>(); //found lines for insert XpFlowSign/XpFlowSignTest
             while (true)
             {
                 #region 4.get lines of current node
@@ -130,9 +131,9 @@ order by l.StartNode, l.Sort
                 nowNodeName = findLine.EndNodeName;
             }//loop
 
-            #region 6.prepare sql for insert XpFlowSign
-            sql = @"
-insert into dbo.XpFlowSign(
+            #region 6.prepare sql for insert XpFlowSign/XpFlowSignTest
+            sql = $@"
+insert into dbo.{signTable}(
     Id, FlowId, SourceId, 
     NodeName, FlowLevel, TotalLevel,
     SignerId, SignerName, 
@@ -144,9 +145,10 @@ insert into dbo.XpFlowSign(
 ";
             #endregion
 
-            //insert XpFlowSign rows
+            //insert XpFlowSign/XpFlowSignTest rows
             var totalLevel = findIdxs.Count - 1;
             var level = 0;  //current flow level, start 0
+            var userType = "";
             foreach (var idx in findIdxs)
             {
                 #region 7.get signer Id/name by rules
@@ -155,6 +157,7 @@ insert into dbo.XpFlowSign(
                 DateTime? signTime = null;
                 if (level == 0)
                 {
+                    userType = "UserId";
                     signTime = DateTime.Now;
                     if (row[userFid] != null)
                         signerId = row[userFid].ToString();
@@ -169,31 +172,39 @@ insert into dbo.XpFlowSign(
                             break;
                             */
                         case SignerTypeEstr.Fid:
+                            userType = line.SignerValue;
                             if (row[line.SignerValue] != null)
                                 signerId = row[line.SignerValue].ToString();
                             break;
                         case SignerTypeEstr.UserMgr:
+                            userType = "User Manager";
                             if (row[userFid] != null)
                                 signerId = await db.GetStrAsync(string.Format(SqlUserMgr, row[userFid].ToString()));
                             break;
                         case SignerTypeEstr.DeptMgr:
+                            userType = "Depart Manager";
                             if (line.SignerValue != null)
-                                signerId = await db .GetStrAsync(string.Format(SqlDeptMgr, line.SignerValue));
+                                signerId = await db.GetStrAsync(string.Format(SqlDeptMgr, line.SignerValue));
                             break;
                     }
                 }
 
-                if (_Str.IsEmpty(signerId))
+                if (string.IsNullOrEmpty(signerId))
                 {
-                    error = "SignerId is empty.";
+                    error = $"SignerId is empty. ({userType})";
                     goto lab_exit;
                 }
 
                 //get signer Name
                 var signerName = await db.GetStrAsync(string.Format(SqlUserName, signerId));
+                if (string.IsNullOrEmpty(signerName))
+                {
+                    error = $"SignerId not existed. ({userType}={signerId})";
+                    goto lab_exit;
+                }
                 #endregion
 
-                #region 8.insert XpFlowSign
+                #region 8.insert XpFlowSign/XpFlowSignTest
                 await db.ExecSqlAsync(sql, new List<object>() {
                     "Id", _Str.NewId(),
                     "FlowId", line.FlowId,
@@ -213,9 +224,16 @@ insert into dbo.XpFlowSign(
             //case of ok
             return "";
 
-            //case of error
+        //case of error
         lab_exit:
-            return $"_XpFlow.cs CreateSignRows() failed(Flow.Code={flowCode}): {error}";
+            return isTest
+                ? error
+                : $"_XpFlow.cs CreateSignRows() failed(Flow.Code={flowCode}): {error}";
+        }
+
+        private static string GetSignTable(bool isTest)
+        {
+            return isTest ? "XpFlowSignTest" : "XpFlowSign";
         }
 
         /// <summary>
@@ -338,10 +356,10 @@ insert into dbo.XpFlowSign(
         /// <param name="signNote">sign note</param>
         /// <param name="sourceTable">source Table for update FlowLevel, FlowStatus columns</param>
         /// <returns>ResultDto for called by controller</returns>
-        public static async Task<ResultDto> SignRowAsync(string flowSignId, 
-            bool signYes, string signNote, string sourceTable)
+        public static async Task<ResultDto> SignRowAsync(string flowSignId, bool signYes,
+            string signNote, string sourceTable, bool isTest)
         {
-            #region 1.check XpFlowSign row existed
+            #region 1.check XpFlowSign/XpFlowSignTest row existed
             Db db = null;
             var error = "";
             if (!await _Str.CheckKeyAsync(flowSignId))
@@ -353,20 +371,21 @@ insert into dbo.XpFlowSign(
             db = new Db();
             await db.BeginTranAsync();
 
-            //get XpFlowSign row
-            var sql = $"select SourceId, FlowLevel, TotalLevel from dbo.XpFlowSign where Id='{flowSignId}' and SignStatus='0'";
+            //get XpFlowSign/XpFlowSignTest row
+            var signTable = GetSignTable(isTest);
+            var sql = $"select SourceId, FlowLevel, TotalLevel from dbo.{signTable} where Id='{flowSignId}' and SignStatus='0'";
             var row = await db.GetJsonAsync(sql);
             if (row == null)
             {
-                error = $"not found XpFlowSign row.(Id={flowSignId})";
+                error = $"not found {signTable} row.(Id={flowSignId})";
                 goto lab_error;
             }
             #endregion
 
-            #region 2.update XpFlowSign row
+            #region 2.update XpFlowSign/XpFlowSignTest row
             var signStatus = signYes ? "Y" : "N";
             sql = $@"
-update dbo.XpFlowSign set 
+update dbo.{signTable} set 
     SignStatus=@SignStatus, 
     Note=@Note,
     SignTime=getDate()
@@ -382,15 +401,18 @@ where Id='{flowSignId}'
 
             #region 3.update source row FlowLevel/FlowStatus
             //flowStatus: Y(agree flow), N(not agree), 0(signing)
+            var nowLevel = Convert.ToInt32(row["FlowLevel"]);
             var flowStatus = !signYes ? "N" :
-                (Convert.ToInt32(row["FlowLevel"]) == Convert.ToInt32(row["TotalLevel"])) ? "Y" : 
+                (nowLevel == Convert.ToInt32(row["TotalLevel"])) ? "Y" : 
                 "0";
+            //final flowLevel must between 0-totalLevel
+            var flowLevel = (flowStatus == "0") ? nowLevel + 1 : 0;
 
             //update source table
             var sourceId = row["SourceId"].ToString();
             sql = $@"
 update {sourceTable} set
-    FlowLevel=FlowLevel+1,
+    FlowLevel={flowLevel},
     FlowStatus='{flowStatus}'
 where Id='{sourceId}'
 ";

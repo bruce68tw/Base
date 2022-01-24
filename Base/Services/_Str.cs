@@ -203,39 +203,18 @@ namespace Base.Services
         /// <returns>JObject</returns>
         public static JObject ToJson(string str)
         {
-            return _Str.IsEmpty(str) 
-                ? null : JObject.Parse(str);
-            /*
-            if (_Str.IsEmpty(str))
+            if (string.IsNullOrEmpty(str))
                 return null;
 
-		    try {
-			    return JObject.Parse(str);
-		    } catch {
-                _Log.Error("_Str.cs ToJson() error: " + str);
+            try
+            {
+                return JObject.Parse(str);
+            }
+            catch
+            {
+                //_Log.Error("_Str.cs ToJson() error: " + str);
                 return null;
-		    }
-            */
-
-            /*
-		    if (!ok){
-			    var pos = str.IndexOf(",");
-			    if (pos < 0){
-				    _Log.Error("_Str.cs ToJson() error:" + str);
-				    return null;
-			    }
-				
-			    str = "{" + str.Substring(pos+1) ;
-			    try {
-                    return JObject.Parse(str);
-			    } catch {
-				    return null;
-			    }
-		    }		
-		
-		    //case else
-		    return null;
-            */
+            }
         }
 
         /// <summary>
