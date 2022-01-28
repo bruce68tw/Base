@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Text;
+﻿using Base.Models;
 using Newtonsoft.Json.Linq;
-using System.Security.Cryptography;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Linq;
-using Base.Models;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Base.Services
@@ -34,17 +34,18 @@ namespace Base.Services
             return new string(Enumerable.Repeat(chars, len)
               .Select(s => s[_random.Next(s.Length)]).ToArray());
         }
+        */
 
-        public static string GetPreError(string error = "")
+        public static string GetError(string error = "")
         {
             return _Fun.PreError + _Str.EmptyToValue(error, _Fun.SystemError);
         }
 
-        public static string GetPreSysError(string error)
+        //get BR code error
+        public static string GetBrError(string error)
         {
-            return _Fun.PreSystemError + error;
+            return _Fun.PreBrError + error;
         }
-        */
 
         /// <summary>
         /// check object is empty or not
@@ -66,7 +67,6 @@ namespace Base.Services
             return (sep + longStr + sep).IndexOf(sep + shortStr + sep) >= 0;
         }
 
-
         public static string EmptyToValue(string data, string value)
         {
             return _Str.IsEmpty(data)
@@ -74,16 +74,16 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// add anti slash for path if need
+        /// add directory seperator for path if need
         /// </summary>
         /// <param name="dir">now path</param>
         /// <returns></returns>
-        public static string AddAntiSlash(string dir)
+        public static string AddDirSep(string dir)
         {
             if (IsEmpty(dir))
-                return "\\";
+                return _Fun.DirSep.ToString();
             if (dir.Substring(dir.Length - 1, 1) != "/" && dir.Substring(dir.Length - 1, 1) != "\\")
-                dir += "\\";
+                dir += _Fun.DirSep;
             return dir;
         }
 
@@ -308,8 +308,8 @@ namespace Base.Services
                 data = _base34[(int)mod] + data;
             }
 
-            //fixed length of 10 chars, add tailed '0'
-            const int minLen = 4;
+            //min length 6 chars, add tailed '0'
+            const int minLen = 6;
             if (data.Length < minLen)
                 data += new string('0', minLen - data.Length);
 

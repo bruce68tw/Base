@@ -2,6 +2,7 @@
 using Base.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Base.Services
@@ -21,7 +22,7 @@ namespace Base.Services
         public const string BaseUser = "_BaseUser";         //base user info
         public const string ProgAuthStrs = "_ProgAuthStrs"; //program autu string list
 
-        //c# datetime format, when js send to c#, match to _fun.MmDtFmt
+        //c# datetime format, when js send to c#, will match to _fun.MmDtFmt
         public const string CsDtFmt = "yyyy/MM/dd HH:mm:ss";
 
         //carrier
@@ -36,12 +37,15 @@ namespace Base.Services
         public const string TimeOutFid = "TimeOut";
 
         //indicate error
-        //public const string PreError = "E:";
-        public const string PreBrError = "B:";
+        public const string PreError = "E:";
+        public const string PreBrError = "B:";  //_BR code error
         //public const string PreSystemError = "S:";
 
         //default view cols for layout(row div, label=2, input=3)(horizontal) 
         public static List<int> DefHoriCols = new() { 2, 3 };
+
+        //directory tail seperator
+        public static char DirSep = Path.DirectorySeparatorChar;
 
         //class name for hide element in RWD phone
         public static string HideRwd = "xg-hide-rwd";
@@ -74,10 +78,10 @@ namespace Base.Services
 
         #region base varibles
         //ap physical path, has right slash
-        public static string DirRoot = _Str.GetLeft(AppDomain.CurrentDomain.BaseDirectory, "bin\\");
+        public static string DirRoot = _Str.GetLeft(AppDomain.CurrentDomain.BaseDirectory, "bin" + DirSep);
 
         //temp folder
-        public static string DirTemp = DirRoot + "_temp\\";
+        public static string DirTemp = DirRoot + "_temp" + DirSep;
         #endregion
 
         #region Db variables
@@ -196,6 +200,12 @@ Offset {2} Rows Fetch Next {3} Rows Only
 
             //case of ok
             return "";
+        }
+
+        //get current userId
+        public static string Dir(string folder, bool tailSep = true)
+        {
+            return _Fun.DirRoot + folder + (tailSep ? DirSep : "");
         }
 
         //get current userId

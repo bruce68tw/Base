@@ -164,7 +164,7 @@ namespace BaseWeb.Services
 
             //save files
             _File.MakeDir(saveDir);
-            saveDir = _Str.AddAntiSlash(saveDir);
+            saveDir = _Str.AddDirSep(saveDir);
             var fileJson = (JObject)inputJson[_Web.FileJson];   //file vs pkey
             var newKeyCol = values[0];  //equals to 't' + levelStr
             var fid = values[1];        //file fid
@@ -239,10 +239,10 @@ namespace BaseWeb.Services
             //    return row;
 
             //get path
-            var saveDir = _Str.AddAntiSlash(path.SaveDir);
+            var saveDir = _Str.AddDirSep(path.SaveDir);
             var serverPath = (path.ServerPath == "") 
                 ? AppDomain.CurrentDomain.BaseDirectory : path.ServerPath;
-            serverPath = _Str.AddAntiSlash(serverPath);
+            serverPath = _Str.AddDirSep(serverPath);
 
             //if (fid == "")
             //    fid = fileName;
@@ -281,10 +281,10 @@ namespace BaseWeb.Services
                 return;
 
             //get path
-            var saveDir = _Str.AddAntiSlash(path.SaveDir);
+            var saveDir = _Str.AddDirSep(path.SaveDir);
             var serverPath = (path.ServerPath == "") 
                 ? AppDomain.CurrentDomain.BaseDirectory : path.ServerPath;
-            serverPath = _Str.AddAntiSlash(serverPath);
+            serverPath = _Str.AddDirSep(serverPath);
 
             //var key = "";   //pkey value
             foreach (JObject row in rows)

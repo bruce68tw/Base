@@ -29,7 +29,7 @@ namespace Base.Services
             //send
             var email = new EmailDto()
             {
-                Subject = _Fun.Config.SystemName + " Error",
+                Subject = _Fun.Config.SystemName + " Info",
                 ToUsers = StrToUsers(_Fun.Config.RootEmail),
                 Body = msg,
             };
@@ -47,7 +47,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// send one mail
+        /// send one mail by emailDto
         /// </summary>
         /// <param name="email">email model</param>
         /// <param name="smtp">smtp model</param>
@@ -58,7 +58,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// send mails asynchronus
+        /// send mails by emailDtos asynchronus
         /// </summary>
         /// <param name="emails"></param>
         /// <param name="smtp"></param>
@@ -87,7 +87,7 @@ namespace Base.Services
         }
         */
 
-        //mailMessage add image
+        //mailMessage add embeded image list
         private static void MsgAddImages(MailMessage msg, List<IdStrDto> images)
         {
             if (images == null || images.Count == 0)
@@ -98,8 +98,10 @@ namespace Base.Services
                 var imageHtml = $"<html><body><img src=cid:{image.Id}/><br></body></html>";
                 var altView = AlternateView.CreateAlternateViewFromString(imageHtml, null, MediaTypeNames.Text.Html);
 
-                var linkSrc = new LinkedResource(image.Str, MediaTypeNames.Image.Jpeg);
-                linkSrc.ContentId = Guid.NewGuid().ToString();
+                var linkSrc = new LinkedResource(image.Str, MediaTypeNames.Image.Jpeg)
+                {
+                    ContentId = Guid.NewGuid().ToString()
+                };
                 altView.LinkedResources.Add(linkSrc);
 
                 //MailMessage mail = new MailMessage();
@@ -107,6 +109,12 @@ namespace Base.Services
             }
         }
 
+        /// <summary>
+        /// convert emailDto & smtp to mailMessage object
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="smtp"></param>
+        /// <returns></returns>
         public static MailMessage DtoToMsg(EmailDto email, SmtpDto smtp = null)
         {
             if (smtp == null)
@@ -118,6 +126,14 @@ namespace Base.Services
             return DtoToMsgByArg(email, utf8, sender, from);
         }
 
+        /// <summary>
+        /// convert emailDto & args to mailMessage
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="utf8"></param>
+        /// <param name="sender"></param>
+        /// <param name="from"></param>
+        /// <returns></returns>
         private static MailMessage DtoToMsgByArg(EmailDto email, Encoding utf8, MailAddress sender, MailAddress from)
         {
             var msg = new MailMessage()
@@ -134,20 +150,23 @@ namespace Base.Services
             //add image, use cid(better than base64 !!)
             MsgAddImages(msg, email.Images);
 
-            //attach files
+            //add attach files
             if (email.Files != null)
             {
                 foreach (var file in email.Files)
                 {
                     if (File.Exists(file))
                     {
-                        var attach = new Attachment(file);
-                        attach.Name = _File.GetFileName(file);  //否則email附檔會出現路徑
+                        var attach = new Attachment(file)
+                        {
+                            Name = _File.GetFileName(file)  //否則email附檔會出現路徑
+                        };
                         msg.Attachments.Add(attach);
                     }
                 }
             }
 
+            //add receivers
             if (email.ToUsers != null)
             {
                 foreach (var user in email.ToUsers)
@@ -165,6 +184,12 @@ namespace Base.Services
             return msg;
         }
 
+        /// <summary>
+        /// convert emailDtos to mailMessages
+        /// </summary>
+        /// <param name="emails"></param>
+        /// <param name="smtp"></param>
+        /// <returns></returns>
         public static List<MailMessage> DtosToMsgs(List<EmailDto> emails, SmtpDto smtp = null)
         {
             if (smtp == null)
@@ -207,6 +232,13 @@ namespace Base.Services
         }
         */
 
+        /// <summary>
+        /// send email
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="smtp"></param>
+        /// <param name="sendImage"></param>
+        /// <returns></returns>
         public static async Task SendByMsgAsync(MailMessage msg, SmtpDto smtp = null, bool sendImage = true)
         {
             await SendByMsgsAsync(new List<MailMessage>() { msg }, smtp, sendImage);
@@ -245,6 +277,7 @@ namespace Base.Services
             //send email
             try
             {
+                //set smtp
                 var client = new SmtpClient()
                 {
                     Host = smtp.Host,
@@ -256,6 +289,7 @@ namespace Base.Services
                     Timeout = 30000,
                 };
 
+                //add images & send
                 foreach (var msg in msgs)
                 {
                     if (sendImage)

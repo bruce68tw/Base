@@ -243,7 +243,7 @@ namespace Base.Services
             #region 4.save ok excel file
             if (_Str.IsEmpty(importDto.LogRowId))
                 importDto.LogRowId = _Str.NewId();
-            var fileStem = _Str.AddAntiSlash(dirUpload) + importDto.LogRowId;
+            var fileStem = _Str.AddDirSep(dirUpload) + importDto.LogRowId;
             docx.SaveAs(fileStem + ".xlsx");
             #endregion
 
@@ -437,7 +437,7 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                 return;
 
             //copy excel & add _fail for file name
-            var fileName = Path.GetDirectoryName(this.saveExcelPath) + "\\"
+            var fileName = Path.GetDirectoryName(this.saveExcelPath) + _Fun.DirSep
                 + Path.GetFileNameWithoutExtension(this.saveExcelPath)
                 + "_fail" + Path.GetExtension(this.saveExcelPath);
             File.Copy(this.tplPath, fileName, true);
