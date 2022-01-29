@@ -21,20 +21,27 @@ namespace Base.Services
         private static readonly long _startTicks = new DateTime(2000, 1, 1).Ticks;
         //private static long _startMilliSec = new DateTime(2000, 1, 1).Ticks / 1000;
 
-        /*
         //random string for reptcha
-        private static Random _random = new Random();
-        public static string RandomStr(int len, int type = 1)
-        {
-            var chars = 
-                (type == 1) ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" : 
-                (type == 2) ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : 
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        //private static Random _random = new Random();
 
+        /// <summary>
+        /// get random string
+        /// </summary>
+        /// <param name="len"></param>
+        /// <param name="type">1-4</param>
+        /// <returns></returns>
+        public static string RandomStr(int len, int type)
+        {
+            var chars =
+                (type == 1) ? "0123456789" :
+                (type == 2) ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" :
+                (type == 3) ? "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789" : 
+                "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+            var random = new Random();
             return new string(Enumerable.Repeat(chars, len)
-              .Select(s => s[_random.Next(s.Length)]).ToArray());
+              .Select(s => s[random.Next(s.Length)]).ToArray());
         }
-        */
 
         public static string GetError(string error = "")
         {

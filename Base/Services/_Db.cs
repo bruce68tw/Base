@@ -35,6 +35,11 @@ namespace Base.Services
         #endregion
 
         #region others
+        public static async Task<string> GetStrAsync(string sql, List<object> args = null, string dbStr = "")
+        {
+            return await new Db(dbStr).GetStrAsync(sql, args);
+        }
+
         public static async Task<List<string>> GetStrsAsync(string sql, List<object> args = null, string dbStr = "")
         {
             return await new Db(dbStr).GetStrsAsync(sql, args);

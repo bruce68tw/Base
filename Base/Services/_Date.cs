@@ -23,6 +23,12 @@ namespace Base.Services
                 : (end.Value - start.Value).Days;
         }
 
+        public static long MinDiff(DateTime? start, DateTime? end)
+        {
+            return (start == null || end == null || start == end)
+                ? 0
+                : (end.Value - start.Value).Minutes;
+        }
         /// <summary>
         /// 2 string date difference
         /// </summary>
