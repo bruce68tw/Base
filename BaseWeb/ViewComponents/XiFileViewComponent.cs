@@ -14,22 +14,9 @@ namespace BaseWeb.ViewComponents
         /// <summary>
         /// file upload, 
         /// </summary>
-        /// <param name="title"></param>
-        /// <param name="fid"></param>
-        /// <param name="cols"></param>
-        /// <param name="fileType">I(image),E(excel),W(word)</param>
         /// <returns></returns>
         public HtmlString Invoke(XiFileDto dto)
         {
-            /*
-             string title, string fid, string value = "",
-            bool required = false, bool inRow = false, string cols = "",
-            string labelTip = "", int maxSize = 0, string fileType = "I",
-            string extAttr = "", string extClass = "", string edit = "",
-            string fnOnViewFile = "",
-            string fnOnOpenFile = "_ifile.onOpenFile(this)",
-            string fnOnDeleteFile = "_ifile.onDeleteFile(this)"
-             */
             if (_Str.IsEmpty(dto.FnOnViewFile))
                 dto.FnOnViewFile = $"_me.onViewFile(\"{dto.Table}\", \"{dto.Fid}\", this)";
             dto.FnOnViewFile = _Helper.GetLinkFn(dto.FnOnViewFile);
@@ -45,14 +32,13 @@ namespace BaseWeb.ViewComponents
             var dataEdit = _Helper.GetDataEdit(dto.Edit);
 
             //if container is label, inside element onclick will trigger when click inside !!
-            //data-max/exts for input file for checking, others for input hide !!
             //hidden input text for validate msg placement
-            //data-max, data-exts is checking when change file, so put in input file.
-            //button open/delete will be handled by status, but link(view) is not.
+            //data-max/exts for checking so put in input file, others for input hide !!
+            //button open/delete will be handled by status, but link(view) is on.
             var html = $@"
 <div class='form-control xi-box {dto.BoxClass}' style='margin-bottom:0'>
     <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' onchange='_ifile.onChangeFile(this)' style='display:none'>
-    <input{attr} data-type='file' type='hidden'>
+    <input{attr} data-type='file' type='hidden' class='xd-valid'>
 
     <button type='button' class='btn btn-link' onclick='_ifile.onOpenFile(this)' {dataEdit}>
         <i class='ico-open'></i>
