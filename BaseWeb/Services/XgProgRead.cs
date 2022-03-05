@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BaseWeb.Services
 {
-    public class XpProgRead
+    public class XgProgRead
     {
         private readonly ReadDto dto = new()
         {

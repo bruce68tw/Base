@@ -3,9 +3,9 @@ using Base.Services;
 
 namespace BaseWeb.Services
 {
-    public class XpProgEdit : XpEdit
+    public class XgProgEdit : XgEdit
     {
-        public XpProgEdit(string ctrl) : base(ctrl) { }
+        public XgProgEdit(string ctrl) : base(ctrl) { }
 
         override public EditDto GetDto()
         {

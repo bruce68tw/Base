@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BaseWeb.Services
 {
-    public class XpFlowRead
+    public class XgFlowRead
     {
         private ReadDto dto = new()
         {

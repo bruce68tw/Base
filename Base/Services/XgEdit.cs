@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     //auto Ctrl variables for all xxxEdit.cs
-    abstract public class XpEdit
+    abstract public class XgEdit
     {
         public string Ctrl;
 
-        public XpEdit(string ctrl) 
+        public XgEdit(string ctrl) 
         {
             Ctrl = ctrl; 
         }
@@ -42,7 +42,8 @@ namespace Base.Services
             return await EditService().CreateAsync(json);
         }
 
-        public async Task<ResultDto> UpdateAsync(string key, JObject json)
+        //can override
+        public virtual async Task<ResultDto> UpdateAsync(string key, JObject json)
         {
             return await EditService().UpdateAsync(key, json);
         }

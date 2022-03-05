@@ -18,6 +18,7 @@
     <None Remove="Enums\EnumCacheDb.cs_old" />
     <None Remove="Enums\EnumCacheStatus.cs_old" />
     <None Remove="Enums\zz_EnumOrderDir.cs_old" />
+    <None Remove="Enums\zz_LaunchStatusEstr.cs_old" />
     <None Remove="Models\CacheReadModel.cs_old" />
     <None Remove="Models\DbFormatDto.cs_old" />
     <None Remove="Models\ErrorFieldDto.cs_old" />

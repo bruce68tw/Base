@@ -9,7 +9,7 @@ using System.IO;
 using System.Threading.Tasks;
 using BaseApi.Services;
 
-namespace BaseWeb.Services
+namespace BaseApi.Services
 {
     public class _WebFile
     {

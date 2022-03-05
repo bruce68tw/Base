@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace BaseWeb.Services
 {
-    public class _XpFlow
+    public class _XgFlow
     {
         //match to XpCode.Type="AndOr" && Flow.js
         private const string OrSep = "{O}";

@@ -29,7 +29,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get file ext, lowercase without dot, ex: docx
+        /// get file ext, lowercase no dot, ex: docx
         /// </summary>
         /// <param name="path">file path</param>
         /// <returns></returns>

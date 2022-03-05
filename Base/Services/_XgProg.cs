@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     //program function
-    public static class _XpProg
+    public static class _XgProg
     {
         /// <summary>
         /// check program access right

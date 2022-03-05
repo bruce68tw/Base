@@ -1,7 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
 using Base.Services;
-using BaseApi.Services;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -12,9 +11,9 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace BaseWeb.Services
+namespace BaseApi.Services
 {
-    #pragma warning disable CA2211 // 非常數欄位不應可見
+#pragma warning disable CA2211 // 非常數欄位不應可見
     public static class _Web
     {
         //server side fid for file input collection, must pre '_'

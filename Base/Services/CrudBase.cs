@@ -180,7 +180,7 @@ namespace Base.Services
         /// <returns>BR error code if any</returns>
         protected string CheckAuthTypeData(JObject data, CrudEnum crudEnum)
         {
-            var range = _XpProg.GetAuthRange(_ctrl, crudEnum);
+            var range = _XgProg.GetAuthRange(_ctrl, crudEnum);
             if (range == AuthRangeEnum.User)
             {
                 if (!_Json.IsFidEqual(data, _Fun.UserFid, _Fun.UserId()))

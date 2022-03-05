@@ -1,5 +1,6 @@
 ﻿using Base.Models;
 using Base.Services;
+using BaseApi.Services;
 using DocumentFormat.OpenXml.Packaging;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;

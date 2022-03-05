@@ -34,18 +34,6 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// delete all keys in current database index
-        /// </summary>
-        public static async Task FlushDbAsync()
-        {
-            if (!IsOk())
-                return;
-
-            var server = _redis.GetServer(_redis.GetEndPoints()[0]);
-            await server.FlushDatabaseAsync();
-        }
-
-        /// <summary>
         /// get string value
         /// </summary>
         /// <param name="key"></param>
@@ -75,6 +63,18 @@ namespace Base.Services
                 return false;
 
             return await _db.KeyDeleteAsync(key);
+        }
+
+        /// <summary>
+        /// delete all keys in current database index
+        /// </summary>
+        public static async Task FlushDbAsync()
+        {
+            if (!IsOk())
+                return;
+
+            var server = _redis.GetServer(_redis.GetEndPoints()[0]);
+            await server.FlushDatabaseAsync();
         }
 
     }//class

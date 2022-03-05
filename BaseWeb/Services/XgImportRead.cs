@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace BaseWeb.Services
 {
-    public class XpImportRead
+    public class XgImportRead
     {
         private readonly string _importType;
 
         //constructor
-        public XpImportRead(string importType)
+        public XgImportRead(string importType)
         {
             _importType = importType;
         }

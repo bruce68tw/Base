@@ -15,7 +15,7 @@ namespace Base.Services
 {
     public class _Str
     {
-        //base34 encode(remove I,O for readable)
+        //base34 encode(remove I/O for readable)
         private static readonly char[] _base34 = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ".ToCharArray();
         private static readonly ulong _baseLen = (ulong)_base34.Length;
         private static readonly long _startTicks = new DateTime(2000, 1, 1).Ticks;
@@ -285,27 +285,22 @@ namespace Base.Services
         
         /// <summary>
         /// get new Id for db key, 10 char(upperCase), consider db index performance
-        /// max date is 2120/1/1(10 char, from 2000/1/1)
+        /// max date is 2300/1/1(9char+A, from 2000/1/1)
         /// </summary>
         /// <returns></returns>
         public static string NewId()
         {
-            //stop 1 milli second for avoid repeat(sync way here !!)
+            //1.stop 1 milli second for avoid repeat(sync way here !!)
             Thread.Sleep(1);
             //await Task.Delay(1);
 
-            var num = (ulong)((DateTime.Now.Ticks - _startTicks) / TimeSpan.TicksPerMillisecond);
+            //2.get current time
+            //var ticks = new DateTime(2500, 1, 1).Ticks;
+            var ticks = DateTime.Now.Ticks;
+            var num = (ulong)((ticks - _startTicks)/ TimeSpan.TicksPerMillisecond) * 3;
             //var num = (ulong)(DateTime.Now.Millisecond - _startMilliSec);
 
-            //乘上一個數字(16)以增加尾數的差異性
-            //const int baseNum = 16;
-            //tail add one random number(0-baseNum - 1, guid for random seed)
-            //var random = new Random(Guid.NewGuid().GetHashCode());
-            //num = num * baseNum + (ulong)random.Next(0, baseNum - 1);
-            //var tail = ticks % 10; 
-            //num = num * 10 + (ulong)(ticks % 10);
-
-            //convert to base34
+            //3.convert to base34
             var data = "";
             ulong mod;
             while (num > 0)
@@ -315,14 +310,16 @@ namespace Base.Services
                 data = _base34[(int)mod] + data;
             }
 
-            //min length 6 chars, add tailed '0'
+            //4.min length 6 chars, add tailed '0'
             const int minLen = 6;
             if (data.Length < minLen)
                 data += new string('0', minLen - data.Length);
 
-            //tail add 1 random char & server id for multiple web server
-            var tail = _base34[_Num.GetRandom((int)_baseLen - 1)];
-            data += tail + _Fun.Config.ServerId;
+            //5.tail add 1 random char & server id for multiple web server
+            //var tail = _base34[_Num.GetRandom((int)_baseLen - 1)];
+            //data += tail + _Fun.Config.ServerId;
+            //data += _base34[_Num.GetRandom((int)_baseLen - 1)];
+            data += _Fun.Config.ServerId;
             return data;
         }
 

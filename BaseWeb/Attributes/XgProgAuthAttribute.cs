@@ -26,7 +26,7 @@ namespace BaseWeb.Attributes
             var ctrl = (string)context.RouteData.Values["Controller"];  //ctrl name
             var userInfo = _Fun.GetBaseUser();
             var isLogin = userInfo.IsLogin;
-            if (isLogin && _XpProg.CheckAuth(userInfo.ProgAuthStrs, ctrl, _crudEnum))
+            if (isLogin && _XgProg.CheckAuth(userInfo.ProgAuthStrs, ctrl, _crudEnum))
             {
                 //case of ok
                 base.OnActionExecuting(context);

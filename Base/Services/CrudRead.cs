@@ -548,7 +548,7 @@ namespace Base.Services
                 if (baseUser == null)
                     return "-2";
 
-                var range = _XpProg.GetAuthRange(ctrl, crudEnum, baseUser.ProgAuthStrs);
+                var range = _XgProg.GetAuthRange(ctrl, crudEnum, baseUser.ProgAuthStrs);
                 if (range == AuthRangeEnum.User)
                 {
                     //by user

@@ -6,16 +6,19 @@ using System.Threading.Tasks;
 
 namespace BaseWeb.Services
 {
-    public class XpRoleRead
+    public class XgTranLogRead
     {
         private readonly ReadDto dto = new()
         {
             ReadSql = @"
-select * from dbo.XpRole
-order by Id
+select *
+from dbo.XpTranLog
+order by Sn desc
 ",
             Items = new QitemDto[] {
-                new() { Fid = "Name", Op = ItemOpEstr.Like },
+                new() { Fid = "TableName", Op = ItemOpEstr.Like },
+                new() { Fid = "ColName", Op = ItemOpEstr.Like },
+                new() { Fid = "RowId" },
             },
         };
 

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BaseWeb.Services
 {
-    public class XpEasyRptRead
+    public class XgEasyRptRead
     {
         private readonly ReadDto dto = new()
         {

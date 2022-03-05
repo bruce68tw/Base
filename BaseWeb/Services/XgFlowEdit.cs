@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace BaseWeb.Services
 {
-    public class XpFlowEdit : XpEdit
+    public class XgFlowEdit : XgEdit
     {
-        public XpFlowEdit(string ctrl) : base(ctrl) { }
+        public XgFlowEdit(string ctrl) : base(ctrl) { }
 
         override public EditDto GetDto()
         {

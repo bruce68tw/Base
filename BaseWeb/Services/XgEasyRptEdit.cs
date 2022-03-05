@@ -3,9 +3,9 @@ using Base.Services;
 
 namespace BaseWeb.Services
 {
-    public class XpEasyRptEdit : XpEdit
+    public class XgEasyRptEdit : XgEdit
     {
-        public XpEasyRptEdit(string ctrl) : base(ctrl) { }
+        public XgEasyRptEdit(string ctrl) : base(ctrl) { }
 
         override public EditDto GetDto()
         {
