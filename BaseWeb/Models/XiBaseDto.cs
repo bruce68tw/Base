@@ -23,6 +23,10 @@
         public string Title { get; set; }
         public string Fid { get; set; }
         public string Value { get; set; }
+        
+        /// <summary>
+        /// C(create), U(update), Other for none
+        /// </summary>
         public string Edit { get; set; }
         public bool InRow  { get; set; }
         public bool Required  { get; set; }

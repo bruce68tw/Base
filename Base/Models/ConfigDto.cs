@@ -12,16 +12,16 @@
             Locale = "zh-TW";
             ServerId = "A";
             SlowSql = 1000;
-            LogDebug = false;
-            LogSql = false;
-            RootEmail = "";
-            TesterEmail = "";
+            //LogDebug = false;
+            //LogSql = false;
+            //RootEmail = "";
+            //TesterEmail = "";
             UploadFileMax = 5;
             //CacheSecond = 3600;
-            SSL = false;
-            Smtp = "";
-            HtmlImageUrl = "";
-            Redis = "";
+            //SSL = false;
+            //Smtp = "";
+            //HtmlImageUrl = "";
+            //Redis = "";
         }
 
         //db connect string
@@ -76,6 +76,31 @@
         /// empty for memory cache
         /// </summary>
         public string Redis { get; set; }
+
+        /// <summary>
+        /// google client Id for oAuth2
+        /// </summary>
+        public string GoogleClientId { get; set; }
+
+        /// <summary>
+        /// google client Secret for oAuth2
+        /// </summary>
+        public string GoogleClientSecret { get; set; }
+
+        /// <summary>
+        /// google oAuth2 redirect url
+        /// </summary>
+        public string GoogleRedirect { get; set; }
+
+        /// <summary>
+        /// facebook client Id for oAuth2
+        /// </summary>
+        public string FbClientId { get; set; }
+
+        /// <summary>
+        /// facebook client Secret for oAuth2
+        /// </summary>
+        public string FbClientSecret { get; set; }
 
     }
 }

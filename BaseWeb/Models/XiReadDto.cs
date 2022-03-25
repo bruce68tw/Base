@@ -6,6 +6,7 @@
         {
             InRow = false;
             SaveDb = false; //default not save Db !!
+            EditStyle = false;
         }
 
         public string Title { get; set; }
@@ -18,5 +19,9 @@
         public string Cols { get; set; }
         public string Format { get; set; }
         public bool SaveDb { get; set; }
+        /// <summary>
+        /// edit field style, default false
+        /// </summary>
+        public bool EditStyle { get; set; }
     }
 }

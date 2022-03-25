@@ -33,7 +33,7 @@ namespace BaseWeb.ViewComponents
                 {
                     html += string.Format(@"
 <li>
-    <a href='{0}'data-pjax='1'>
+    <a href='{0}' data-pjax>
         <i class='{1}'></i>{2}
     </a>
 </li>
@@ -46,7 +46,7 @@ namespace BaseWeb.ViewComponents
                     foreach (var item in row.Items)
                     {
                         childs += string.Format(@"
-<li><a href='{0}' data-pjax='1'>{1}</a></li>
+<li><a href='{0}' data-pjax>{1}</a></li>
 ", item.Url, item.Name);
                     }
 

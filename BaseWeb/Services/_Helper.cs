@@ -273,13 +273,12 @@ namespace BaseWeb.Services
                 iconTip = GetIconTip();
             }
             var reqSpan = GetRequiredSpan(required);
+            var labelClass = labelHideRwd ? _Fun.HideRwd : "";
             string result;
-            var labelClass = "xg-label";
-            if (labelHideRwd)
-                labelClass += " " + _Fun.HideRwd;
             if (colList.Count > 1)
             {
                 //horizontal
+                labelClass += " xg-label";
                 result = string.Format(@"
 <div class='col-md-{0} {5}'{2}>{3}</div>
 <div class='col-md-{1} xg-input'>
@@ -290,6 +289,7 @@ namespace BaseWeb.Services
             else
             {
                 //vertical
+                labelClass += " xg-vlabel";
                 result = string.Format(@"
 <div class='col-md-{0} xg-row'>
     <div class='{4}'{1}>{2}</div>
