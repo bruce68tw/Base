@@ -41,6 +41,17 @@ namespace BaseApi.Services
             return GetHttp().Request;
         }
 
+        public static string GetCookie(string key)
+        {
+            return GetHttp().Request.Cookies.TryGetValue(key, out string value)
+                ? value : "";
+        }
+
+        public static void SetCookie(string key, string value)
+        {
+            GetHttp().Response.Cookies.Append(key, value);
+        }
+
         //get http response
         public static HttpResponse GetResponse()
         {
@@ -68,6 +79,13 @@ namespace BaseApi.Services
             return $"{req.Scheme}://{req.Host}{req.Path}{req.QueryString}";
         }
 
+        /// <summary>
+        /// get url result
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="args"></param>
+        /// <param name="isGet"></param>
+        /// <returns></returns>
         public static async Task<string> GetUrlResult(string url, string args = "", bool isGet = true)
         {
             var request = WebRequest.Create(url) as HttpWebRequest;

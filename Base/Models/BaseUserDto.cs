@@ -7,6 +7,7 @@
     {
         //login or not
         public bool IsLogin;
+        public bool HasPwd;
 
         //locale code
         public string Locale;

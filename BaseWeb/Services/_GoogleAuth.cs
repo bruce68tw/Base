@@ -8,9 +8,6 @@ namespace BaseWeb.Services
     //use OAuth, google will callback http action, so put BaseWeb
     public static class _GoogleAuth
     {
-        //constant
-        //const string _authScope = "https://www.googleapis.com/auth/userinfo.profile";
-
         private static bool _init = false;
         private static string _redirect;
         private static string _clientId;
@@ -34,15 +31,20 @@ namespace BaseWeb.Services
         /// <returns></returns>
         public static string GetAuthUrl(string arg = "")
         {
+            //response_type=code for call by server side !!
             var url = "https://accounts.google.com/o/oauth2/v2/auth";
-            var scope = "https://www.googleapis.com/auth/userinfo.email";   //get email
-            url = $"{url}?redirect_uri={_redirect}&response_type=code&client_id={_clientId}&scope={scope}";
+            var scope = "https://www.googleapis.com/auth/userinfo.email";   //get email (userinfo.profile for user name)
+            url = $"{url}?redirect_uri={_redirect}&client_id={_clientId}&scope={scope}&response_type=code";
             if (arg != "")
                 url += "&state=" + arg;
             return url;
         }
 
-        //auth code to token
+        /// <summary>
+        /// auth code to token
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
         public static async Task<string> CodeToToken(string code)
         {
             var url = "https://www.googleapis.com/oauth2/v4/token";
@@ -51,11 +53,15 @@ namespace BaseWeb.Services
             return json["access_token"].ToString();
         }
 
-        //has email
+        /// <summary>
+        /// get user info
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
         public static async Task<JObject> GetUser(string token)
         {
-            var url = $"https://www.googleapis.com/oauth2/v1/userinfo?access_token={token}";
-            //var url = "https://www.googleapis.com/auth/userinfo.email?access_token={0}";
+            //var url = $"https://www.googleapis.com/oauth2/v1/userinfo?access_token={token}";
+            var url = $"https://www.googleapis.com/oauth2/v3/userinfo?access_token={token}";
             var result = await _Http.GetUrlResult(url);
             return _Str.ToJson(result);
         }

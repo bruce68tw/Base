@@ -102,5 +102,10 @@
         /// </summary>
         public string FbClientSecret { get; set; }
 
+        /// <summary>
+        /// facebook oAuth2 redirect url
+        /// </summary>
+        public string FbRedirect { get; set; }
+
     }
 }
