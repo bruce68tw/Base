@@ -1,6 +1,5 @@
-﻿using Base.Enums;
-using Base.Models;
-using Base.Services;
+﻿using Base.Services;
+using BaseApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
@@ -11,22 +10,22 @@ namespace BaseWeb.Attributes
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            var br = _Fun.GetBaseUser();
-            if (br != null && br.IsLogin)
-            {
-                //case of ok
-                base.OnActionExecuting(context);
-                return;
-            }
-            else
+            var userInfo = _Fun.GetBaseUser();
+            if (userInfo == null || userInfo.UserId == "")
             {
                 //redirect to login action
                 context.Result = new RedirectToRouteResult(
                     new RouteValueDictionary
                     {
                         { "controller", "Home" },
-                        { "action", "Login" }
+                        { "action", "Login" },
+                        { "url", _Http.GetWebPath() },
                     });
+            }
+            else
+            {
+                //case of ok
+                base.OnActionExecuting(context);
             }
         }
 

@@ -20,7 +20,7 @@ namespace Base.Services
         private readonly string _dbStr;
 
         //jQuery dataTables input arg
-        private DtDto _dtDto;
+        //private DtDto _dtDto;
 
         //sql args, (id, value)
         private List<object> _sqlArgs = new();
@@ -52,14 +52,17 @@ namespace Base.Services
         public async Task<JObject> GetPageAsync(ReadDto readDto, DtDto dtDto, string ctrl = "")
         {
             #region 1.check input
+            dtDto.length = _Page.GetPageRows(dtDto.length);
+            /*
             //adjust page rows if need
             if (dtDto.length < 1)
                 dtDto.length = 1;
             else if (dtDto.length > 50)
                 dtDto.length = 50;
+            */
 
             //set instance variables from input args
-            _dtDto = dtDto;
+            //_dtDto = dtDto;
             //if (findJson == null)
             //    findJson = _Str.IsEmpty(dtDto.findJson) ? null : _Str.ToJson(dtDto.findJson);
             #endregion
@@ -70,7 +73,7 @@ namespace Base.Services
                 return null;
 
             //prepare sql where & set sql args by user input condition
-            var search = (_dtDto.search == null) ? "" : _dtDto.search.value;
+            var search = (dtDto.search == null) ? "" : dtDto.search.value;
             var where = await GetWhereAsync(ctrl, readDto, _Str.ToJson(dtDto.findJson), CrudEnum.Read, search);
             if (where == "-1")
                 return _Json.GetError();
@@ -131,6 +134,104 @@ namespace Base.Services
                 data = rows,
                 recordsFiltered = rowCount,
             });
+        }
+
+        /// <summary>
+        /// get page rows for dataTables(json)
+        /// logic same to GetPageAsync()
+        /// </summary>
+        /// <param name="readDto"></param>
+        /// <param name="pageIn"></param>
+        /// <param name="ctrl">controller name for authorize</param>
+        /// <returns>jquery dataTables object</returns>
+        public async Task<PageOut<T>> GetEasyPageAsync<T>(ReadDto readDto, PageIn pageIn, string ctrl = "") where T : class
+        {
+            #region 1.check input
+            /*
+            //adjust page rows if need
+            if (pageIn.length < 1)
+                pageIn.length = _Fun.PageRows;
+            else if (pageIn.length > 100)
+                pageIn.length = 100;
+            */
+
+            var result = new PageOut<T>();
+            #endregion
+
+            #region 2.get sql
+            var sqlDto = _Sql.SqlToDto(readDto.ReadSql, readDto.UseSquare);
+            if (sqlDto == null)
+                return null;
+
+            //prepare sql where & set sql args by user input condition
+            //var search = (_dtDto.search == null) ? "" : _dtDto.search.value;
+            var where = await GetWhereAsync(ctrl, readDto, _Str.ToJson(pageIn.findJson), CrudEnum.Read);
+            if (where == "-1")
+                return _Page.GetError<T>(result);
+            else if (where == "-2")
+                return _Page.GetBrError<T>(result, _Fun.TimeOutFid);
+
+            if (where != "")
+                sqlDto.Where = (sqlDto.Where == "")
+                    ? "Where " + where : sqlDto.Where + " And " + where;
+            #endregion
+
+            #region 3.get rows count if need
+            List<T> rows = null;
+            var db = GetDb();
+            var filterRows = pageIn.filterRows;
+            var group = (sqlDto.Group == "") ? "" : " " + sqlDto.Group; //remove last space
+            string sql;
+            if (filterRows < 0)
+            {
+                sql = "Select Count(*) as _count " +
+                    sqlDto.From + " " +
+                    sqlDto.Where +
+                    group;
+                var row = await db.GetJsonAsync(sql, _sqlArgs); //for log carrier
+                if (row == null)
+                {
+                    filterRows = 0;
+                    goto lab_exit;
+                }
+
+                //case of ok
+                filterRows = Convert.ToInt32(row["_count"]);
+            }
+            #endregion
+
+            #region 4.sql add sorting
+            /*
+            var orderColumn = (dtDto.order == null || dtDto.order.Count == 0)
+                ? -1 : dtDto.order[0].column;
+            if (orderColumn >= 0)
+                sqlDto.Order = "Order By " +
+                    sqlDto.Columns[orderColumn].Trim() +
+                    (dtDto.order[0].dir == OrderTypeEnum.Asc ? "" : " Desc");
+            */
+            #endregion
+
+            #region 5.get page rows 
+            sql = _Sql.DtoToSql(sqlDto, (pageIn.page - 1) * pageIn.length, pageIn.length);
+            rows = await db.GetModelsAsync<T>(sql, _sqlArgs);
+            if (rows == null)
+                rows = new List<T>();
+        #endregion
+
+            lab_exit:
+            //close db
+            await db.DisposeAsync();
+
+            //return result
+            var json = JObject.FromObject(new
+            {
+                pageNo = pageIn.page,
+                pageRows = pageIn.length,
+                filterRows = filterRows,
+            });
+            result.PageArg = _Json.ToStr(json);
+            result.Rows = rows;
+            return result;
         }
 
         /// <summary>

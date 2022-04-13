@@ -195,5 +195,12 @@ namespace Base.Services
             return dir;
         }
 
+        public static string IdToFileName(string id, string fileName)
+        {
+            return (string.IsNullOrEmpty(fileName))
+                ? "" 
+                : id + "." + GetFileExt(fileName);
+        }
+
     }//class
 }

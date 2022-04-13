@@ -6,7 +6,7 @@
     public class BaseUserDto
     {
         //login or not
-        public bool IsLogin;
+        //public bool IsLogin;
         public bool HasPwd;
 
         //locale code

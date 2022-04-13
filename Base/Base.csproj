@@ -21,6 +21,7 @@
     <None Remove="Enums\zz_LaunchStatusEstr.cs_old" />
     <None Remove="Models\CacheReadModel.cs_old" />
     <None Remove="Models\DbFormatDto.cs_old" />
+    <None Remove="Models\EasyPageDto.cs_old" />
     <None Remove="Models\ErrorFieldDto.cs_old" />
     <None Remove="Models\ExcelRowModel.cs_old" />
     <None Remove="Models\ExcelSheetModel.cs_old" />

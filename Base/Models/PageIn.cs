@@ -1,15 +1,16 @@
 ﻿namespace Base.Models
 {
     /// <summary>
-    /// for mobile datatables input argument, use lower camel
+    /// for RWD pagin input, use lower camel(jquery simple pagination)
     /// </summary>
-    public class EasyDtDto
+    public class PageIn
     {
-        public EasyDtDto()
+        public PageIn()
         {
-            start = 0;
+            //start = 0;
+            page = 1;
             length = 10;
-            recordsFiltered = -1;
+            filterRows = -1;
             findJson = "";
         }
 
@@ -17,13 +18,15 @@
         //public int draw { get; set; }
 
         //start row position, base 0
-        public int start { get; set; }
+        //public int start { get; set; }
+        //page no
+        public int page { get; set; }
 
         //rows count to display
         public int length { get; set; }
 
         //-1: re-count filtered rows count(means change jquery condition)
-        public int recordsFiltered { get; set; }
+        public int filterRows { get; set; }
 
         //query condition json in string type
         public string findJson { get; set; }

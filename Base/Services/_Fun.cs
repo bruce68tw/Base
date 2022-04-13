@@ -24,6 +24,7 @@ namespace Base.Services
 
         //c# datetime format, when js send to c#, will match to _fun.MmDtFmt
         public const string CsDtFmt = "yyyy/MM/dd HH:mm:ss";
+        public const string CsDtFmt2 = "yyyy/MM/dd HH:mm";
 
         //carrier
         public const string TextCarrier = "\r\n";     //for string
@@ -35,6 +36,9 @@ namespace Base.Services
 
         //session timeout, map to _BR.js
         public const string TimeOutFid = "TimeOut";
+
+        //default pagin rows
+        public const int PageRows = 10;
 
         //indicate error
         public const string PreError = "E:";

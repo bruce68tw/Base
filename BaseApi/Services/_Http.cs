@@ -79,6 +79,12 @@ namespace BaseApi.Services
             return $"{req.Scheme}://{req.Host}{req.Path}{req.QueryString}";
         }
 
+        public static string GetWebPath()
+        {
+            var req = GetRequest();
+            return $"{req.Path}{req.QueryString}";
+        }
+
         /// <summary>
         /// get url result
         /// </summary>

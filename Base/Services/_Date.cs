@@ -338,6 +338,15 @@ namespace Base.Services
                 ? (DateTime?)null : dt2.Value.Date;
         }
 
+        //no sec
+        public static string GetDtStr2(DateTime? dt)
+        {
+            if (dt == null)
+                return "";
+
+            return dt.Value.ToString(_Fun.CsDtFmt2);
+        }
+
         /// <summary>
         /// get date part string
         /// </summary>

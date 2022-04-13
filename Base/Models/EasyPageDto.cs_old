@@ -1,0 +1,31 @@
+﻿using System.Collections.Generic;
+
+namespace Base.Models
+{
+    /// <summary>
+    /// for return to jquery simple pagination
+    /// refer CrudRead.cs GetPageAsync() return json
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class EasyPageDto<T>
+    {
+        public EasyPageDto()
+        {
+            data = new List<T>();
+        }
+
+        //public int draw { get; set; }
+        public int page { get; set; }
+
+        //condition rows count
+        public int recordsFiltered { get; set; }
+
+        public List<T> data { get; set; }
+
+        /// <summary>
+        /// error msg if any (necessary field for resultXXX dto)
+        /// refer ResultDto.cs
+        /// </summary>
+        public string ErrorMsg { get; set; }
+    }
+}
