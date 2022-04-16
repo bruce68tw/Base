@@ -6,6 +6,7 @@
     public class ConfigDto
     {
         //constructor
+        //must use { get; set; } for binding at Startup.cs !!
         public ConfigDto()
         {
             SystemName = "MIS System";
@@ -22,6 +23,7 @@
             //Smtp = "";
             //HtmlImageUrl = "";
             //Redis = "";
+            HtmlImageUrl = "";
         }
 
         //db connect string
@@ -55,7 +57,7 @@
         public int UploadFileMax { get; set; }
 
         //cache time(second)
-        //public int CacheSecond { get; set; }
+        //public int CacheSecond = "";
 
         //SSL or not
         public bool SSL { get; set; }

@@ -89,9 +89,13 @@ namespace BaseApi.Services
         {
             //get authStrs
             var data = new List<MenuDto>();
-            var authStrs = _Fun.GetBaseUser().ProgAuthStrs;
+            var baseUser = _Fun.GetBaseUser();
+            var authStrs = baseUser.ProgAuthStrs;
             if (_Str.IsEmpty(authStrs))
                 return data;
+
+            //remove ',' at start/end
+            authStrs = authStrs[1..^1];
 
             //get prog string list
             var progList = new List<string>();
@@ -103,7 +107,7 @@ namespace BaseApi.Services
                     break;
 
                 case AuthTypeEnum.Action:
-                case AuthTypeEnum.Data:
+                case AuthTypeEnum.Row:
                     var list = authStrs.Split(',');
                     foreach (var item in list)
                         progList.Add(_Str.GetLeft(item, ":"));

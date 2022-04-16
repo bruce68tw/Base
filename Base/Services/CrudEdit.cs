@@ -628,10 +628,10 @@ namespace Base.Services
                 return _Model.GetError("CrudEdit.cs Update() failed: key is empty.");
 
             //check for AuthType=Row if need
-            if (_Fun.IsAuthTypeData())
+            if (_Fun.IsAuthTypeRow())
             {
                 var data = await GetDbRowAsync(_editDto, key);    //return data
-                var errorBr = CheckAuthTypeData(data, CrudEnum.Update);
+                var errorBr = CheckAuthRow(data, CrudEnum.Update);
                 if (!_Str.IsEmpty(errorBr))
                     return _Model.GetBrError(errorBr);
             }
@@ -1000,10 +1000,10 @@ namespace Base.Services
         public async Task<ResultDto> DeleteAsync(string key)
         {
             //check for AuthType=Row if need
-            if (_Fun.IsAuthTypeData())
+            if (_Fun.IsAuthTypeRow())
             {
                 var data = await GetDbRowAsync(_editDto, key);    //return data
-                var brError = CheckAuthTypeData(data, CrudEnum.Delete);
+                var brError = CheckAuthRow(data, CrudEnum.Delete);
                 if (_Str.NotEmpty(brError))
                     return _Model.GetBrError(brError);
             }

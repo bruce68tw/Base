@@ -103,7 +103,7 @@ namespace Base.Services
                 data += quote + row[fid] + quote + sep;
             return (data == "")
                 ? ""
-                : data.Substring(0, data.Length - sep.Length);
+                : data[..^sep.Length];
         }
 
         //find json array
@@ -133,7 +133,7 @@ namespace Base.Services
         {
             var pos = src.LastIndexOf('\n', rightPos - 1);
             pos = (pos < 0) ? 0 : pos + 1;
-            return src.Substring(pos, rightPos - pos);
+            return src[pos..rightPos];
         }
 
         //JArray to string[], JArray must be string[] !!
@@ -156,8 +156,8 @@ namespace Base.Services
             {
                 var value = row[fid].ToString();
                 var len = value.Length - tailLen;
-                if (value.Substring(len) == tail)
-                    row[fid] = value.Substring(0, len);
+                if (value[len..] == tail)
+                    row[fid] = value[..len];
             }
         }
 
@@ -226,7 +226,7 @@ namespace Base.Services
 
             foreach(var item in json)
             {
-                if (item.Key.Substring(0, 1) != "_" && item.Value != null)
+                if (item.Key[..1] != "_" && item.Value != null)
                     return false;
             }
 
@@ -251,7 +251,8 @@ namespace Base.Services
 
         public static bool IsFidEqual(JObject json, string fid, string value)
         {
-            return _Str.IsInList(json[fid].ToString(), value);
+            return (json == null || string.IsNullOrEmpty(value)) ? false :
+                (json[fid].ToString() ==  value);
         }
 
         /// <summary>

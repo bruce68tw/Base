@@ -10,8 +10,8 @@ namespace BaseWeb.Attributes
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            var userInfo = _Fun.GetBaseUser();
-            if (userInfo == null || userInfo.UserId == "")
+            var baseUser = _Fun.GetBaseUser();
+            if (baseUser.UserId == "")
             {
                 //redirect to login action
                 context.Result = new RedirectToRouteResult(

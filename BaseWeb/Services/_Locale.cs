@@ -63,8 +63,8 @@ namespace BaseWeb.Services
         /// <returns></returns>
         public static string GetLocaleByUser(bool dash = true)
         {
-            var br = _Fun.GetBaseUser();
-            var locale = (br == null) ? _Fun.Config.Locale : br.Locale;
+            var user = _Fun.GetBaseUser();
+            var locale = (user.Locale == "") ? _Fun.Config.Locale : user.Locale;
             if (!dash)
                 locale = locale.Replace("-", "");
             return locale;

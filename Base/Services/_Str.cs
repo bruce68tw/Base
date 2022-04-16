@@ -69,10 +69,12 @@ namespace Base.Services
             return !IsEmpty(data);
         }
 
+        /*
         public static bool IsInList(string longStr, string shortStr, string sep = ",")
         {
             return (sep + longStr + sep).IndexOf(sep + shortStr + sep) >= 0;
         }
+        */
 
         public static string EmptyToValue(string data, string value)
         {
@@ -288,7 +290,7 @@ namespace Base.Services
         /// max date is 2300/1/1(9char+A, from 2000/1/1)
         /// </summary>
         /// <returns></returns>
-        public static string NewId()
+        public static string NewId(DateTime? dt = null)
         {
             //1.stop 1 milli second for avoid repeat(sync way here !!)
             Thread.Sleep(1);
@@ -296,7 +298,7 @@ namespace Base.Services
 
             //2.get current time
             //var ticks = new DateTime(2500, 1, 1).Ticks;
-            var ticks = DateTime.Now.Ticks;
+            var ticks = (dt == null) ? DateTime.Now.Ticks : dt.Value.Ticks;
             var num = (ulong)((ticks - _startTicks)/ TimeSpan.TicksPerMillisecond) * 3;
             //var num = (ulong)(DateTime.Now.Millisecond - _startMilliSec);
 

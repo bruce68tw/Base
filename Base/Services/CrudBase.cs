@@ -148,9 +148,9 @@ namespace Base.Services
                 goto lab_exit;
 
             //check for AuthType=Row if need
-            if (_Fun.IsAuthTypeData())
+            if (_Fun.IsAuthTypeRow())
             {
-                var brError = CheckAuthTypeData(data, crudEnum);
+                var brError = CheckAuthRow(data, crudEnum);
                 if (_Str.NotEmpty(brError))
                 {
                     data = _Json.GetBrError(brError);
@@ -175,20 +175,20 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// check AuthType=Data if need
+        /// check AuthType=Row if need
         /// </summary>
         /// <returns>BR error code if any</returns>
-        protected string CheckAuthTypeData(JObject data, CrudEnum crudEnum)
+        protected string CheckAuthRow(JObject row, CrudEnum crudEnum)
         {
-            var range = _XgProg.GetAuthRange(_ctrl, crudEnum);
+            var range = _XgProg.GetAuthRange(_Fun.GetBaseUser().ProgAuthStrs, _ctrl, crudEnum);
             if (range == AuthRangeEnum.User)
             {
-                if (!_Json.IsFidEqual(data, _Fun.UserFid, _Fun.UserId()))
+                if (!_Json.IsFidEqual(row, _Fun.UserFid, _Fun.UserId()))
                     return "NoAuthUser";
             }
             else if (range == AuthRangeEnum.Dept)
             {
-                if (!_Json.IsFidEqual(data, _Fun.DeptFid, _Fun.DeptId()))
+                if (!_Json.IsFidEqual(row, _Fun.DeptFid, _Fun.DeptId()))
                     return "NoAuthDept";
             }
 

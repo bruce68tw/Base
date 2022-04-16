@@ -13,15 +13,24 @@ namespace Base.Services
         /// <summary>
         /// check program access right
         /// </summary>
-        /// <param name="authStrs">program auth string list</param>
+        /// <param name="authStrs">program auth string list, has ',' at begin/end</param>
         /// <param name="prog">program id</param>
         /// <param name="crudEnum">crud function, see CrudFunEstr, empty for controller, value for action</param>
         /// <returns>bool</returns>
         public static bool CheckAuth(string authStrs, string prog, CrudEnum crudEnum)
         {
-            return (crudEnum == CrudEnum.Empty)
-                ? _Str.IsInList(authStrs, prog)
-                : (GetAuthRange(prog, crudEnum, authStrs) != AuthRangeEnum.None);
+            if (_Fun.AuthType == AuthTypeEnum.Ctrl)
+            {
+                //authStr format: ,xxx,xxx,
+                return authStrs.Contains("," + prog + ",", StringComparison.CurrentCulture);
+            }
+            else
+            {
+                //authStr format: ,xxx:121,xxx:001,
+                return (crudEnum == CrudEnum.Empty)
+                    ? authStrs.Contains("," + prog + ":")
+                    : GetAuthRange(authStrs, prog, crudEnum) != AuthRangeEnum.None;
+            }
         }
 
         /// <summary>
@@ -31,7 +40,7 @@ namespace Base.Services
         /// <returns></returns>
         public static bool CheckCreate(string prog)
         {
-            return (_Fun.AuthType != AuthTypeEnum.Action && _Fun.AuthType != AuthTypeEnum.Data)
+            return (_Fun.AuthType != AuthTypeEnum.Action && _Fun.AuthType != AuthTypeEnum.Row)
                 ? true
                 : CheckAuth(_Fun.GetBaseUser().ProgAuthStrs, prog, CrudEnum.Create);
         }
@@ -43,18 +52,19 @@ namespace Base.Services
         /// <param name="crudEnum"></param>
         /// <param name="authStrs"></param>
         /// <returns></returns>
-        public static AuthRangeEnum GetAuthRange(string prog, CrudEnum crudEnum, string authStrs = null)
+        public static AuthRangeEnum GetAuthRange(string authStrs, string prog, CrudEnum crudEnum)
         {
-            if (authStrs == null)
-                authStrs = _Fun.GetBaseUser().ProgAuthStrs;
-            var sep = ",";
-            var funList = _Str.GetMid(sep + authStrs + sep, sep + prog + ":", sep);
+            //if (authStrs == null)
+            //    authStrs = _Fun.GetBaseUser().ProgAuthStrs;
+            //var sep = ",";
+            var funList = _Str.GetMid(authStrs, "," + prog + ":", ",");
             var funPos = (int)crudEnum;
             if (funList.Length <= funPos)
                 return AuthRangeEnum.None;
 
+            //pos 0, fun is auth row or not(0/1)
             var auth = (AuthRangeEnum)Convert.ToInt32(funList.Substring(funPos, 1));
-            return (funList.Substring((int)CrudEnum.AuthRow, 1) == "1") ? auth :
+            return (funList[..1] == "1") ? auth :
                 (auth == AuthRangeEnum.None) ? AuthRangeEnum.None : AuthRangeEnum.All;
         }
 
@@ -62,7 +72,7 @@ namespace Base.Services
         /// get program auth list
         /// </summary>
         /// <param name="userId">user Id</param>
-        /// <returns></returns>
+        /// <returns>has ','(if not empty) at start/end for easy coding</returns>
         public static async Task<string> GetAuthStrsAsync(string userId)
         {
             string sql;
@@ -82,10 +92,10 @@ where ur.UserId=@UserId
                     rows = await _Db.GetModelsAsync<IdStrDto>(sql, new List<object>() { "UserId", userId });
                     return (rows == null || rows.Count == 0)
                         ? ""
-                        : _List.ToStr(rows.Select(a => a.Id).ToList());
+                        : "," + _List.ToStr(rows.Select(a => a.Id).ToList()) + ",";
 
                 case AuthTypeEnum.Action:
-                case AuthTypeEnum.Data:
+                case AuthTypeEnum.Row:
                     //return format: code:xxx,...
                     //concat auth string list, consider different DB type
                     var authStr = _Sql.GetConcat(
@@ -112,7 +122,7 @@ group by p.Code
                     rows = await _Db.GetModelsAsync<IdStrDto>(sql, new List<object>() { "UserId", userId });
                     return (rows == null || rows.Count == 0)
                         ? ""
-                        : _List.ToStr(rows.Select(a => a.Id + ":" + a.Str).ToList());
+                        : "," + _List.ToStr(rows.Select(a => a.Id + ":" + a.Str).ToList()) + ",";
 
                 //case else
                 default:

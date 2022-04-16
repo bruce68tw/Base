@@ -144,7 +144,7 @@ namespace Base.Services
         /// <param name="pageIn"></param>
         /// <param name="ctrl">controller name for authorize</param>
         /// <returns>jquery dataTables object</returns>
-        public async Task<PageOut<T>> GetEasyPageAsync<T>(ReadDto readDto, PageIn pageIn, string ctrl = "") where T : class
+        public async Task<PageOut<T>> GetPage2Async<T>(ReadDto readDto, PageIn pageIn, string ctrl = "") where T : class
         {
             #region 1.check input
             /*
@@ -227,7 +227,7 @@ namespace Base.Services
             {
                 pageNo = pageIn.page,
                 pageRows = pageIn.length,
-                filterRows = filterRows,
+                filterRows,
             });
             result.PageArg = _Json.ToStr(json);
             result.Rows = rows;
@@ -332,14 +332,14 @@ namespace Base.Services
                         var key = prop.Key;
                         var len = key.Length;
                         //field name not underline
-                        if (key.Substring(0, 1) == "_")
+                        if (key[..1] == "_")
                             continue;
 
                         //field name tail is 2, for date field
                         if (key.Substring(len - 1, 1) == "2")
                         {
                             //skip if date field is done
-                            var key2 = key.Substring(0, len - 1);
+                            var key2 = key[..(len - 1)];
                             if (okDates.Contains(key2))
                                 continue;
 
@@ -643,13 +643,13 @@ namespace Base.Services
             #endregion
 
             #region 2.where add for AuthType=Data if need
-            if (_Fun.IsAuthTypeData())
+            if (_Fun.IsAuthTypeRow())
             {
                 var baseUser = _Fun.GetBaseUser();
-                if (baseUser == null)
+                if (baseUser.UserId == "")
                     return "-2";
 
-                var range = _XgProg.GetAuthRange(ctrl, crudEnum, baseUser.ProgAuthStrs);
+                var range = _XgProg.GetAuthRange(baseUser.ProgAuthStrs, ctrl, crudEnum);
                 if (range == AuthRangeEnum.User)
                 {
                     //by user

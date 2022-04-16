@@ -6,7 +6,7 @@ namespace Base.Enums
     /// </summary>
     public enum CrudEnum
     {
-        AuthRow,
+        AuthRow,    //pos 0, fun is auth row or not(0/1)
         Create,
         Read,
         Update,

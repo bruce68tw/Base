@@ -34,7 +34,7 @@ namespace Base.Services
         public const string UserFid = "_userId";
         public const string DeptFid = "_deptId";
 
-        //session timeout, map to _BR.js
+        //session timeout(or not login), map to _BR.js
         public const string TimeOutFid = "TimeOut";
 
         //default pagin rows
@@ -224,9 +224,9 @@ Offset {2} Rows Fetch Next {3} Rows Only
         }
 
         //check is AuthType=Data
-        public static bool IsAuthTypeData()
+        public static bool IsAuthTypeRow()
         {
-            return (AuthType == AuthTypeEnum.Data);
+            return (AuthType == AuthTypeEnum.Row);
         }
 
         /*
@@ -249,11 +249,11 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// <summary>
         /// get base user info for base component
         /// </summary>
-        /// <returns>BaseUserInfoDto</returns>
+        /// <returns>BaseUserDto(not null)</returns>
         public static BaseUserDto GetBaseUser()
         {
             var service = (IBaseUserService)DiBox.GetService(typeof(IBaseUserService));
-            return service.GetData();
+            return service.GetData() ?? new BaseUserDto();
         }
 
         /// <summary>
