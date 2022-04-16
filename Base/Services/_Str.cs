@@ -312,10 +312,10 @@ namespace Base.Services
                 data = _base34[(int)mod] + data;
             }
 
-            //4.min length 6 chars, add tailed '0'
-            const int minLen = 6;
+            //4.min length 6 chars, add pre '0'
+            const int minLen = 5;
             if (data.Length < minLen)
-                data += new string('0', minLen - data.Length);
+                data = new string('0', minLen - data.Length) + data;
 
             //5.tail add 1 random char & server id for multiple web server
             //var tail = _base34[_Num.GetRandom((int)_baseLen - 1)];

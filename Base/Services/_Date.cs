@@ -355,6 +355,14 @@ namespace Base.Services
             return dt.Value.ToString(_Fun.CsDtFmt2);
         }
 
+        public static string GetDtStr3(DateTime? dt)
+        {
+            if (dt == null)
+                return "";
+
+            return dt.Value.ToString("yyyy/MM/dd HH:mm:ss-fff");
+        }
+
         /// <summary>
         /// get date part string
         /// </summary>
