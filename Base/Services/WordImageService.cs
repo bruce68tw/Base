@@ -50,7 +50,7 @@ namespace Base.Services
             WidthInEMU = Convert.ToInt64((decimal)width * CM_TO_EMU);
             HeightInEMU = Convert.ToInt64((decimal)height * CM_TO_EMU);
 
-            ImageName = $"IMG_{Guid.NewGuid().ToString().Substring(0, 8)}";
+            ImageName = $"IMG_{Guid.NewGuid().ToString()[..8]}";
         }
 
         /*

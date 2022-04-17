@@ -110,16 +110,16 @@ namespace BaseWeb.Services
 
                         //set head or add left string of rows
                         if (i == 0)
-                            fileStr = _Word.TplFillRow(bodyTpl.TplStr.Substring(0, rowTpl.StartPos), row);
+                            fileStr = _Word.TplFillRow(bodyTpl.TplStr[..rowTpl.StartPos], row);
                         else
-                            fileStr += bodyTpl.TplStr.Substring(oldEnd + 1, rowTpl.StartPos - oldEnd - 1);
+                            fileStr += bodyTpl.TplStr[(oldEnd + 1)..rowTpl.StartPos];
 
                         //add middle
                         fileStr += _Word.TplFillRows(rowTpl.TplStr, childs[i]);
 
                         //add tail
                         if (i == childLen - 1)
-                            fileStr += _Word.TplFillRow(bodyTpl.TplStr.Substring(rowTpl.EndPos + 1), row);
+                            fileStr += _Word.TplFillRow(bodyTpl.TplStr[(rowTpl.EndPos + 1)..], row);
 
                         //set old pos
                         oldStart = rowTpl.StartPos;
@@ -127,9 +127,9 @@ namespace BaseWeb.Services
                     }//for childs
 
                      //set word file string
-                    fileStr = mainStr.Substring(0, bodyTpl.StartPos) +
+                    fileStr = mainStr[..bodyTpl.StartPos] +
                         fileStr +
-                        mainStr.Substring(bodyTpl.EndPos + 1);
+                        mainStr[(bodyTpl.EndPos + 1)..];
                 }
                 else
                 {

@@ -179,7 +179,7 @@ namespace Base.Services
         public static bool IsImageExt(string ext)
         {
             //ext = ext.Replace(".", "").ToLower();
-            return (",jpg,jpeg,png,gif,tif,tiff,").IndexOf("," + ext + ",") >= 0;
+            return (",jpg,jpeg,png,gif,tif,tiff,").Contains("," + ext + ",");
         }
 
         /// <summary>

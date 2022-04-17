@@ -238,7 +238,7 @@ namespace Base.Services
             if (pos <= 0)
                 return hm5;
 
-            var hour = Convert.ToInt32(hm5.Substring(0, pos));
+            var hour = Convert.ToInt32(hm5[..pos]);
             var min = Convert.ToInt32(hm5[(pos + 1)..]) + addMin;
             if (min < 0)
             {
@@ -376,7 +376,7 @@ namespace Base.Services
             var pos = dt.IndexOf(" ");
             return (pos <= 0)
                 ? dt
-                : dt.Substring(0, pos);
+                : dt[..pos];
         }
 
         /*
@@ -430,7 +430,7 @@ namespace Base.Services
             if (sep <= 0)
                 return "";
 
-            var year = Convert.ToInt32(ym.Substring(0, sep)) - 1911;
+            var year = Convert.ToInt32(ym[..sep]) - 1911;
             var month = Convert.ToInt32(ym[(sep + 1)..]);
             if (type == 1)
                 return year + "年" + month + "月";
@@ -459,9 +459,9 @@ namespace Base.Services
         {
             var len = date.Length;
             if (len == 6)
-                return (Convert.ToInt32(date.Substring(0, 2)) + 1911) + "/" + date.Substring(2, 2) + "/" + date.Substring(4, 2);
+                return (Convert.ToInt32(date[..2]) + 1911) + "/" + date.Substring(2, 2) + "/" + date.Substring(4, 2);
             if (len == 7)
-                return (Convert.ToInt32(date.Substring(0, 3)) + 1911) + "/" + date.Substring(3, 2) + "/" + date.Substring(5, 2);
+                return (Convert.ToInt32(date[..3]) + 1911) + "/" + date.Substring(3, 2) + "/" + date.Substring(5, 2);
             else
                 return "";
         }

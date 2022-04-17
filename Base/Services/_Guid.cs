@@ -21,7 +21,7 @@ namespace Base.Services
             var code = Convert.ToBase64String(guid.ToByteArray());
             code = code.Replace("/", "_");
             code = code.Replace("+", "-");
-            return code.Substring(0, 22);
+            return code[..22];
         }
 
         public static Guid Decode(string encode)

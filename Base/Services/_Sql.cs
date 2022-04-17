@@ -36,7 +36,7 @@ namespace Base.Services
                 result.Order = "";
             else
             {
-                result.Order = useSquare ? "Order " + sql.Substring(order + 7).Trim() : sql.Substring(order).Trim();
+                result.Order = useSquare ? "Order " + sql[(order + 7)..].Trim() : sql[order..].Trim();
                 end = order - 1;
             }
 
@@ -44,7 +44,7 @@ namespace Base.Services
                 result.Group = "";
             else
             {
-                result.Group = useSquare ? "Group " + sql.Substring(group + 7 , end - group - 7).Trim() : sql.Substring(group, end - group).Trim();
+                result.Group = useSquare ? "Group " + sql[(group + 7)..end].Trim() : sql[group..end].Trim();
                 end = group - 1;
             }
 
@@ -52,19 +52,19 @@ namespace Base.Services
                 result.Where = "";
             else
             {
-                result.Where = useSquare ? "Where " + sql.Substring(where + 7, end - where - 7).Trim() : sql.Substring(where, end - where).Trim();
+                result.Where = useSquare ? "Where " + sql[(where + 7)..end].Trim() : sql[where..end].Trim();
                 end = where - 1;
             }
 
             if (useSquare)
             {
-                result.From = "From " + sql.Substring(from + 6, end - from - 6).Trim();
-                result.Select = sql.Substring(0, from).Trim().Substring(7);     //exclude "Select" word !!
+                result.From = "From " + sql[(from + 6)..end].Trim();
+                result.Select = sql[..from].Trim()[7..];     //exclude "Select" word !!
             }
             else
             {
-                result.From = sql.Substring(from, end - from).Trim();
-                result.Select = sql.Substring(0, from).Trim().Substring(7);     //exclude "Select" word !!
+                result.From = sql[from..end].Trim();
+                result.Select = sql[..from].Trim()[7..];     //exclude "Select" word !!
             }
 
             //set columns[]
@@ -73,7 +73,7 @@ namespace Base.Services
             {
                 var col = result.Columns[i].Trim();
                 var pos = col.IndexOf(" ");
-                result.Columns[i] = (pos > 0) ? col.Substring(0, pos) : col;
+                result.Columns[i] = (pos > 0) ? col[..pos] : col;
             }
             //result.Columns = result.Select.Replace(" ","").Split(',');
             return result;
@@ -169,7 +169,7 @@ namespace Base.Services
             for (int i = 0; i < len; i++)
                 list += values[i] + op;
 
-            return sql + "(" + list.Substring(0, list.Length - op.Length) + ")";
+            return sql + "(" + list[..^op.Length] + ")";
         }
 
     }//class

@@ -54,10 +54,8 @@ namespace Base.Services
         /// <returns></returns>
         public string GetMainPartStr()
         {
-            using (var sr = new StreamReader(_docx.MainDocumentPart.GetStream()))
-            {
-                return sr.ReadToEnd();
-            }            
+            using var sr = new StreamReader(_docx.MainDocumentPart.GetStream());
+            return sr.ReadToEnd();
         }
 
         /// <summary>
@@ -66,10 +64,8 @@ namespace Base.Services
         public void SetMainPartStr(string str)
         {
             //string to docx stream, must use FileMode.Create, or target file can not open !!
-            using (var sw = new StreamWriter(_docx.MainDocumentPart.GetStream(FileMode.Create)))
-            {
-                sw.Write(str);
-            }
+            using var sw = new StreamWriter(_docx.MainDocumentPart.GetStream(FileMode.Create));
+            sw.Write(str);
         }
 
         /// <summary>
@@ -109,10 +105,10 @@ namespace Base.Services
                 //int newStart = _tplStartPos, newEnd = _tplEndPos;
 
                 //update srcTpl string
-                srcTpl = srcTpl.Substring(0, drawTpl.StartPos + graphTpl.StartPos) +
+                srcTpl = srcTpl[..(drawTpl.StartPos + graphTpl.StartPos)] +
                     //newRun.Descendants<D.Graphic>().First().InnerXml +    //.docx open failed !!
                     newGraph.TplStr + 
-                    srcTpl.Substring(drawTpl.StartPos + graphTpl.EndPos + 1);
+                    srcTpl[(drawTpl.StartPos + graphTpl.EndPos + 1)..];
             }
 
             //return new tpl string
@@ -205,10 +201,10 @@ namespace Base.Services
             var startLen = findStart.Length;
             var endLen = findEnd.Length;
             endPos = endPos + endLen - 1;   //adjust
-            var tplStr = srcText.Substring(startPos, endPos - startPos + 1);
+            var tplStr = srcText[startPos..(endPos + 1)];
             if (!hasTag)
             {
-                tplStr = tplStr.Substring(startLen, tplStr.Length - startLen - endLen);
+                tplStr = tplStr[startLen..^endLen];
                 startPos += startLen;
                 endPos -= endLen;
             }

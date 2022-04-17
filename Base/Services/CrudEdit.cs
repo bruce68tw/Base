@@ -185,7 +185,7 @@ namespace Base.Services
         //is special fid or not
         private bool IsSpecEditFid(string fid)
         {
-            return (fid.Substring(0, 1) == "_");
+            return (fid[..1] == "_");
         }
 
         /// <summary>
