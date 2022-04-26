@@ -15,8 +15,11 @@ namespace Base.Services
 {
     public class _Str
     {
+
         //base34 encode(remove I/O for readable)
         private static readonly char[] _base34 = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ".ToCharArray();
+        private static readonly char[] _base36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+        private static readonly char[] _base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
         private static readonly ulong _baseLen = (ulong)_base34.Length;
         private static readonly long _startTicks = new DateTime(2000, 1, 1).Ticks;
         //private static long _startMilliSec = new DateTime(2000, 1, 1).Ticks / 1000;
@@ -28,7 +31,7 @@ namespace Base.Services
         /// get random string
         /// </summary>
         /// <param name="len"></param>
-        /// <param name="type">1-4</param>
+        /// <param name="type">1(num),2(upper alpha),3(all alpha),4(num & alpha)</param>
         /// <returns></returns>
         public static string RandomStr(int len, int type)
         {
@@ -299,7 +302,7 @@ namespace Base.Services
             //2.get current time
             //var ticks = new DateTime(2500, 1, 1).Ticks;
             var ticks = (dt == null) ? DateTime.Now.Ticks : dt.Value.Ticks;
-            var num = (ulong)((ticks - _startTicks)/ TimeSpan.TicksPerMillisecond) * 3;
+            var num = (ulong)((ticks - _startTicks)/ TimeSpan.TicksPerMillisecond) * 4;
             //var num = (ulong)(DateTime.Now.Millisecond - _startMilliSec);
 
             //3.convert to base34
@@ -312,7 +315,7 @@ namespace Base.Services
                 data = _base34[(int)mod] + data;
             }
 
-            //4.min length 6 chars, add pre '0'
+            //4.min length 5 chars, add pre '0'
             const int minLen = 5;
             if (data.Length < minLen)
                 data = new string('0', minLen - data.Length) + data;
@@ -382,19 +385,22 @@ namespace Base.Services
         //convert hex string to normal string
         public static string HexToStr(string hex)
         {
+            return Convert.ToString(Convert.FromHexString(hex));
+            /*
             var date = "";
             while (hex.Length > 0)
             {
                 //date += Convert.ToChar(Convert.ToUInt32(hex.Substring(0, 2), 16)).ToString();
-                date += Convert.ToChar(Convert.ToUInt32(hex[0..3], 16)).ToString();
+                date += Convert.ToChar(Convert.ToUInt32(hex[..3], 16)).ToString();
                 hex = hex[2..];
                 //hex = hex.Substring(2, hex.Length - 2);
             }
             return date;
+            */
         }
 
         /// <summary>
-        /// list string 加上單引號
+        /// list string add single quota(')
         /// </summary>
         /// <param name="list"></param>
         /// <returns></returns>
@@ -419,7 +425,7 @@ namespace Base.Services
                 return true;
 
             if (logError)
-                await _Log.ErrorAsync($"_Str.CheckKeyRuleAsync() failed ({str})");
+                await _Log.ErrorAsync($"_Str.CheckKeyAsync() failed ({str})");
             return false;
         }
 
@@ -464,7 +470,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get left part string, not include found string
+        /// get left part string(first find), not include found string
         /// </summary>
         /// <param name="source"></param>
         /// <param name="find">find string</param>
@@ -551,6 +557,67 @@ namespace Base.Services
                 result = sw.ReadToEnd();
             }
             return result;
+        }
+
+        //get guid base36 string(25 char)
+        public static string Guid36()
+        {
+            return ToBaseStr(GuidBytes(), _base36);
+        }
+        //get guid base62 string(22 char)
+        public static string Guid62()
+        {
+            return ToBaseStr(GuidBytes(), _base62);
+        }
+
+        private static byte[] GuidBytes()
+        {
+            return Guid.NewGuid().ToByteArray();
+        }
+
+        /// <summary>
+        /// see: https://github.com/ghost1face/base62/blob/master/Base62/Base62Converter.cs BaseConvert()
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="baseChars"></param>
+        /// <returns></returns>
+        private static string ToBaseStr(byte[] source, char[] baseChars)
+        {
+            //modify
+            //var result = new List<int>();
+            var targetBase = baseChars.Length;
+            var result = "";
+
+            int count;
+            while ((count = source.Length) > 0)
+            {
+                var quotient = new List<byte>();
+                int remainder = 0;
+                for (var i = 0; i != count; i++)
+                {
+                    int accumulator = source[i] + remainder * 256;  //fix to 256
+                    byte digit = (byte)((accumulator - (accumulator % targetBase)) / targetBase);
+                    remainder = accumulator % targetBase;
+                    if (quotient.Count > 0 || digit != 0)
+                    {
+                        quotient.Add(digit);
+                    }
+                }
+
+                //result.Insert(0, remainder);
+                result = baseChars[remainder] + result; //to baseBytes[]
+                source = quotient.ToArray();
+            }
+
+            //modify
+            return result;
+            /*
+            var output = new byte[result.Count];
+            for (int i = 0; i < result.Count; i++)
+                output[i] = (byte)result[i];
+
+            return output;
+            */
         }
 
         /// <summary>

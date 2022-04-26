@@ -144,7 +144,7 @@ namespace BaseWeb.Services
 
             //value -> date format
             value = _Date.GetDateStr(value);
-            var dataEdit = GetDataEdit(edit);
+            //var dataEdit = GetDataEdit(edit);
 
             //input-group & input-group-addon are need for datepicker !!
             return $@"
@@ -217,7 +217,7 @@ namespace BaseWeb.Services
             //use class for multi columns !!
             //xg-select-col for dropdown inner width=100%, xg-select-colX for RWD width
             return $@"
-<select{attr} class='form-control {boxClass}'>
+<select{attr} class='form-select {boxClass}'>
     {optList}
 </select>";            
         }

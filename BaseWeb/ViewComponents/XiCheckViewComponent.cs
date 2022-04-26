@@ -32,7 +32,7 @@ namespace BaseWeb.ViewComponents
                 attr += $" onclick='{dto.FnOnClick}'";
 
             //ext class
-            if (dto.Label == "")
+            if (string.IsNullOrEmpty(dto.Label))
                 dto.BoxClass += " xg-no-label";
 
             //get html (span for checkbox checked sign)

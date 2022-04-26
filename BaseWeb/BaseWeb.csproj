@@ -30,6 +30,7 @@
     <None Remove="Services\_ActionResult.cs_tmp" />
     <None Remove="Services\_Http.cs_tmp" />
     <None Remove="Services\_Session.cs_old" />
+    <None Remove="ViewComponents\XgPageViewComponent.cs_old" />
     <None Remove="ViewComponents\XiCheckViewComponent.cs_old" />
     <None Remove="ViewComponents\zz_XiCheckViewComponent.cs_old" />
   </ItemGroup>

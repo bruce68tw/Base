@@ -3,13 +3,13 @@
     public class XiCheckDto : XiBaseDto
     {
         /*
+        */
         public XiCheckDto()
         {
             IsCheck = false;
             Label = "";
             FnOnClick = "";
         }
-        */
 
         public bool IsCheck { get; set; }
         public string Label { get; set; }

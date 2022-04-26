@@ -12,7 +12,7 @@ namespace Base.Services
     {
         public static PageIn GetPageIn(int pageNo, int pageRows, int filterRows, List<object> args = null)
         {
-            pageRows = GetPageRows(pageRows);
+            //pageRows = GetPageRows(pageRows);
             var result = new PageIn() 
             { 
                 //start = (pageNo - 1) * pageRows,
@@ -32,11 +32,16 @@ namespace Base.Services
             return result;
         }
 
-        public static int GetPageRows(int pageRows)
+        public static int GetPageRows(int pageRows, List<int> pageRowList = null)
         {
+            pageRowList ??= new List<int>() { 10, 25, 50, 100 };
+            return pageRowList.Contains(pageRows)
+                ? pageRows : pageRowList[0];
+            /*
             return (pageRows < 1) ? _Fun.PageRows :
                 (pageRows > 100) ? 100 :
                 pageRows;
+            */
         }
 
         public static PageOut<T> GetError<T>(PageOut<T> page, string error = "") where T : class
