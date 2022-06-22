@@ -45,7 +45,7 @@ namespace Base.Models
         public string WhereDeptFid = _Fun.WhereDeptFid;
 
         /// <summary>
-        /// for quick search, include table alias, will get like xx% query
+        /// for quick search, include table alias, will get like %xx% query
         /// </summary>
         public string[] FindCols;
 

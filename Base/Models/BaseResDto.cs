@@ -47,5 +47,9 @@
         //validation
         public string Required { get; set; }
         public string StrLen { get; set; }
+
+        public string TipUpdate { get; set; }
+        public string TipDelete { get; set; }
+        public string TipView { get; set; }
     }
 }

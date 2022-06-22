@@ -135,7 +135,7 @@ namespace Base.Services
 
             #region set smtp
             var smtp = Config.Smtp;
-            if (smtp != "")
+            if (!string.IsNullOrEmpty(smtp))
             {
                 try
                 {

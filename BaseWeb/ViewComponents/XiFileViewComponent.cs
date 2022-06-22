@@ -46,7 +46,7 @@ namespace BaseWeb.ViewComponents
     <button type='button' class='btn btn-link' onclick='_ifile.onDeleteFile(this)' {dataEdit}>
         <i class='ico-delete'></i>
     </button>
-    <a href='#' onclick='{dto.FnOnViewFile}'>{dto.Value}</a>
+    <button type='button' class='btn btn-link' onclick='{dto.FnOnViewFile}'>{dto.Value}</button>
 </div>";
 
             //add label if need

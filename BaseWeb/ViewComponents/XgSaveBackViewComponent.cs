@@ -7,7 +7,7 @@ namespace BaseWeb.ViewComponents
 {
     public class XgSaveBackViewComponent : ViewComponent
     {
-        public HtmlString Invoke(string align = "center", string fnOnSave = "_crud.onSave()", string fnOnBack = "_crud.onToRead()" )
+        public HtmlString Invoke(string align = "center", string fnOnSave = "_crudE.onSave()", string fnOnBack = "_crudR.onToRead()" )
         {
             var baseR = _Locale.GetBaseRes();
             var html = $@"

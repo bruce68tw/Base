@@ -13,7 +13,7 @@ namespace Base.Services
     public delegate string FnSetNewKeyJson(CrudEdit editService, JObject inputJson, EditDto edit);
 
     /// <summary>
-    /// crud edit afterSave
+    /// crud edit AfterSave
     /// </summary>
     /// <param name="db"></param>
     /// <returns></returns>

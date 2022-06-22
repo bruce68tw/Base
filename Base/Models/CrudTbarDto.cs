@@ -9,21 +9,21 @@ namespace Base.Models
         /// <summary>
         /// fn onclick find button
         /// </summary>
-        public string FnOnFind = "_crud.onFind()";
+        public string FnOnFind = "_crudR.onFind()";
 
         /// <summary>
         /// fn onclick find2 button
         /// </summary>
-        public string FnOnFind2 = "_crud.onCreate()";
+        public string FnOnFind2 = "_crudR.onFind2()";
 
         /// <summary>
         /// onCreate
         /// </summary>
-        public string FnOnCreate = "_crud.onCreate()";
+        public string FnOnCreate = "_crudR.onCreate()";
 
         /// <summary>
         /// onCreate
         /// </summary>
-        public string FnOnExport = "_crud.onExport()";
+        public string FnOnExport = "_crudR.onExport()";
     }
 }

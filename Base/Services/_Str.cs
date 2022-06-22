@@ -287,8 +287,30 @@ namespace Base.Services
                 .Replace('+', '-')
                 .Replace('/', '_');
         }
-        
+
         /// <summary>
+        /// get new Id for db key, 10 char
+        /// max date is 2300/1/1(A+9char, from 2000/1/1)
+        /// </summary>
+        /// <returns></returns>
+        public static string NewId(DateTime? dt = null)
+        {
+            //1.stop 1 milli second for avoid repeat(sync way here !!)
+            Thread.Sleep(1);
+
+            var ticks = (dt == null) ? DateTime.Now.Ticks : dt.Value.Ticks;
+            var num = (ulong)((ticks - _startTicks) / TimeSpan.TicksPerMillisecond) * 3;
+            using var sha1 = SHA256.Create();
+            var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(num.ToString()));
+            return _Fun.Config.ServerId + string.Concat(Convert.ToBase64String(hash)
+                .ToCharArray()
+                .Where(a => char.IsLetterOrDigit(a))
+                .Take(9));
+        }
+
+        /*
+        /// <summary>
+        /// old version
         /// get new Id for db key, 10 char(upperCase), consider db index performance
         /// max date is 2300/1/1(9char+A, from 2000/1/1)
         /// </summary>
@@ -327,6 +349,7 @@ namespace Base.Services
             data += _Fun.Config.ServerId;
             return data;
         }
+        */
 
         /// <summary>
         /// get new key from newKeyJson(CrudEdit.cs)

@@ -18,11 +18,12 @@ namespace Base.Services
 
         //db str in config file
         private readonly string _dbStr;
+        private readonly Db _db;
 
         //jQuery dataTables input arg
         //private DtDto _dtDto;
 
-        //sql args, (id, value)
+        //sql args, (id, value), be set in GetWhereAsync()
         private List<object> _sqlArgs = new();
 
         //constructor
@@ -31,9 +32,15 @@ namespace Base.Services
             _dbStr = dbStr;
         }
 
+        //constructor, db can not be null
+        public CrudRead(Db db)
+        {
+            _db = db;
+        }
+
         private Db GetDb()
         {
-            return new Db(_dbStr);
+            return _db ?? new Db(_dbStr);
         }
 
         public async Task<JObject> GetPageAsync(ReadDto readDto, EasyDtDto easyDto, string ctrl = "")

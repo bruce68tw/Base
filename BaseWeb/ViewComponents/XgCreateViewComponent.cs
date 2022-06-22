@@ -6,7 +6,7 @@ namespace BaseWeb.ViewComponents
 {
     public class XgCreateViewComponent : ViewComponent
     {
-        public HtmlString Invoke(string fnOnClick = "_crud.onCreate()")
+        public HtmlString Invoke(string fnOnClick = "_crudR.onCreate()")
         {
             var label = _Locale.GetBaseRes().BtnCreate;
             return new HtmlString($@"

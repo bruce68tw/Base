@@ -36,7 +36,10 @@ _Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, d
 );
 
             if (!_Str.IsEmpty(dto.Title))
-                html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
+            {
+                var cols = dto.Cols ?? "2,5";
+                html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, cols);
+            }
 
             return new HtmlString(html);
         } 
