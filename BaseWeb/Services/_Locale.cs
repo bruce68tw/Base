@@ -23,17 +23,17 @@ namespace BaseWeb.Services
         /// </summary>
         /// <param name="locale"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<bool> SetCultureAsync(string locale)
+        public static async Task<bool> SetCultureA(string locale)
         {
             //add _brList if need
             //var error = "";
             if (!_brList.Any(a => a.Key == locale))
             {
-                var br = await ReadBaseResAsync(locale);
+                var br = await ReadBaseResA(locale);
                 _brList.Add(locale, br);    //add first
                 if (br == null)
                 {
-                    await _Log.ErrorAsync($"_Locale.cs SetCulture() failed, no locale ({locale})");
+                    await _Log.ErrorA($"_Locale.cs SetCulture() failed, no locale ({locale})");
                     return false;
                 }
             }
@@ -95,19 +95,19 @@ namespace BaseWeb.Services
                 ? null : dict.Value;
         }
 
-        private static async Task<BaseResDto> ReadBaseResAsync(string locale)
+        private static async Task<BaseResDto> ReadBaseResA(string locale)
         {
             //error = ""; //initial
             var file = _Web.DirWeb + "locale/" + locale + "/BR.json";
             if (!File.Exists(file))
             {
-                await _Log.ErrorAsync("no file: " + file);
+                await _Log.ErrorA("no file: " + file);
                 return null;
             }
 
             //set _br
             var br = new BaseResDto(); //initial value
-            var json = _Str.ToJson(await _File.ToStrAsync(file));
+            var json = _Str.ToJson(await _File.ToStrA(file));
             _Json.CopyToModel(json, br);
             return br;
         }

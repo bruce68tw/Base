@@ -39,9 +39,9 @@ namespace Base.Services
         /// <param name="list"></param>
         /// <param name="logError"></param>
         /// <returns></returns>
-        public static async Task<bool> CheckKeyAsync(List<string> list, bool logError = true)
+        public static async Task<bool> CheckKeyA(List<string> list, bool logError = true)
         {
-            return await _Str.CheckKeyAsync(ToStr(list), logError);
+            return await _Str.CheckKeyA(ToStr(list), logError);
         }
 
         public static List<string> Concat(List<string> list1, List<string> list2)

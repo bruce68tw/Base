@@ -17,7 +17,7 @@ namespace Base.Services
     /// </summary>
     /// <param name="db"></param>
     /// <returns></returns>
-    public delegate Task<string> FnAfterSaveAsync(Db db, JObject keyJson);
+    public delegate Task<string> FnAfterSaveA(Db db, JObject keyJson);
     
     /// <summary>
     /// check row, return error msg if any

@@ -18,7 +18,7 @@ namespace BaseWeb.Services
         /// <param name="importType"></param>
         /// <param name="importDto"></param>
         /// <param name="uiDtFormat">skip if excel no datetime cell</param>
-        public static async Task<ResultImportDto> ImportByFileAsync<T>(IFormFile file, string dirUpload,
+        public static async Task<ResultImportDto> ImportByFileA<T>(IFormFile file, string dirUpload,
             ExcelImportDto<T> importDto, string uiDtFormat = "") where T : class, new()
         {
             //check
@@ -28,7 +28,7 @@ namespace BaseWeb.Services
                     ErrorMsg = "Upload file is empty.",
                 };
 
-            return await new ExcelImportService<T>().ImportByStreamAsync(file.OpenReadStream(), importDto, dirUpload, file.FileName, uiDtFormat);
+            return await new ExcelImportService<T>().ImportByStreamA(file.OpenReadStream(), importDto, dirUpload, file.FileName, uiDtFormat);
         }
 
         /// <summary>
@@ -40,10 +40,10 @@ namespace BaseWeb.Services
         /// <param name="fileName">output fileName</param>
         /// <param name="tplPath"></param>
         /// <param name="srcRowNo"></param>
-        public static async Task ExportByReadAsync(string ctrl, ReadDto readDto, JObject findJson, 
+        public static async Task ExportByReadA(string ctrl, ReadDto readDto, JObject findJson, 
             string fileName, string tplPath, int srcRowNo)
         {
-            await ExportByRowsAsync(await new CrudRead().GetExportRowsAsync(ctrl, readDto, findJson), fileName, tplPath, srcRowNo);
+            await ExportByRowsA(await new CrudRead().GetExportRowsA(ctrl, readDto, findJson), fileName, tplPath, srcRowNo);
         }
 
         /// <summary>
@@ -54,11 +54,11 @@ namespace BaseWeb.Services
         /// <param name="tplPath"></param>
         /// <param name="srcRowNo"></param>
         /// <param name="dbStr"></param>
-        public static async Task ExportBySqlAsync(string sql, string fileName, string tplPath, 
+        public static async Task ExportBySqlA(string sql, string fileName, string tplPath, 
             int srcRowNo, string dbStr = "")
         {
-            var rows = await _Db.GetJsonsAsync(sql, null, dbStr);
-            await ExportByRowsAsync(rows, fileName, tplPath, srcRowNo);
+            var rows = await _Db.GetJsonsA(sql, null, dbStr);
+            await ExportByRowsA(rows, fileName, tplPath, srcRowNo);
         }
 
         /// <summary>
@@ -68,14 +68,14 @@ namespace BaseWeb.Services
         /// <param name="fileName">output fileName</param>
         /// <param name="tplPath"></param>
         /// <param name="srcRowNo"></param>
-        public static async Task ExportByRowsAsync(JArray rows, string fileName, string tplPath, int srcRowNo)
+        public static async Task ExportByRowsA(JArray rows, string fileName, string tplPath, int srcRowNo)
         {
             var ms = new MemoryStream();
             var docx = _Excel.FileToMsDocx(tplPath, ms);
             _Excel.DocxByRows(rows, docx, srcRowNo);
             docx.Dispose(); //must dispose, or get empty excel !!
             //ms.Position = 0;
-            await _Web.ExportByStream(ms, fileName);
+            await _Web.ExportByStreamA(ms, fileName);
         }
 
         #region remark code

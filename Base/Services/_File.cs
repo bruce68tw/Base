@@ -75,7 +75,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="path">file path</param>
         /// <returns>file string, return null if no file</returns>
-        public static async Task<string> ToStrAsync(string path)
+        public static async Task<string> ToStrA(string path)
         {
             if (!File.Exists(path))
                 return null;
@@ -91,7 +91,7 @@ namespace Base.Services
         /// <param name="str">content</param>
         /// <param name="path">file full path</param>
         /// <returns></returns>        
-        public static async Task<bool> StrToFileAsync(string str, string path)
+        public static async Task<bool> StrToFileA(string str, string path)
         {
             try
             {
@@ -100,7 +100,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorAsync("_File.cs StrToFileAsync() failed: " + ex.Message);
+                await _Log.ErrorA("_File.cs StrToFileAsync() failed: " + ex.Message);
                 return false;
             }
         }

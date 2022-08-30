@@ -17,18 +17,18 @@ namespace Base.Services
     {
 
         //base34 encode(remove I/O for readable)
-        private static readonly char[] _base34 = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ".ToCharArray();
-        private static readonly char[] _base36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
-        private static readonly char[] _base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
-        private static readonly ulong _baseLen = (ulong)_base34.Length;
-        private static readonly long _startTicks = new DateTime(2000, 1, 1).Ticks;
+        //private static readonly char[] _base34 = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ".ToCharArray();
+        //private static readonly char[] _base36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+        //private static readonly char[] _base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
+        //private static readonly ulong _baseLen = (ulong)_base34.Length;
+        //private static readonly long _startTicks = new DateTime(2000, 1, 1).Ticks;
         //private static long _startMilliSec = new DateTime(2000, 1, 1).Ticks / 1000;
 
         //random string for reptcha
         //private static Random _random = new Random();
 
         /// <summary>
-        /// get random string
+        /// get random string, no upper alpha O,I
         /// </summary>
         /// <param name="len"></param>
         /// <param name="type">1(num),2(upper alpha),3(all alpha),4(num & alpha)</param>
@@ -282,6 +282,9 @@ namespace Base.Services
         /// <returns>22 char</returns>
         public static string Md5(string str)
         {
+            if (string.IsNullOrEmpty(str))
+                return "";
+
             var bytes = MD5.Create().ComputeHash(Encoding.Default.GetBytes(str));
             return Convert.ToBase64String(bytes)[..22]
                 .Replace('+', '-')
@@ -293,19 +296,20 @@ namespace Base.Services
         /// max date is 2300/1/1(A+9char, from 2000/1/1)
         /// </summary>
         /// <returns></returns>
-        public static string NewId(DateTime? dt = null)
+        //public static string NewId(DateTime? dt = null)
+        public static string NewId(int len = _Fun.AutoIdMid)
         {
             //1.stop 1 milli second for avoid repeat(sync way here !!)
             Thread.Sleep(1);
 
-            var ticks = (dt == null) ? DateTime.Now.Ticks : dt.Value.Ticks;
-            var num = (ulong)((ticks - _startTicks) / TimeSpan.TicksPerMillisecond) * 3;
-            using var sha1 = SHA256.Create();
-            var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(num.ToString()));
+            //var ticks = (dt == null) ? DateTime.Now.Ticks : dt.Value.Ticks;
+            //var num = (ulong)((ticks - _startTicks) / TimeSpan.TicksPerMillisecond) * 3;
+            using var sha = SHA256.Create();
+            var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(DateTime.Now.Ticks.ToString()));
             return _Fun.Config.ServerId + string.Concat(Convert.ToBase64String(hash)
                 .ToCharArray()
                 .Where(a => char.IsLetterOrDigit(a))
-                .Take(9));
+                .Take(len - _Fun.Config.ServerId.Length));
         }
 
         /*
@@ -438,7 +442,7 @@ namespace Base.Services
         /// <param name="str"></param>
         /// <param name="logTail">optional, when wrong add log tail</param>
         /// <returns></returns>
-        public static async Task<bool> CheckKeyAsync(string str, bool logError = true)
+        public static async Task<bool> CheckKeyA(string str, bool logError = true)
         {
             if (_Str.IsEmpty(str))
                 return true;
@@ -448,7 +452,7 @@ namespace Base.Services
                 return true;
 
             if (logError)
-                await _Log.ErrorAsync($"_Str.CheckKeyAsync() failed ({str})");
+                await _Log.ErrorA($"_Str.CheckKeyA() failed ({str})");
             return false;
         }
 
@@ -582,6 +586,7 @@ namespace Base.Services
             return result;
         }
 
+        /*
         //get guid base36 string(25 char)
         public static string Guid36()
         {
@@ -592,6 +597,7 @@ namespace Base.Services
         {
             return ToBaseStr(GuidBytes(), _base62);
         }
+        */
 
         private static byte[] GuidBytes()
         {

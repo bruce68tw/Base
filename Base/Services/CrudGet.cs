@@ -23,13 +23,13 @@ namespace Base.Services
             _dbStr = dbStr;
         }
 
-        public async Task<JObject> GetUpdJsonAsync(string key)
+        public async Task<JObject> GetUpdJsonA(string key)
         {
-            return await GetJsonByFunAsync(CrudEnum.Update, key);
+            return await GetJsonByFunA(CrudEnum.Update, key);
         }
-        public async Task<JObject> GetViewJsonAsync(string key)
+        public async Task<JObject> GetViewJsonA(string key)
         {
-            return await GetJsonByFunAsync(CrudEnum.View, key);
+            return await GetJsonByFunA(CrudEnum.View, key);
         }
 
     }//class

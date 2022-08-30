@@ -23,7 +23,7 @@ namespace Base.Services
             catch(Exception ex)
             {
                 _redis = null;
-                _ = _Log.ErrorAsync("_Redis.cs failed: " + ex.Message);    //discard result !!
+                _ = _Log.ErrorA("_Redis.cs failed: " + ex.Message);    //discard result !!
             }
         }
 
@@ -38,7 +38,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="key"></param>
         /// <returns>null if not found</returns>
-        public static async Task<string> GetStrAsync(string key)
+        public static async Task<string> GetStrA(string key)
         {
             if (!IsOk())
                 return null;
@@ -49,7 +49,7 @@ namespace Base.Services
                 : value.ToString();
         }
 
-        public static async Task<bool> SetStrAsync(string key, string value)
+        public static async Task<bool> SetStrA(string key, string value)
         {
             if (!IsOk())
                 return false;
@@ -57,7 +57,7 @@ namespace Base.Services
             return await _db.StringSetAsync(key, value);
         }
 
-        public static async Task<bool> DeleteKeyAsync(string key)
+        public static async Task<bool> DeleteKeyA(string key)
         {
             if (!IsOk())
                 return false;
@@ -68,7 +68,7 @@ namespace Base.Services
         /// <summary>
         /// delete all keys in current database index
         /// </summary>
-        public static async Task FlushDbAsync()
+        public static async Task FlushDbA()
         {
             if (!IsOk())
                 return;

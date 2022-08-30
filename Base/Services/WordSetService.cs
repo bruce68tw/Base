@@ -74,7 +74,7 @@ namespace Base.Services
         /// <param name="srcTpl">(ref) source template string</param>
         /// <param name="imageDtos"></param>
         /// <returns>new template string</returns>
-        public async Task<string> AddImagesAsync(string srcTpl, List<WordImageDto> imageDtos)
+        public async Task<string> AddImagesA(string srcTpl, List<WordImageDto> imageDtos)
         {
             if (imageDtos == null || imageDtos.Count == 0)
                 return "";
@@ -90,18 +90,18 @@ namespace Base.Services
                 var newRun = GetImageRun(imageId, runDto);
 
                 //find drawing object from srcTpl
-                var drawTpl = await GetDrawTplAsync(srcTpl, imageInfo.Code);
+                var drawTpl = await GetDrawTplA(srcTpl, imageInfo.Code);
                 if (drawTpl == null)
                     continue;
 
                 //find graphicData object(map to D.Graphic) from drawing object
-                var graphTpl = await GetGraphDataTplAsync(drawTpl.TplStr);
+                var graphTpl = await GetGraphDataTplA(drawTpl.TplStr);
                 if (graphTpl == null)
                     continue;
 
                 //replace graphic section
                 //newRun.Descendants<D.Graphic>().First().InnerXml cause .docx open failed !!
-                var newGraph = await GetGraphDataTplAsync(newRun.InnerXml);
+                var newGraph = await GetGraphDataTplA(newRun.InnerXml);
                 //int newStart = _tplStartPos, newEnd = _tplEndPos;
 
                 //update srcTpl string
@@ -122,9 +122,9 @@ namespace Base.Services
         /// <param name="startPos"></param>
         /// <param name="endPos"></param>
         /// <returns></returns>
-        public async Task<WordSetTplDto> GetBodyTplAsync(string srcText)
+        public async Task<WordSetTplDto> GetBodyTplA(string srcText)
         {
-            return await GetRangeTplAsync(srcText, false, "<w:body>", "</w:body>");
+            return await GetRangeTplA(srcText, false, "<w:body>", "</w:body>");
         }
 
         /// <summary>
@@ -135,10 +135,10 @@ namespace Base.Services
         /// <param name="endPos"></param>
         /// <param name="childIdx"></param>
         /// <returns></returns>
-        public async Task<WordSetTplDto> GetRowTplAsync(string srcText, int childIdx = -1)
+        public async Task<WordSetTplDto> GetRowTplA(string srcText, int childIdx = -1)
         {
             var findMid = (childIdx < 0) ? "[!]" : $"[!{childIdx}]";
-            var result = await GetRangeTplAsync(srcText, true, "<w:tr ", "</w:tr>", findMid);
+            var result = await GetRangeTplA(srcText, true, "<w:tr ", "</w:tr>", findMid);
             result.TplStr = result.TplStr.Replace(findMid, "");
             return result;
         }
@@ -149,14 +149,14 @@ namespace Base.Services
         /// <param name="srcText"></param>
         /// <param name="imageCode"></param>
         /// <returns></returns>
-        public async Task<WordSetTplDto> GetDrawTplAsync(string srcText, string imageCode)
+        public async Task<WordSetTplDto> GetDrawTplA(string srcText, string imageCode)
         {
-            return await GetRangeTplAsync(srcText, true, "<w:drawing>", "</w:drawing>", $"descr=\"{imageCode}\"");
+            return await GetRangeTplA(srcText, true, "<w:drawing>", "</w:drawing>", $"descr=\"{imageCode}\"");
         }
 
-        private async Task<WordSetTplDto> GetGraphDataTplAsync(string srcText)
+        private async Task<WordSetTplDto> GetGraphDataTplA(string srcText)
         {
-            return await GetRangeTplAsync(srcText, true, "<a:graphicData", "</a:graphicData>");
+            return await GetRangeTplA(srcText, true, "<a:graphicData", "</a:graphicData>");
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace Base.Services
         /// <param name="findEnd">equal to startStr if empty</param>
         /// <param name="findMid">find start string</param>
         /// <returns></returns>
-        private async Task<WordSetTplDto> GetRangeTplAsync(string srcText, bool hasTag, string findStart, 
+        private async Task<WordSetTplDto> GetRangeTplA(string srcText, bool hasTag, string findStart, 
             string findEnd, string findMid = "")
         {
             //int midStartPos = -1, midEndPos = -1;
@@ -216,7 +216,7 @@ namespace Base.Services
             }; 
 
         lab_error:
-            await _Log.ErrorAsync($"WordSetService.cs GetRangeStr() get empty result.(findStart='{findStart}', findMid='{findMid}')");
+            await _Log.ErrorA($"WordSetService.cs GetRangeStr() get empty result.(findStart='{findStart}', findMid='{findMid}')");
             return null;
         }
 

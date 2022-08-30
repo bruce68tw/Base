@@ -43,9 +43,9 @@ namespace Base.Services
             return new Db(_dbStr);
         }
 
-        protected async Task<JObject> GetJsonByFunAsync(CrudEnum fun, string key)
+        protected async Task<JObject> GetJsonByFunA(CrudEnum fun, string key)
         {
-            return await GetJsonAsync(fun, key);
+            return await GetJsonA(fun, key);
         }
 
         //add argument into _argFids, _argValues
@@ -109,7 +109,7 @@ namespace Base.Services
         /// <param name="key"></param>
         /// <param name="db"></param>
         /// <returns></returns>
-        public async Task<JObject> GetDbRowAsync(EditDto edit, string key, Db db = null)
+        public async Task<JObject> GetDbRowA(EditDto edit, string key, Db db = null)
         {
             //reset sqlArgs first
             //ResetArg();
@@ -122,8 +122,8 @@ namespace Base.Services
             var sql = _Str.IsEmpty(edit.ReadSql)
                 ? GetSql(edit, key)
                 : GetSqlByField(edit, key);
-            var row = await db.GetJsonAsync(sql, _sqlArgs);
-            await _Fun.CheckCloseDb(db, hasDb);
+            var row = await db.GetJsonA(sql, _sqlArgs);
+            await _Fun.CheckCloseDbA(db, hasDb);
             return row;
         }
 
@@ -134,16 +134,16 @@ namespace Base.Services
         /// </summary>
         /// <param name="key">table primary key value</param>
         /// <returns></returns>
-        protected async Task<JObject> GetJsonAsync(CrudEnum crudEnum, string key)
+        protected async Task<JObject> GetJsonA(CrudEnum crudEnum, string key)
         {
-            if (!await _Str.CheckKeyAsync(key))
+            if (!await _Str.CheckKeyA(key))
             {
                 //await _Log.ErrorAsync("CrudEdit.cs GetJson() failed, key wrong: " + key);
                 return null;
             }
 
             var db = GetDb();
-            var data = await GetDbRowAsync(_editDto, key, db);    //return data
+            var data = await GetDbRowA(_editDto, key, db);    //return data
             if (data == null)
                 goto lab_exit;
 
@@ -165,7 +165,7 @@ namespace Base.Services
                 var childs = new JArray();
                 var keys = new List<string>() { key };
                 for (var i = 0; i < editChilds.Length; i++)
-                    childs.Add(await GetChildDbJsonAsync(1, editChilds[i], keys, db));
+                    childs.Add(await GetChildDbJsonA(1, editChilds[i], keys, db));
                 data[_Fun.Childs] = childs;
             }
             
@@ -204,14 +204,14 @@ namespace Base.Services
         /// <param name="keys"></param>
         /// <param name="db"></param>
         /// <returns>JObject with prop: _rows, _childs</returns>
-        protected async Task<JObject> GetChildDbJsonAsync(int editLevel, EditDto edit, List<string> keys, Db db)
+        protected async Task<JObject> GetChildDbJsonA(int editLevel, EditDto edit, List<string> keys, Db db)
         {
             //get this rows
             var keyList = _List.ToStr(keys, true);
             var sql = _Str.IsEmpty(edit.ReadSql)
                 ? GetSqlByWhere(edit, edit.FkeyFid + " in (" + keyList + ")")
                 : GetSqlByField(edit, keyList);
-            var rows = await db.GetJsonsAsync(sql);
+            var rows = await db.GetJsonsA(sql);
             if (rows == null)
                 return null;
 
@@ -225,7 +225,7 @@ namespace Base.Services
                 keys = _Json.ArrayToListStr(rows, edit.PkeyFid);
                 var childs = new JArray();
                 for (var i = 0; i < editChilds.Length; i++)
-                    childs.Add(await GetChildDbJsonAsync(editLevel + 1, editChilds[i], keys, db));
+                    childs.Add(await GetChildDbJsonA(editLevel + 1, editChilds[i], keys, db));
                 data[_Fun.Childs] = childs;
             }
             return data;

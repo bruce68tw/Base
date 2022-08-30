@@ -39,42 +39,42 @@ namespace Base.Services
         /// log info only when _Fun.LogInfo flag is true !!
         /// </summary>
         /// <param name="msg">log msg</param>
-        public static async Task InfoAsync(string msg)
+        public static async Task InfoA(string msg)
         {
-            await LogFileAsync(GetFilePath("info"), msg);
+            await LogFileA(GetFilePath("info"), msg);
         }
 
         /// <summary>
         /// log debug when _Fun.LogDebug true !!
         /// </summary>
         /// <param name="msg">log msg</param>
-        public static async Task DebugAsync(string msg)
+        public static async Task DebugA(string msg)
         {
             if (_Fun.Config.LogDebug)
-                await LogFileAsync(GetFilePath("debug"), msg);
+                await LogFileA(GetFilePath("debug"), msg);
         }
 
         /// <summary>
         /// log sql only when _Fun.LogSql true !!
         /// </summary>
         /// <param name="msg">log msg</param>
-        public static async Task SqlAsync(string msg)
+        public static async Task SqlA(string msg)
         {
             if (_Fun.Config.LogSql)
-                await LogFileAsync(GetFilePath("sql"), msg);
+                await LogFileA(GetFilePath("sql"), msg);
         }
 
         /// <summary>
         /// log error
         /// </summary>
         /// <param name="msg">log message</param>
-        public static async Task ErrorAsync(string msg, bool emailRoot = true)
+        public static async Task ErrorA(string msg, bool emailRoot = true)
         {
-            await LogFileAsync(GetFilePath("error"), msg);
+            await LogFileA(GetFilePath("error"), msg);
 
             //send root
             if (emailRoot)
-                await _Email.SendRootAsync(msg);
+                await _Email.SendRootA(msg);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="path">log file path</param>
         /// <param name="msg"></param>
-        private static async Task LogFileAsync(string path, string msg)
+        private static async Task LogFileA(string path, string msg)
         {
             if (_Str.IsEmpty(msg))
                 return;

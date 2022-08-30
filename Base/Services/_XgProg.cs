@@ -73,7 +73,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="userId">user Id</param>
         /// <returns>has ','(if not empty) at start/end for easy coding</returns>
-        public static async Task<string> GetAuthStrsAsync(string userId)
+        public static async Task<string> GetAuthStrsA(string userId)
         {
             string sql;
             List<IdStrDto> rows;
@@ -89,7 +89,7 @@ join XpUserRole ur on rp.RoleId=ur.RoleId
 join XpProg p on rp.ProgId=p.Id
 where ur.UserId=@UserId
 ";
-                    rows = await _Db.GetModelsAsync<IdStrDto>(sql, new List<object>() { "UserId", userId });
+                    rows = await _Db.GetModelsA<IdStrDto>(sql, new List<object>() { "UserId", userId });
                     return (rows == null || rows.Count == 0)
                         ? ""
                         : "," + _List.ToStr(rows.Select(a => a.Id).ToList()) + ",";
@@ -119,7 +119,7 @@ join XpProg p on rp.ProgId=p.Id
 where ur.UserId=@UserId
 group by p.Code
 ";
-                    rows = await _Db.GetModelsAsync<IdStrDto>(sql, new List<object>() { "UserId", userId });
+                    rows = await _Db.GetModelsA<IdStrDto>(sql, new List<object>() { "UserId", userId });
                     return (rows == null || rows.Count == 0)
                         ? ""
                         : "," + _List.ToStr(rows.Select(a => a.Id + ":" + a.Str).ToList()) + ",";

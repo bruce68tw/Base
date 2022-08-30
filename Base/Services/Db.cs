@@ -56,7 +56,7 @@ namespace Base.Services
         /// if you need to operate reader(not by command), call this method by yourself !!
         /// </summary>
         /// <returns>error msg if any</returns>
-        public async Task<bool> InitDbAsync()
+        public async Task<bool> InitDbA()
         {
             if (_status)
                 return true;
@@ -82,12 +82,13 @@ namespace Base.Services
                 _conn = null;
 
                 //not log db connection string for security reason
-                await _Log.ErrorAsync("connect db error: " + ex.Message);
+                await _Log.ErrorA("connect db error: " + ex.Message);
                 return false;
             }
         }
 
         //must use ValueTask
+        //DisposeAsync for IAsyncDisposable
         public async ValueTask DisposeAsync()
         {
             if (_cmd != null)
@@ -132,9 +133,9 @@ namespace Base.Services
         /// <param name="sqlArgs"></param>
         /// <param name="dbSec"></param>
         /// <returns>error msg if any</returns>
-        private async Task<bool> InitCmdAsync(string sql, List<object> sqlArgs = null, int dbSec = _dbSec)
+        private async Task<bool> InitCmdA(string sql, List<object> sqlArgs = null, int dbSec = _dbSec)
         {
-            if (!await InitDbAsync())
+            if (!await InitDbA())
                 return false;
 
             //set instance variables
@@ -178,7 +179,7 @@ namespace Base.Services
 
             //log debug info
             if (_Str.NotEmpty(sql))
-                await _Log.SqlAsync(GetSqlText(sql));
+                await _Log.SqlA(GetSqlText(sql));
             return true;
         }
 
@@ -190,10 +191,10 @@ namespace Base.Services
         /// <param name="sqlArgs"></param>
         /// <param name="dbSec"></param>
         /// <returns></returns>
-        public async Task<IDataReader> GetReaderAsync(string sql, List<object> sqlArgs = null, int dbSec = _dbSec)
+        public async Task<IDataReader> GetReaderA(string sql, List<object> sqlArgs = null, int dbSec = _dbSec)
         {
             //init command
-            if (!await InitCmdAsync(sql, sqlArgs, dbSec))
+            if (!await InitCmdA(sql, sqlArgs, dbSec))
                 return null;
 
             try
@@ -206,7 +207,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorAsync($"_cmd.ExecuteReader() error: {GetSqlText(sql)}, {ex.Message}\n");
+                await _Log.ErrorA($"_cmd.ExecuteReader() error: {GetSqlText(sql)}, {ex.Message}\n");
                 return null;
             }
         }
@@ -248,20 +249,20 @@ namespace Base.Services
             {
                 var diff = (int)_Date.MiniSecDiff(_now, DateTime.Now);
                 if (diff >= _Fun.Config.SlowSql)
-                    await _Log.ErrorAsync($"Slow Sql({diff}): {sql}");
+                    await _Log.ErrorA($"Slow Sql({diff}): {sql}");
             }
         }        
 
         #region GetJson(s)
-        public async Task<JObject> GetJsonAsync(string sql, List<object> sqlArgs = null)
+        public async Task<JObject> GetJsonA(string sql, List<object> sqlArgs = null)
         {
-            var rows = await GetJsonsAsync(sql, sqlArgs);
+            var rows = await GetJsonsA(sql, sqlArgs);
             return (rows == null || rows.Count == 0) ? null : (JObject)rows[0];
         }
 
-        public async Task<JArray> GetJsonsAsync(string sql, List<object> sqlArgs = null)
+        public async Task<JArray> GetJsonsA(string sql, List<object> sqlArgs = null)
         {
-            var reader = await GetReaderAsync(sql, sqlArgs);
+            var reader = await GetReaderA(sql, sqlArgs);
             if (reader == null)
                 return null;
 
@@ -276,15 +277,15 @@ namespace Base.Services
         #endregion
 
         #region GetInt(s)/GetStr(s)
-        public async Task<int?> GetIntAsync(string sql, List<object> sqlArgs = null)
+        public async Task<int?> GetIntA(string sql, List<object> sqlArgs = null)
         {
-            var list = await GetIntsAsync(sql, sqlArgs);
+            var list = await GetIntsA(sql, sqlArgs);
             return (list == null) ? (int?)null : list[0];
         }
 
-        public async Task<List<int>> GetIntsAsync(string sql, List<object> sqlArgs = null)
+        public async Task<List<int>> GetIntsA(string sql, List<object> sqlArgs = null)
         {
-            var reader = await GetReaderForModelAsync(sql, sqlArgs);
+            var reader = await GetReaderForModelA(sql, sqlArgs);
             if (reader == null)
                 return null;
 
@@ -304,16 +305,16 @@ namespace Base.Services
         /// <param name="sql"></param>
         /// <param name="sqlArgs"></param>
         /// <returns></returns>
-        public async Task<string> GetStrAsync(string sql, List<object> sqlArgs = null)
+        public async Task<string> GetStrA(string sql, List<object> sqlArgs = null)
         {
-            var list = await GetStrsAsync(sql, sqlArgs);
+            var list = await GetStrsA(sql, sqlArgs);
             //return (list == null) ? null : list[0];
             return list[0];
         }
 
-        public async Task<List<string>> GetStrsAsync(string sql, List<object> sqlArgs = null)
+        public async Task<List<string>> GetStrsA(string sql, List<object> sqlArgs = null)
         {
-            var reader = await GetReaderForModelAsync(sql, sqlArgs);
+            var reader = await GetReaderForModelA(sql, sqlArgs);
             if (reader == null)
                 return null;
 
@@ -327,15 +328,15 @@ namespace Base.Services
         #endregion
 
         #region GetModel(s)      
-        public async Task<T> GetModelAsync<T>(string sql, List<object> sqlArgs = null)
+        public async Task<T> GetModelA<T>(string sql, List<object> sqlArgs = null)
         {
-            var rows = await GetModelsAsync<T>(sql, sqlArgs);
+            var rows = await GetModelsA<T>(sql, sqlArgs);
             return (rows == null || rows.Count == 0) ? default : rows[0];
         }
         
-        public async Task<List<T>> GetModelsAsync<T>(string sql, List<object> sqlArgs = null)
+        public async Task<List<T>> GetModelsA<T>(string sql, List<object> sqlArgs = null)
         {
-            var reader = await GetReaderForModelAsync(sql, sqlArgs);
+            var reader = await GetReaderForModelA(sql, sqlArgs);
             if (reader == null)
                 return null;
 
@@ -372,7 +373,7 @@ namespace Base.Services
                 //_Fun.DbStatus = false;
                 status = false;
                 var error = "Db.GetModelsAsync() error:(field=" + errorFid + ") " + GetSqlText(sql) + ", " + ex2.Message;
-                await _Log.ErrorAsync(error);
+                await _Log.ErrorA(error);
             }
 
             reader.Close();
@@ -438,10 +439,10 @@ namespace Base.Services
 
         //get reader for get model()
         //return null when failed
-        private async Task<IDataReader> GetReaderForModelAsync(string sql, List<object> sqlArgs = null)
+        private async Task<IDataReader> GetReaderForModelA(string sql, List<object> sqlArgs = null)
         {
             //run reader
-            if (!await InitCmdAsync(sql, sqlArgs))
+            if (!await InitCmdA(sql, sqlArgs))
                 return null;
 
             try
@@ -453,7 +454,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorAsync($"_cmd.ExecuteReader() error: {GetSqlText(sql)}, {ex.Message}");
+                await _Log.ErrorA($"_cmd.ExecuteReader() error: {GetSqlText(sql)}, {ex.Message}");
                 return null;
             }
         }
@@ -463,9 +464,9 @@ namespace Base.Services
         /// </summary>
         /// <param name="sql"></param>
         /// <returns>affected rows count, -1 means error</returns>
-        public async Task<int> ExecSqlAsync(string sql, List<object> sqlArgs = null)
+        public async Task<int> ExecSqlA(string sql, List<object> sqlArgs = null)
         {
-            if (!await InitCmdAsync(sql, sqlArgs))
+            if (!await InitCmdA(sql, sqlArgs))
                 return 0;
 
             try
@@ -476,7 +477,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorAsync($"Db.UpdateDb() error: {ex.Message}\nsql: {GetSqlText(sql)}");
+                await _Log.ErrorA($"Db.UpdateDb() error: {ex.Message}\nsql: {GetSqlText(sql)}");
                 return 0;
             }
         }
@@ -499,14 +500,14 @@ namespace Base.Services
                 where = " and " + where;
             //var key2 = (kvalue.GetType() == typeof(string)) ? "'" + kvalue + "'" : kvalue.ToString();
             var sql = $"update {table} set {statusId}={status2} where {kid}=@{kid}{where};";
-            return (await ExecSqlAsync(sql, new List<object>(){ kid, kvalue }) > 0);
+            return (await ExecSqlA(sql, new List<object>(){ kid, kvalue }) > 0);
         }
 
         #region transation (3 functions)
         //return error msg if any
-        public async Task<bool> BeginTranAsync()
+        public async Task<bool> BeginTranA()
         {
-            if (!await InitCmdAsync(null))
+            if (!await InitCmdA(null))
                 return false;
 
             _tran = await _conn.BeginTransactionAsync();
@@ -514,12 +515,12 @@ namespace Base.Services
             return true;
         }
 
-        public async Task CommitAsync()
+        public async Task CommitA()
         {
             await _tran.CommitAsync();
         }
 
-        public async Task RollbackAsync()
+        public async Task RollbackA()
         {
             await _tran.RollbackAsync();
         }

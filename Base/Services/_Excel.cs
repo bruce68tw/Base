@@ -34,7 +34,7 @@ namespace Base.Services
         /// <param name="sheetNo"></param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> ImportByFileAsync(string uiDtFormat, string filePath, string insertSql, int[] excelCols, int excelStartRow, bool[] isDates = null, int sheetNo = 0, Db db = null)
+        public static async Task<string> ImportByFileA(string uiDtFormat, string filePath, string insertSql, int[] excelCols, int excelStartRow, bool[] isDates = null, int sheetNo = 0, Db db = null)
         {
             //check
             if (!File.Exists(filePath))
@@ -44,7 +44,7 @@ namespace Base.Services
             }
 
             var docx = SpreadsheetDocument.Open(filePath, false);
-            return await ImportByDocxAsync(uiDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
+            return await ImportByDocxA(uiDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace Base.Services
         /// <param name="sheetNo"></param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> ImportByDocxAsync(string uiDtFormat, SpreadsheetDocument docx, string insertSql, int[] excelCols, int excelStartRow, bool[] isDates = null, int sheetNo = 0, Db db = null)
+        public static async Task<string> ImportByDocxA(string uiDtFormat, SpreadsheetDocument docx, string insertSql, int[] excelCols, int excelStartRow, bool[] isDates = null, int sheetNo = 0, Db db = null)
         {
             //var rb = _Locale.RB;
             var emptyDb = false;
@@ -115,7 +115,7 @@ namespace Base.Services
                 //insert into only when all columns has value
                 //transfer emtpy datetime to null, or it will be 1900/1/1
                 var sql2 = string.Format(insertSql, cols).Replace("'null'", "null");
-                if (rowHasCol && await db.ExecSqlAsync(sql2) == 0)
+                if (rowHasCol && await db.ExecSqlA(sql2) == 0)
                 {
                     //ok = false;
                     error = "_Excel.cs ImportByDocx failed, sql is empty.";
@@ -123,7 +123,7 @@ namespace Base.Services
                 }
             }
 
-            await _Fun.CheckCloseDb(db, emptyDb);
+            await _Fun.CheckCloseDbA(db, emptyDb);
 
             //book = null;    //can not Dispose(), must close by caller
             //sheet = null;
@@ -141,11 +141,11 @@ namespace Base.Services
         /// <param name="sheetNo"></param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> ImportByStreamAsync(string uiDtFormat, Stream stream, string insertSql, int excelStartRow, int[] excelCols, bool[] isDates = null, int sheetNo = 0, Db db = null)
+        public static async Task<string> ImportByStreamA(string uiDtFormat, Stream stream, string insertSql, int excelStartRow, int[] excelCols, bool[] isDates = null, int sheetNo = 0, Db db = null)
         {
             stream.Position = 0;
             var docx = StreamToDocx(stream);
-            return await ImportByDocxAsync(uiDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
+            return await ImportByDocxA(uiDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
         }
 
         /// <summary>
@@ -171,10 +171,10 @@ namespace Base.Services
         /// <param name="findJson"></param>
         /// <param name="srcRowNo"></param>
         /// <param name="dbStr"></param>
-        public static async Task DocxByReadAsync(string ctrl, SpreadsheetDocument docx, ReadDto readDto, 
+        public static async Task DocxByReadA(string ctrl, SpreadsheetDocument docx, ReadDto readDto, 
             JObject findJson, int srcRowNo, string dbStr = "")
         {
-            DocxByRows(await new CrudRead(dbStr).GetExportRowsAsync(ctrl, readDto, findJson), docx, srcRowNo);
+            DocxByRows(await new CrudRead(dbStr).GetExportRowsA(ctrl, readDto, findJson), docx, srcRowNo);
         }
 
         /// <summary>
@@ -183,13 +183,13 @@ namespace Base.Services
         /// <param name="filePath">excel file path to save</param>
         /// <param name="sql"></param>
         /// <param name="dbStr">db property name in config file</param>
-        public static async Task DocxBySqlAsync(string sql, SpreadsheetDocument docx, int srcRowNo, Db db = null)
+        public static async Task DocxBySqlA(string sql, SpreadsheetDocument docx, int srcRowNo, Db db = null)
         {
             var emptyDb = false;
             _Fun.CheckOpenDb(ref db, ref emptyDb);
 
-            var rows = await db.GetJsonsAsync(sql);
-            await _Fun.CheckCloseDb(db, emptyDb);
+            var rows = await db.GetJsonsA(sql);
+            await _Fun.CheckCloseDbA(db, emptyDb);
 
             DocxByRows(rows, docx, srcRowNo);
         }

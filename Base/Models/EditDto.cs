@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Base.Services;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
 namespace Base.Models
@@ -20,10 +21,12 @@ namespace Base.Models
         //public bool HasFKey = true;
 
         /// <summary>
-        /// auto key value when create(call _Str.NewId())
-        /// if false, then set by coding !!
+        /// auto Id length, 0 means set by code
+        /// //auto key value when create(call _Str.NewId())
+        /// //if false, then set by code !!
         /// </summary>
-        public bool AutoNewId = true;
+        //public bool AutoNewId = true;
+        public int AutoIdLen = _Fun.AutoIdMid;
 
         /// <summary>
         /// table name

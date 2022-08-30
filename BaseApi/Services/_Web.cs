@@ -45,7 +45,7 @@ namespace BaseApi.Services
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="fileName"></param>
-        public static async Task ExportByStream(Stream stream, string fileName)
+        public static async Task ExportByStreamA(Stream stream, string fileName)
         {
             //response to client, must close docx first, 
             //so put code here, or docx file will get wrong !!
@@ -85,7 +85,7 @@ namespace BaseApi.Services
         /// </summary>
         /// <param name="locale">consider multiple language if not empty</param>
         /// <returns></returns>
-        public static async Task<List<MenuDto>> GetMenuAsync()
+        public static async Task<List<MenuDto>> GetMenuA()
         {
             //get authStrs
             var data = new List<MenuDto>();
@@ -124,7 +124,7 @@ from dbo.XpProg
 where Code in ({_List.ToStr(progList, true)})
 order by Sort
 ";
-            return await _Db.GetModelsAsync<MenuDto>(sql);
+            return await _Db.GetModelsA<MenuDto>(sql);
         }
 
         /// <summary>

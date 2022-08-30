@@ -11,7 +11,7 @@
         {
             SystemName = "MIS System";
             Locale = "zh-TW";
-            ServerId = "A";
+            ServerId = "";
             SlowSql = 1000;
             //LogDebug = false;
             //LogSql = false;

@@ -42,7 +42,7 @@ namespace BaseApi.Services
         /// <param name="file"></param>
         /// <param name="filePath"></param>
         /// <returns>status</returns>
-        public static async Task<bool> SaveFileAsync(IFormFile file, string filePath)
+        public static async Task<bool> SaveFileA(IFormFile file, string filePath)
         {
             try
             {
@@ -58,7 +58,7 @@ namespace BaseApi.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorAsync("_WebFile.cs SaveFileAsync() failed: " + ex.Message);
+                await _Log.ErrorA("_WebFile.cs SaveFileA() failed: " + ex.Message);
                 return false;
             }
         }
@@ -107,12 +107,12 @@ namespace BaseApi.Services
         /// <param name="file"></param>
         /// <param name="saveDir"></param>
         /// <returns>file name, or empty for error</returns>
-        public static async Task<string> SaveHtmlImage(IFormFile file, string saveDir)
+        public static async Task<string> SaveHtmlImageA(IFormFile file, string saveDir)
         {
             //saveDir = _Str.EmptyToValue(saveDir, _Web.DirWeb + "image");
             var fileName = _Str.NewId() + Path.GetExtension(file.FileName);
             var path = _Str.AddSlash(saveDir) + fileName;
-            return (await SaveFileAsync(file, path))
+            return (await SaveFileA(file, path))
                 ? fileName : "";
         }
 
@@ -125,12 +125,12 @@ namespace BaseApi.Services
                 "_" + fileTail + _Str.NewId() + Path.GetExtension(file.FileName);
         }
 
-        public static async Task<bool> SaveCrudFileAsnyc(JObject inputJson, JObject newKey, string saveDir, IFormFile file, string serverFid)
+        public static async Task<bool> SaveCrudFileA(JObject inputJson, JObject newKey, string saveDir, IFormFile file, string serverFid)
         {
             if (file == null)
                 return true;
 
-            return await SaveCrudFilesAsnyc(inputJson, newKey, saveDir, new List<IFormFile> { file }, serverFid, false);
+            return await SaveCrudFilesA(inputJson, newKey, saveDir, new List<IFormFile> { file }, serverFid, false);
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace BaseApi.Services
         /// <param name="serverFid"></param>
         /// <param name="isMulti">if true, fileJson fid will like 't03_FileNameX', X is row no</param>
         /// <returns></returns>
-        public static async Task<bool> SaveCrudFilesAsnyc(JObject inputJson, JObject newKey, string saveDir, List<IFormFile> files, string serverFid, bool isMulti = true)
+        public static async Task<bool> SaveCrudFilesA(JObject inputJson, JObject newKey, string saveDir, List<IFormFile> files, string serverFid, bool isMulti = true)
         {
             if (files == null || files.Count == 0)
                 return true;
@@ -203,14 +203,14 @@ namespace BaseApi.Services
 
                 //save file
                 var filePath = saveDir + fid + "_" + key + Path.GetExtension(files[i].FileName);
-                await SaveFileAsync(files[i], filePath);
+                await SaveFileA(files[i], filePath);
             }
 
             //case ok ok
             return true;
 
         lab_error:
-            await _Log.ErrorAsync("_WebFile.cs SaveCrudFiles failed: " + error);
+            await _Log.ErrorA("_WebFile.cs SaveCrudFiles failed: " + error);
             return false;
         }
 
@@ -232,7 +232,7 @@ namespace BaseApi.Services
         /// <param name="fileFid">field id for file to save db, if empty then same as fname</param>
         /// <returns></returns>
         //public static void SaveFilesAndSetRows(HttpFileCollectionBase files, JArray rows, string dirSaveServer, string dirSave, string preFile, string kid, string fid)
-        public static async Task<JObject> SetRowFileAsync(JObject row, IFormFile file, UploadDto path, string fileTail, string fileFid)
+        public static async Task<JObject> SetRowFileA(JObject row, IFormFile file, UploadDto path, string fileTail, string fileFid)
         {
             //consider delete file
             //if (file == null)
@@ -258,7 +258,7 @@ namespace BaseApi.Services
             {
                 var filePath = GetFilePath(saveDir, fileTail, file);
                 //file.SaveAs(serverPath + "\\" + filePath);
-                await SaveFileAsync(file, filePath);
+                await SaveFileA(file, filePath);
                 row[fileFid] = path.PreUrl + filePath.Replace("\\", "/");
             }
             return row;
@@ -274,7 +274,7 @@ namespace BaseApi.Services
         /// <param name="fileTail">file tail to save</param>
         /// <param name="fileFid">column id for save file path</param>
         /// <returns></returns>
-        public static async Task SetRowsFilesAsync(JArray rows, List<IFormFile> files, UploadDto path, string fileTail, string fileFid)
+        public static async Task SetRowsFilesA(JArray rows, List<IFormFile> files, UploadDto path, string fileTail, string fileFid)
         {
             //check input
             if (files == null || files.Count == 0 || rows == null || rows.Count == 0)
@@ -300,7 +300,7 @@ namespace BaseApi.Services
                 //var filePath = GetFilePath(saveDir, fileTail + key, file);
                 var filePath = GetFilePath(saveDir, fileTail, file);
                 //file.SaveAs(serverPath + "\\" + filePath);
-                await SaveFileAsync(file, filePath);
+                await SaveFileA(file, filePath);
 
                 //change field value of uploadf file(save related path)
                 row[fileFid] = path.PreUrl + filePath.Replace("\\", "/");
@@ -320,7 +320,7 @@ namespace BaseApi.Services
         /// <param name="path"></param>
         /// <param name="downFileName">download file name</param>
         /// <returns></returns>
-        public static async Task<FileContentResult> ViewFileAsync(string path, string downFileName = "")
+        public static async Task<FileContentResult> ViewFileA(string path, string downFileName = "")
         {
             var hasFile = File.Exists(path);
             var ext = _File.GetFileExt(path);

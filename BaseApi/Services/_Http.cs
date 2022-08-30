@@ -92,8 +92,9 @@ namespace BaseApi.Services
         /// <param name="args"></param>
         /// <param name="isGet"></param>
         /// <returns></returns>
-        public static async Task<string> GetUrlResult(string url, string args = "", bool isGet = true)
+        public static async Task<string> GetUrlResultA(string url, string args = "", bool isGet = true)
         {
+            //TODO
             var request = WebRequest.Create(url) as HttpWebRequest;
             request.Method = isGet ? "GET" : "POST";
             request.KeepAlive = true; //keep alive

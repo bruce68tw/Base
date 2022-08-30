@@ -20,7 +20,7 @@ namespace Base.Services
         /// email to Root(web.config RootEmail field)
         /// </summary>
         /// <param name="msg"></param>
-        public static async Task SendRootAsync(string msg)
+        public static async Task SendRootA(string msg)
         {
             //check
             if (_Str.IsEmpty(_Fun.Config.RootEmail))
@@ -33,7 +33,7 @@ namespace Base.Services
                 ToUsers = StrToUsers(_Fun.Config.RootEmail),
                 Body = msg,
             };
-            await SendByMsgAsync(DtoToMsg(email), null, false);
+            await SendByMsgA(DtoToMsg(email), null, false);
         }
 
         /// <summary>
@@ -52,9 +52,9 @@ namespace Base.Services
         /// <param name="email">email model</param>
         /// <param name="smtp">smtp model</param>
         /// <param name="sync">sync send or not, false(web ap), console(true)</param>
-        public static async Task SendByDtoAsync(EmailDto email, SmtpDto smtp = null)
+        public static async Task SendByDtoA(EmailDto email, SmtpDto smtp = null)
         {
-            await SendByDtosAsync(new List<EmailDto>() { email }, smtp);
+            await SendByDtosA(new List<EmailDto>() { email }, smtp);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="emails"></param>
         /// <param name="smtp"></param>
-        public static async Task SendByDtosAsync(List<EmailDto> emails, SmtpDto smtp = null)
+        public static async Task SendByDtosA(List<EmailDto> emails, SmtpDto smtp = null)
         {
             //change receiver to tester if need !!
             //var email = new EmailDto();// = null;
@@ -76,7 +76,7 @@ namespace Base.Services
             }
 
             //send
-            await SendByMsgsAsync(DtosToMsgs(emails, smtp), smtp);
+            await SendByMsgsA(DtosToMsgs(emails, smtp), smtp);
         }
 
         /*
@@ -239,9 +239,9 @@ namespace Base.Services
         /// <param name="smtp"></param>
         /// <param name="sendImage"></param>
         /// <returns></returns>
-        public static async Task SendByMsgAsync(MailMessage msg, SmtpDto smtp = null, bool sendImage = true)
+        public static async Task SendByMsgA(MailMessage msg, SmtpDto smtp = null, bool sendImage = true)
         {
-            await SendByMsgsAsync(new List<MailMessage>() { msg }, smtp, sendImage);
+            await SendByMsgsA(new List<MailMessage>() { msg }, smtp, sendImage);
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="msgs"></param>
         /// <param name="smtp"></param>
-        public static async Task SendByMsgsAsync(List<MailMessage> msgs, SmtpDto smtp = null, bool sendImage = true)
+        public static async Task SendByMsgsA(List<MailMessage> msgs, SmtpDto smtp = null, bool sendImage = true)
         {
             //check
             //error = ""; //initial
@@ -305,7 +305,7 @@ namespace Base.Services
                 var error = _Str.NotEmpty(ex.Message) ? ex.Message :
                     (ex.InnerException != null) ? ex.InnerException.Message :
                     "Email Error !!";
-                await _Log.ErrorAsync("_Email.cs SendByMsgsAsync() failed: " + error, false);    //false here, not mailRoot, or endless roop !!
+                await _Log.ErrorA("_Email.cs SendByMsgsA() failed: " + error, false);    //false here, not mailRoot, or endless roop !!
             }
         }
 

@@ -40,21 +40,21 @@ namespace BaseWeb.Services
         }
 
         //auth code to token
-        public static async Task<string> CodeToToken(string code)
+        public static async Task<string> CodeToTokenA(string code)
         {
             var url = "https://graph.facebook.com/v13.0/oauth/access_token";
             var args = $"code={code}&client_id={_clientId}&client_secret={_clientSecret}&redirect_uri={_redirect}&grant_type=authorization_code";
-            var json = _Str.ToJson(await _Http.GetUrlResult(url, args, false));
+            var json = _Str.ToJson(await _Http.GetUrlResultA(url, args, false));
             return json["access_token"].ToString();
         }
 
         //email in it
-        public static async Task<JObject> GetUser(string token)
+        public static async Task<JObject> GetUserA(string token)
         {
             var url = "https://graph.facebook.com/v2.3/me";
             //url = $"{url}?fields=name,email&access_token={token}";
             url = $"{url}?fields=email&access_token={token}";
-            var result = await _Http.GetUrlResult(url);
+            var result = await _Http.GetUrlResultA(url);
             return _Str.ToJson(result);
         }
 

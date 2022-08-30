@@ -4,7 +4,7 @@ namespace Base.Models
 {
     /// <summary>
     /// for RWD pagin output(jquery simple pagination)
-    /// refer CrudRead.cs GetPageAsync() return json
+    /// refer CrudRead.cs GetPageA() return json
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class PageOut<T>

@@ -45,11 +45,11 @@ namespace BaseWeb.Services
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
-        public static async Task<string> CodeToToken(string code)
+        public static async Task<string> CodeToTokenA(string code)
         {
             var url = "https://www.googleapis.com/oauth2/v4/token";
             var args = $"code={code}&client_id={_clientId}&client_secret={_clientSecret}&redirect_uri={_redirect}&grant_type=authorization_code";
-            var json = _Str.ToJson(await _Http.GetUrlResult(url, args, false));
+            var json = _Str.ToJson(await _Http.GetUrlResultA(url, args, false));
             return json["access_token"].ToString();
         }
 
@@ -58,11 +58,11 @@ namespace BaseWeb.Services
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        public static async Task<JObject> GetUser(string token)
+        public static async Task<JObject> GetUserA(string token)
         {
             //var url = $"https://www.googleapis.com/oauth2/v1/userinfo?access_token={token}";
             var url = $"https://www.googleapis.com/oauth2/v3/userinfo?access_token={token}";
-            var result = await _Http.GetUrlResult(url);
+            var result = await _Http.GetUrlResultA(url);
             return _Str.ToJson(result);
         }
 

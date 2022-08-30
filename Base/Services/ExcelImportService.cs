@@ -39,11 +39,11 @@ namespace Base.Services
         /// <param name="fileName"></param>
         /// <param name="uiDtFormat"></param>
         /// <returns></returns>
-        public async Task<ResultImportDto> ImportByStreamAsync(Stream stream, ExcelImportDto<T> importDto, string dirUpload, string fileName, string uiDtFormat)
+        public async Task<ResultImportDto> ImportByStreamA(Stream stream, ExcelImportDto<T> importDto, string dirUpload, string fileName, string uiDtFormat)
         {
             stream.Position = 0;
             var docx = _Excel.StreamToDocx(stream);
-            var result = await ImportByDocxAsync(docx, importDto, dirUpload, fileName, uiDtFormat);
+            var result = await ImportByDocxA(docx, importDto, dirUpload, fileName, uiDtFormat);
 
             //release docx
             docx = null;
@@ -59,7 +59,7 @@ namespace Base.Services
         /// <param name="fileName">imported excel file name</param>
         /// <param name="uiDtFormat"></param>
         /// <returns>error msg if any</returns>
-        public async Task<ResultImportDto> ImportByDocxAsync(SpreadsheetDocument docx, ExcelImportDto<T> importDto, string dirUpload, string fileName, string uiDtFormat)
+        public async Task<ResultImportDto> ImportByDocxA(SpreadsheetDocument docx, ExcelImportDto<T> importDto, string dirUpload, string fileName, string uiDtFormat)
         {
             #region 1.set variables
             #region set docx, excelRows, ssTable
@@ -311,7 +311,7 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
 {okCount}, {failCount}, {totalCount}, 
 '{importDto.CreatorName}', '{_Date.NowDbStr()}')
 ";
-            await _Db.ExecSqlAsync(sql);
+            await _Db.ExecSqlA(sql);
             #endregion
 
             //7.return import result

@@ -27,30 +27,30 @@ namespace Base.Services
             return new CrudGet(Ctrl, GetDto());
         }
 
-        public async Task<JObject> GetUpdJsonAsync(string key)
+        public async Task<JObject> GetUpdJsonA(string key)
         {
-            return await GetService().GetUpdJsonAsync(key);
+            return await GetService().GetUpdJsonA(key);
         }
 
-        public async Task<JObject> GetViewJsonAsync(string key)
+        public async Task<JObject> GetViewJsonA(string key)
         {
-            return await GetService().GetViewJsonAsync(key);
+            return await GetService().GetViewJsonA(key);
         }
 
-        public async Task<ResultDto> CreateAsync(JObject json)
+        public async Task<ResultDto> CreateA(JObject json)
         {
-            return await EditService().CreateAsync(json);
+            return await EditService().CreateA(json);
         }
 
         //can override
-        public virtual async Task<ResultDto> UpdateAsync(string key, JObject json)
+        public virtual async Task<ResultDto> UpdateA(string key, JObject json)
         {
-            return await EditService().UpdateAsync(key, json);
+            return await EditService().UpdateA(key, json);
         }
 
-        public async Task<ResultDto> DeleteAsync(string key)
+        public async Task<ResultDto> DeleteA(string key)
         {
-            return await EditService().DeleteAsync(key);
+            return await EditService().DeleteA(key);
         }
 
     }//class

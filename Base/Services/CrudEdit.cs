@@ -195,7 +195,7 @@ namespace Base.Services
         /// <param name="inputRow"></param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        private async Task<bool> InsertRowAsync(EditDto edit, JObject inputRow, Db db)
+        private async Task<bool> InsertRowA(EditDto edit, JObject inputRow, Db db)
         {
             //set key & map field
 
@@ -279,7 +279,7 @@ namespace Base.Services
 
             //insert db
             var sql = $"Insert Into {edit.Table} ({fids[0..^1]}) Values ({values[0..^1]})";
-            if (await db.ExecSqlAsync(sql, _sqlArgs) == 0)
+            if (await db.ExecSqlA(sql, _sqlArgs) == 0)
             {
                 //not log error here, Db.cs already log it.
                 //error = "CrudEdit.cs InsertRow() failed, insert no row.(" + sql + ")";
@@ -293,14 +293,14 @@ namespace Base.Services
 
         lab_error:
             if (!string.IsNullOrEmpty(error))
-                await _Log.ErrorAsync(error);
+                await _Log.ErrorA(error);
             return false;
                 
         }
 
         //update one row, recursive!!
         //return error msg if any
-        private async Task<bool> UpdateRowAsync(EditDto edit, JObject inputRow, Db db)
+        private async Task<bool> UpdateRowA(EditDto edit, JObject inputRow, Db db)
         {
             //skip if empty
             if (_Json.IsEmpty(inputRow))
@@ -336,7 +336,7 @@ namespace Base.Services
 
                 if (edit._FidNo[fid] == null)
                 {
-                    await _Log.ErrorAsync($"CrudEdit.cs UpdateRow() field not existed({edit.Table}.{fid}");
+                    await _Log.ErrorA($"CrudEdit.cs UpdateRow() field not existed({edit.Table}.{fid}");
                     return false;
                 }
 
@@ -383,9 +383,9 @@ namespace Base.Services
 
             //update db
             sql = $"Update {edit.Table} Set {sql[0..^1] + setCol4} Where {GetWhereAndArg(edit, rowKey)}";
-            if (await db.ExecSqlAsync(sql, _sqlArgs) == 0)
+            if (await db.ExecSqlA(sql, _sqlArgs) == 0)
             {
-                await _Log.ErrorAsync($"CrudEdit.cs UpateRow() failed, update 0 row.({sql})");
+                await _Log.ErrorA($"CrudEdit.cs UpateRow() failed, update 0 row.({sql})");
                 return false;
             }
 
@@ -607,10 +607,10 @@ namespace Base.Services
         /// <param name="json"></param>
         /// <param name="fnAfterSave"></param>
         /// <returns>ResultDto</returns>
-        public async Task<ResultDto> CreateAsync(JObject json,
-            FnSetNewKeyJson fnSetNewKey = null, FnAfterSaveAsync fnAfterSave = null)
+        public async Task<ResultDto> CreateA(JObject json,
+            FnSetNewKeyJson fnSetNewKey = null, FnAfterSaveA fnAfterSave = null)
         {
-            return await SaveJsonAsync(json, fnSetNewKey, fnAfterSave);
+            return await SaveJsonA(json, fnSetNewKey, fnAfterSave);
         }
 
         /// <summary>
@@ -620,8 +620,8 @@ namespace Base.Services
         /// <param name="json"></param>
         /// <param name="fnAfterSave"></param>
         /// <returns>ResultDto</returns>
-        public async Task<ResultDto> UpdateAsync(string key, JObject json,
-            FnSetNewKeyJson fnSetNewKey = null, FnAfterSaveAsync fnAfterSave = null)
+        public async Task<ResultDto> UpdateA(string key, JObject json,
+            FnSetNewKeyJson fnSetNewKey = null, FnAfterSaveA fnAfterSave = null)
         {
             //return error if empty key
             if (_Str.IsEmpty(key))
@@ -630,13 +630,13 @@ namespace Base.Services
             //check for AuthType=Row if need
             if (_Fun.IsAuthTypeRow())
             {
-                var data = await GetDbRowAsync(_editDto, key);    //return data
+                var data = await GetDbRowA(_editDto, key);    //return data
                 var errorBr = CheckAuthRow(data, CrudEnum.Update);
                 if (!_Str.IsEmpty(errorBr))
                     return _Model.GetBrError(errorBr);
             }
 
-            return await SaveJsonAsync(json, fnSetNewKey, fnAfterSave);
+            return await SaveJsonA(json, fnSetNewKey, fnAfterSave);
         }
 
         /// <summary>
@@ -647,8 +647,8 @@ namespace Base.Services
         /// <param name="fnSetNewKeyJson">custom function for set newKeyJson</param>
         /// <param name="fnAfterSaveAsync"></param>
         /// <returns></returns>
-        private async Task<ResultDto> SaveJsonAsync(JObject inputJson, 
-            FnSetNewKeyJson fnSetNewKeyJson = null, FnAfterSaveAsync fnAfterSaveAsync = null)
+        private async Task<ResultDto> SaveJsonA(JObject inputJson, 
+            FnSetNewKeyJson fnSetNewKeyJson = null, FnAfterSaveA fnAfterSaveAsync = null)
         {
             //check input & set fidNos same time
             var log = false;
@@ -682,13 +682,13 @@ namespace Base.Services
             //transaction if need
             db = GetDb();
             if (trans)
-                await db.BeginTranAsync();
+                await db.BeginTranA();
 
             //set current time(_now)
             SetNow();
 
             //save db recursive
-            if (!await SaveJson2Async("0", null, inputJson, _editDto, db))
+            if (!await SaveJson2A("0", null, inputJson, _editDto, db))
                 goto lab_error;
 
             //call AfterSave() if need
@@ -710,7 +710,7 @@ namespace Base.Services
 
             //case of ok
             if (trans)
-                await db.CommitAsync();
+                await db.CommitA();
             await db.DisposeAsync();
             return new ResultDto() { Value = _saveRows.ToString() };
 
@@ -718,12 +718,12 @@ namespace Base.Services
             if (db != null)
             {
                 if (trans)
-                    await db.RollbackAsync();
+                    await db.RollbackA();
                 await db.DisposeAsync();
             }
 
             if (log)
-                await _Log.ErrorAsync("CrudEdit.cs SaveJsonAsync() failed: " + error);
+                await _Log.ErrorA("CrudEdit.cs SaveJsonA() failed: " + error);
             return _Model.GetError();
         }
 
@@ -737,7 +737,7 @@ namespace Base.Services
         /// <param name="inputJson">JObject for level0, JArray for level1/2</param>
         /// <param name="db"></param>
         /// <returns></returns>
-        private async Task<bool> SaveJson2Async(string levelStr, List<string> upDeletes, 
+        private async Task<bool> SaveJson2A(string levelStr, List<string> upDeletes, 
             JObject inputJson, EditDto edit, Db db)
         {
             var hasInput = (inputJson != null);
@@ -751,12 +751,12 @@ namespace Base.Services
             List<string> deletes = (!hasInput || inputJson[Deletes] == null)
                 ? null : _Str.ToList(inputJson[Deletes].ToString());
             if (upDeletes != null)
-                deletes = _List.Concat(deletes, await GetKeysByUpKeysAsync(edit, upDeletes, db));
+                deletes = _List.Concat(deletes, await GetKeysByUpKeysA(edit, upDeletes, db));
 
             if (deletes != null)
             {
                 //deleted key, no special char !!
-                if (isLevel0 && !await _List.CheckKeyAsync(deletes))
+                if (isLevel0 && !await _List.CheckKeyA(deletes))
                 {
                     //await _Log.ErrorAsync("CrudEdit.cs SaveJsons() failed, key is not AlphaNum.");
                     return false;
@@ -766,7 +766,7 @@ namespace Base.Services
                 //if (!hasFkey)
                     //deletes = _List.Concat(deletes, await GetKeysByUpKeysAsync(edit, upDeletes, db));
 
-                if (!await DeleteRowsByKeysAsync(edit, deletes, db))
+                if (!await DeleteRowsByKeysA(edit, deletes, db))
                     return false;
             }
             #endregion
@@ -794,12 +794,12 @@ namespace Base.Services
 
                     if (IsNewRow(inputRow))
                     {
-                        if (!await InsertRowAsync(edit, inputRow, db))
+                        if (!await InsertRowA(edit, inputRow, db))
                             return false;
                     }
                     else
                     {
-                        if (!await UpdateRowAsync(edit, inputRow, db))
+                        if (!await UpdateRowA(edit, inputRow, db))
                             return false;
                     }
                 }//for rows
@@ -812,7 +812,7 @@ namespace Base.Services
             {
                 //recursive call
                 var childJson = GetChildJson(inputJson, i);
-                if (!await SaveJson2Async(levelStr + i, deletes, childJson, edit.Childs[i], db))
+                if (!await SaveJson2A(levelStr + i, deletes, childJson, edit.Childs[i], db))
                     return false;
             }//for childs
             #endregion
@@ -914,7 +914,7 @@ namespace Base.Services
                             #endregion
 
                             //get new key
-                            var key = _Str.NewId();
+                            var key = _Str.NewId(edit.AutoIdLen);
                             inputRow[kid] = key;
                             inputRow[IsNew] = "1";  //string
 
@@ -997,18 +997,18 @@ namespace Base.Services
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public async Task<ResultDto> DeleteAsync(string key)
+        public async Task<ResultDto> DeleteA(string key)
         {
             //check for AuthType=Row if need
             if (_Fun.IsAuthTypeRow())
             {
-                var data = await GetDbRowAsync(_editDto, key);    //return data
+                var data = await GetDbRowA(_editDto, key);    //return data
                 var brError = CheckAuthRow(data, CrudEnum.Delete);
                 if (_Str.NotEmpty(brError))
                     return _Model.GetBrError(brError);
             }
 
-            return await DeleteByKeysAsync(new List<string>() { key });
+            return await DeleteByKeysA(new List<string>() { key });
         }
 
         /// <summary>
@@ -1016,33 +1016,33 @@ namespace Base.Services
         /// </summary>
         /// <param name="keys">row key list</param>
         /// <returns></returns>
-        public async Task<ResultDto> DeleteByKeysAsync(List<string> keys)
+        public async Task<ResultDto> DeleteByKeysA(List<string> keys)
         {
             //check input
-            if (!await _List.CheckKeyAsync(keys))
+            if (!await _List.CheckKeyA(keys))
                 return _Model.GetError();
 
             //transaction or not
             var trans = IsTrans(_editDto);
             var db = GetDb();
             if (trans)
-                await db.BeginTranAsync();
+                await db.BeginTranA();
 
             //set current time(_now)
             SetNow();
 
             var json = new JObject() { [Deletes] = _List.ToStr(keys) };
-            if (!await SaveJson2Async("0", null, json, _editDto, db))
+            if (!await SaveJson2A("0", null, json, _editDto, db))
                 goto lab_error;
 
             if (trans)
-                await db.CommitAsync();
+                await db.CommitA();
             await db.DisposeAsync();
             return new ResultDto();
 
         lab_error:
             if (trans)
-                await db.RollbackAsync();
+                await db.RollbackA();
             await db.DisposeAsync();
             //TODO
             return _Model.GetError();
@@ -1055,7 +1055,7 @@ namespace Base.Services
         /// <param name="keys">can be multi pkey value(consider seperator)</param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        private async Task<bool> DeleteRowsByKeysAsync(EditDto edit, List<string> keys, Db db = null)
+        private async Task<bool> DeleteRowsByKeysA(EditDto edit, List<string> keys, Db db = null)
         {
             //check input
             if (keys == null || keys.Count == 0)
@@ -1081,23 +1081,23 @@ namespace Base.Services
 
             //update db
             var sql = string.Format(_Fun.DeleteRowsSql, edit.Table, kid, values[0..^1]);
-            var count = await db.ExecSqlAsync(sql, _sqlArgs);
+            var count = await db.ExecSqlA(sql, _sqlArgs);
             //if (count == 0)
             //    goto lab_error;
-            await _Fun.CheckCloseDb(db, emptyDb);
+            await _Fun.CheckCloseDbA(db, emptyDb);
 
             //case of ok
             _saveRows += count;
             return true;
         }
 
-        private async Task<List<string>> GetKeysByUpKeysAsync(EditDto edit, List<string> upKeys, Db db)
+        private async Task<List<string>> GetKeysByUpKeysA(EditDto edit, List<string> upKeys, Db db)
         {
             if (upKeys == null || upKeys.Count == 0)
                 return null;
 
             var sql = string.Format("select {0} from {1} where {2} in ({3})", edit.PkeyFid, edit.Table, edit.FkeyFid, _List.ToStr(upKeys, true));
-            return await db.GetStrsAsync(sql);
+            return await db.GetStrsA(sql);
         }
 
     }//class

@@ -39,7 +39,7 @@ where u.Id='{0}'
         /// <param name="sourceId">source row Id(key)</param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> CreateSignRowsAsync(JObject row, string userFid, string flowCode,
+        public static async Task<string> CreateSignRowsA(JObject row, string userFid, string flowCode,
             string sourceId, bool isTest, Db db)
         {
             #region 1.get flow lines by flow code
@@ -62,7 +62,7 @@ join dbo.XpFlowNode nt on l.EndNode=nt.Id
 where f.Code='{0}'
 order by l.StartNode, l.Sort
 ", flowCode);
-            var flowLines = await db.GetModelsAsync<SignLineDto>(sql);
+            var flowLines = await db.GetModelsA<SignLineDto>(sql);
             #endregion
 
             #region 2.get start node id/name
@@ -184,17 +184,17 @@ insert into dbo.{signTable}(
                         case SignerTypeEstr.UserMgr:
                             userType = "User Manager";
                             if (row[userFid] != null)
-                                signerId = await db.GetStrAsync(string.Format(SqlUserMgr, row[userFid].ToString()));
+                                signerId = await db.GetStrA(string.Format(SqlUserMgr, row[userFid].ToString()));
                             break;
                         case SignerTypeEstr.DeptMgr:
                             userType = "Depart Manager";
                             if (line.SignerValue != null)
-                                signerId = await db.GetStrAsync(string.Format(SqlDeptMgr, line.SignerValue));
+                                signerId = await db.GetStrA(string.Format(SqlDeptMgr, line.SignerValue));
                             break;
                         case SignerTypeEstr.Role:
                             userType = "Role";
                             if (line.SignerValue != null)
-                                signerId = await db.GetStrAsync(string.Format(SqlRole, line.SignerValue));
+                                signerId = await db.GetStrA(string.Format(SqlRole, line.SignerValue));
                             break;
                     }
                 }
@@ -206,7 +206,7 @@ insert into dbo.{signTable}(
                 }
 
                 //get signer Name
-                var signerName = await db.GetStrAsync(string.Format(SqlUserName, signerId));
+                var signerName = await db.GetStrA(string.Format(SqlUserName, signerId));
                 if (string.IsNullOrEmpty(signerName))
                 {
                     error = $"SignerId not existed. ({userType}={signerId})";
@@ -215,7 +215,7 @@ insert into dbo.{signTable}(
                 #endregion
 
                 #region 8.insert XpFlowSign/XpFlowSignTest
-                await db.ExecSqlAsync(sql, new List<object>() {
+                await db.ExecSqlA(sql, new List<object>() {
                     "Id", _Str.NewId(),
                     "FlowId", line.FlowId,
                     "SourceId", sourceId,
@@ -366,25 +366,25 @@ insert into dbo.{signTable}(
         /// <param name="signNote">sign note</param>
         /// <param name="sourceTable">source Table for update FlowLevel, FlowStatus columns</param>
         /// <returns>ResultDto for called by controller</returns>
-        public static async Task<ResultDto> SignRowAsync(string flowSignId, bool signYes,
+        public static async Task<ResultDto> SignRowA(string flowSignId, bool signYes,
             string signNote, string sourceTable, bool isTest)
         {
             #region 1.check XpFlowSign/XpFlowSignTest row existed
             Db db = null;
             var error = "";
-            if (!await _Str.CheckKeyAsync(flowSignId))
+            if (!await _Str.CheckKeyA(flowSignId))
             {
                 //error = $"key has wrong char.({flowSignId})";
                 goto lab_error;
             }
 
             db = new Db();
-            await db.BeginTranAsync();
+            await db.BeginTranA();
 
             //get XpFlowSign/XpFlowSignTest row
             var signTable = GetSignTable(isTest);
             var sql = $"select SourceId, FlowLevel, TotalLevel from dbo.{signTable} where Id='{flowSignId}' and SignStatus='0'";
-            var row = await db.GetJsonAsync(sql);
+            var row = await db.GetJsonA(sql);
             if (row == null)
             {
                 error = $"not found {signTable} row.(Id={flowSignId})";
@@ -401,7 +401,7 @@ update dbo.{signTable} set
     SignTime=getDate()
 where Id='{flowSignId}' 
 ";
-            var count = await db.ExecSqlAsync(sql, new List<object>() { "SignStatus", signStatus, "Note", signNote });
+            var count = await db.ExecSqlA(sql, new List<object>() { "SignStatus", signStatus, "Note", signNote });
             if (count != 1)
             {
                 error = "_XpFlow.cs SignRow() failed, should update one row: " + sql;
@@ -427,7 +427,7 @@ update {sourceTable} set
 where Id='{sourceId}'
 ";
             #region case ok error
-            count = await db.ExecSqlAsync(sql);
+            count = await db.ExecSqlA(sql);
             if (count != 1)
             {
                 error = "_XpFlow.cs SignRow() failed, should update one row: " + sql;
@@ -436,7 +436,7 @@ where Id='{sourceId}'
             #endregion
 
             #region case of ok
-            await db.CommitAsync();
+            await db.CommitA();
             await db.DisposeAsync();
 
             return new ResultDto()
@@ -450,7 +450,7 @@ where Id='{sourceId}'
         lab_error:
             if (db != null)
             {
-                await db.RollbackAsync();
+                await db.RollbackA();
                 await db.DisposeAsync();
             }
             return _Model.GetError(error);

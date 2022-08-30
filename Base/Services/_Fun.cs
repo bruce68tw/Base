@@ -40,6 +40,11 @@ namespace Base.Services
         //default pagin rows
         public const int PageRows = 10;
 
+        //default auto Id length
+        public const int AutoIdShort = 6;
+        public const int AutoIdMid = 10;
+        public const int AutoIdLong = 16;
+
         //indicate error
         public const string PreError = "E:";
         public const string PreBrError = "B:";  //_BR code error
@@ -274,7 +279,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// </summary>
         /// <param name="db"></param>
         /// <param name="hasDb"></param>
-        public static async Task CheckCloseDb(Db db, bool hasDb)
+        public static async Task CheckCloseDbA(Db db, bool hasDb)
         {
             if (!hasDb)
                 await db.DisposeAsync();

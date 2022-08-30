@@ -65,14 +65,14 @@ namespace BaseWeb.Services
             };
         }
 
-        public async Task<ResultDto> CreateAsync(JObject json, FnSetNewKeyJson fnSetNewKey)
+        public async Task<ResultDto> CreateA(JObject json, FnSetNewKeyJson fnSetNewKey)
         {
-            return await EditService().CreateAsync(json, fnSetNewKey);
+            return await EditService().CreateA(json, fnSetNewKey);
         }
 
-        public async Task<ResultDto> UpdateAsync(string key, JObject json, FnSetNewKeyJson fnSetNewKey)
+        public async Task<ResultDto> UpdateA(string key, JObject json, FnSetNewKeyJson fnSetNewKey)
         {
-            return await EditService().UpdateAsync(key, json, fnSetNewKey);
+            return await EditService().UpdateA(key, json, fnSetNewKey);
         }
 
     } //class

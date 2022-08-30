@@ -61,14 +61,14 @@ namespace BaseWeb.Services
         /// <param name="childs">IEnumerable for anonymous type</param>
         /// <param name="images"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<bool> ExportByTplRowAsync(string tplPath, string fileName, 
+        public static async Task<bool> ExportByTplRowA(string tplPath, string fileName, 
             dynamic row, List<IEnumerable<dynamic>> childs = null, 
             List <WordImageDto> images = null)
         {
             #region 1.check template file
             if (!File.Exists(tplPath))
             {
-                await _Log.ErrorAsync($"_WebWord.cs ExportByTplRow() no tpl file ({tplPath})");
+                await _Log.ErrorA($"_WebWord.cs ExportByTplRow() no tpl file ({tplPath})");
                 return false;
             }
             #endregion
@@ -89,11 +89,11 @@ namespace BaseWeb.Services
 
                 //4.add images first
                 if (images != null)
-                    mainStr = await wordSet.AddImagesAsync(mainStr, images);
+                    mainStr = await wordSet.AddImagesA(mainStr, images);
 
                 //get word body start/end pos
                 //int bodyStart = 0, bodyEnd = 0; //no start/end tag
-                var bodyTpl = await wordSet.GetBodyTplAsync(mainStr);
+                var bodyTpl = await wordSet.GetBodyTplA(mainStr);
 
                 #region 5.fill row && childs rows
                 var hasChild = (childs != null && childs.Count > 0);
@@ -104,7 +104,7 @@ namespace BaseWeb.Services
                     for (var i = 0; i < childLen; i++)
                     {
                         //int rowStart = 0, rowEnd = 0;
-                        var rowTpl = await wordSet.GetRowTplAsync(bodyTpl.TplStr, i);
+                        var rowTpl = await wordSet.GetRowTplA(bodyTpl.TplStr, i);
                         if (rowTpl.TplStr == "")
                             continue;
 
@@ -145,7 +145,7 @@ namespace BaseWeb.Services
             //_Word.IsDocxValid(docx);
 
             //6.export file by stream
-            await _Web.ExportByStream(ms, fileName);
+            await _Web.ExportByStreamA(ms, fileName);
             return true;
         }
 

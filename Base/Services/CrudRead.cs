@@ -43,10 +43,10 @@ namespace Base.Services
             return _db ?? new Db(_dbStr);
         }
 
-        public async Task<JObject> GetPageAsync(ReadDto readDto, EasyDtDto easyDto, string ctrl = "")
+        public async Task<JObject> GetPageA(ReadDto readDto, EasyDtDto easyDto, string ctrl = "")
         {
             var dtDto = _Model.Copy<EasyDtDto, DtDto>(easyDto);
-            return await GetPageAsync(readDto, dtDto, ctrl);
+            return await GetPageA(readDto, dtDto, ctrl);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Base.Services
         /// <param name="dtDto"></param>
         /// <param name="ctrl">controller name for authorize</param>
         /// <returns>jquery dataTables object</returns>
-        public async Task<JObject> GetPageAsync(ReadDto readDto, DtDto dtDto, string ctrl = "")
+        public async Task<JObject> GetPageA(ReadDto readDto, DtDto dtDto, string ctrl = "")
         {
             #region 1.check input
             dtDto.length = _Page.GetPageRows(dtDto.length);
@@ -81,7 +81,7 @@ namespace Base.Services
 
             //prepare sql where & set sql args by user input condition
             var search = (dtDto.search == null) ? "" : dtDto.search.value;
-            var where = await GetWhereAsync(ctrl, readDto, _Str.ToJson(dtDto.findJson), CrudEnum.Read, search);
+            var where = await GetWhereA(ctrl, readDto, _Str.ToJson(dtDto.findJson), CrudEnum.Read, search);
             if (where == "-1")
                 return _Json.GetError();
             else if(where == "-2")
@@ -104,7 +104,7 @@ namespace Base.Services
                     sqlDto.From + " " +
                     sqlDto.Where +
                     group;
-                var row = await db.GetJsonAsync(sql, _sqlArgs); //for log carrier
+                var row = await db.GetJsonA(sql, _sqlArgs); //for log carrier
                 if (row == null)
                 {
                     rowCount = 0;
@@ -127,7 +127,7 @@ namespace Base.Services
 
             #region 5.get page rows 
             sql = _Sql.DtoToSql(sqlDto, dtDto.start, dtDto.length);
-            rows = await db.GetJsonsAsync(sql, _sqlArgs);
+            rows = await db.GetJsonsA(sql, _sqlArgs);
             #endregion
 
         lab_exit:
@@ -145,13 +145,13 @@ namespace Base.Services
 
         /// <summary>
         /// get page rows for dataTables(json)
-        /// logic same to GetPageAsync()
+        /// logic same to GetPageA()
         /// </summary>
         /// <param name="readDto"></param>
         /// <param name="pageIn"></param>
         /// <param name="ctrl">controller name for authorize</param>
         /// <returns>jquery dataTables object</returns>
-        public async Task<PageOut<T>> GetPage2Async<T>(ReadDto readDto, PageIn pageIn, string ctrl = "") where T : class
+        public async Task<PageOut<T>> GetPage2A<T>(ReadDto readDto, PageIn pageIn, string ctrl = "") where T : class
         {
             #region 1.check input
             /*
@@ -172,7 +172,7 @@ namespace Base.Services
 
             //prepare sql where & set sql args by user input condition
             //var search = (_dtDto.search == null) ? "" : _dtDto.search.value;
-            var where = await GetWhereAsync(ctrl, readDto, _Str.ToJson(pageIn.findJson), CrudEnum.Read);
+            var where = await GetWhereA(ctrl, readDto, _Str.ToJson(pageIn.findJson), CrudEnum.Read);
             if (where == "-1")
                 return _Page.GetError<T>(result);
             else if (where == "-2")
@@ -195,7 +195,7 @@ namespace Base.Services
                     sqlDto.From + " " +
                     sqlDto.Where +
                     group;
-                var row = await db.GetJsonAsync(sql, _sqlArgs); //for log carrier
+                var row = await db.GetJsonA(sql, _sqlArgs); //for log carrier
                 if (row == null)
                 {
                     filterRows = 0;
@@ -220,7 +220,7 @@ namespace Base.Services
 
             #region 5.get page rows 
             sql = _Sql.DtoToSql(sqlDto, (pageIn.page - 1) * pageIn.length, pageIn.length);
-            rows = await db.GetModelsAsync<T>(sql, _sqlArgs);
+            rows = await db.GetModelsA<T>(sql, _sqlArgs);
             if (rows == null)
                 rows = new List<T>();
         #endregion
@@ -264,7 +264,7 @@ namespace Base.Services
         /// <param name="readDto"></param>
         /// <param name="findJson"></param>
         /// <returns></returns>
-        public async Task<JArray> GetExportRowsAsync(string ctrl, ReadDto readDto, JObject findJson)
+        public async Task<JArray> GetExportRowsA(string ctrl, ReadDto readDto, JObject findJson)
         {
             //convert sql to model
             var sql = _Str.IsEmpty(readDto.ExportSql)
@@ -274,7 +274,7 @@ namespace Base.Services
             //    return null;
 
             //prepare sql where, also set _sqlArgs
-            var where = await GetWhereAsync(ctrl, readDto, findJson, CrudEnum.Export);
+            var where = await GetWhereA(ctrl, readDto, findJson, CrudEnum.Export);
             //TODO for -2
             if (where == "-1" || where == "-2")
                 return null;
@@ -294,7 +294,7 @@ namespace Base.Services
 
             //get data
             sql = _Sql.DtoToSql(sqlDto, 0, _Fun.MaxExportCount);
-            return await db.GetJsonsAsync(sql, _sqlArgs);
+            return await db.GetJsonsA(sql, _sqlArgs);
         }
 
         /// <summary>
@@ -305,7 +305,7 @@ namespace Base.Services
         /// <param name="findJson">query condition</param>
         /// <param name="inputSearch">quick search string</param>
         /// <returns>where string, -1(error), -2(timeout cannot get BaseUser for Auth)</returns>
-        private async Task<string> GetWhereAsync(string ctrl, ReadDto readDto, 
+        private async Task<string> GetWhereA(string ctrl, ReadDto readDto, 
             JObject findJson, CrudEnum crudEnum, string inputSearch = "")
         {
             #region set variables
@@ -703,7 +703,7 @@ namespace Base.Services
             return where;
 
         lab_error:
-            await _Log.ErrorAsync("CrudRead.cs GetWhereAsync() failed: " + error);
+            await _Log.ErrorA("CrudRead.cs GetWhereAsync() failed: " + error);
             return "-1";
         }
 
