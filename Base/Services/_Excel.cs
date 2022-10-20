@@ -60,11 +60,8 @@ namespace Base.Services
         /// <returns>error msg if any</returns>
         public static async Task<string> ImportByDocxA(string uiDtFormat, SpreadsheetDocument docx, string insertSql, int[] excelCols, int excelStartRow, bool[] isDates = null, int sheetNo = 0, Db db = null)
         {
-            //var rb = _Locale.RB;
-            var emptyDb = false;
-            _Fun.CheckOpenDb(ref db, ref emptyDb);
-
             //open excel
+            var newDb = _Db.CheckOpenDb(ref db);
             var wbPart = docx.WorkbookPart;
             var ssPart = wbPart.GetPartsOfType<SharedStringTablePart>().First();
             var ssTable = ssPart.SharedStringTable;
@@ -123,7 +120,7 @@ namespace Base.Services
                 }
             }
 
-            await _Fun.CheckCloseDbA(db, emptyDb);
+            await _Db.CheckCloseDbA(db, newDb);
 
             //book = null;    //can not Dispose(), must close by caller
             //sheet = null;
@@ -185,12 +182,9 @@ namespace Base.Services
         /// <param name="dbStr">db property name in config file</param>
         public static async Task DocxBySqlA(string sql, SpreadsheetDocument docx, int srcRowNo, Db db = null)
         {
-            var emptyDb = false;
-            _Fun.CheckOpenDb(ref db, ref emptyDb);
-
+            var newDb = _Db.CheckOpenDb(ref db);
             var rows = await db.GetJsonsA(sql);
-            await _Fun.CheckCloseDbA(db, emptyDb);
-
+            await _Db.CheckCloseDbA(db, newDb);
             DocxByRows(rows, docx, srcRowNo);
         }
 

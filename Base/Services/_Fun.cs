@@ -261,30 +261,6 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return service.GetData() ?? new BaseUserDto();
         }
 
-        /// <summary>
-        /// check and open db
-        /// </summary>
-        /// <param name="db"></param>
-        /// <param name="hasDb"></param>
-        /// <param name="dbStr"></param>
-        public static void CheckOpenDb(ref Db db, ref bool hasDb, string dbStr = "")
-        {
-            hasDb = (db != null);
-            if (!hasDb)
-                db = new Db(dbStr);
-        }
-
-        /// <summary>
-        /// check and close db
-        /// </summary>
-        /// <param name="db"></param>
-        /// <param name="hasDb"></param>
-        public static async Task CheckCloseDbA(Db db, bool hasDb)
-        {
-            if (!hasDb)
-                await db.DisposeAsync();
-        }
-
         public static void Except(string error = "")
         {
             throw new Exception(_Str.EmptyToValue(error, SystemError));

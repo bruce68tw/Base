@@ -114,16 +114,13 @@ namespace Base.Services
             //reset sqlArgs first
             //ResetArg();
 
-            //connect db if need
-            var hasDb = false;
-            _Fun.CheckOpenDb(ref db, ref hasDb, _dbStr);
-
             //return row & close db if need
+            var newDb = _Db.CheckOpenDb(ref db, _dbStr);
             var sql = _Str.IsEmpty(edit.ReadSql)
                 ? GetSql(edit, key)
                 : GetSqlByField(edit, key);
             var row = await db.GetJsonA(sql, _sqlArgs);
-            await _Fun.CheckCloseDbA(db, hasDb);
+            await _Db.CheckCloseDbA(db, newDb);
             return row;
         }
 

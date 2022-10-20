@@ -1064,10 +1064,8 @@ namespace Base.Services
             //reset
             ResetArg();
 
-            var emptyDb = false;
-            _Fun.CheckOpenDb(ref db, ref emptyDb);
-
             //delete rows
+            var newDb = _Db.CheckOpenDb(ref db);
             var values = "";
             //=== case of single pkey ===
             //set sql args
@@ -1084,7 +1082,7 @@ namespace Base.Services
             var count = await db.ExecSqlA(sql, _sqlArgs);
             //if (count == 0)
             //    goto lab_error;
-            await _Fun.CheckCloseDbA(db, emptyDb);
+            await _Db.CheckCloseDbA(db, newDb);
 
             //case of ok
             _saveRows += count;

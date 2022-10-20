@@ -55,9 +55,9 @@ namespace BaseWeb.Services
         /// <param name="srcRowNo"></param>
         /// <param name="dbStr"></param>
         public static async Task ExportBySqlA(string sql, string fileName, string tplPath, 
-            int srcRowNo, string dbStr = "")
+            int srcRowNo)
         {
-            var rows = await _Db.GetJsonsA(sql, null, dbStr);
+            var rows = await _Db.GetJsonsA(sql);
             await ExportByRowsA(rows, fileName, tplPath, srcRowNo);
         }
 

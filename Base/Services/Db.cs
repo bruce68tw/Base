@@ -19,7 +19,7 @@ namespace Base.Services
         private DbTransaction _tran;
 
         //column mapping for update/insert, key-type-欄位序號
-        private List<IdNumDto> _colMap = new();
+        private List<IdNumDto> _colMaps = new();
 
         //status
         private bool _status;    //db status
@@ -207,7 +207,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorA($"_cmd.ExecuteReader() error: {GetSqlText(sql)}, {ex.Message}\n");
+                await _Log.ErrorA($"_cmd.ExecuteReaderAsync() error: {GetSqlText(sql)}, {ex.Message}\n");
                 return null;
             }
         }
@@ -266,13 +266,22 @@ namespace Base.Services
             if (reader == null)
                 return null;
 
-            //read db rows into JArray
-            var rows = new JArray();
-            while (reader.Read())
-                rows.Add(ReaderGetJson(reader));
+            try
+            {
+                //read db rows into JArray
+                var rows = new JArray();
+                while (reader.Read())
+                    rows.Add(ReaderGetJson(reader));
 
-            reader.Close();
-            return (rows.Count == 0) ? null : rows;
+                reader.Close();
+                return (rows.Count == 0) ? null : rows;
+            }
+            catch (Exception ex)
+            {
+                await _Log.ErrorA($"Db.cs GetJsonsA() failed: {ex.Message}");
+                return null;
+            }
+
         }
         #endregion
 
@@ -372,7 +381,7 @@ namespace Base.Services
             {
                 //_Fun.DbStatus = false;
                 status = false;
-                var error = "Db.GetModelsAsync() error:(field=" + errorFid + ") " + GetSqlText(sql) + ", " + ex2.Message;
+                var error = "Db.GetModelsA() error:(field=" + errorFid + ") " + GetSqlText(sql) + ", " + ex2.Message;
                 await _Log.ErrorA(error);
             }
 
@@ -391,10 +400,10 @@ namespace Base.Services
             //var dtFormat = _Fun.DbDtFormat;
             var dtFormat = _Fun.CsDtFmt;
             var row = new JObject();
-            for (var i = 0; i < _colMap.Count; i++)
+            for (var i = 0; i < _colMaps.Count; i++)
             {
-                var fid = _colMap[i].Id;
-                var type = _colMap[i].Num;
+                var fid = _colMaps[i].Id;
+                var type = _colMaps[i].Num;
                 row[fid] = reader.IsDBNull(i) ? "" :
                     //(type == DataTypeEnum.Datetime) ? reader.GetDateTime(i).ToString(dtFormat) :
                     (type == DataTypeEnum.Date) ? reader.GetDateTime(i).ToString(dtFormat) :
@@ -408,7 +417,7 @@ namespace Base.Services
         //set _colMap, also call this method when initial reader
         private void SetColMap(IDataReader reader)
         {
-            _colMap.Clear();    // = new ListJObject();  //reset
+            _colMaps.Clear();    // = new ListJObject();  //reset
             //var keys = new List<string>();
             var colLen = reader.FieldCount;
             //string type;//, type2fid = "";
@@ -428,7 +437,7 @@ namespace Base.Services
                 else
                     type = DataTypeEnum.Other;
 
-                _colMap.Add(new IdNumDto()
+                _colMaps.Add(new IdNumDto()
                 {
                     Id = reader.GetName(i),
                     Num = type,
@@ -454,7 +463,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorA($"_cmd.ExecuteReader() error: {GetSqlText(sql)}, {ex.Message}");
+                await _Log.ErrorA($"_cmd.ExecuteReaderAsync() error: {GetSqlText(sql)}, {ex.Message}");
                 return null;
             }
         }
@@ -477,7 +486,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorA($"Db.UpdateDb() error: {ex.Message}\nsql: {GetSqlText(sql)}");
+                await _Log.ErrorA($"Db.ExecSqlA() error: {ex.Message}\nsql: {GetSqlText(sql)}");
                 return 0;
             }
         }

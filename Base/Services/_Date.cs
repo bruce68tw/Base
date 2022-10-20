@@ -47,7 +47,7 @@ namespace Base.Services
             }
             catch(Exception ex)
             {
-                error = "_Date.StrDiffDay() failed: " + ex.Message;
+                error = "_Date.StrDayDiff() failed: " + ex.Message;
                 return 0;
             }
         }
@@ -325,6 +325,8 @@ namespace Base.Services
         {
             if (_Str.IsEmpty(dt))
                 return null;
+            if (dt.Length <= 10)
+                dt += " 00:00:00";
 
             DateTime.TryParseExact(dt, _Fun.CsDtFmt, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt2);
             return dt2;
@@ -335,32 +337,26 @@ namespace Base.Services
         {
             var dt2 = CsToDt(dt);
             return (dt2 == null)
-                ? (DateTime?)null : dt2.Value.Date;
+                ? null : dt2.Value.Date;
         }
 
         public static string GetDtStr(DateTime? dt)
         {
-            if (dt == null)
-                return "";
-
-            return dt.Value.ToString(_Fun.CsDtFmt);
+            return (dt == null)
+                ? "" : dt.Value.ToString(_Fun.CsDtFmt);
         }
 
         //no sec
         public static string GetDtStr2(DateTime? dt)
         {
-            if (dt == null)
-                return "";
-
-            return dt.Value.ToString(_Fun.CsDtFmt2);
+            return (dt == null)
+                ? "" : dt.Value.ToString(_Fun.CsDtFmt2);
         }
 
         public static string GetDtStr3(DateTime? dt)
         {
-            if (dt == null)
-                return "";
-
-            return dt.Value.ToString("yyyy/MM/dd HH:mm:ss-fff");
+            return (dt == null)
+                ? "" : dt.Value.ToString("yyyy/MM/dd HH:mm:ss-fff");
         }
 
         /// <summary>
@@ -375,8 +371,7 @@ namespace Base.Services
 
             var pos = dt.IndexOf(" ");
             return (pos <= 0)
-                ? dt
-                : dt[..pos];
+                ? dt : dt[..pos];
         }
 
         /*

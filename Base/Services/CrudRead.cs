@@ -389,7 +389,7 @@ namespace Base.Services
                         if (hasDate1 && hasDate2)  //case of has 2nd field, then query start/end
                         {
                             itemWhere = $"({col} is Null Or {col} Between @{item.Fid} And @{fid2})";
-                            AddArg(item.Fid, _Date.CsToDt(value.ToString() + " 00:00:00"));
+                            AddArg(item.Fid, _Date.CsToDt(value.ToString()));
                             AddArg(fid2, _Date.CsToDt(findJson[fid2].ToString() + " 23:59:59"));
                         }
                         else if (hasDate1)  //has start date, then query this date after

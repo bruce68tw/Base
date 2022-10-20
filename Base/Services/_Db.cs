@@ -10,40 +10,83 @@ namespace Base.Services
     /// </summary>
     public class _Db
     {
-        #region GetJson(s)
-        public static async Task<JObject> GetJsonA(string sql, List<object> args = null, string dbStr = "")
+        /// <summary>
+        /// check and open db
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="hasDb"></param>
+        /// <param name="dbStr"></param>
+        /// <returns>true(new open db)</returns>
+        public static bool CheckOpenDb(ref Db db, string dbStr = "")
         {
-            var rows = await GetJsonsA(sql, args, dbStr);
-            return (rows == null || rows.Count == 0) ? null : (JObject)rows[0];
+            var newDb = (db == null);
+            if (newDb)
+                db = new Db(dbStr);
+            return newDb;
         }
 
-        public static async Task<JArray> GetJsonsA(string sql, List<object> args = null, string dbStr = "")
+        /// <summary>
+        /// check and close db
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="newDb">true(new open db)</param>
+        public static async Task CheckCloseDbA(Db db, bool newDb)
         {
-            return await new Db(dbStr).GetJsonsA(sql, args);
+            if (newDb)
+                await db.DisposeAsync();
+        }
+
+        #region GetJson(s)
+        public static async Task<JObject> GetJsonA(string sql, List<object> args = null, Db db = null)
+        {
+            var newDb = CheckOpenDb(ref db);
+            var rows = await GetJsonsA(sql, args, db);
+            await CheckCloseDbA(db, newDb);
+            return (rows == null || rows.Count == 0) 
+                ? null : (JObject)rows[0];
+        }
+
+        public static async Task<JArray> GetJsonsA(string sql, List<object> args = null, Db db = null)
+        {
+            var newDb = CheckOpenDb(ref db);
+            var rows = await db.GetJsonsA(sql, args);
+            await CheckCloseDbA(db, newDb);
+            return rows;
         }
         #endregion        
 
         #region GetModel(s)
-        public static async Task<T> GetModelA<T>(string sql, List<object> args = null, string dbStr = "")
+        public static async Task<T> GetModelA<T>(string sql, List<object> args = null, Db db = null)
         {
-            var rows = await GetModelsA<T>(sql, args, dbStr);
+            var newDb = CheckOpenDb(ref db);
+            var rows = await GetModelsA<T>(sql, args, db);
+            await CheckCloseDbA(db, newDb);
             return (rows == null || rows.Count == 0) ? default(T) : rows[0];
         }
-        public static async Task<List<T>> GetModelsA<T>(string sql, List<object> args = null, string dbStr = "")
+        public static async Task<List<T>> GetModelsA<T>(string sql, List<object> args = null, Db db = null)
         {
-            return await new Db(dbStr).GetModelsA<T>(sql, args);
+            var newDb = CheckOpenDb(ref db);
+            var rows = await db.GetModelsA<T>(sql, args);
+            await CheckCloseDbA(db, newDb);
+            return rows;
         }
         #endregion
 
         #region get string
-        public static async Task<string> GetStrA(string sql, List<object> args = null, string dbStr = "")
+        public static async Task<string> GetStrA(string sql, List<object> args = null, Db db = null)
         {
-            return await new Db(dbStr).GetStrA(sql, args);
+            var newDb = CheckOpenDb(ref db);
+            var result = await db.GetStrA(sql, args);
+            await CheckCloseDbA(db, newDb);
+            return result;
         }
 
-        public static async Task<List<string>> GetStrsA(string sql, List<object> args = null, string dbStr = "")
+        public static async Task<List<string>> GetStrsA(string sql, List<object> args = null, Db db = null)
         {
-            return await new Db(dbStr).GetStrsA(sql, args);
+            var newDb = CheckOpenDb(ref db);
+            var result = await db.GetStrsA(sql, args);
+            await CheckCloseDbA(db, newDb);
+            return result;
         }
         #endregion
 
@@ -75,26 +118,30 @@ order by Sort";
         //get codes from sql 
         public static async Task<List<IdStrDto>> SqlToCodesA(string sql, Db db = null)
         {
-            var emptyDb = false;
-            _Fun.CheckOpenDb(ref db, ref emptyDb);
-
+            var newDb = CheckOpenDb(ref db);
             var rows = await db.GetModelsA<IdStrDto>(sql);
-            await _Fun.CheckCloseDbA(db, emptyDb);
+            await CheckCloseDbA(db, newDb);
             return rows;
         }
         #endregion
 
         //update
-        public static async Task<int> ExecSqlA(string sql, List<object> args = null, string dbStr = "")
+        public static async Task<int> ExecSqlA(string sql, List<object> args = null, Db db = null)
         {
-            return await new Db(dbStr).ExecSqlA(sql, args);
+            var newDb = CheckOpenDb(ref db);
+            var result = await db.ExecSqlA(sql, args);
+            await CheckCloseDbA(db, newDb);
+            return result;
+            //return await new Db(dbStr).ExecSqlA(sql, args);
         }
 
+        /*
         //set row Status column to true/false
         public static async Task<bool> SetRowStatusA(string table, string kid, object kvalue, bool status, string statusId = "Status", string where = "", string dbStr = "")
         {
             return await new Db(dbStr).SetRowStatus(table, kid, kvalue, status, statusId, where);
         }
+        */
 
     }//class
 }
