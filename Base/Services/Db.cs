@@ -317,8 +317,8 @@ namespace Base.Services
         public async Task<string> GetStrA(string sql, List<object> sqlArgs = null)
         {
             var list = await GetStrsA(sql, sqlArgs);
-            //return (list == null) ? null : list[0];
-            return list[0];
+            return (list == null) ? null : list[0];
+            //return list[0];
         }
 
         public async Task<List<string>> GetStrsA(string sql, List<object> sqlArgs = null)

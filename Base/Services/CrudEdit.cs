@@ -126,21 +126,22 @@ namespace Base.Services
         }
 
         //parse foreign key
-        private int ParseFkey(JObject row)
+        private int GetFkeyIndex(JObject row)
         {
-            return ParseCol(row, FkeyFid);
+            return GetKeyIndex(row, FkeyFid);
         }
 
         /// <summary>
-        /// parse column for PkCol, FkCol
+        /// for Pkey/Fkey, 讀取欄位序號, 新增資料時, Key欄位會存入上一層的資料序號, 在後端寫入
+        /// 如果欄位內容不為數字則表示為正常key value
         /// </summary>
         /// <param name="row"></param>
-        /// <param name="col"></param>
-        /// <returns>-1(error), 0(right key), n(new key)</returns>
-        private int ParseCol(JObject row, string col)
+        /// <param name="kid">key field id</param>
+        /// <returns>-1(error/not found), 0(正常key值), n(new key)</returns>
+        private int GetKeyIndex(JObject row, string kid)
         {
-            return _Object.IsEmpty(row[col]) ? -1 :
-                Int32.TryParse(row[col].ToString(), out int num) ? num : 
+            return _Object.IsEmpty(row[kid]) ? -1 :
+                Int32.TryParse(row[kid].ToString(), out int num) ? num : 
                 0;
         }
 
@@ -152,7 +153,7 @@ namespace Base.Services
         /// <returns></returns>
         private bool IsNewKey(JObject row, string kid)
         {
-            return ParseCol(row, kid) > 0;
+            return GetKeyIndex(row, kid) > 0;
         }
 
         /// <summary>
@@ -165,7 +166,13 @@ namespace Base.Services
             return (row[IsNew] != null && row[IsNew].ToString() == "1");
         }
 
-        private bool HasField(JObject row, string kid)
+        /// <summary>
+        /// 檢查是否存在任何欄位(不含特殊欄位和主鍵欄位)
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="kid">主鍵欄位</param>
+        /// <returns></returns>
+        private bool HasInputField(JObject row, string kid)
         {
             if (row == null)
                 return false;
@@ -625,7 +632,7 @@ namespace Base.Services
         {
             //return error if empty key
             if (_Str.IsEmpty(key))
-                return _Model.GetError("CrudEdit.cs Update() failed: key is empty.");
+                return _Model.GetError("CrudEdit.cs UpdateA() failed: key is empty.");
 
             //check for AuthType=Row if need
             if (_Fun.IsAuthTypeRow())
@@ -671,13 +678,16 @@ namespace Base.Services
                 goto lab_error;
             }
 
-            //set new key
+            //set new key if need
             //addFunName = false;
-            error = (fnSetNewKeyJson == null)
-                ? SetNewKeyJson(inputJson, _editDto)
-                : fnSetNewKeyJson(this, inputJson, _editDto);
-            if (_Str.NotEmpty(error))
-                goto lab_error;
+            if (_editDto.AutoIdLen > 0)
+            {
+                error = (fnSetNewKeyJson == null)
+                    ? SetNewKeyJson(inputJson, _editDto)
+                    : fnSetNewKeyJson(this, inputJson, _editDto);
+                if (_Str.NotEmpty(error))
+                    goto lab_error;
+            }
 
             //transaction if need
             db = GetDb();
@@ -789,7 +799,7 @@ namespace Base.Services
 
                     //insert/update this
                     var inputRow = inputRow0 as JObject;
-                    if (!HasField(inputRow, kid))
+                    if (!HasInputField(inputRow, kid))
                         continue;
 
                     if (IsNewRow(inputRow))
@@ -826,17 +836,22 @@ namespace Base.Services
             return _newKeyJson;
         }
 
-        //return error msg if any
+        /// <summary>
+        /// set new key & _newKeyJson variables
+        /// </summary>
+        /// <param name="inputJson"></param>
+        /// <param name="edit"></param>
+        /// <returns>return error msg if any</returns>
         public string SetNewKeyJson(JObject inputJson, EditDto edit)
         {
             return SetNewKeyJson2("0", null, inputJson, edit);
         }
 
         /// <summary>
-        /// (recursive)set new key json(_newKeyJson), called by SetNewKey()
+        /// (recursive)set new key(寫入inputJson), called by SetNewKey()
         /// </summary>
         /// <param name="levelStr">level concat string, ex:0,00,012</param>
-        /// <param name="upNewKey">empty for level0, string for level1, JObject for level2...
+        /// <param name="upNewKey">empty for level0, string for level1, JObject for level2 after(f+idx=value)
         /// <param name="edit"></param>
         /// <param name="inputJson">JObject for level0, JArray for level1/2</param>
         /// <returns>error msg if any</returns>
@@ -864,10 +879,10 @@ namespace Base.Services
 
                     //insert/update this
                     var inputRow = inputRow0 as JObject;
-                    if (HasField(inputRow, kid))
+                    if (HasInputField(inputRow, kid))
                     {
                         //adjust pkeyIdx if need
-                        var pkeyIdx = ParseCol(inputRow, kid);
+                        var pkeyIdx = GetKeyIndex(inputRow, kid);
                         if (pkeyIdx < 0)
                         {
                             //< 0 means empty pkey, main edit allows empty pkey
@@ -875,25 +890,25 @@ namespace Base.Services
                                 pkeyIdx = 1;    //adjust, let it be new
                             else
                             {
-                                error = $"can not get PkeyFid ({edit.PkeyFid})";
+                                error = $"no PkeyFid ({edit.PkeyFid})";
                                 goto lab_error;
                             }
                         }
 
                         //case of insert row
-                        if (pkeyIdx != 0)
+                        if (pkeyIdx > 0)
                         {
                             #region set foreign key value for not level0
                             if (!isLevel0)
                             {
-                                var fkeyIdx = ParseFkey(inputRow);
+                                var fkeyIdx = GetFkeyIndex(inputRow);
                                 if (fkeyIdx < 0)
                                 {
                                     if (levelLen == 2)
                                         fkeyIdx = 1;    //adjust
                                     else
                                     {
-                                        error = $"can not get FkeyFid ({edit.FkeyFid})";
+                                        error = $"no FkeyFid ({edit.FkeyFid})";
                                         goto lab_error;
                                     }
                                 }
@@ -972,7 +987,7 @@ namespace Base.Services
 
                 //has row need set or not
                 var row = row0 as JObject;
-                var keyIndex = ParseCol(row, fid);
+                var keyIndex = GetKeyIndex(row, fid);
                 if (keyIndex > 0)
                 {
                     if (json == null)
