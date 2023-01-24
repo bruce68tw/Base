@@ -1,0 +1,14 @@
+﻿namespace Base.Services
+{
+    public abstract class Cache0Service
+    {
+
+        public abstract string GetStr(string key);
+
+        public abstract bool SetStr(string key, string value);
+
+        public abstract bool DeleteKey(string key);
+
+        //Task FlushDbA();
+    }
+}

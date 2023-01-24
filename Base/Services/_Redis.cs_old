@@ -6,11 +6,12 @@ namespace Base.Services
 {
     /// <summary>
     /// use StackExchange Redis currently
+    /// 配合 memoryCache, 使用同步取值
     /// </summary>
     public static class _Redis
     {
         private static readonly ConnectionMultiplexer _redis;
-        private static readonly IDatabase _db;   //current database
+        private static readonly IDatabase _db;   //current redis database
 
         //constructor
         static _Redis()
@@ -38,33 +39,34 @@ namespace Base.Services
         /// </summary>
         /// <param name="key"></param>
         /// <returns>null if not found</returns>
-        public static async Task<string> GetStrA(string key)
+        public static string GetStr(string key)
         {
             if (!IsOk())
                 return null;
 
-            var value = await _db.StringGetAsync(key);
+            var value = _db.StringGet(key);
             return (value.IsNull)
                 ? null
                 : value.ToString();
         }
 
-        public static async Task<bool> SetStrA(string key, string value)
+        public static bool SetStr(string key, string value)
         {
             if (!IsOk())
                 return false;
 
-            return await _db.StringSetAsync(key, value);
+            return _db.StringSet(key, value);
         }
 
-        public static async Task<bool> DeleteKeyA(string key)
+        public static bool DeleteKey(string key)
         {
             if (!IsOk())
                 return false;
 
-            return await _db.KeyDeleteAsync(key);
+            return _db.KeyDelete(key);
         }
 
+        /*
         /// <summary>
         /// delete all keys in current database index
         /// </summary>
@@ -76,6 +78,7 @@ namespace Base.Services
             var server = _redis.GetServer(_redis.GetEndPoints()[0]);
             await server.FlushDatabaseAsync();
         }
+        */
 
     }//class
 }

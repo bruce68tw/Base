@@ -76,23 +76,24 @@ namespace Base.Services
         public static async Task<string> GetAuthStrsA(string userId)
         {
             string sql;
-            List<IdStrDto> rows;
+            //List<IdStrDto> rows;
             switch (_Fun.AuthType)
             {
                 case AuthTypeEnum.Ctrl:
                     //return format: code,...
                     sql = @"
 select distinct 
-    p.Code as Id
+    p.Code
 from XpRoleProg rp
 join XpUserRole ur on rp.RoleId=ur.RoleId
 join XpProg p on rp.ProgId=p.Id
 where ur.UserId=@UserId
 ";
-                    rows = await _Db.GetModelsA<IdStrDto>(sql, new List<object>() { "UserId", userId });
-                    return (rows == null || rows.Count == 0)
+                    //rows = await _Db.GetModelsA<IdStrDto>(sql, new(){ "UserId", userId });
+                    var list = await _Db.GetStrsA(sql, new(){ "UserId", userId });
+                    return (list == null || list.Count == 0)
                         ? ""
-                        : "," + _List.ToStr(rows.Select(a => a.Id).ToList()) + ",";
+                        : "," + _List.ToStr(list) + ",";
 
                 case AuthTypeEnum.Action:
                 case AuthTypeEnum.Row:
@@ -119,7 +120,7 @@ join XpProg p on rp.ProgId=p.Id
 where ur.UserId=@UserId
 group by p.Code
 ";
-                    rows = await _Db.GetModelsA<IdStrDto>(sql, new List<object>() { "UserId", userId });
+                    var rows = await _Db.GetModelsA<IdStrDto>(sql, new(){ "UserId", userId });
                     return (rows == null || rows.Count == 0)
                         ? ""
                         : "," + _List.ToStr(rows.Select(a => a.Id + ":" + a.Str).ToList()) + ",";

@@ -23,6 +23,9 @@ namespace Base.Models
         //query condition json in string type
         public string findJson { get; set; }
 
+        //優先考慮 sort 欄位, 內容為: A/D + fid, ex:Au.Account
+        public string sort { get; set; }
+
         //search word
         public DtSearchDto search { get; set; }
 

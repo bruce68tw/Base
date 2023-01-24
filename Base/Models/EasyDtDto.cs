@@ -11,6 +11,7 @@
             length = 10;
             recordsFiltered = -1;
             findJson = "";
+            sort = "";
         }
 
         //Draw counter, jQuery Datatables need for control async ajax sequence
@@ -27,6 +28,9 @@
 
         //query condition json in string type
         public string findJson { get; set; }
+
+        //A/D + fid, ex:Au.Account
+        public string sort { get; set; }
 
         //search word
         //public DtSearchDto search { get; set; }

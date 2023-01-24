@@ -81,7 +81,7 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// get prog menu by session, called by _Layout.cshtml for show menu
+        /// get prog menu from session, called by _Layout.cshtml for show menu
         /// </summary>
         /// <param name="locale">consider multiple language if not empty</param>
         /// <returns></returns>
@@ -117,7 +117,7 @@ namespace BaseApi.Services
                     return data;
             }
 
-            //read Prog
+            //get Program name from XpProg
             var sql = $@"
 select Code, Name, Url, Sort
 from dbo.XpProg

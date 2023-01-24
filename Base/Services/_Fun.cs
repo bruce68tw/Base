@@ -15,12 +15,19 @@ namespace Base.Services
         //hidden input for CRSF
         //public const string HideKey = "_hideKey";
 
-        //system session name
-        public const string Rows = "_rows";         //rows fid for CrudEdit
-        public const string Childs = "_childs";     //childs fid for CrudEdit
+        //crud update/view for AuthType=Data only in xxxEdit.cs
+        public const string FidUser = "_userId";
+        public const string FidDept = "_deptId";
 
-        public const string BaseUser = "_BaseUser";         //base user info
-        public const string ProgAuthStrs = "_ProgAuthStrs"; //program autu string list
+        //session timeout(or not login), map to _BR.js
+        public const string FidTimeOut = "TimeOut";
+
+        //system session name
+        public const string FidRows = "_rows";         //rows fid for CrudEdit
+        public const string FidChilds = "_childs";     //childs fid for CrudEdit
+
+        public const string FidBaseUser = "_BaseUser";         //base user info
+        //public const string ProgAuthStrs = "_ProgAuthStrs"; //program autu string list
 
         //c# datetime format, when js send to c#, will match to _fun.MmDtFmt
         public const string CsDtFmt = "yyyy/MM/dd HH:mm:ss";
@@ -29,13 +36,6 @@ namespace Base.Services
         //carrier
         public const string TextCarrier = "\r\n";     //for string
         public const string HtmlCarrier = "<br>";     //for html
-
-        //crud update/view for AuthType=Data only in xxxEdit.cs
-        public const string UserFid = "_userId";
-        public const string DeptFid = "_deptId";
-
-        //session timeout(or not login), map to _BR.js
-        public const string TimeOutFid = "TimeOut";
 
         //default pagin rows
         public const int PageRows = 10;
@@ -60,13 +60,16 @@ namespace Base.Services
         public static string HideRwd = "xg-hide-rwd";
         #endregion
 
-        #region variables which PG can change
+        #region variables PG can modify
+        //session timeout(unit: minutes)
+        public static int TimeOut = 120;
+
         //max export rows count
         public static int MaxExportCount = 3000;
 
         //crud read for AuthType=Data only in xxxRead.cs
-        public static string WhereUserFid = "u.Id='{0}'";
-        public static string WhereDeptFid = "u.DeptId='{0}'";
+        public static string UserEqual = "u.Id='{0}'";
+        public static string DeptEqual = "u.DeptId='{0}'";
 
         public static string SystemError = "System Error, Please Contact Administrator.";
         #endregion
@@ -85,7 +88,7 @@ namespace Base.Services
         public static AuthTypeEnum AuthType;
         #endregion
 
-        #region base varibles
+        #region dir varibles
         //ap physical path, has right slash
         public static string DirRoot = _Str.GetLeft(AppDomain.CurrentDomain.BaseDirectory, "bin" + DirSep);
 

@@ -80,6 +80,12 @@
         public string Redis { get; set; }
 
         /// <summary>
+        /// for CORS, 逗號分隔
+        /// empty for memory cache
+        /// </summary>
+        public string AllowOrigins { get; set; }
+
+        /// <summary>
         /// google client Id for oAuth2
         /// </summary>
         public string GoogleClientId { get; set; }

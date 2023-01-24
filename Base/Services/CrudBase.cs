@@ -58,7 +58,7 @@ namespace Base.Services
         //clear argument
         protected void ResetArg()
         {
-            _sqlArgs = new List<object>();
+            _sqlArgs = new();
         }
 
         //get where by pkey for query 1st table & updata tables, set sql args at the same time
@@ -163,7 +163,7 @@ namespace Base.Services
                 var keys = new List<string>() { key };
                 for (var i = 0; i < editChilds.Length; i++)
                     childs.Add(await GetChildDbJsonA(1, editChilds[i], keys, db));
-                data[_Fun.Childs] = childs;
+                data[_Fun.FidChilds] = childs;
             }
             
         lab_exit:
@@ -180,12 +180,12 @@ namespace Base.Services
             var range = _XgProg.GetAuthRange(_Fun.GetBaseUser().ProgAuthStrs, _ctrl, crudEnum);
             if (range == AuthRangeEnum.User)
             {
-                if (!_Json.IsFidEqual(row, _Fun.UserFid, _Fun.UserId()))
+                if (!_Json.IsFidEqual(row, _Fun.FidUser, _Fun.UserId()))
                     return "NoAuthUser";
             }
             else if (range == AuthRangeEnum.Dept)
             {
-                if (!_Json.IsFidEqual(row, _Fun.DeptFid, _Fun.DeptId()))
+                if (!_Json.IsFidEqual(row, _Fun.FidDept, _Fun.DeptId()))
                     return "NoAuthDept";
             }
 
@@ -213,7 +213,7 @@ namespace Base.Services
                 return null;
 
             //prepare return data
-            var data = new JObject() { [_Fun.Rows] = rows };
+            var data = new JObject() { [_Fun.FidRows] = rows };
 
             //get childs json list(recursive)
             var editChilds = edit.Childs;
@@ -223,7 +223,7 @@ namespace Base.Services
                 var childs = new JArray();
                 for (var i = 0; i < editChilds.Length; i++)
                     childs.Add(await GetChildDbJsonA(editLevel + 1, editChilds[i], keys, db));
-                data[_Fun.Childs] = childs;
+                data[_Fun.FidChilds] = childs;
             }
             return data;
         }

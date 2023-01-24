@@ -261,7 +261,7 @@ namespace Base.Services
         /// <param name="upJson">input row</param>
         /// <param name="childIdx">child index</param>
         /// <returns>JArray</returns>
-        public static JArray GetChildRows(JObject upJson, int childIdx, string fidRows = _Fun.Rows, string fidChilds = _Fun.Childs)
+        public static JArray GetChildRows(JObject upJson, int childIdx, string fidRows = _Fun.FidRows, string fidChilds = _Fun.FidChilds)
         {
             var child = GetChildJson(upJson, childIdx, fidChilds);
             return (child == null || child[fidRows] == null)
@@ -275,7 +275,7 @@ namespace Base.Services
         /// <param name="upJson"></param>
         /// <param name="childIdx"></param>
         /// <returns></returns>
-        public static JObject GetChildJson(JObject upJson, int childIdx, string fidChilds = _Fun.Childs)
+        public static JObject GetChildJson(JObject upJson, int childIdx, string fidChilds = _Fun.FidChilds)
         {
             if (upJson == null || upJson[fidChilds] == null)
                 return null;

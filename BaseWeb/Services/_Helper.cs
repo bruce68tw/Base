@@ -291,7 +291,7 @@ namespace BaseWeb.Services
                 //vertical
                 labelClass += " xg-vlabel";
                 result = string.Format(@"
-<div class='col-md-{0} xg-row'>
+<div class='col-md-{0} zz_xg-row'>
     <div class='{4}'{1}>{2}</div>
     <div class='xg-input'>
         {3}

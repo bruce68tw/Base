@@ -85,7 +85,7 @@ namespace Base.Services
             if (where == "-1")
                 return _Json.GetError();
             else if(where == "-2")
-                return _Json.GetBrError(_Fun.TimeOutFid);
+                return _Json.GetBrError(_Fun.FidTimeOut);
 
             if (where != "")
                 sqlDto.Where = (sqlDto.Where == "") 
@@ -117,12 +117,21 @@ namespace Base.Services
             #endregion
 
             #region 4.sql add sorting
-            var orderColumn = (dtDto.order == null || dtDto.order.Count == 0) 
-                ? -1 : dtDto.order[0].column;
-            if (orderColumn >= 0)
-                sqlDto.Order = "Order By " + 
-                    sqlDto.Columns[orderColumn].Trim() + 
-                    (dtDto.order[0].dir == OrderTypeEnum.Asc ? "" : " Desc");
+            //優先考慮 sort 欄位, 內容為: A/D+fid, ex:Au.Account
+            if (_Str.IsEmpty(dtDto.sort))
+            {
+                var orderColumn = (dtDto.order == null || dtDto.order.Count == 0)
+                    ? -1 : dtDto.order[0].column;
+                if (orderColumn >= 0)
+                    sqlDto.Order = "Order By " +
+                        sqlDto.Columns[orderColumn].Trim() +
+                        (dtDto.order[0].dir == OrderTypeEnum.Asc ? "" : " Desc");
+            }
+            else
+            {
+                sqlDto.Order = "Order By " + dtDto.sort[1..] + 
+                    (dtDto.sort[..1] == "D" ? " Desc" : "");
+            }
             #endregion
 
             #region 5.get page rows 
@@ -176,7 +185,7 @@ namespace Base.Services
             if (where == "-1")
                 return _Page.GetError<T>(result);
             else if (where == "-2")
-                return _Page.GetBrError<T>(result, _Fun.TimeOutFid);
+                return _Page.GetBrError<T>(result, _Fun.FidTimeOut);
 
             if (where != "")
                 sqlDto.Where = (sqlDto.Where == "")

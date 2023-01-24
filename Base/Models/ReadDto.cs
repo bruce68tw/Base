@@ -37,12 +37,12 @@ namespace Base.Models
         /// <summary>
         /// (for AuthType=Data only) user fid, default to _Fun.FindUserFid
         /// </summary>
-        public string WhereUserFid = _Fun.WhereUserFid;
+        public string WhereUserFid = _Fun.UserEqual;
 
         /// <summary>
         /// (for AuthType=Data only) dept fid, default to _Fun.FindDeptFid
         /// </summary>
-        public string WhereDeptFid = _Fun.WhereDeptFid;
+        public string WhereDeptFid = _Fun.DeptEqual;
 
         /// <summary>
         /// for quick search, include table alias, will get like %xx% query

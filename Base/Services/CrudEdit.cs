@@ -78,10 +78,10 @@ namespace Base.Services
         /// <returns>JArray</returns>
         private JArray JsonToRows(JObject json)
         {
-            if (json == null || json[_Fun.Rows] == null)
+            if (json == null || json[_Fun.FidRows] == null)
                 return null;
 
-            var rows = json[_Fun.Rows] as JArray;
+            var rows = json[_Fun.FidRows] as JArray;
             return (rows.Count == 0)
                 ? null
                 : rows;
@@ -153,7 +153,7 @@ namespace Base.Services
         /// <returns></returns>
         private bool IsNewKey(JObject row, string kid)
         {
-            return GetKeyIndex(row, kid) > 0;
+            return GetKeyIndex(row, kid) < 0;
         }
 
         /// <summary>
@@ -436,7 +436,7 @@ namespace Base.Services
             if (json == null)
                 return "";
 
-            //validate this
+            //validate this rows
             string error;
             JArray rows = JsonToRows(json);
             if (rows != null)
@@ -484,15 +484,19 @@ namespace Base.Services
             if (IsNewKey(row, edit.PkeyFid))
             {
                 //check required
-                foreach (var fid in edit._FidRequires)
+                if (edit._FidRequires != null)
                 {
-                    if (_Object.IsEmpty(row[fid]))
-                        return "field is required for insert.(" + edit.Table + "." + fid + ")";
+                    foreach (var fid in edit._FidRequires)
+                    {
+                        if (_Object.IsEmpty(row[fid]))
+                            return "field is required for insert.(" + edit.Table + "." + fid + ")";
+                    }
                 }
             }
             else
             {
                 //check required
+                var  required = edit._FidRequires != null;
                 foreach (var item in row)
                 {
                     //底線欄位不檢查是否存在DB
@@ -505,7 +509,7 @@ namespace Base.Services
                         return string.Format("input field is wrong ({0}.{1})", edit.Table, fid);
 
                     //check required
-                    if (_Object.IsEmpty(row[fid]) && edit._FidRequires.Contains(fid))
+                    if (required && _Object.IsEmpty(row[fid]) && edit._FidRequires.Contains(fid))
                         return "field is required for update.(" + edit.Table + "." + fid + ")";
                 }
             }
@@ -785,8 +789,8 @@ namespace Base.Services
                 return true;
 
             #region insert/update this rows
-            var inputRows = (inputJson[_Fun.Rows] == null)
-                ? null : inputJson[_Fun.Rows] as JArray;
+            var inputRows = (inputJson[_Fun.FidRows] == null)
+                ? null : inputJson[_Fun.FidRows] as JArray;
             //JObject upNewKey2 = new(); //new pkey for childs fkey
             if (inputRows != null)
             {
@@ -865,8 +869,8 @@ namespace Base.Services
 
             #region insert/update this rows
             var error = "";
-            var inputRows = (inputJson[_Fun.Rows] == null)
-                ? null : inputJson[_Fun.Rows] as JArray;
+            var inputRows = (inputJson[_Fun.FidRows] == null)
+                ? null : inputJson[_Fun.FidRows] as JArray;
             JObject upNewKey2 = new(); //new pkey for childs fkey
             if (inputRows != null)
             {

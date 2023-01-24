@@ -1,7 +1,7 @@
 ﻿namespace Base.Models
 {
     /// <summary>
-    /// for RWD pagin input, use lower camel(jquery simple pagination)
+    /// for RWD pagin input, use lower camel(jquery/app/vue simple pagination)
     /// </summary>
     public class PageIn
     {

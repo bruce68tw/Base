@@ -26,6 +26,11 @@ namespace BaseApi.Services
             return service.HttpContext;
         }
 
+        public static string GetIp()
+        {
+            return GetHttp().Connection.RemoteIpAddress.ToString();
+        }
+
         public static string GetContentTypeByExt(string ext)
         {
             //var ext = _File.GetFileExt(path);

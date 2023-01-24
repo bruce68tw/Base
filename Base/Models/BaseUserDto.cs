@@ -26,7 +26,9 @@
         //diffence hours to GMT for Db saving
         //public double HourDiff = 0;
 
-        //program list, ex:User:CRUDPEV,Dept:CRUD...
+        /// <summary>
+        /// authed program list, format=progId:CRUDPEV,...
+        /// </summary>
         public string ProgAuthStrs = "";
 
     }//class
