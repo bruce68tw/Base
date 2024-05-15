@@ -6,11 +6,15 @@ namespace Base.Services
 {
     public class _Sql
     {
-        //convert sql string to model 
+        /// <summary>
+        /// convert sql string to model 
+        /// </summary>
+        /// <param name="sql">如果空白會傳回 empty SqlDto</param>
+        /// <param name="useSquare"></param>
+        /// <returns></returns>
         public static SqlDto SqlToDto(string sql, bool useSquare)
         {
-            if (_Str.IsEmpty(sql))
-                return null;
+            //if (_Str.IsEmpty(sql)) return null;
 
             var sql2 = sql.ToLower();
             var len = sql2.Length;
@@ -98,7 +102,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// sql string add in condition
+        /// sql string add (sql where) in condition
         /// </summary>
         /// <param name="fid">傳入參數欄位id</param>
         /// <param name="keys">in key值array</param>
@@ -143,32 +147,27 @@ namespace Base.Services
         //public static string sqlConcat(string ps_sql, params string[] pas_input)
         public static string GetConcat(params string[] values)
         {
-            int len = values.Length;
-            if (len <= 1)
-                return "";
+            var len = values.Length;
+            if (len <= 1) return "";
 
             string op;
-            string sql = "";
+            var sql = "";
             switch (_Fun.DbType)
             {
                 case DbTypeEnum.MSSql:
-                    op = " + ";
-                    break;
+                    op = " + "; break;
                 case DbTypeEnum.MySql:
                     op = ", ";
-                    sql = "concat";
-                    break;
+                    sql = "concat"; break;
                 case DbTypeEnum.Oracle:
-                    op = " || ";
-                    break;
+                    op = " || "; break;
                 default:
                     return "";
             }
 
-            string list = "";
-            for (int i = 0; i < len; i++)
+            var list = "";
+            for (var i = 0; i < len; i++)
                 list += values[i] + op;
-
             return sql + "(" + list[..^op.Length] + ")";
         }
 

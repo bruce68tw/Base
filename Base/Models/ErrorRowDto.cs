@@ -18,7 +18,7 @@ namespace Base.Models
         /// <summary>
         /// 輸入錯誤的欄位id清單, type為Key(id), Value(錯誤訊息)
         /// </summary>
-        public List<IdStrDto> ErrorFields { get; set; }
+        public List<IdStrDto> ErrorFields { get; set; } = null!;
 
     }
 }

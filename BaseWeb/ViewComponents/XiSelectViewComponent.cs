@@ -11,13 +11,7 @@ namespace BaseWeb.ViewComponents
     {
         public HtmlString Invoke(XiSelectDto dto)
         {
-            /*
-             string title, string fid, string value, List<IdStrDto> rows, 
-            bool required = false, bool inRow = false, string edit = "", bool addEmptyRow = true,
-            string labelTip = "", string inputTip = "", string extAttr = "", string extClass = "",
-            string fnOnChange = "", string cols = "" 
-             */
-            var html = _Helper.GetSelectHtml(dto.Fid, dto.Value, "select", dto.Rows,
+            var html = _Helper.GetSelectHtml(dto.Fid, dto.Value, "select", dto.Rows!,
                 dto.Required, dto.Edit, dto.AddEmptyRow,
                 dto.InputTip, dto.InputAttr, dto.BoxClass, dto.FnOnChange);
 

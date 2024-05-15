@@ -14,9 +14,9 @@ namespace Base.Services
     /// </summary>
     public class Db : IAsyncDisposable
     {
-        private DbConnection _conn = null;   //or will compile error !!
-        private DbCommand _cmd = null;
-        private DbTransaction _tran;
+        private DbConnection? _conn;
+        private DbCommand? _cmd;
+        private DbTransaction? _tran;
 
         //column mapping for update/insert, key-type-欄位序號
         private List<IdNumDto> _colMaps = new();
@@ -25,10 +25,10 @@ namespace Base.Services
         private bool _status;    //db status
 
         //sql args pairs, ex:"UserId","001",,,
-        private List<object> _sqlArgs;
+        private List<object>? _sqlArgs;
 
         private DateTime _now;      //for sql slow action
-        private readonly string _dbStr;      //db connection string        
+        private readonly string _dbStr = "";      //db connection string        
         private const int _dbSec = 600; //command second, can not too short
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Base.Services
             //InitDb(); //here !!
         }
 
-        public DbConnection GetConnection()
+        public DbConnection? GetConnection()
         {
             return _conn;
         }
@@ -58,19 +58,18 @@ namespace Base.Services
         /// <returns>error msg if any</returns>
         public async Task<bool> InitDbA()
         {
-            if (_status)
-                return true;
+            if (_status) return true;
 
             //when _dbStr length > 30, treat it as connection string
             //var connStr = (_dbStr.Length > 30) ? _dbStr : _Config.GetDbStr(_dbStr);
 
-            _conn = (DbConnection)_Fun.DiBox.GetService(typeof(DbConnection));
+            _conn = (DbConnection)_Fun.DiBox.GetService(typeof(DbConnection))!;
             //set connect string will get error when connecting state
             //if (_conn.ConnectionString == null || _conn.ConnectionString != _dbStr)
-                _conn.ConnectionString = _dbStr;
             //_conn.State = ConnectionState.Connecting
             try
             {
+                _conn!.ConnectionString = _dbStr;
                 await _conn.OpenAsync();
                 _status = true;
                 return true;
@@ -82,19 +81,19 @@ namespace Base.Services
                 _conn = null;
 
                 //not log db connection string for security reason
-                await _Log.ErrorA("connect db error: " + ex.Message);
+                await _Log.ErrorRootA("connect db error: " + ex.Message);
                 return false;
             }
         }
 
-        //must use ValueTask
-        //DisposeAsync for IAsyncDisposable
+        /// <summary>
+        /// must use ValueTask, 函數名稱必須是DisposeAsync (繼承 IAsyncDisposable)
+        /// </summary>
+        /// <returns></returns>
         public async ValueTask DisposeAsync()
         {
-            if (_cmd != null)
-                await _cmd.DisposeAsync();
-            if (_conn != null)
-                await _conn.DisposeAsync();
+            if (_cmd != null) await _cmd.DisposeAsync();
+            if (_conn != null) await _conn.DisposeAsync();
         }
 
         /*
@@ -133,10 +132,9 @@ namespace Base.Services
         /// <param name="sqlArgs"></param>
         /// <param name="dbSec"></param>
         /// <returns>error msg if any</returns>
-        private async Task<bool> InitCmdA(string sql, List<object> sqlArgs = null, int dbSec = _dbSec)
+        private async Task<bool> InitCmdA(string sql, List<object>? sqlArgs = null, int dbSec = _dbSec)
         {
-            if (!await InitDbA())
-                return false;
+            if (!await InitDbA()) return false;
 
             //set instance variables
             _sqlArgs = sqlArgs;
@@ -145,8 +143,8 @@ namespace Base.Services
             if (_cmd == null)
             {
                 //_cmd = new SqlCommand();
-                _cmd = (DbCommand)_Fun.DiBox.GetService(typeof(DbCommand));
-                _cmd.Connection = _conn;
+                _cmd = (DbCommand)_Fun.DiBox.GetService(typeof(DbCommand))!;
+                _cmd!.Connection = _conn;
             }
             else
             {
@@ -178,8 +176,7 @@ namespace Base.Services
             _cmd.CommandText = sql;
 
             //log debug info
-            if (_Str.NotEmpty(sql))
-                await _Log.SqlA(GetSqlText(sql));
+            if (sql != "") _Log.Sql(GetSqlText(sql!));
             return true;
         }
 
@@ -191,49 +188,47 @@ namespace Base.Services
         /// <param name="sqlArgs"></param>
         /// <param name="dbSec"></param>
         /// <returns></returns>
-        public async Task<IDataReader> GetReaderA(string sql, List<object> sqlArgs = null, int dbSec = _dbSec)
+        public async Task<IDataReader?> GetReaderA(string sql, List<object>? sqlArgs = null, int dbSec = _dbSec)
         {
             //init command
-            if (!await InitCmdA(sql, sqlArgs, dbSec))
-                return null;
+            if (!await InitCmdA(sql, sqlArgs, dbSec)) return null;
 
             try
             {
                 SetNow();
-                var reader = await _cmd.ExecuteReaderAsync();
-                await LogSlowSql(sql);
+                var reader = await _cmd!.ExecuteReaderAsync();
+                LogSlowSql(sql);
                 SetColMap(reader);
                 return reader;
             }
             catch (Exception ex)
             {
-                await _Log.ErrorA($"_cmd.ExecuteReaderAsync() error: {GetSqlText(sql)}, {ex.Message}\n");
+                await _Log.ErrorRootA($"_cmd.ExecuteReaderAsync() error: {GetSqlText(sql)}, {ex.Message}\n");
                 return null;
             }
         }
 
         //get sql text by argValue[]
         private string GetSqlText(string sql)
-        {           
-            return sql + GetArgsText(_sqlArgs);
+        {
+            return sql + (_sqlArgs == null ? "" : GetArgsText(_sqlArgs));
         }
 
         /// <summary>
-        /// get sql text by argValue[]
+        /// get sql text of args part
         /// also called by CrudEdit.cs
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
         public string GetArgsText(List<object> args)
         {
-            var sqlArgs = "";
-            if (args != null && args.Count > 0)
-            {
-                for (var i = 0; i < args.Count; i += 2)
-                    sqlArgs += (args[i + 1] == null ? "null" : args[i + 1].ToString()) + ",";
+            if (args.Count == 0) return "";
 
-                sqlArgs = "(" + sqlArgs[0..^1] + ")";
-            }
+            var sqlArgs = "";
+            for (var i = 0; i < args.Count; i += 2)
+                sqlArgs += (args[i + 1] == null ? "null" : args[i + 1].ToString()) + ",";
+
+            sqlArgs = "(" + sqlArgs[0..^1] + ")";
             return sqlArgs;
         }
 
@@ -243,28 +238,28 @@ namespace Base.Services
         }
 
         //check and log if slow query
-        private async Task LogSlowSql(string sql)
+        private void LogSlowSql(string sql)
         {
             if (_Fun.Config.SlowSql > 0)
             {
                 var diff = (int)_Date.MiniSecDiff(_now, DateTime.Now);
                 if (diff >= _Fun.Config.SlowSql)
-                    await _Log.ErrorA($"Slow Sql({diff}): {sql}");
+                    _Log.Error($"Slow Sql({diff}): {sql}");
             }
         }        
 
         #region GetJson(s)
-        public async Task<JObject> GetJsonA(string sql, List<object> sqlArgs = null)
+        public async Task<JObject?> GetJsonA(string sql, List<object>? sqlArgs = null)
         {
             var rows = await GetJsonsA(sql, sqlArgs);
-            return (rows == null || rows.Count == 0) ? null : (JObject)rows[0];
+            return (rows == null || rows.Count == 0) 
+                ? null : (JObject)rows[0];
         }
 
-        public async Task<JArray> GetJsonsA(string sql, List<object> sqlArgs = null)
+        public async Task<JArray?> GetJsonsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderA(sql, sqlArgs);
-            if (reader == null)
-                return null;
+            if (reader == null) return null;
 
             try
             {
@@ -278,7 +273,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorA($"Db.cs GetJsonsA() failed: {ex.Message}");
+                await _Log.ErrorRootA($"Db.cs GetJsonsA() failed: {ex.Message}");
                 return null;
             }
 
@@ -286,50 +281,49 @@ namespace Base.Services
         #endregion
 
         #region GetInt(s)/GetStr(s)
-        public async Task<int?> GetIntA(string sql, List<object> sqlArgs = null)
+        public async Task<int?> GetIntA(string sql, List<object>? sqlArgs = null)
         {
             var list = await GetIntsA(sql, sqlArgs);
-            return (list == null) ? (int?)null : list[0];
+            return list?[0];
         }
 
-        public async Task<List<int>> GetIntsA(string sql, List<object> sqlArgs = null)
+        //也可傳回bit(0/1)
+        public async Task<List<int>?> GetIntsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
-            if (reader == null)
-                return null;
+            if (reader == null) return null;
 
+            //使用Convert.ToInt32可以轉換bit
             var list = new List<int>();
             while (reader.Read())
-            {
-                list.Add((int)reader[0]);
-            }
+                list.Add(Convert.ToInt32(reader[0]));
+
             reader.Close();
             return (list.Count == 0) ? null : list;
         }
 
         /// <summary>
-        /// get Db string column value, return null if not found !!
+        /// get Db string column value, return null if not found row !!
+        /// return '' if column value is null !!
         /// string is nullable type !!
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="sqlArgs"></param>
         /// <returns></returns>
-        public async Task<string> GetStrA(string sql, List<object> sqlArgs = null)
+        public async Task<string?> GetStrA(string sql, List<object>? sqlArgs = null)
         {
             var list = await GetStrsA(sql, sqlArgs);
-            return (list == null) ? null : list[0];
-            //return list[0];
+            return list?[0];
         }
 
-        public async Task<List<string>> GetStrsA(string sql, List<object> sqlArgs = null)
+        public async Task<List<string?>?> GetStrsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
-            if (reader == null)
-                return null;
+            if (reader == null) return null;
 
-            var list = new List<string>();
+            var list = new List<string?>();
             while (reader.Read())
-                list.Add((string)reader[0]);
+                list.Add(reader.IsDBNull(0) ? "" : (string)reader[0]);
 
             reader.Close();
             return (list.Count == 0) ? null : list;
@@ -337,17 +331,16 @@ namespace Base.Services
         #endregion
 
         #region GetModel(s)      
-        public async Task<T> GetModelA<T>(string sql, List<object> sqlArgs = null)
+        public async Task<T?> GetModelA<T>(string sql, List<object>? sqlArgs = null)
         {
             var rows = await GetModelsA<T>(sql, sqlArgs);
             return (rows == null || rows.Count == 0) ? default : rows[0];
         }
         
-        public async Task<List<T>> GetModelsA<T>(string sql, List<object> sqlArgs = null)
+        public async Task<List<T>?> GetModelsA<T>(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
-            if (reader == null)
-                return null;
+            if (reader == null) return null;
 
             //get column name list
             var fname = new JObject();
@@ -359,7 +352,7 @@ namespace Base.Services
             var list = new List<T>();
             var status = true;
             var errorFid = "";      //error field id
-            var props = Activator.CreateInstance<T>().GetType().GetProperties();
+            var props = Activator.CreateInstance<T>()!.GetType().GetProperties();
             try
             {
                 while (reader.Read())
@@ -377,12 +370,12 @@ namespace Base.Services
                     list.Add(row);
                 }
             }
-            catch (Exception ex2)
+            catch (Exception ex)
             {
                 //_Fun.DbStatus = false;
                 status = false;
-                var error = "Db.GetModelsA() error:(field=" + errorFid + ") " + GetSqlText(sql) + ", " + ex2.Message;
-                await _Log.ErrorA(error);
+                var error = "Db.GetModelsA() error:(field=" + errorFid + ") " + GetSqlText(sql) + ", " + ex.Message;
+                await _Log.ErrorRootA(error);
             }
 
             reader.Close();
@@ -398,17 +391,18 @@ namespace Base.Services
         public JObject ReaderGetJson(IDataReader reader)
         {
             //var dtFormat = _Fun.DbDtFormat;
-            var dtFormat = _Fun.CsDtFmt;
+            //var dtFormat = _Fun.CsDtFmt;
             var row = new JObject();
             for (var i = 0; i < _colMaps.Count; i++)
             {
                 var fid = _colMaps[i].Id;
                 var type = _colMaps[i].Num;
                 row[fid] = reader.IsDBNull(i) ? "" :
-                    //(type == DataTypeEnum.Datetime) ? reader.GetDateTime(i).ToString(dtFormat) :
-                    (type == DataTypeEnum.Date) ? reader.GetDateTime(i).ToString(dtFormat) :
+                    (type == DataTypeEnum.Datetime) ? reader.GetDateTime(i).ToString(_Fun.CsDtFmt) :
+                    (type == DataTypeEnum.Date) ? reader.GetDateTime(i).ToString(_Fun.CsDateFmt) :
                     (type == DataTypeEnum.Bit) ? (reader.GetBoolean(i) ? 1 : 0) :
                     (type == DataTypeEnum.Int) ? Convert.ToInt32(reader[i]) :
+                    (type == DataTypeEnum.Decimal) ? Convert.ToDecimal(reader[i]) :
                     reader[i].ToString();
             }
             return row;
@@ -421,21 +415,17 @@ namespace Base.Services
             //var keys = new List<string>();
             var colLen = reader.FieldCount;
             //string type;//, type2fid = "";
-            int type;
+            //int type;
             for (var i = 0; i < colLen; i++)
             {
                 //fid = reader.GetName(i);
-                var typeName = reader.GetDataTypeName(i).ToLower();
-                //if (typeName.Contains("datetime"))
-                //    type = DataTypeEnum.Datetime;
-                if (typeName.Contains("date"))
-                    type = DataTypeEnum.Date;
-                else if (typeName.Contains("bit"))
-                    type = DataTypeEnum.Bit;
-                else if (typeName.Contains("int"))
-                    type = DataTypeEnum.Int;
-                else
-                    type = DataTypeEnum.Other;
+                var name = reader.GetDataTypeName(i).ToLower();
+                int type = name.Contains("smalldatetime") ? DataTypeEnum.Date :
+                    name.Contains("datetime") ? DataTypeEnum.Datetime :
+                    name.Contains("bit") ? DataTypeEnum.Bit :
+                    name.Contains("int") ? DataTypeEnum.Int :
+                    name.Contains("decimal") ? DataTypeEnum.Decimal :
+                    DataTypeEnum.Other;
 
                 _colMaps.Add(new IdNumDto()
                 {
@@ -448,22 +438,21 @@ namespace Base.Services
 
         //get reader for get model()
         //return null when failed
-        private async Task<IDataReader> GetReaderForModelA(string sql, List<object> sqlArgs = null)
+        private async Task<IDataReader?> GetReaderForModelA(string sql, List<object>? sqlArgs = null)
         {
             //run reader
-            if (!await InitCmdA(sql, sqlArgs))
-                return null;
+            if (!await InitCmdA(sql, sqlArgs)) return null;
 
             try
             {
                 SetNow();
-                var reader = await _cmd.ExecuteReaderAsync();
-                await LogSlowSql(sql);
+                var reader = await _cmd!.ExecuteReaderAsync();
+                LogSlowSql(sql);
                 return reader;
             }
             catch (Exception ex)
             {
-                await _Log.ErrorA($"_cmd.ExecuteReaderAsync() error: {GetSqlText(sql)}, {ex.Message}");
+                await _Log.ErrorRootA($"_cmd.ExecuteReaderAsync() error: {GetSqlText(sql)}, {ex.Message}");
                 return null;
             }
         }
@@ -473,20 +462,19 @@ namespace Base.Services
         /// </summary>
         /// <param name="sql"></param>
         /// <returns>affected rows count, -1 means error</returns>
-        public async Task<int> ExecSqlA(string sql, List<object> sqlArgs = null)
+        public async Task<int> ExecSqlA(string sql, List<object>? sqlArgs = null)
         {
-            if (!await InitCmdA(sql, sqlArgs))
-                return 0;
+            if (!await InitCmdA(sql, sqlArgs)) return 0;
 
             try
             {
-                return _cmd.ExecuteNonQuery();
+                return _cmd!.ExecuteNonQuery();
                 //if (count == 0)
                 //    return "Db.cs ExecSql() failed, change no row.(" + sql + ")";
             }
             catch (Exception ex)
             {
-                await _Log.ErrorA($"Db.ExecSqlA() error: {ex.Message}\nsql: {GetSqlText(sql)}");
+                await _Log.ErrorRootA($"Db.ExecSqlA() error: {ex.Message}\nsql: {GetSqlText(sql)}");
                 return 0;
             }
         }
@@ -505,8 +493,7 @@ namespace Base.Services
             bool status, string statusId = "Status", string where = "")
         {
             var status2 = status ? 1 : 0;
-            if (where != "")
-                where = " and " + where;
+            if (where != "") where = " and " + where;
             //var key2 = (kvalue.GetType() == typeof(string)) ? "'" + kvalue + "'" : kvalue.ToString();
             var sql = $"update {table} set {statusId}={status2} where {kid}=@{kid}{where};";
             return (await ExecSqlA(sql, new(){ kid, kvalue }) > 0);
@@ -516,22 +503,21 @@ namespace Base.Services
         //return error msg if any
         public async Task<bool> BeginTranA()
         {
-            if (!await InitCmdA(null))
-                return false;
+            if (!await InitCmdA("")) return false;
 
-            _tran = await _conn.BeginTransactionAsync();
-            _cmd.Transaction = _tran;
+            _tran = await _conn!.BeginTransactionAsync();
+            _cmd!.Transaction = _tran;
             return true;
         }
 
         public async Task CommitA()
         {
-            await _tran.CommitAsync();
+            await _tran!.CommitAsync();
         }
 
         public async Task RollbackA()
         {
-            await _tran.RollbackAsync();
+            await _tran!.RollbackAsync();
         }
         #endregion
 

@@ -35,29 +35,29 @@ namespace Base.Models
         public string TableAs = "";
 
         /// <summary>
-        /// (for AuthType=Data only) user fid, default to _Fun.FindUserFid
+        /// (for AuthType=Row only) user fid, default to _Fun.FindUserFid
         /// </summary>
         public string WhereUserFid = _Fun.UserEqual;
 
         /// <summary>
-        /// (for AuthType=Data only) dept fid, default to _Fun.FindDeptFid
+        /// (for AuthType=Row only) dept fid, default to _Fun.FindDeptFid
         /// </summary>
         public string WhereDeptFid = _Fun.DeptEqual;
 
         /// <summary>
         /// for quick search, include table alias, will get like %xx% query
         /// </summary>
-        public string[] FindCols;
+        public string[]? FindCols;
 
         /// <summary>
         /// or query for column group, suggest to List more easy !!
         /// </summary>
-        public List<List<string>> OrGroups;
+        public List<List<string>>? OrGroups;
 
         /// <summary>
         /// query condition fields
         /// </summary>
-        public QitemDto[] Items;
+        public QitemDto[]? Items;
 
     }//class
 }

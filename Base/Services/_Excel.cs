@@ -34,14 +34,11 @@ namespace Base.Services
         /// <param name="sheetNo"></param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> ImportByFileA(string uiDtFormat, string filePath, string insertSql, int[] excelCols, int excelStartRow, bool[] isDates = null, int sheetNo = 0, Db db = null)
+        public static async Task<string> ImportByFileA(string uiDtFormat, string filePath, string insertSql, int[] excelCols, int excelStartRow, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
         {
             //check
             if (!File.Exists(filePath))
-            {
                 return "_Excel.ToTable() failed, no file: " + filePath;
-                //return false;
-            }
 
             var docx = SpreadsheetDocument.Open(filePath, false);
             return await ImportByDocxA(uiDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
@@ -58,12 +55,12 @@ namespace Base.Services
         /// <param name="sheetNo"></param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> ImportByDocxA(string uiDtFormat, SpreadsheetDocument docx, string insertSql, int[] excelCols, int excelStartRow, bool[] isDates = null, int sheetNo = 0, Db db = null)
+        public static async Task<string> ImportByDocxA(string uiDtFormat, SpreadsheetDocument docx, string insertSql, int[] excelCols, int excelStartRow, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
         {
             //open excel
             var newDb = _Db.CheckOpenDb(ref db);
             var wbPart = docx.WorkbookPart;
-            var ssPart = wbPart.GetPartsOfType<SharedStringTablePart>().First();
+            var ssPart = wbPart!.GetPartsOfType<SharedStringTablePart>().First();
             var ssTable = ssPart.SharedStringTable;
 
             //var ok = true;
@@ -88,7 +85,7 @@ namespace Base.Services
                     var value = "";
                     if (cell.DataType != null && cell.DataType == CellValues.SharedString)
                     {
-                        var ssid = int.Parse(cell.CellValue.Text);
+                        var ssid = int.Parse(cell.CellValue!.Text);
                         value = ssTable.ChildElements[ssid].InnerText;
                     }
                     else if (cell.CellValue != null)
@@ -98,10 +95,10 @@ namespace Base.Services
 
                     //excel date column is double type, must transfer to datetime with format !!
                     cols[j + 1] = (value == "")
-                        ? (dateLen > j && isDates[j])
+                        ? (dateLen > j && isDates![j])
                             ? "null"
                             : ""
-                        : (dateLen > j && isDates[j])
+                        : (dateLen > j && isDates![j])
                             ? DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat)
                             : value;
 
@@ -112,7 +109,7 @@ namespace Base.Services
                 //insert into only when all columns has value
                 //transfer emtpy datetime to null, or it will be 1900/1/1
                 var sql2 = string.Format(insertSql, cols).Replace("'null'", "null");
-                if (rowHasCol && await db.ExecSqlA(sql2) == 0)
+                if (rowHasCol && await db!.ExecSqlA(sql2) == 0)
                 {
                     //ok = false;
                     error = "_Excel.cs ImportByDocx failed, sql is empty.";
@@ -120,7 +117,7 @@ namespace Base.Services
                 }
             }
 
-            await _Db.CheckCloseDbA(db, newDb);
+            await _Db.CheckCloseDbA(db!, newDb);
 
             //book = null;    //can not Dispose(), must close by caller
             //sheet = null;
@@ -138,7 +135,7 @@ namespace Base.Services
         /// <param name="sheetNo"></param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> ImportByStreamA(string uiDtFormat, Stream stream, string insertSql, int excelStartRow, int[] excelCols, bool[] isDates = null, int sheetNo = 0, Db db = null)
+        public static async Task<string> ImportByStreamA(string uiDtFormat, Stream stream, string insertSql, int excelStartRow, int[] excelCols, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
         {
             stream.Position = 0;
             var docx = StreamToDocx(stream);
@@ -171,7 +168,9 @@ namespace Base.Services
         public static async Task DocxByReadA(string ctrl, SpreadsheetDocument docx, ReadDto readDto, 
             JObject findJson, int srcRowNo, string dbStr = "")
         {
-            DocxByRows(await new CrudRead(dbStr).GetExportRowsA(ctrl, readDto, findJson), docx, srcRowNo);
+            var rows = await new CrudReadSvc(dbStr).GetExportRowsA(ctrl, readDto, findJson);
+            if (rows != null)
+                DocxByRows(rows, docx, srcRowNo);
         }
 
         /// <summary>
@@ -180,12 +179,13 @@ namespace Base.Services
         /// <param name="filePath">excel file path to save</param>
         /// <param name="sql"></param>
         /// <param name="dbStr">db property name in config file</param>
-        public static async Task DocxBySqlA(string sql, SpreadsheetDocument docx, int srcRowNo, Db db = null)
+        public static async Task DocxBySqlA(string sql, SpreadsheetDocument docx, int srcRowNo, Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
-            var rows = await db.GetJsonsA(sql);
+            var rows = await db!.GetJsonsA(sql);
             await _Db.CheckCloseDbA(db, newDb);
-            DocxByRows(rows, docx, srcRowNo);
+            if (rows != null)
+                DocxByRows(rows, docx, srcRowNo);
         }
 
         /// <summary>
@@ -198,13 +198,10 @@ namespace Base.Services
         /// <returns>error msg if any</returns>
         public static string DocxByRows(JArray rows, SpreadsheetDocument docx, int srcRowNo)
         {
-            #region 1.check docx
-            if (docx == null)
-                return "_Excel.cs RowsToDocx() failed, docx is null.";
-            #endregion
+            //if (docx == null) return "_Excel.cs RowsToDocx() failed, docx is null.";
 
             //2.get col name list from source rows[0]
-            var rowCount = (rows == null) ? 0 : rows.Count;
+            var rowCount = rows.Count;
             var cols = new List<string>();
             if (rowCount > 0)
             {
@@ -213,30 +210,30 @@ namespace Base.Services
             }
 
             #region prepare excel variables
-            SheetData sheetData = null;
+            //SheetData? sheetData = null;
             var colCount = cols.Count;
-            var sheet = docx.WorkbookPart.Workbook.Descendants<Sheet>().FirstOrDefault();
-            var wsPart = (WorksheetPart)docx.WorkbookPart.GetPartById(sheet.Id);
-            sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
+            var sheet = docx.WorkbookPart!.Workbook.Descendants<Sheet>().FirstOrDefault();
+            var wsPart = (WorksheetPart)docx.WorkbookPart.GetPartById(sheet!.Id!);
+            var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
             #endregion
 
             //3.loop of write excel rows, use template
             for (var rowNo = 0; rowNo < rowCount; rowNo++)
             {
                 //add row and fill data, TODO: copy row style
-                var row = (JObject)rows[rowNo];
+                var row = (JObject)rows![rowNo];
                 var newRow = new Row();
                 for (var colNo = 0; colNo < colCount; colNo++)
                 {
                     newRow.Append(new Cell()
                     {
-                        CellValue = new CellValue(row[cols[colNo]] == null ? "" : row[cols[colNo]].ToString()),
+                        CellValue = new CellValue(row[cols[colNo]] == null ? "" : row[cols[colNo]]!.ToString()),
                         DataType = CellValues.String,
                     });
                 }
 
                 //insert row into sheet
-                sheetData.InsertAt(newRow, rowNo + srcRowNo);
+                sheetData!.InsertAt(newRow, rowNo + srcRowNo);
             }
 
             //case of ok

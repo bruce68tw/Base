@@ -7,8 +7,8 @@ namespace Base.Models
     {
         //public string label { get; set; }
 
-        public List<string> backgroundColor { get; set; }
+        public List<string> backgroundColor { get; set; } = null!;
 
-        public List<int> data { get; set; }
+        public List<int> data { get; set; } = null!;
     }
 }

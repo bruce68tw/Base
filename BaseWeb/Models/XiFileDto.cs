@@ -2,6 +2,7 @@
 {
     public class XiFileDto : XiBaseDto
     {
+        /*
         public XiFileDto()
         {
             MaxSize = 10;
@@ -9,15 +10,16 @@
             //FnOnOpenFile = "_ifile.onOpenFile(this)";
             //FnOnDeleteFile = "_ifile.onDeleteFile(this)";
         }
+        */
 
         //for onViewFile()
-        public string Table { get; set; }
+        public string Table { get; set; } = "";
 
-        public int MaxSize { get; set; }
+        public int MaxSize { get; set; } = 10;
 
         //*(all),I(image),E(excel),W(word)
-        public string FileType { get; set; }
-        public string FnOnViewFile { get; set; }
+        public string FileType { get; set; } = "I"; //image
+        public string FnOnViewFile { get; set; } = "";
         //public string FnOnOpenFile { get; set; }
         //public string FnOnDeleteFile { get; set; }
     }

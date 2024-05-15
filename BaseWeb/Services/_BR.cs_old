@@ -1,0 +1,49 @@
+﻿using Base.Models;
+using Base.Services;
+using BaseApi.Services;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace BaseWeb.Services
+{
+    //for web system only
+    public static class _BR
+    {
+        //loaded localization list, <locale, BaseResDto>
+        private static Dictionary<string, BaseResDto> _brList = new();
+
+        /// <summary>
+        /// (GetBaseRes) get base resource
+        /// </summary>
+        /// <param name="locale">default to user locale</param>
+        /// <returns></returns>
+        public static BaseResDto GetData(string locale)
+        {
+            //if (locale == "") locale = _Locale.GetLocaleByUser();
+            var dict = _brList.FirstOrDefault(a => a.Key == locale);
+            return dict.Equals(default(Dictionary<string, BaseResDto>)) 
+                ? new() : dict.Value;
+        }
+
+        //(ReadBaseResA)
+        private static async Task<BaseResDto?> ReadFileA(string locale)
+        {
+            //error = ""; //initial
+            var file = _FunApi.DirWeb + "locale/" + locale + "/BR.json";
+            if (!File.Exists(file))
+            {
+                _Log.Error("no file: " + file);
+                return null;
+            }
+
+            //set _br
+            var br = new BaseResDto(); //initial value
+            var json = _Str.ToJson((await _File.ToStrA(file))!);
+            _Json.CopyToModel(json!, br);
+            return br;
+        }
+
+    }//class
+}

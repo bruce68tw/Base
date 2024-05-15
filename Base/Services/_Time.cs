@@ -1,5 +1,4 @@
-﻿
-namespace Base.Services
+﻿namespace Base.Services
 {
     public class _Time
     {

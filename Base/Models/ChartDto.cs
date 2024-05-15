@@ -5,12 +5,12 @@ namespace Base.Models
     //欄位名稱和大小寫配合 Chart.js
     public class ChartDto
     {
-        public string title { get; set; }
+        public string title { get; set; } = "";
 
         //label list
-        public List<string> labels { get; set; }
+        public List<string> labels { get; set; } = null!;
 
-        public List<ChartItemDto> datasets { get; set; }
+        public List<ChartItemDto> datasets { get; set; } = null!;
     }
 
 }

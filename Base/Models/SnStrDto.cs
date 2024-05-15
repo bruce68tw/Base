@@ -3,6 +3,6 @@
     public class SnStrDto
     {
         public int Sn { get; set; }
-        public string Str { get; set; }
+        public string Str { get; set; } = "";
     }
 }

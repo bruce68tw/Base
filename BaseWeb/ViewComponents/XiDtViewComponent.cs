@@ -15,7 +15,7 @@ namespace BaseWeb.Helpers
             string date = "", hour = "", min = "";
             if (!_Str.IsEmpty(dto.Value))
             {
-                var dt = _Date.CsToDt(dto.Value).Value;
+                var dt = _Date.CsToDt(dto.Value)!.Value;
                 date = dt.Date.ToString();
                 hour = dt.Hour.ToString();
                 min = dt.Minute.ToString();

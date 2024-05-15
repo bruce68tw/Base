@@ -209,7 +209,7 @@ namespace BaseWeb.Services
             var len = (rows == null) ? 0 : rows.Count;
             for (var i = 0; i < len; i++)
             {
-                var selected = (value == rows[i].Id) ? " selected" : "";
+                var selected = (value == rows![i].Id) ? " selected" : "";
                 optList += string.Format(tplOpt, rows[i].Id, rows[i].Str, selected);
             }
 
@@ -306,16 +306,10 @@ namespace BaseWeb.Services
             return result;
         }
 
-        private static List<int> GetCols(string cols)
+        private static List<int> GetCols(string? cols)
         {
             var values = _Str.ToIntList(cols);
-            return (values == null) ? _Fun.DefHoriCols : values;
-            /*
-            var len = values.Count;
-            if (len == 1)
-                values.Add(values[0]);
-            return values;
-            */
+            return (values.Count == 0) ? _Fun.DefHoriCols : values;
         }
 
         /*

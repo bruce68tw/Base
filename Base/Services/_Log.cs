@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Base.Services
 {
-    //write log text file
+    //write log text file, use sync !!
     public static class _Log
     {
 
@@ -39,42 +39,66 @@ namespace Base.Services
         /// log info only when _Fun.LogInfo flag is true !!
         /// </summary>
         /// <param name="msg">log msg</param>
-        public static async Task InfoA(string msg)
+        public static void Info(string msg)
         {
-            await LogFileA(GetFilePath("info"), msg);
+            LogFile(GetFilePath("info"), msg);
         }
 
         /// <summary>
         /// log debug when _Fun.LogDebug true !!
         /// </summary>
         /// <param name="msg">log msg</param>
-        public static async Task DebugA(string msg)
+        public static void Debug(string msg)
         {
             if (_Fun.Config.LogDebug)
-                await LogFileA(GetFilePath("debug"), msg);
+                LogFile(GetFilePath("debug"), msg);
         }
 
         /// <summary>
         /// log sql only when _Fun.LogSql true !!
         /// </summary>
         /// <param name="msg">log msg</param>
-        public static async Task SqlA(string msg)
+        public static void Sql(string msg)
         {
             if (_Fun.Config.LogSql)
-                await LogFileA(GetFilePath("sql"), msg);
+                LogFile(GetFilePath("sql"), msg);
         }
 
         /// <summary>
         /// log error
         /// </summary>
         /// <param name="msg">log message</param>
-        public static async Task ErrorA(string msg, bool emailRoot = true)
+        public static void Error(string msg)
         {
-            await LogFileA(GetFilePath("error"), msg);
+            LogFile(GetFilePath("error"), msg);
 
             //send root
-            if (emailRoot)
-                await _Email.SendRootA(msg);
+            //if (emailRoot) await _Email.SendRootA(msg);
+        }
+
+        /*
+        /// <summary>
+        /// log error and return system error(SE) code
+        /// </summary>
+        /// <param name="msg"></param>
+        public static string ErrorSeCode(string msg)
+        {
+            Error(msg);
+            return _Fun.SysErrCode;
+        }
+        */
+
+        /// <summary>
+        /// log error and mail root
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public static async Task ErrorRootA(string msg)
+        {
+            LogFile(GetFilePath("error"), msg);
+
+            //send root
+            await _Email.SendRootA(msg);
         }
 
         /// <summary>
@@ -82,28 +106,24 @@ namespace Base.Services
         /// </summary>
         /// <param name="path">log file path</param>
         /// <param name="msg"></param>
-        private static async Task LogFileA(string path, string msg)
+        private static void LogFile(string path, string msg)
         {
-            if (_Str.IsEmpty(msg))
-                return;
+            if (msg == "") return;
 
             const int loops = 5;
             for (var i=0; i<loops; i++)
             {
                 try
                 {
-                    if (msg.Substring(msg.Length - 1, 1) != "\n")
-                        msg += "\n";
-
+                    if (msg.Substring(msg.Length - 1, 1) != "\n") msg += "\n";
                     msg = DateTime.Now.ToString("HH:mm:ss") + "(" + i + "); " + msg;
-                    await File.AppendAllTextAsync(path, msg);
+                    File.AppendAllText(path, msg);
                     break;
                 }
                 catch
                 {
                     //raise error if get max loops
-                    if (i < loops - 1)
-                        _Time.Sleep(100);
+                    if (i < loops - 1) _Time.Sleep(100);
                     else
                     {
                         //throw new Exception("_Log.cs LogFile() failed for file: " + path);

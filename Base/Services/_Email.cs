@@ -14,7 +14,7 @@ namespace Base.Services
     {
         //get from _Fun.Config.EmailImagePairs
         //null(will get)
-        private static List<IdStrDto> _emailImagePairs = null;
+        private static List<IdStrDto>? _emailImagePairs;
 
         /// <summary>
         /// email to Root(web.config RootEmail field)
@@ -23,8 +23,7 @@ namespace Base.Services
         public static async Task SendRootA(string msg)
         {
             //check
-            if (_Str.IsEmpty(_Fun.Config.RootEmail))
-                return;
+            if (_Str.IsEmpty(_Fun.Config.RootEmail)) return;
 
             //send
             var email = new EmailDto()
@@ -39,11 +38,11 @@ namespace Base.Services
         /// <summary>
         /// mail users string to list string
         /// </summary>
-        /// <param name="userStr"></param>
+        /// <param name="users">seperate with ';' or ','</param>
         /// <returns></returns>
-        private static List<string> StrToUsers(string userStr)
+        private static List<string> StrToUsers(string users)
         {
-            return userStr.Replace(';', ',').Split(',').ToList();
+            return users.Replace(';', ',').Split(',').ToList();
         }
 
         /// <summary>
@@ -52,7 +51,7 @@ namespace Base.Services
         /// <param name="email">email model</param>
         /// <param name="smtp">smtp model</param>
         /// <param name="sync">sync send or not, false(web ap), console(true)</param>
-        public static async Task SendByDtoA(EmailDto email, SmtpDto smtp = null)
+        public static async Task SendByDtoA(EmailDto email, SmtpDto? smtp = null)
         {
             await SendByDtosA(new List<EmailDto>() { email }, smtp);
         }
@@ -62,7 +61,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="emails"></param>
         /// <param name="smtp"></param>
-        public static async Task SendByDtosA(List<EmailDto> emails, SmtpDto smtp = null)
+        public static async Task SendByDtosA(List<EmailDto> emails, SmtpDto? smtp = null)
         {
             //change receiver to tester if need !!
             //var email = new EmailDto();// = null;
@@ -81,7 +80,7 @@ namespace Base.Services
 
         /*
         //send one mail
-        private static void SendByDto2(EmailDto email, SmtpDto smtp = null)
+        private static void SendByDto2(EmailDto email, SmtpDto? smtp = null)
         {
             SendByDtos2(new List<EmailDto>() { email }, smtp);
         }
@@ -90,8 +89,7 @@ namespace Base.Services
         //mailMessage add embeded image list
         private static void MsgAddImages(MailMessage msg, List<IdStrDto> images)
         {
-            if (images == null || images.Count == 0)
-                return;
+            //if (images == null || images.Count == 0) return;
 
             foreach (var image in images)
             {
@@ -115,13 +113,12 @@ namespace Base.Services
         /// <param name="email"></param>
         /// <param name="smtp"></param>
         /// <returns></returns>
-        public static MailMessage DtoToMsg(EmailDto email, SmtpDto smtp = null)
+        public static MailMessage DtoToMsg(EmailDto email, SmtpDto? smtp = null)
         {
-            if (smtp == null)
-                smtp = _Fun.Smtp;
-
-            var utf8 = Encoding.GetEncoding("utf-8");
-            var sender = new MailAddress(_Str.IsEmpty(smtp.Id) ? smtp.FromEmail : smtp.Id);  //real sender
+            smtp ??= _Fun.Smtp;
+            //var utf8 = Encoding.GetEncoding("utf-8");
+            var utf8 = Encoding.UTF8;
+            var sender = new MailAddress(_Str.IsEmpty(smtp!.Id) ? smtp.FromEmail : smtp.Id);  //real sender
             var from = new MailAddress(_Str.IsEmpty(smtp.FromEmail) ? smtp.Id : smtp.FromEmail, smtp.FromName, utf8);
             return DtoToMsgByArg(email, utf8, sender, from);
         }
@@ -148,7 +145,7 @@ namespace Base.Services
             };
 
             //add image, use cid(better than base64 !!)
-            MsgAddImages(msg, email.Images);
+            if (email.Images != null) MsgAddImages(msg, email.Images);
 
             //add attach files
             if (email.Files != null)
@@ -190,18 +187,16 @@ namespace Base.Services
         /// <param name="emails"></param>
         /// <param name="smtp"></param>
         /// <returns></returns>
-        public static List<MailMessage> DtosToMsgs(List<EmailDto> emails, SmtpDto smtp = null)
+        public static List<MailMessage> DtosToMsgs(List<EmailDto> emails, SmtpDto? smtp = null)
         {
-            if (smtp == null)
-                smtp = _Fun.Smtp;
-
+            smtp ??= _Fun.Smtp;
             var msgs = new List<MailMessage>();
-            var utf8 = Encoding.GetEncoding("utf-8");
-            var sender = new MailAddress(_Str.IsEmpty(smtp.Id) ? smtp.FromEmail : smtp.Id);  //real sender
+            //var utf8 = Encoding.GetEncoding("utf-8");
+            var utf8 = Encoding.UTF8;
+            var sender = new MailAddress(_Str.IsEmpty(smtp!.Id) ? smtp.FromEmail : smtp.Id);  //real sender
             var from = new MailAddress(_Str.IsEmpty(smtp.FromEmail) ? smtp.Id : smtp.FromEmail, smtp.FromName, utf8);
             foreach (var email in emails)
                 msgs.Add(DtoToMsgByArg(email, utf8, sender, from));
-
             return msgs;
         }
 
@@ -211,7 +206,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="msg"></param>
         /// <param name="smtp"></param>
-        public static void SendByMsg(MailMessage msg, SmtpDto smtp = null)
+        public static void SendByMsg(MailMessage msg, SmtpDto? smtp = null)
         {
             SendByMsgs(new List<MailMessage>() { msg }, smtp);
         }
@@ -221,7 +216,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="msgs"></param>
         /// <param name="smtp"></param>
-        public static void SendByMsgs(List<MailMessage> msgs, SmtpDto smtp = null)
+        public static void SendByMsgs(List<MailMessage> msgs, SmtpDto? smtp = null)
         {
             //async send email
             var thread = new Thread(delegate ()
@@ -239,7 +234,7 @@ namespace Base.Services
         /// <param name="smtp"></param>
         /// <param name="sendImage"></param>
         /// <returns></returns>
-        public static async Task SendByMsgA(MailMessage msg, SmtpDto smtp = null, bool sendImage = true)
+        public static async Task SendByMsgA(MailMessage msg, SmtpDto? smtp = null, bool sendImage = true)
         {
             await SendByMsgsA(new List<MailMessage>() { msg }, smtp, sendImage);
         }
@@ -249,18 +244,16 @@ namespace Base.Services
         /// </summary>
         /// <param name="msgs"></param>
         /// <param name="smtp"></param>
-        public static async Task SendByMsgsA(List<MailMessage> msgs, SmtpDto smtp = null, bool sendImage = true)
+        public static async Task SendByMsgsA(List<MailMessage> msgs, SmtpDto? smtp = null, bool sendImage = true)
         {
             //check
             //error = ""; //initial
-            if (smtp == null)
-                smtp = _Fun.Smtp;
-
             //set _emailImagePairs if need
+            smtp ??= _Fun.Smtp;
             if (sendImage && _emailImagePairs == null)
             { 
                 _emailImagePairs = new List<IdStrDto>();
-                if (!_Str.IsEmpty(_Fun.Config.EmailImagePairs))
+                if (_Fun.Config.EmailImagePairs != "")
                 {
                     var values = _Fun.Config.EmailImagePairs.Split(',');
                     for (var i = 0; i < values.Length; i += 2)
@@ -280,7 +273,7 @@ namespace Base.Services
                 //set smtp
                 var client = new SmtpClient()
                 {
-                    Host = smtp.Host,
+                    Host = smtp!.Host,
                     Port = smtp.Port,
                     UseDefaultCredentials = false,
                     DeliveryMethod = SmtpDeliveryMethod.Network,
@@ -292,11 +285,10 @@ namespace Base.Services
                 //add images & send
                 foreach (var msg in msgs)
                 {
-                    if (sendImage)
+                    if (sendImage && _emailImagePairs != null) 
                         MsgAddImages(msg, _emailImagePairs);
                     await client.SendMailAsync(msg);
                 }
-
                 client.Dispose();
             }
             catch (Exception ex)
@@ -305,7 +297,8 @@ namespace Base.Services
                 var error = _Str.NotEmpty(ex.Message) ? ex.Message :
                     (ex.InnerException != null) ? ex.InnerException.Message :
                     "Email Error !!";
-                await _Log.ErrorA("_Email.cs SendByMsgsA() failed: " + error, false);    //false here, not mailRoot, or endless roop !!
+                //false here, not mailRoot, or endless roop !!
+                _Log.Error("_Email.cs SendByMsgsA() failed: " + error);    
             }
         }
 

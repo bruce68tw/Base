@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,8 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Attributes\XgRB0Attribute.cs_old" />
-    <None Remove="Attributes\XgRBAttribute.cs_old" />
     <None Remove="Services\ActionResultExt.cs_tmp" />
     <None Remove="Services\ICrudEdit.cs_old" />
     <None Remove="Services\ICrudRead.cs_old" />
@@ -28,11 +27,16 @@
     <None Remove="Services\XpResourceService.c_old" />
     <None Remove="Services\_ActionResult.cs_old" />
     <None Remove="Services\_ActionResult.cs_tmp" />
+    <None Remove="Services\_BR.cs_old" />
     <None Remove="Services\_Http.cs_tmp" />
     <None Remove="Services\_Session.cs_old" />
     <None Remove="ViewComponents\XgPageViewComponent.cs_old" />
     <None Remove="ViewComponents\XiCheckViewComponent.cs_old" />
     <None Remove="ViewComponents\zz_XiCheckViewComponent.cs_old" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Services\_BR.cs_old" />
   </ItemGroup>
 
   <ItemGroup>

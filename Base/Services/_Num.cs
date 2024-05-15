@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 
 namespace Base.Services
 {
@@ -13,23 +12,16 @@ namespace Base.Services
         /// <returns></returns>
         public static int NumToRwdCol(int itemCount)
         {
-            switch (itemCount)
+            return itemCount switch
             {
-                case 1:
-                    return 12;
-                case 2:
-                    return 6;
-                case 3:
-                    return 4;
-                case 4:
-                    return 3;
-                case 6:
-                    return 2;
-                case 12:
-                    return 1;
-                default:
-                    return 12;
-            }
+                1 => 12,
+                2 => 6,
+                3 => 4,
+                4 => 3,
+                6 => 2,
+                12 => 1,
+                _ => 12,
+            };
         }
 
         /// <summary>
@@ -41,17 +33,18 @@ namespace Base.Services
         public static List<int> StrToList(string text, char sep)
         {
             var result = new List<int>();
-            if (_Str.IsEmpty(text))
-                return result;
+            if (_Str.IsEmpty(text)) return result;
 
             var list = text.Split(sep);
-            //int num;
             foreach (var item in list)
-            {
-                if (int.TryParse(item, out var num))
-                    result.Add(num);
-            }
+                if (int.TryParse(item, out var num)) result.Add(num);
             return result;
+        }
+
+        public static int TryParse(object? obj, int value)
+        {
+            return (obj == null) ? value : 
+                int.TryParse(obj.ToString(), out var num) ? num : value;
         }
 
         /// <summary>

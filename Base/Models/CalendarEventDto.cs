@@ -5,8 +5,8 @@ namespace Base.Models
     //https://www.helloweba.com/view-blog-231.html
     public class CalendarEventDto
     {
-        public string id { get; set; }
-        public string title { get; set; }
+        public string id { get; set; } = "";
+        public string title { get; set; } = "";
         public bool allDay { get; set; }
         public DateTime startDT { get; set; }
         public DateTime endDT { get; set; }
@@ -25,8 +25,8 @@ namespace Base.Models
             }
         }
 
-        public string color { get; set; }
-        public string textColor { get; set; }
+        public string color { get; set; } = "";
+        public string textColor { get; set; } = "";
 
         /*
         public string url

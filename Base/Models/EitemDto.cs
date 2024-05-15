@@ -26,10 +26,13 @@ namespace Base.Models
         /// <summary>
         /// default value when add new
         /// </summary>
-        public object Value;
+        public object? Value;
 
         //required or not
         public bool Required = false;
+
+        //if true, Create/Update will skip
+        public bool Read = false;
 
         //allow create 
         public bool Create = true;

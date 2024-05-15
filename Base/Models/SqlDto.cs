@@ -8,7 +8,7 @@ namespace Base.Models
         public string Select = "";
 
         //column list
-        public string[] Columns = null;     
+        public string[] Columns = {};     
 
         public string From = "";
         public string Where = "";

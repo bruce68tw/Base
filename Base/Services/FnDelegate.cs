@@ -10,14 +10,16 @@ namespace Base.Services
     /// </summary>
     /// <param name="db"></param>
     /// <returns>error msg if any</returns>
-    public delegate string FnSetNewKeyJson(CrudEdit editService, JObject inputJson, EditDto edit);
+    public delegate Task<string> FnSetNewKeyJsonA(CrudEditSvc editService, JObject inputJson, EditDto edit);
 
     /// <summary>
-    /// crud edit AfterSave
+    /// crud edit AfterSave, inside transaction
+    /// 參考 HrAdm LeaveEdit.cs CreateA()、BaoAdm BaoEdit.cs
     /// </summary>
     /// <param name="db"></param>
-    /// <returns></returns>
-    public delegate Task<string> FnAfterSaveA(Db db, JObject keyJson);
+    /// <param name="keyJson"></param>
+    /// <returns>error msg if any</returns>
+    public delegate Task<string> FnAfterSaveA(CrudEditSvc editService, Db db, JObject keyJson);
     
     /// <summary>
     /// check row, return error msg if any
@@ -33,5 +35,11 @@ namespace Base.Services
     /// <param name="okRows"></param>
     /// <returns>list error string, '' for success</returns>
     public delegate List<string> FnSaveImportRows<T>(List<T> okRows) where T : class, new();
+
+    /// <summary>
+    /// save import rows
+    /// </summary>
+    /// <returns>list error string, '' for success</returns>
+    public delegate Task<string> FnGetNewKeyA();
 
 }

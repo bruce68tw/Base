@@ -172,6 +172,11 @@ namespace Base.Services
             return DateTime.Now.ToString("yyyyMMdd_HHmmss");
         }
 
+        public static string NowYm()
+        {
+            return DateTime.Now.ToString("yyyyMM");
+        }
+
         /*
         public static DateTime Today()
         {
@@ -272,15 +277,13 @@ namespace Base.Services
         }
 
         //birth to age
-        public static int BirthToAge(DateTime? birth)
+        public static int BirthToAge(DateTime birth)
         {
-            if (birth == null)
-                return 0;
+            //if (birth == null) return 0;
 
             var today = DateTime.Today;
-            var age = today.Year - birth.Value.Year;
-            if (birth > today.AddYears(-age))
-                age--;
+            var age = today.Year - birth.Year;
+            if (birth > today.AddYears(-age)) age--;
             return age;
         }
 
@@ -289,13 +292,12 @@ namespace Base.Services
         /// </summary>
         /// <param name="dt"></param>
         /// <returns></returns>
-        public static long ToTick(DateTime? dt)
+        public static long ToTick(DateTime dt)
         {
-            if (dt == null)
-                return 0;
+            //if (dt == null) return 0;
 
             var date0 = new DateTime(1970, 1, 1);
-            return (dt.Value.Ticks - date0.Ticks) / 10000000 - 8 * 60 * 60;
+            return (dt.Ticks - date0.Ticks) / 10000000 - 8 * 60 * 60;
         }
 
         //tick to datetime
@@ -309,69 +311,62 @@ namespace Base.Services
         /// <summary>
         /// cs datetime string to tick
         /// </summary>
-        /// <param name="dt">_Fun.CsDtFormat</param>
+        /// <param name="dts">_Fun.CsDtFormat</param>
         /// <returns></returns>
-        public static long CsToTick(string dt)
+        public static long CsToTick(string dts)
         {
-            return ToTick(CsToDt(dt));
+            var dt = CsToDt(dts);
+            return (dt == null) ? 0 : ToTick(dt.Value);
         }
 
         /// <summary>
         /// cs datetime string to datetime
         /// </summary>
-        /// <param name="dt">yyyy/MM/dd hh:mm:ss</param>
+        /// <param name="dts">yyyy/MM/dd hh:mm:ss</param>
         /// <returns></returns>
-        public static DateTime? CsToDt(string dt)
+        public static DateTime? CsToDt(string dts)
         {
-            if (_Str.IsEmpty(dt))
-                return null;
-            if (dt.Length <= 10)
-                dt += " 00:00:00";
+            if (dts == "") return null;
+            if (dts.Length <= 10) dts += " 00:00:00";
 
-            DateTime.TryParseExact(dt, _Fun.CsDtFmt, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt2);
+            DateTime.TryParseExact(dts, _Fun.CsDtFmt, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt2);
             return dt2;
         }
 
         //string to date
-        public static DateTime? CsToDate(string dt)
+        public static DateTime? CsToDate(string dts)
         {
-            var dt2 = CsToDt(dt);
-            return (dt2 == null)
-                ? null : dt2.Value.Date;
+            var dt = CsToDt(dts);
+            return (dt == null)
+                ? null : dt.Value.Date;
         }
 
-        public static string GetDtStr(DateTime? dt)
+        public static string GetDtStr(DateTime dt)
         {
-            return (dt == null)
-                ? "" : dt.Value.ToString(_Fun.CsDtFmt);
+            return dt.ToString(_Fun.CsDtFmt);
         }
 
         //no sec
-        public static string GetDtStr2(DateTime? dt)
+        public static string GetDtStr2(DateTime dt)
         {
-            return (dt == null)
-                ? "" : dt.Value.ToString(_Fun.CsDtFmt2);
+            return dt.ToString(_Fun.CsDtFmt2);
         }
 
-        public static string GetDtStr3(DateTime? dt)
+        public static string GetDtStr3(DateTime dt)
         {
-            return (dt == null)
-                ? "" : dt.Value.ToString("yyyy/MM/dd HH:mm:ss-fff");
+            return dt.ToString("yyyy/MM/dd HH:mm:ss-fff");
         }
 
         /// <summary>
         /// get date part string
         /// </summary>
-        /// <param name="dt">any format of datetime string</param>
+        /// <param name="dts">any format of datetime string</param>
         /// <returns></returns>
-        public static string GetDateStr(string dt)
+        public static string GetDateStr(string dts)
         {
-            if (_Str.IsEmpty(dt))
-                return "";
-
-            var pos = dt.IndexOf(" ");
-            return (pos <= 0)
-                ? dt : dt[..pos];
+            if (dts == "") return "";
+            var pos = dts.IndexOf(" ");
+            return (pos <= 0) ? dts : dts[..pos];
         }
 
         /*
@@ -392,22 +387,16 @@ namespace Base.Services
         /// <param name="dt"></param>
         /// <param name="type">1(年月日), 2(/), 3(無分隔符號)</param>
         /// <returns></returns>
-        public static string ToTwDateStr(DateTime? dt, int type)
+        public static string ToTwDateStr(DateTime dt, int type)
         {
-            if (dt == null)
-                return "";
-
-            //DateTime dt = DateTime.Parse(date);
-            var dt2 = dt.Value;
-            var year = (dt2.Year - 1911).ToString();
-            if (type == 1)
-                return year + "年" + dt2.Month + "月" + dt2.Day + "日";
-            if (type == 2)
-                return year + "/" + dt2.Month.ToString("00") + "/" + dt2.Day.ToString("00");
-            if (type == 3)
-                return year + dt2.Month.ToString("00") + dt2.Day.ToString("00");
-            else
-                return "??";
+            var year = (dt.Year - 1911).ToString();
+            return type switch
+            {
+                1 => year + "年" + dt.Month + "月" + dt.Day + "日",
+                2 => year + "/" + dt.Month.ToString("00") + "/" + dt.Day.ToString("00"),
+                3 => year + dt.Month.ToString("00") + dt.Day.ToString("00"),
+                _ => "??",
+            };
         }
 
         /// <summary>
@@ -418,75 +407,70 @@ namespace Base.Services
         /// <returns></returns>
         public static string Ym7ToTwYm(string ym, int type)
         {
-            if (_Str.IsEmpty(ym))
-                return "";
-
+            if (ym == "") return "";
             var sep = ym.IndexOf("/");
-            if (sep <= 0)
-                return "";
+            if (sep <= 0) return "";
 
             var year = Convert.ToInt32(ym[..sep]) - 1911;
             var month = Convert.ToInt32(ym[(sep + 1)..]);
-            if (type == 1)
-                return year + "年" + month + "月";
-            if (type == 2)
-                return year + "/" + month.ToString("00");
-            if (type == 3)
-                return year + month.ToString("00");
-            else
-                return "??";
+            return type switch
+            {
+                1 => year + "年" + month + "月",
+                2 => year + "/" + month.ToString("00"),
+                3 => year + month.ToString("00"),
+                _ => "??",
+            };
         }
 
         //傳回民國年月日
-        public static string StrToTwDateStr(string dt, int type)
+        public static string StrToTwDateStr(string dts, int type)
         {
-            return _Str.IsEmpty(dt)
-                ? ""
-                : ToTwDateStr(DateTime.Parse(dt), type);
+            return (dts == "")
+                ? "" : ToTwDateStr(DateTime.Parse(dts), type);
         }
 
         /// <summary>
         /// 民國日期(yyymmdd) to 日期字串
         /// </summary>
-        /// <param name="date"></param>
+        /// <param name="ds"></param>
         /// <returns></returns>
-        public static string TwDate7ToDateStr(string date)
+        public static string TwDate7ToDateStr(string ds)
         {
-            var len = date.Length;
-            if (len == 6)
-                return (Convert.ToInt32(date[..2]) + 1911) + "/" + date.Substring(2, 2) + "/" + date.Substring(4, 2);
-            if (len == 7)
-                return (Convert.ToInt32(date[..3]) + 1911) + "/" + date.Substring(3, 2) + "/" + date.Substring(5, 2);
-            else
-                return "";
+            var len = ds.Length;
+            return len switch
+            {
+                6 => (Convert.ToInt32(ds[..2]) + 1911) + "/" + ds.Substring(2, 2) + "/" + ds.Substring(4, 2),
+                7 => (Convert.ToInt32(ds[..3]) + 1911) + "/" + ds.Substring(3, 2) + "/" + ds.Substring(5, 2),
+                _ => "",
+            };
         }
         #endregion
 
         #region hour/minute source list
         public static List<IdStrDto> GetHourList()
         {
-            var list = new List<IdStrDto>();
+            var rows = new List<IdStrDto>();
             for(var i=0; i<23; i++)
             {
-                list.Add(new IdStrDto() {
+                rows.Add(new IdStrDto() {
                     Id = i.ToString(),
                     Str = i.ToString(),
                 });
             }
-            return list;
+            return rows;
         }
         public static List<IdStrDto> GetMinuteList(int step)
         {
-            var list = new List<IdStrDto>();
+            var rows = new List<IdStrDto>();
             for (var i = 0; i < 60; i+=step)
             {
-                list.Add(new IdStrDto()
+                rows.Add(new IdStrDto()
                 {
                     Id = i.ToString(),
                     Str = i.ToString(),
                 });
             }
-            return list;
+            return rows;
         }
         #endregion
 

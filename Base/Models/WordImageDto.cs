@@ -3,15 +3,15 @@
     //word image
     public class WordImageDto
     {
-        public string Code;
+        public string Code = "";
 
-        public string FilePath;
+        public string FilePath = "";
 
         public double Width;
 
         public double Height;
 
-        public string Tag;
+        public string Tag = "";
 
     }
 }

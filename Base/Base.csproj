@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Configurations>Debug;Release;Debug-Local</Configurations>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,6 +48,7 @@
     <None Remove="Services\Date2.cs_old" />
     <None Remove="Services\Db0Service.cs_old" />
     <None Remove="Services\Extension.cs_old" />
+    <None Remove="Services\Hashids.cs_old" />
     <None Remove="Services\IBaseResService.cs_old" />
     <None Remove="Services\LogError.cs_old" />
     <None Remove="Services\UserDataService.cs_old" />
@@ -59,6 +61,7 @@
     <None Remove="Services\_Cast.cs_old" />
     <None Remove="Services\_Config.cs_old" />
     <None Remove="Services\_Error.cs_old" />
+    <None Remove="Services\_Linq.cs_old" />
     <None Remove="Services\_Locale.cs_old" />
     <None Remove="Services\_Msg.cs_old" />
     <None Remove="Services\_Multi.cs_old" />
@@ -67,9 +70,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="2.14.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.20.0" />
+    <PackageReference Include="Handlebars.Net" Version="2.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="SkiaSharp" Version="2.88.3" />
     <PackageReference Include="StackExchange.Redis" Version="2.2.88" />
     <PackageReference Include="System.Data.OleDb" Version="6.0.0" />
     <PackageReference Include="System.Drawing.Common" Version="6.0.0" />

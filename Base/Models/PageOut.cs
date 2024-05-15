@@ -9,13 +9,15 @@ namespace Base.Models
     /// <typeparam name="T"></typeparam>
     public class PageOut<T>
     {
+        /*
         public PageOut()
         {
             Rows = new List<T>();
         }
+        */
 
         //json string has: pageNo, pageRows, filterRows
-        public string PageArg { get; set; }
+        public string PageArg { get; set; } = "";
         /*
         //public int draw { get; set; }
         public int page { get; set; }
@@ -24,12 +26,12 @@ namespace Base.Models
         public int recordsFiltered { get; set; }
         */
 
-        public List<T> Rows { get; set; }
+        public List<T>? Rows { get; set; }
 
         /// <summary>
         /// error msg if any (necessary field for resultXXX dto)
         /// refer ResultDto.cs
         /// </summary>
-        public string ErrorMsg { get; set; }
+        public string ErrorMsg { get; set; } = "";
     }
 }

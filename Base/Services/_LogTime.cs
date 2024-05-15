@@ -15,9 +15,7 @@ namespace Base
         //constructor
         public static void Init(string name = "") 
         {
-            if (name != "")
-                name += _newLine;
-
+            if (name != "") name += _newLine;
             _start = DateTime.Now;
             _now = _start;
             _result = _newLine + name;

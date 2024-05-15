@@ -75,10 +75,9 @@ namespace Base.Services
         /// </summary>
         /// <param name="path">file path</param>
         /// <returns>file string, return null if no file</returns>
-        public static async Task<string> ToStrA(string path)
+        public static async Task<string?> ToStrA(string path)
         {
-            if (!File.Exists(path))
-                return null;
+            if (!File.Exists(path)) return null;
 
             //utf8 file only !!
             using var file = new StreamReader(path, Encoding.UTF8);
@@ -100,7 +99,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorA("_File.cs StrToFileAsync() failed: " + ex.Message);
+                await _Log.ErrorRootA("_File.cs StrToFileAsync() failed: " + ex.Message);
                 return false;
             }
         }
@@ -137,10 +136,10 @@ namespace Base.Services
             int i = 0;
             if (tailPos)
                 while (File.Exists(filePath))
-                    filePath = Path.Combine(dir, fileName + fileExt + "(" + ++i + ")");
+                    filePath = Path.Combine(dir!, fileName + fileExt + "(" + ++i + ")");
             else
                 while (File.Exists(filePath))
-                    filePath = Path.Combine(dir, fileName + "(" + ++i + ")" + fileExt);
+                    filePath = Path.Combine(dir!, fileName + "(" + ++i + ")" + fileExt);
 
             return filePath;
         }

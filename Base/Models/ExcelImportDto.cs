@@ -13,17 +13,17 @@ namespace Base.Models
         /// (delegate) save imported rows into DB 
         /// ex: private List<string> SaveImportRows(List<T> okRows)
         /// </summary>
-        public FnSaveImportRows<T> FnSaveImportRows;
+        public FnSaveImportRows<T>? FnSaveImportRows;
 
         /// <summary>
         /// map to ImportLog.Type
         /// </summary>
-        public string ImportType;
+        public string ImportType = "";
 
         /// <summary>
         /// template file path
         /// </summary>
-        public string TplPath;
+        public string TplPath = "";
 
         /// <summary>
         /// directory for save excel file(source & failed)
@@ -53,12 +53,12 @@ namespace Base.Models
         /// <summary>
         /// ImportLog table row Id, set to _Str.NewId() if empty
         /// </summary>
-        public string LogRowId;
+        public string LogRowId = "";
 
         /// <summary>
         /// creator name
         /// </summary>
-        public string CreatorName;
+        public string CreatorName = "";
 
     }
 }

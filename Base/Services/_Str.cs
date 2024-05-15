@@ -1,4 +1,5 @@
 ﻿using Base.Models;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -48,7 +49,7 @@ namespace Base.Services
 
         public static string GetError(string error = "")
         {
-            return _Fun.PreError + _Str.EmptyToValue(error, _Fun.SystemError);
+            return _Fun.PreError + EmptyToValue(error, _Fun.SystemError);
         }
 
         //get BR code error
@@ -57,17 +58,24 @@ namespace Base.Services
             return _Fun.PreBrError + error;
         }
 
+        public static string ToSystemError(string error)
+        {
+            return string.IsNullOrEmpty(error)
+                ? ""
+                : _Fun.SystemError;
+        }
+
         /// <summary>
         /// check object is empty or not
         /// </summary>
         /// <param name="data">input string</param>
         /// <returns></returns>
-        public static bool IsEmpty(string data)
+        public static bool IsEmpty(string? data)
         {
             return (data == null || data == "");
         }
 
-        public static bool NotEmpty(string data)
+        public static bool NotEmpty(string? data)
         {
             return !IsEmpty(data);
         }
@@ -79,10 +87,9 @@ namespace Base.Services
         }
         */
 
-        public static string EmptyToValue(string data, string value)
+        public static string EmptyToValue(string? data, string value)
         {
-            return _Str.IsEmpty(data)
-                ? value : data;
+            return IsEmpty(data) ? value : data!;
         }
 
         /// <summary>
@@ -92,8 +99,7 @@ namespace Base.Services
         /// <returns></returns>
         public static string AddDirSep(string dir)
         {
-            if (IsEmpty(dir))
-                return _Fun.DirSep.ToString();
+            if (IsEmpty(dir)) return _Fun.DirSep.ToString();
             if (dir.Substring(dir.Length - 1, 1) != "/" && dir.Substring(dir.Length - 1, 1) != "\\")
                 dir += _Fun.DirSep;
             return dir;
@@ -106,11 +112,20 @@ namespace Base.Services
         /// <returns></returns>
         public static string AddSlash(string url)
         {
-            if (IsEmpty(url))
-                return "/";
+            if (IsEmpty(url)) return "/";
             if (url.Substring(url.Length - 1, 1) != "/")
                 url += "/";
             return url;
+        }
+
+        /// <summary>
+        /// add like % for sql
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string AddLike(string? value)
+        {
+            return IsEmpty(value) ? "" : value + "%";
         }
 
         public static string RemoveRightSlash(string dir)
@@ -131,8 +146,7 @@ namespace Base.Services
         public static string ReplaceChars(string source, string oldStr, string newStr)
         {
             return (source == "")
-                ? ""
-                : Regex.Replace(source, @"[" + oldStr + "]", newStr);
+                ? "" : Regex.Replace(source, @"[" + oldStr + "]", newStr);
         }
 
         /// <summary>
@@ -143,31 +157,32 @@ namespace Base.Services
         /// <returns></returns>
         public static string PreChar(int len, object obj, char c1)
         {
-            var str2 = obj.ToString();
-            return (str2.Length >= len) ? str2 : new string(c1, len - str2.Length) + str2;
+            var str = obj.ToString();
+            return (str!.Length >= len) ? str : new string(c1, len - str.Length) + str;
         }
 
         //add pre zero
         public static string PreZero(int len, object obj, bool matchLen = false)
         {
             var str = obj.ToString();
-            return (str.Length < len) ? new string('0', len - str.Length) + str :
-                matchLen ? str[..len] :
-                str;
+            return (str!.Length < len) ? new string('0', len - str.Length) + str :
+                matchLen ? str[..len] : str;
         }
 
         //字串後面補字元
         public static string TailChar(int len, object obj, char c1 = '0')
         {
-            var str2 = obj.ToString();
-            return (str2.Length >= len) ? str2 : str2 + new string(c1, len - str2.Length);
+            var str = obj.ToString();
+            return (str!.Length >= len) ? str : str + new string(c1, len - str.Length);
         }
 
+        /*
         //trim string, return "" if null       
         public static string Trim(string str)
         {
             return (str == null) ? "" : str.Trim();
         }
+        */
 
         /// <summary>
         /// get \t string times
@@ -177,8 +192,7 @@ namespace Base.Services
         public static string Tab(int times)
         {
             var result = "";
-            for (var i = 0; i < times; i++)
-                result += "\t";
+            for (var i = 0; i < times; i++) result += "\t";
             return result;
         }
 
@@ -186,12 +200,12 @@ namespace Base.Services
         /// get JObject string
         /// </summary>
         /// <param name="fid">JObject field name</param>
-        /// <param name="data">value</param>
+        /// <param name="value">value</param>
         /// <returns>JObject string</returns>
-        public static string JsonData(string fid, string data)
+        public static string JsonData(string fid, string value)
         {
-            var data2 = new JObject { [fid] = data };
-            return data2.ToString();
+            var json = new JObject { [fid] = value };
+            return json.ToString();
         }
 
         /** 將 url64 字串還原為正常的 base64 字串, $pb_decode=true表示要進行 base64 解碼 */
@@ -213,10 +227,9 @@ namespace Base.Services
         /// </summary>
         /// <param name="str">json string</param>
         /// <returns>JObject</returns>
-        public static JObject ToJson(string str)
+        public static JObject? ToJson(string str)
         {
-            if (string.IsNullOrEmpty(str))
-                return null;
+            if (str == "") return null;
 
             try
             {
@@ -245,27 +258,24 @@ namespace Base.Services
         /// <summary>
         /// to List<string>
         /// </summary>
-        /// <param name="str"></param>
+        /// <param name="str">如果''則傳回[]</param>
         /// <param name="sep">seperator</param>
         /// <returns></returns>
         public static List<string> ToList(string str, char sep = ',')
         {
-            return (_Str.IsEmpty(str))
-                ? null
-                : new List<string>(str.Split(sep));
+            return new List<string>(str.Split(sep));
         }
 
         /// <summary>
         /// convert string to list int
         /// </summary>
-        /// <param name="str"></param>
+        /// <param name="str">如果''則傳回[]</param>
         /// <param name="sep"></param>
         /// <returns></returns>
-        public static List<int> ToIntList(string str, char sep = ',')
+        public static List<int> ToIntList(string? str, char sep = ',')
         {
-            return (_Str.IsEmpty(str))
-                ? null
-                : str.Split(sep).Select(Int32.Parse).ToList();
+            return IsEmpty(str)
+                ? new() : str!.Split(sep).Select(Int32.Parse).ToList();
         }
 
         //get hash key(base64, 25 char) for cache key
@@ -280,15 +290,27 @@ namespace Base.Services
         /// </summary>
         /// <param name="str"></param>
         /// <returns>22 char</returns>
-        public static string Md5(string str)
+        public static string Md5(string? str)
         {
-            if (string.IsNullOrEmpty(str))
-                return "";
-
-            var bytes = MD5.Create().ComputeHash(Encoding.Default.GetBytes(str));
+            if (string.IsNullOrEmpty(str)) return "";
+            var bytes = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(str));
             return Convert.ToBase64String(bytes)[..22]
-                .Replace('+', '-')
-                .Replace('/', '_');
+                .Replace('+', '-').Replace('/', '_');
+        }
+
+        //md5 hex string, 32char lowercase
+        public static string Md5Hex(string? str)
+        {
+            if (string.IsNullOrEmpty(str)) return "";
+            var bytes = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(str));
+            return Convert.ToHexString(bytes).ToLower();
+            /*
+            // Convert the byte array to string format
+            StringBuilder sb = new StringBuilder();
+            foreach (byte b in bytes)
+                sb.Append($"{b:X2}");
+            return sb.ToString();
+            */
         }
 
         /// <summary>
@@ -356,21 +378,21 @@ namespace Base.Services
         */
 
         /// <summary>
+        /// 包含商業規則, 特殊用途, 從newKeyJson讀取new key string
         /// get new key from newKeyJson(CrudEdit.cs)
         /// </summary>
         /// <param name="newKeyJson">CrudEdit._newKeyJson</param>
         /// <param name="tableSn">table sn</param>
-        /// <param name="rowIndex">row index, base 0 !! (different)</param>
+        /// <param name="rowIndex">row index, base 0 !! (與keyIdx不同)</param>
         /// <returns></returns>
         public static string ReadNewKeyJson(JObject newKeyJson, string tableSn = "0", int rowIndex = 0)
         {
             var fid = "t" + tableSn;
-            if (newKeyJson == null || newKeyJson[fid] == null)
-                return "";
+            if (newKeyJson[fid] == null) return "";
 
-            JObject json = newKeyJson[fid] as JObject;
+            JObject? json = newKeyJson[fid] as JObject;
             fid = "f" + (rowIndex + 1); //change to base 1
-            return (json[fid] == null) ? "" : json[fid].ToString();
+            return (json![fid] == null) ? "" : json[fid]!.ToString();
         }
 
         /// <summary>
@@ -380,7 +402,7 @@ namespace Base.Services
         /// <returns></returns>
         public static bool ToBool(object obj)
         {
-            var str = obj.ToString().ToLower();
+            var str = obj.ToString()!.ToLower();
             return (str == "1" || str == "true");
         }
 
@@ -395,7 +417,7 @@ namespace Base.Services
             if (json != null)
             {
                 foreach (var item in json)
-                    source = source.Replace("[" + item.Key + "]", item.Value.ToString());
+                    source = source.Replace("[" + item.Key + "]", item.Value!.ToString());
             }
             return source;
         }
@@ -412,7 +434,7 @@ namespace Base.Services
         //convert hex string to normal string
         public static string HexToStr(string hex)
         {
-            return Convert.ToString(Convert.FromHexString(hex));
+            return Convert.ToString(Convert.FromHexString(hex)) ?? "";
             /*
             var date = "";
             while (hex.Length > 0)
@@ -437,22 +459,20 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// check key rule: alphbetic, numeric, comma(,)
+        /// check key rule for db: alphbetic、numeric、comma(,)
         /// </summary>
         /// <param name="str"></param>
         /// <param name="logTail">optional, when wrong add log tail</param>
         /// <returns></returns>
-        public static async Task<bool> CheckKeyA(string str, bool logError = true)
+        public static bool CheckKey(string str, bool logError = true)
         {
-            if (_Str.IsEmpty(str))
-                return true;
+            if (IsEmpty(str)) return true;
 
             Regex rg = new(@"^[a-zA-Z0-9,]*$");
-            if (rg.IsMatch(str))
-                return true;
+            if (rg.IsMatch(str)) return true;
 
             if (logError)
-                await _Log.ErrorA($"_Str.CheckKeyA() failed ({str})");
+                _Log.Error($"_Str.CheckKeyA() failed ({str})");
             return false;
         }
 
@@ -486,13 +506,11 @@ namespace Base.Services
         public static string GetMid(string source, string left, string right)
         {
             var pos1 = source.IndexOf(left);
-            if (pos1 < 0)
-                return "";
+            if (pos1 < 0) return "";
 
             source = source[(left.Length + pos1)..];
             pos1 = source.IndexOf(right);
-            if (pos1 > 0)
-                source = source[..pos1];
+            if (pos1 > 0) source = source[..pos1];
             return source;
         }
 
@@ -597,7 +615,6 @@ namespace Base.Services
         {
             return ToBaseStr(GuidBytes(), _base62);
         }
-        */
 
         private static byte[] GuidBytes()
         {
@@ -616,7 +633,6 @@ namespace Base.Services
             //var result = new List<int>();
             var targetBase = baseChars.Length;
             var result = "";
-
             int count;
             while ((count = source.Length) > 0)
             {
@@ -628,9 +644,7 @@ namespace Base.Services
                     byte digit = (byte)((accumulator - (accumulator % targetBase)) / targetBase);
                     remainder = accumulator % targetBase;
                     if (quotient.Count > 0 || digit != 0)
-                    {
                         quotient.Add(digit);
-                    }
                 }
 
                 //result.Insert(0, remainder);
@@ -640,14 +654,8 @@ namespace Base.Services
 
             //modify
             return result;
-            /*
-            var output = new byte[result.Count];
-            for (int i = 0; i < result.Count; i++)
-                output[i] = (byte)result[i];
-
-            return output;
-            */
         }
+        */
 
         /// <summary>
         /// file extension to http content type, for download file

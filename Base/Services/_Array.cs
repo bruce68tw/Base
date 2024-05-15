@@ -8,9 +8,8 @@ namespace Base.Services
         //string[] to string 
         public static string ToStr(string[] list, string sep = ",")
         {
-            return (list == null || list.Length == 0)
-                ? ""
-                : string.Join(sep, list);
+            return (list.Length == 0)
+                ? "" : string.Join(sep, list);
         }
 
         /// <summary>
@@ -21,7 +20,7 @@ namespace Base.Services
         public static List<IdStrDto> ToIdStrs(params string[] args)
         {
             var data = new List<IdStrDto>();
-            for (var i=0; i<args.Length; i=i+2)
+            for (var i=0; i<args.Length; i+=2)
             {
                 data.Add(new IdStrDto()
                 {

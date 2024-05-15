@@ -6,14 +6,19 @@ namespace Base.Services
     public static class _Object
     {
 
-        public static bool IsEmpty(object data)
+        public static bool IsEmpty(object? data)
         {
             return (data == null || data.ToString() == "");
         }
 
-        public static bool NotEmpty(object data)
+        public static bool NotEmpty(object? data)
         {
             return !IsEmpty(data);
+        }
+
+        public static string NullToEmpty(object? data)
+        {
+            return (data == null) ? "" : data.ToString()!;
         }
 
         /// <summary>
@@ -36,27 +41,27 @@ namespace Base.Services
         /// <summary>
         /// get property value by  name
         /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="name">property name</param>
+        /// <param name="data">前需要加 this ??</param>
+        /// <param name="fid">property name</param>
         /// <returns></returns>
-        public static object GetValueByName(this object obj, string name)
+        public static object GetValueByFid(this object data, string fid)
         {
-            return obj.GetType().GetProperty(name).GetValue(obj, null);
+            return data.GetType().GetProperty(fid)!.GetValue(data, null)!;
         }
 
         /// <summary>
         /// set propery 
         /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="name">property name</param>
+        /// <param name="data"></param>
+        /// <param name="fid">property name</param>
         /// <returns></returns>
-        public static void SetValueByName(this object obj, string name, object value)
+        public static void SetValueByName(this object data, string fid, object value)
         {
-            obj.GetType().GetProperty(name).SetValue(obj, value, null);
+            data.GetType().GetProperty(fid)!.SetValue(data, value, null);
         }
 
         /// <summary>
-        /// get Type name
+        /// ?? get Type name 
         /// </summary>
         public static string GetTypeFullName(this PropertyInfo inputObject)
         {

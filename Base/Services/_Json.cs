@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -20,12 +21,12 @@ namespace Base.Services
         //to json string, return "{}" if input null for jquery parsing !!
         public static string ToStr(JObject json)
         {
-            return (json == null) ? "{}" : json.ToString(Formatting.None);
+            return json.ToString(Formatting.None);
         }
 
-        public static JArray StrToArray(string str)
+        public static JArray? StrToArray(string? str)
         {
-            return _Str.IsEmpty(str) ? null : JArray.Parse(str);
+            return _Str.IsEmpty(str) ? null : JArray.Parse(str!);
         }
 
         /*
@@ -37,6 +38,12 @@ namespace Base.Services
             };
         }
         */
+
+        public static string NullFieldToEmpty(JObject json, string fid)
+        {
+            return (json[fid] == null) 
+                ? "" : json[fid]!.ToString();
+        }
 
         public static JObject GetError(string error = "")
         {
@@ -66,18 +73,17 @@ namespace Base.Services
         /// <summary>
         /// json array to string
         /// </summary>
-        public static string ArrayToStr(JArray rows)
+        public static string? ArrayToStr(JArray rows)
         {
-            return (rows == null || rows.Count == 0) 
-                ? null 
-                : rows.ToString(Formatting.Indented);
+            return (rows.Count == 0) 
+                ? null : rows.ToString(Formatting.Indented);
         }
 
         //sort json array
         public static JArray SortArray(JArray rows, string fid)
         {
             //put empty field to last
-            return new JArray(rows.OrderBy(a => (a[fid].ToString() == "") ? "zzz" : a[fid].ToString()));
+            return new JArray(rows.OrderBy(a => (a[fid]!.ToString() == "") ? "zzz" : a[fid]!.ToString()));
         }
 
         //convert array to list string
@@ -85,7 +91,7 @@ namespace Base.Services
         {
             var data = new List<string>();
             foreach (var row in rows)
-                data.Add(row[fid].ToString());
+                data.Add(row[fid]!.ToString());
             return data;
         }
 
@@ -102,29 +108,25 @@ namespace Base.Services
             foreach (var row in rows)
                 data += quote + row[fid] + quote + sep;
             return (data == "")
-                ? ""
-                : data[..^sep.Length];
+                ? "" : data[..^sep.Length];
         }
 
-        //find json array
-        public static JArray FindArray(JArray rows, string fid, string value)
+        //filter json array
+        public static JArray? FilterArray(JArray rows, string fid, string value)
         {
-            if (rows == null)
-                return null;
+            //if (rows == null) return null;
 
             var finds = new JArray();
             foreach (var row in rows)
-            {
-                if (row[fid].ToString() == value)
-                    finds.Add(row);
-            }
-            return finds.Count == 0 ? null : finds;
+                if (row[fid]!.ToString() == value) finds.Add(row);
+            return (finds.Count == 0) 
+                ? null : finds;
         }
 
         //find json array 1 row
-        public static JObject FindArray1(JArray rows, string fid, string value)
+        public static JObject? FindArray(JArray rows, string fid, string value)
         {
-            var finds = FindArray(rows, fid, value);
+            var finds = FilterArray(rows, fid, value);
             return (finds == null) ? null : (JObject)finds[0];
         }
 
@@ -139,7 +141,7 @@ namespace Base.Services
         //JArray to string[], JArray must be string[] !!
         public static string[] ArrayToStrArray(JArray rows)
         {
-            return rows.ToObject<string[]>();
+            return rows.ToObject<string[]>()!;
         }
 
         /// <summary>
@@ -154,7 +156,7 @@ namespace Base.Services
             var tailLen = tail.Length;
             foreach (var row in rows)
             {
-                var value = row[fid].ToString();
+                var value = row[fid]!.ToString();
                 var len = value.Length - tailLen;
                 if (value[len..] == tail)
                     row[fid] = value[..len];
@@ -179,10 +181,8 @@ namespace Base.Services
             foreach (var field in fields)
             {
                 var key = field.Name;
-                if (from[key] != null)
-                {
-                    field.SetValue(null, from[key].ToString());
-                }
+                if (from[key] != null) 
+                    field.SetValue(null, from[key]!.ToString());
             }
         }
 
@@ -200,7 +200,7 @@ namespace Base.Services
             {
                 var modelProp = model.GetType().GetProperty(item.Key);
                 if (modelProp != null)
-                    modelProp.SetValue(model, item.Value.ToString(), null);
+                    modelProp.SetValue(model, item.Value!.ToString(), null);
             }
             /* 舊的寫法
             foreach (var prop in from.GetType().GetProperties())
@@ -213,18 +213,26 @@ namespace Base.Services
         }
 
         //is empty or not
-        public static bool IsEmpty(JObject json)
+        public static bool IsEmpty(JObject? json)
         {
             return (json == null || !json.HasValues);
         }
 
-        //json是否為空白, 並且不考慮底線欄位
-        public static bool IsEmptyBySkipUnderLine(JObject json)
+        public static bool NotEmpty(JObject? json)
         {
-            if (IsEmpty(json))
-                return true;
+            return !IsEmpty(json);
+        }
 
-            foreach(var item in json)
+        /// <summary>
+        /// json是否為空白, 並且不考慮特殊欄位(底線開頭欄位)
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        public static bool IsEmptyNoSpec(JObject? json)
+        {
+            if (IsEmpty(json)) return true;
+
+            foreach(var item in json!)
             {
                 if (item.Key[..1] != "_" && item.Value != null)
                     return false;
@@ -235,24 +243,23 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// read inputJson(CrudEdit.cs) and get first row
+        /// get rows[0] of json['_rows'] for multiple crudEdit 
         /// </summary>
-        /// <param name="inputJson"></param>
+        /// <param name="json"></param>
         /// <returns></returns>
-        public static JObject ReadInputJson0(JObject inputJson)
+        public static JObject? GetRows0(JObject json)
         {
-            var fid = "_rows";  //same to CrudEdit.Rows
-            if (inputJson[fid] == null)
-                return null;
+            //var fid = "_rows";  //same to CrudEdit.Rows
+            if (json[_Fun.FidRows] == null) return null;
 
-            var rows = inputJson[fid] as JArray;
-            return rows[0] as JObject;
+            var rows = json[_Fun.FidRows] as JArray;
+            return rows![0] as JObject;
         }
 
+        //compare json[fid] and value
         public static bool IsFidEqual(JObject json, string fid, string value)
         {
-            return (json == null || string.IsNullOrEmpty(value)) ? false :
-                (json[fid].ToString() ==  value);
+            return (json[fid]!.ToString() ==  value);
         }
 
         /// <summary>
@@ -261,12 +268,11 @@ namespace Base.Services
         /// <param name="upJson">input row</param>
         /// <param name="childIdx">child index</param>
         /// <returns>JArray</returns>
-        public static JArray GetChildRows(JObject upJson, int childIdx, string fidRows = _Fun.FidRows, string fidChilds = _Fun.FidChilds)
+        public static JArray? GetChildRows(JObject upJson, int childIdx)
         {
-            var child = GetChildJson(upJson, childIdx, fidChilds);
-            return (child == null || child[fidRows] == null)
-                ? null
-                : child[fidRows] as JArray;
+            var child = GetChildJson(upJson, childIdx);
+            return (child == null || child[_Fun.FidRows] == null)
+                ? null : child[_Fun.FidRows] as JArray;
         }
 
         /// <summary>
@@ -275,16 +281,15 @@ namespace Base.Services
         /// <param name="upJson"></param>
         /// <param name="childIdx"></param>
         /// <returns></returns>
-        public static JObject GetChildJson(JObject upJson, int childIdx, string fidChilds = _Fun.FidChilds)
+        public static JObject? GetChildJson(JObject upJson, int childIdx)
         {
-            if (upJson == null || upJson[fidChilds] == null)
-                return null;
+            const string fid = _Fun.FidChilds;
+            if (upJson == null || upJson[fid] == null) return null;
 
             //JArray childs = upJson[Childs] as JArray;
-            return (upJson[fidChilds].Count() <= childIdx
-                    || _Json.IsEmpty(upJson[fidChilds][childIdx] as JObject))
-                ? null
-                : upJson[fidChilds][childIdx] as JObject;
+            return (upJson[fid]!.Count() <= childIdx
+                    || IsEmpty(upJson[fid]![childIdx] as JObject))
+                ? null : upJson[fid]![childIdx] as JObject;
         }
 
         /*

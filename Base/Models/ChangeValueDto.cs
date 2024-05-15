@@ -1,22 +1,22 @@
 ﻿
 namespace Base.Models
 {
-    //for edit ofr
+    //for edit form
     public class ChangeValueDto
     {
         /// <summary>
         /// key
         /// </summary>
-        public string Key { get; set; }
+        public string Key { get; set; } = "";
 
         /// <summary>
         /// old value
         /// </summary>
-        public string OldValue { get; set; }
+        public string OldValue { get; set; } = "";
 
         /// <summary>
         /// new value
         /// </summary>
-        public string NewValue { get; set; }
+        public string NewValue { get; set; } = "";
     }
 }

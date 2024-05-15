@@ -21,18 +21,18 @@ namespace Base.Models
         public int recordsFiltered { get; set; }
 
         //query condition json in string type
-        public string findJson { get; set; }
+        public string findJson { get; set; } = "";
 
         //優先考慮 sort 欄位, 內容為: A/D + fid, ex:Au.Account
-        public string sort { get; set; }
+        public string sort { get; set; } = "";
 
         //search word
-        public DtSearchDto search { get; set; }
+        public DtSearchDto? search { get; set; }
 
         /// <summary>
         /// sorting, get from jQuery DataTables, then get OrderBy, OrderDir
         /// </summary>
-        public List<DtOrderDto> order { get; set; }
+        public List<DtOrderDto>? order { get; set; }
 
     }
 
@@ -52,7 +52,7 @@ namespace Base.Models
     public class DtSearchDto
     {
         //search value
-        public string value { get; set; }
+        public string value { get; set; } = "";
 
         //no used now
         public bool regex { get; set; }

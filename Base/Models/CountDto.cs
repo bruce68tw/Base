@@ -6,10 +6,10 @@
     public class CountDto
     {
         //data type
-        public string DataType { get; set; }
+        public string DataType { get; set; } = "";
 
         //row type
-        public string RowType { get; set; }
+        public string RowType { get; set; } = "";
 
         //amount
         public int Amount { get; set; }

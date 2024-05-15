@@ -7,13 +7,15 @@ namespace Base.Services
         //get value in findJson
         public static string GetFindValue(DtDto dt, string fid)
         {
-            if (_Str.IsEmpty(dt.findJson))
-                return "";
+            if (dt.findJson == null) return "";
+            var json = _Str.ToJson(dt.findJson);
+            return (json == null)
+                ? "" : _Json.NullFieldToEmpty(json, fid);
 
-            var findJson = _Str.ToJson(dt.findJson);
-            return (findJson[fid] == null)
-                ? ""
-                : findJson[fid].ToString();
+            //return _Json.NullFieldToEmpty(_Str.ToJson(dt.findJson), fid);
+            //return (findJson == null)
+            //    ? _Object.NullToEmpty(findJson![fid])
+            //    : "";
         }
 
     }//class

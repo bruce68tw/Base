@@ -1,4 +1,5 @@
 ﻿using Base.Services;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
@@ -21,22 +22,25 @@ namespace Base.Models
         //public bool HasFKey = true;
 
         /// <summary>
-        /// auto Id length, 0 means set by code
-        /// //auto key value when create(call _Str.NewId())
-        /// //if false, then set by code !!
+        /// auto Id length, empty for default.<br/>
+        /// values: _Fun.AutoIdShort(6)、_Fun.AutoIdMid(10)、_Fun.AutoIdLong(16)
         /// </summary>
-        //public bool AutoNewId = true;
         public int AutoIdLen = _Fun.AutoIdMid;
+
+        /// <summary>
+        /// 自行函數 for 設定 new key
+        /// </summary>
+        public FnGetNewKeyA? FnGetNewKeyA = null;
 
         /// <summary>
         /// table name
         /// </summary>
-        public string Table;
+        public string Table = "";
 
         /// <summary>
         /// sql string, if not empty, will read db
-        /// master readSql must use "=", ex: Id='{0}', or Id='{{0}}'(has @ sign)
-        /// child readSql must use "in", ex: Id in ({0}), or Id in ({{0}})(has @ sign)
+        /// master/child-1 readSql must use "=", ex: Id=@Id
+        /// child-2 readSql must use "in", ex: Id in ({0}), or Id in ({{0}})(has @ sign)
         /// </summary>
         public string ReadSql = "";
 
@@ -44,18 +48,18 @@ namespace Base.Models
         /// primary key field id
         /// note: single pkey can not edit
         /// </summary>
-        public string PkeyFid;
+        public string PkeyFid = "";
 
         /// <summary>
         /// (2nd)foreign key field id
         /// 這個欄位不可設為 required !!
         /// </summary>
-        public string FkeyFid;
+        public string FkeyFid = "";
 
         /// <summary>
         /// field list
         /// </summary>
-        public EitemDto[] Items;
+        public EitemDto[] Items = null!;
 
         /// <summary>
         /// field list for empty to null, usually for data field
@@ -64,11 +68,12 @@ namespace Base.Models
         public string[] EmptyToNulls = new string[] { };
 
         /// <summary>
+        /// Col4可為null, 元素也可為null
         /// creator, created datetime, reviser, revised datetime
         /// consider time difference
         /// default has 4 fields, set this to null if none
         /// </summary>
-        public string[] Col4 = new string[] { "Creator", "Created", "Reviser", "Revised" };
+        public string?[]? Col4 = new string[] { "Creator", "Created", "Reviser", "Revised" };
 
         /// <summary>
         /// (2nd)order by string (not include "order by")
@@ -79,18 +84,18 @@ namespace Base.Models
         /// child edit form list
         /// </summary>
         //public List<EditDto> Childs = null;
-        public EditDto[] Childs = null;
+        public EditDto[]? Childs = null;
 
         /// <summary>
         /// fid no 對應, 儲存資料時會系統重新設定, PG不必處理
         /// 如果無異動欄位, 則此變數為 null
         /// </summary>
-        public JObject _FidNo = null;
+        public JObject? _FidNo = null;
 
         /// <summary>
         /// 必填欄位清單, 儲存資料時會系統重新設定, PG不必處理
         /// </summary>
-        public List<string> _FidRequires = null;
+        public List<string>? _FidRequires = null;
 
     }//class
 }

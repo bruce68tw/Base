@@ -3,7 +3,13 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Configurations>Debug;Release;Debug-Local;Debug-IP</Configurations>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Attributes\XgRB0Attribute.cs_old" />
+    <None Remove="Attributes\XgRBAttribute.cs_old" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />

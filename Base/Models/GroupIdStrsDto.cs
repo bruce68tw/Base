@@ -7,11 +7,11 @@ namespace Base.Models
         /// <summary>
         /// group text
         /// </summary>
-        public string Group { get; set; }
+        public string Group { get; set; } = "";
 
         /// <summary>
         /// for select options
         /// </summary>
-        public List<IdStrDto> Items { get; set; }
+        public List<IdStrDto> Items { get; set; } = null!;
     }
 }

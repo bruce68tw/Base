@@ -24,28 +24,26 @@ namespace Base.Services
         //check float
         public static bool IsNumber(object data)
         {
-            return Regex.IsMatch(data.ToString(), @"^[0-9.]");
+            return Regex.IsMatch(data.ToString()!, @"^[0-9.]");
         }
 
         //check integer
         public static bool IsDigits(object data)
         {
-            return Regex.IsMatch(data.ToString(), @"^[0-9]");
+            return Regex.IsMatch(data.ToString()!, @"^[0-9]");
         }
 
 		//check text, allow "," for string list
         public static bool IsText(object data)
         {
             return _Object.IsEmpty(data) 
-                ? true 
-                : Regex.IsMatch(data.ToString(), @"^[\w-,./]");
+                ? true : Regex.IsMatch(data.ToString()!, @"^[\w-,./]");
         }
 
         public static bool IsHtml(object data)
         {
             return _Object.IsEmpty(data) 
-                ? true 
-                : Regex.IsMatch(data.ToString(), @"^[\w-,&;]");
+                ? true : Regex.IsMatch(data.ToString()!, @"^[\w-,&;]");
         }
 
         /// <summary>
@@ -55,17 +53,10 @@ namespace Base.Services
         /// <returns></returns>
         public static bool IsJsonText(JObject row)
         {
-            if (row == null)
-                return true;
-
+            //if (row == null) return true;
             foreach (var item in row)
-            {
-                var key = item.Key;
-                if (!IsText(row[key].ToString()))
-                    return false;
-            }
-            //case of ok
-            return true;
+                if (!IsText(row[item.Key]!.ToString())) return false;            
+            return true;    //case of ok
         }
 
         /// <summary>
@@ -79,7 +70,7 @@ namespace Base.Services
             foreach (var item in row)
             {
                 var key = item.Key;
-                if (!IsText(row[key].ToString()))
+                if (!IsText(row[key]!.ToString()))
                 {
                     result = false;
                     //TODO: temp remark

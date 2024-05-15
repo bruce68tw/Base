@@ -5,6 +5,7 @@
     /// </summary>
     public class ConfigDto
     {
+        /*
         //constructor
         //must use { get; set; } for binding at Startup.cs !!
         public ConfigDto()
@@ -25,21 +26,22 @@
             //Redis = "";
             HtmlImageUrl = "";
         }
+        */
 
         //db connect string
-        public string Db { get; set; }
+        public string Db { get; set; } = "";
 
         //system name
-        public string SystemName { get; set; }
+        public string SystemName { get; set; } = "MIS System";
 
         //default locale code
-        public string Locale { get; set; }
+        public string Locale { get; set; } = "zh-TW";
 
         //server Id for new key
-        public string ServerId { get; set; }
+        public string ServerId { get; set; } = "";
 
         //log error for slow sql(mini secode)
-        public int SlowSql { get; set; }
+        public int SlowSql { get; set; } = 1000;
 
         //log debug
         public bool LogDebug { get; set; }
@@ -48,13 +50,13 @@
         public bool LogSql { get; set; }
 
         //root email address for send error
-        public string RootEmail { get; set; }
+        public string RootEmail { get; set; } = "";
 
         //tester email address
-        public string TesterEmail { get; set; }
+        public string TesterEmail { get; set; } = "";
 
         //upload file max size(MB)
-        public int UploadFileMax { get; set; }
+        public int UploadFileMax { get; set; } = 5;
 
         //cache time(second)
         //public int CacheSecond = "";
@@ -63,57 +65,57 @@
         public bool SSL { get; set; }
 
         //smtp, format: 0(Host),1(Port),2(Ssl),3(Id),4(Pwd),5(FromEmail),6(FromName) 
-        public string Smtp { get; set; }
+        public string Smtp { get; set; } = "";
 
         //email image path list: Id,Path.., ex: _TopImage, c:/xx/xx.png
-        public string EmailImagePairs { get; set; }
+        public string EmailImagePairs { get; set; } = "";
 
         /// <summary>
         /// html image root url for sublime, ex: http://xxx.xx/image, auto add right slash
         /// </summary>
-        public string HtmlImageUrl { get; set; }
+        public string HtmlImageUrl { get; set; } = "";
 
         /// <summary>
         /// redis server for session, ex: "127.0.0.1:6379,ssl=true,password=xxx,defaultDatabase=x", 
         /// empty for memory cache
         /// </summary>
-        public string Redis { get; set; }
+        public string Redis { get; set; } = "";
 
         /// <summary>
         /// for CORS, 逗號分隔
         /// empty for memory cache
         /// </summary>
-        public string AllowOrigins { get; set; }
+        public string AllowOrigins { get; set; } = "";
 
         /// <summary>
         /// google client Id for oAuth2
         /// </summary>
-        public string GoogleClientId { get; set; }
+        public string GoogleClientId { get; set; } = "";
 
         /// <summary>
         /// google client Secret for oAuth2
         /// </summary>
-        public string GoogleClientSecret { get; set; }
+        public string GoogleClientSecret { get; set; } = "";
 
         /// <summary>
         /// google oAuth2 redirect url
         /// </summary>
-        public string GoogleRedirect { get; set; }
+        public string GoogleRedirect { get; set; } = "";
 
         /// <summary>
         /// facebook client Id for oAuth2
         /// </summary>
-        public string FbClientId { get; set; }
+        public string FbClientId { get; set; } = "";
 
         /// <summary>
         /// facebook client Secret for oAuth2
         /// </summary>
-        public string FbClientSecret { get; set; }
+        public string FbClientSecret { get; set; } = "";
 
         /// <summary>
         /// facebook oAuth2 redirect url
         /// </summary>
-        public string FbRedirect { get; set; }
+        public string FbRedirect { get; set; } = "";
 
     }
 }

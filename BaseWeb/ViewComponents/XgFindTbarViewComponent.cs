@@ -13,10 +13,9 @@ namespace BaseWeb.ViewComponents
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
-        public HtmlString Invoke(XgFindTbarDto dto = null)
+        public HtmlString Invoke(XgFindTbarDto? dto = null)
         {
-            if (dto == null)
-                dto = new XgFindTbarDto();
+            dto ??= new XgFindTbarDto();
 
             //set toolbar buttons
             var baseR = _Locale.GetBaseRes();
@@ -27,10 +26,7 @@ namespace BaseWeb.ViewComponents
                 html += string.Format("<button type='button' class='btn xg-btn-size btn-success' onclick='_crudR.onFind2()'>{0}<i class='ico-find2'></i></button>", baseR.BtnFind2);
 
             if (dto.IsHori)
-            {
-                //horizontal
                 html = "<span class='col-md-3 xg-find-tbar'>" + html + "</span>";
-            }
             else
             {
                 //vertical
@@ -41,8 +37,7 @@ namespace BaseWeb.ViewComponents
         {html}
     </div>
 </div>";
-            }
-            
+            }            
             return new HtmlString(html);
         }
 

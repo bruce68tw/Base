@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
+﻿using Base.Interfaces;
+using System.Threading.Tasks;
 
 namespace Base.Services
 {
@@ -8,34 +9,41 @@ namespace Base.Services
     public class _Cache
     {
 
-        private static ICacheService GetService()
+        private static ICacheS GetService()
         {
-            return (ICacheService)_Fun.DiBox.GetService(typeof(ICacheService));
+            return (ICacheS)_Fun.DiBox!.GetService(typeof(ICacheS))!;
         }
 
-        public static string GetStr(string key)
+        public static string? GetStr(string userId, string key)
         {
-            return GetService().GetStr(key);
+            return GetService().GetStr(userId, key);
         }
 
-        public static bool SetStr(string key, string value)
+        public static bool SetStr(string userId, string key, string value)
         {
-            return GetService().SetStr(key, value);
+            return GetService().SetStr(userId, key, value);
         }
 
-        public static T GetModel<T>(string key)
-        {            
-            return _Model.JsonStrToModel<T>(GetService().GetStr(key));
+        public static T? GetModel<T>(string userId, string key)
+        {
+            var str = GetService().GetStr(userId, key);
+            return (_Str.IsEmpty(str)) 
+                ? default : _Model.JsonStrToModel<T>(str!);
         }
 
-        public static bool SetModel<T>(string key, T model)
+        public static bool SetModel<T>(string userId, string key, T model)
         {
-            return GetService().SetStr(key, _Model.ToJsonStr(model));
+            return GetService().SetStr(userId, key, _Model.ToJsonStr(model));
         }
 
-        public static bool DeleteKey(string key)
+        public static bool DeleteKey(string userId, string key)
         {
-            return GetService().DeleteKey(key);
+            return GetService().DeleteKey(userId, key);
+        }
+
+        public static async Task ResetDbA()
+        {
+            await GetService().ResetDbA();
         }
     }
 }

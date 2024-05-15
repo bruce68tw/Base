@@ -26,12 +26,12 @@ namespace Base.Services
         /// <param name="sql"></param>
         /// <param name="db"></param>
         /// <returns></returns>
-        public static async Task<ChartDto> GetDataA(string title, string sql, Db db = null)
+        public static async Task<ChartDto> GetDataA(string title, string sql, Db? db = null)
         {
             //read db rows & close
             var newDb = _Db.CheckOpenDb(ref db);
             var rows = await _Db.GetModelsA<IdNumDto>(sql, null, db);
-            await _Db.CheckCloseDbA(db, newDb);
+            await _Db.CheckCloseDbA(db!, newDb);
 
             //initial result
             var result = new ChartDto
@@ -60,12 +60,12 @@ namespace Base.Services
         /// <param name="colFids">欄位Id清單,空白表示同labels</param>
         /// <param name="db"></param>
         /// <returns></returns>
-        public static async Task<ChartGroupDto> GetGroupDataA(string title, string sql, List<string> labels, List<string> colFids = null, Db db = null)
+        public static async Task<ChartGroupDto> GetGroupDataA(string title, string sql, List<string> labels, List<string>? colFids = null, Db? db = null)
         {
             //read db rows & close
             var newDb = _Db.CheckOpenDb(ref db);
             var rows = await _Db.GetModelsA<RowColNumDto>(sql, null, db);
-            await _Db.CheckCloseDbA(db, newDb);
+            await _Db.CheckCloseDbA(db!, newDb);
 
             //set colNameMap
             var colLen = labels.Count;

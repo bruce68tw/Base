@@ -5,6 +5,11 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Drawing;
+using SkiaSharp;
+using DocumentFormat.OpenXml.Vml;
 
 namespace BaseApi.Services
 {
@@ -22,7 +27,7 @@ namespace BaseApi.Services
 
         public static HttpContext GetHttp()
         {
-            var service = (IHttpContextAccessor)_Fun.DiBox.GetService(typeof(IHttpContextAccessor));
+            var service = (IHttpContextAccessor)_Fun.DiBox!.GetService(typeof(IHttpContextAccessor))!;
             return service.HttpContext;
         }
 
@@ -101,7 +106,7 @@ namespace BaseApi.Services
         {
             //TODO
             var request = WebRequest.Create(url) as HttpWebRequest;
-            request.Method = isGet ? "GET" : "POST";
+            request!.Method = isGet ? "GET" : "POST";
             request.KeepAlive = true; //keep alive
             request.ContentType = "application/x-www-form-urlencoded";
 
@@ -112,12 +117,81 @@ namespace BaseApi.Services
                 await reqStream.WriteAsync(bs.AsMemory(0, bs.Length));
             }
 
-            var response = request.GetResponse() as HttpWebResponse; ;
-            var stream = new StreamReader(response.GetResponseStream());
+            var response = request.GetResponse() as HttpWebResponse;
+            var stream = new StreamReader(response!.GetResponseStream());
             var result = await stream.ReadToEndAsync();
             //stream.Close();
             stream.Dispose();
             return result;
+        }
+
+        /// <summary>
+        /// convert string to image for front captcha
+        /// width=90 is for 6 char
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="width">about code.Length * 16</param>
+        /// <param name="height"></param>
+        /// <param name="fontSize"></param>
+        public static MemoryStream OutputStrImage(string code, int width = 0, int height = 32, int fontSize = 20)
+        {
+            if (string.IsNullOrEmpty(code)) code = "??";
+
+            if (width == 0) width = code.Length * 16;
+            using var image = new SKBitmap(width, height);
+            using var canvas = new SKCanvas(image);
+            // Get random
+            var random = new Random();
+
+            // Reset background color
+            canvas.Clear(SKColors.White);
+
+            // Draw background lines for interruption
+            using (var linePaint = new SKPaint { Color = SKColors.Silver })
+            {
+                for (int i = 0; i <= 24; i++)
+                {
+                    int x1 = random.Next(image.Width);
+                    int x2 = random.Next(image.Width);
+                    int y1 = random.Next(image.Height);
+                    int y2 = random.Next(image.Height);
+                    canvas.DrawLine(x1, y1, x2, y2, linePaint);
+                }
+            }
+
+            using (var textPaint = new SKPaint { TextSize = fontSize, IsAntialias = true, Color = SKColors.Blue })
+            {
+                // Draw the text
+                canvas.DrawText(code, 5, 3 + fontSize, textPaint);
+            }
+
+            // Draw points for interruption
+            for (int i = 0; i <= 499; i++)
+            {
+                int x = random.Next(image.Width);
+                int y = random.Next(image.Height);
+                image.SetPixel(x, y, new SKColor((byte)random.Next(256), (byte)random.Next(256), (byte)random.Next(256)));
+            }
+
+            // Draw border
+            using (var borderPaint = new SKPaint { Color = SKColors.Silver, IsStroke = true })
+            {
+                canvas.DrawRect(0, 0, image.Width - 1, image.Height - 1, borderPaint);
+            }
+
+            // Save the image to a memory stream
+            using MemoryStream ms = new MemoryStream();
+            image.Encode(SKEncodedImageFormat.Png, 100).SaveTo(ms);
+
+            return ms;
+            /*
+            //response image
+            var imageData = ms.ToArray();
+            var response = GetResponse();
+            response.Clear();
+            response.ContentType = "image/png";
+            await response.Body.WriteAsync(imageData);
+            */
         }
 
         #region remark code

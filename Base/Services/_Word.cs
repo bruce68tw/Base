@@ -26,7 +26,6 @@ namespace Base.Services
         public const int Radio = 2;     //radio
         public const int CharV = 3;     //V char
 
-
         /// <summary>
         /// merge word files into one
         /// </summary>
@@ -46,7 +45,7 @@ namespace Base.Services
                 for (var i = 1; i < srcFiles.Length; i++)
                 {
                     //add page break
-                    mainPart.Document.Body.AppendChild(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
+                    mainPart!.Document.Body!.AppendChild(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
 
                     //add file
                     var altChunkId = "AltChunkId" + i;
@@ -62,7 +61,7 @@ namespace Base.Services
                     };
                     mainPart.Document.Body.InsertAfter(altChunk, mainPart.Document.Body.Elements<Paragraph>().Last());
                 }
-                mainPart.Document.Save();
+                mainPart!.Document.Save();
                 //docx.Close();
             }
 
@@ -83,10 +82,9 @@ namespace Base.Services
         /// <returns></returns>
         public static string TplFillRow<T>(string rowTpl, T row)
         {
-            if (row == null)
-                return rowTpl;
+            //if (row == null) return rowTpl;
 
-            var props = row.GetType().GetProperties();
+            var props = row!.GetType().GetProperties();
             var result = rowTpl;
             foreach (var prop in props)
             {
@@ -105,8 +103,7 @@ namespace Base.Services
         /// <returns></returns>
         public static string TplFillRows(string rowTpl, IEnumerable<dynamic> rows)
         {
-            if (rows == null || rows.Count() == 0)
-                return "";
+            if (!rows.Any()) return "";
 
             //var rows = (List<T>)row0s;
             //if (rows.Count == 0)
@@ -130,8 +127,7 @@ namespace Base.Services
         //word doc add image, and convert image to text
         public static void DocxAddImage(WordprocessingDocument docx, ref string text, List<WordImageDto> images)
         {
-            if (images == null || images.Count == 0)
-                return;
+            if (images.Count == 0) return;
 
             var mainPart = docx.MainDocumentPart;
             foreach (var image in images)
@@ -140,12 +136,12 @@ namespace Base.Services
                 //var width = Convert.ToDouble(images[i + 1]);
                 //var height = Convert.ToDouble(images[i + 2]);
                 //var tag = images[i + 3];
-                var imageService = new WordImageService(image.FilePath, image.Width, image.Height);
+                var imageService = new WordImageSvc(image.FilePath, image.Width, image.Height);
                 var newText = "";
                 if (imageService.DataStream != null)
                 {
                     //TODO: how multiple images ??
-                    var imagePart = mainPart.AddImagePart(ImagePartType.Jpeg);
+                    var imagePart = mainPart!.AddImagePart(ImagePartType.Jpeg);
                     imagePart.FeedData(imageService.DataStream);
                     var imagePartId = mainPart.GetIdOfPart(imagePart);
                     newText = GetImageRun(imagePartId, imageService).InnerXml;
@@ -176,7 +172,7 @@ namespace Base.Services
                 //reset table column or write into
                 if (rowLen > i)
                     for (var j = 0; j < colLen; j++)
-                        row[preTable + cols[j] + i] = rows[i][cols[j]].ToString();
+                        row[preTable + cols[j] + i] = rows![i][cols[j]]!.ToString();
                 else
                     for (var j = 0; j < colLen; j++)
                         row[preTable + cols[j] + i] = "";
@@ -222,18 +218,15 @@ namespace Base.Services
 
         public static string YesNo(bool status, int type = Checkbox)
         {
-            if (type == Checkbox)
-                return status ? "■" : "□";
-            if (type == Radio)
-                return status ? "●" : "○";
-            else
-                return status ? "V" : "";
+            if (type == Checkbox) return status ? "■" : "□";
+            if (type == Radio) return status ? "●" : "○";
+            else return status ? "V" : "";
         }
 
         //for add word image
         //http://blog.darkthread.net/post-2017-11-06-insert-image-to-docx.aspx
         //https://msdn.microsoft.com/zh-tw/library/office/bb497430.aspx
-        public static Run GetImageRun(string imagePartId, WordImageService imageService)
+        public static Run GetImageRun(string imagePartId, WordImageSvc imageService)
         {
             // Define the reference of the image.
             var element =

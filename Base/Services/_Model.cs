@@ -16,13 +16,10 @@ namespace Base.Services
         /// <returns></returns>
         public static string ToFormStr<T>(T model)
         {
-            if (model == null)
-                return "";
-
+            //if (model == null) return "";
             var result = "";
-            foreach (var prop in model.GetType().GetProperties())
+            foreach (var prop in model!.GetType().GetProperties())
                 result += prop.Name + "=" + prop.GetValue(model, null) + ", ";
-
             return result;
         }
 
@@ -32,9 +29,7 @@ namespace Base.Services
         /// <returns></returns>
         public static string ToJsonStr<T>(T model)
         {
-            if (model == null)
-                return "";
-
+            //if (model == null) return "";
             return JsonConvert.SerializeObject(model);
             /*
             var result = new JObject();
@@ -55,11 +50,9 @@ namespace Base.Services
         /// <returns></returns>
         public static JObject ToJson<T>(T model)
         {
-            if (model == null)
-                return null;
-
+            //if (model == null) return null;
             var result = new JObject();
-            foreach (var prop in model.GetType().GetProperties())
+            foreach (var prop in model!.GetType().GetProperties())
             {
                 var value = prop.GetValue(model, null);
                 result[prop.Name] = (value == null) ? "" : value.ToString();
@@ -69,15 +62,14 @@ namespace Base.Services
 
         public static TTo Copy<TFrom, TTo>(TFrom from) where TTo : new()
         {
-            if (from == null)
-                return default;
+            //if (from == null) return default;
 
             var result = new TTo();
-            foreach (var prop in from.GetType().GetProperties())
+            foreach (var prop in from!.GetType().GetProperties())
             {
                 var fid = prop.Name;
                 if (HasProp<TTo>(result, fid))
-                    SetValue<TTo>(result, fid, prop.GetValue(from, null));
+                    SetValue<TTo>(result, fid, prop!.GetValue(from, null)!);
             }
             return result;
         }
@@ -97,7 +89,7 @@ namespace Base.Services
         /// <typeparam name="T"></typeparam>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static T JsonStrToModel<T>(string str)
+        public static T? JsonStrToModel<T>(string str)
         {
             return JsonConvert.DeserializeObject<T>(str);
         }
@@ -106,30 +98,27 @@ namespace Base.Services
         /// get property value of model
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="name"></param>
+        /// <param name="fid"></param>
         /// <returns></returns>
-        public static object GetValue<T>(T model, string name)
+        public static object? GetValue<T>(T model, string fid)
         {
             //if model hasn't this property, log error
-            var prop = model.GetType().GetProperty(name);
-            return (prop == null)
-                ? null
-                : prop.GetValue(model, null);
+            var prop = model!.GetType().GetProperty(fid);
+            return prop?.GetValue(model, null);
         }
 
         /// <summary>
         /// model set property
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="name"></param>
+        /// <param name="fid"></param>
         /// <param name="value">property new value</param>
         /// <returns></returns>
-        public static bool SetValue<T>(T model, string name, object value)
+        public static bool SetValue<T>(T model, string fid, object value)
         {
             //if model hasn't this property, log error
-            var prop = model.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-            if (prop == null)
-                return false;
+            var prop = model!.GetType().GetProperty(fid, BindingFlags.Public | BindingFlags.Instance);
+            if (prop == null) return false;
 
             prop.SetValue(model, value, null);
             return true;
@@ -139,34 +128,31 @@ namespace Base.Services
         /// check model if has property
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="prop">property name</param>
+        /// <param name="fid">property name</param>
         /// <returns></returns>
-        public static bool HasProp<T>(T model, string prop)
+        public static bool HasProp<T>(T model, string fid)
         {
-            return (model.GetType().GetProperty(prop) != null);
+            return (model!.GetType().GetProperty(fid) != null);
         }
 
         /// <summary>
         /// convert hashtable to model, must add where T : new() !!
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="table"></param>
+        /// <param name="hash"></param>
         /// <returns></returns>
-        public static T HashToModel<T>(Hashtable table) where T : new()
+        public static T HashToModel<T>(Hashtable hash) where T : new()
         {
             T model = new();
             foreach (var prop in model.GetType().GetProperties())
             {
-                if (!table.Contains(prop.Name))
-                    continue;
-
+                if (!hash.Contains(prop.Name)) continue;
                 if (prop.PropertyType == typeof(int))
-                    prop.SetValue(model, Convert.ToInt32(table[prop.Name]), null);
+                    prop.SetValue(model, Convert.ToInt32(hash[prop.Name]), null);
                 else
-                    prop.SetValue(model, table[prop.Name].ToString(), null);
+                    prop.SetValue(model, hash[prop.Name]!.ToString(), null);
 
             }
-
             return model;
         }
 

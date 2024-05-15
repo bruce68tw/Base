@@ -1,23 +1,26 @@
 ﻿using Base.Enums;
+using Base.Interfaces;
 using Base.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Base.Services
 {
     //global function
-    #pragma warning disable CA2211 // 非常數欄位不應可見
+#pragma warning disable CA2211 // 非常數欄位不應可見
     public static class _Fun
     {
         #region constant
         //hidden input for CRSF
         //public const string HideKey = "_hideKey";
 
-        //crud update/view for AuthType=Data only in xxxEdit.cs
+        //crud update/view for AuthType=Row only in xxxEdit.cs
         public const string FidUser = "_userId";
         public const string FidDept = "_deptId";
+
+        public const string NoAuthUser = "NoAuthUser";
+        public const string NoAuthDept = "NoAuthDept";
 
         //session timeout(or not login), map to _BR.js
         public const string FidTimeOut = "TimeOut";
@@ -32,6 +35,7 @@ namespace Base.Services
         //c# datetime format, when js send to c#, will match to _fun.MmDtFmt
         public const string CsDtFmt = "yyyy/MM/dd HH:mm:ss";
         public const string CsDtFmt2 = "yyyy/MM/dd HH:mm";
+        public const string CsDateFmt = "yyyy/MM/dd";
 
         //carrier
         public const string TextCarrier = "\r\n";     //for string
@@ -45,12 +49,14 @@ namespace Base.Services
         public const int AutoIdMid = 10;
         public const int AutoIdLong = 16;
 
+        //錯誤處理方式:(1)for User Msg (2)聯絡管理者 (3)無訊息,傳回空值 ex讀取資料 (4)
         //indicate error
         public const string PreError = "E:";
         public const string PreBrError = "B:";  //_BR code error
         //public const string PreSystemError = "S:";
+        //public const string SysErrCode = "_SE";    //decode at front side
 
-        //default view cols for layout(row div, label=2, input=3)(horizontal) 
+        //default horizontal columns: view cols for layout(row div, label=2, input=3)(horizontal) 
         public static List<int> DefHoriCols = new() { 2, 3 };
 
         //directory tail seperator
@@ -64,10 +70,16 @@ namespace Base.Services
         //session timeout(unit: minutes)
         public static int TimeOut = 120;
 
+        //max login fail count
+        public static int MaxLoginFail = 3;
+
         //max export rows count
         public static int MaxExportCount = 3000;
 
-        //crud read for AuthType=Data only in xxxRead.cs
+        //密碼強度: 0(無限制), 1(中等:英數字), 2(強:大小寫英文,數字,特殊符號,長度10以上)
+        public static int PwdStrongLevel = 0;
+
+        //crud read for AuthType=Row only in xxxRead.cs/xxxR.cs
         public static string UserEqual = "u.Id='{0}'";
         public static string DeptEqual = "u.DeptId='{0}'";
 
@@ -78,8 +90,8 @@ namespace Base.Services
         //is devironment or not
         public static bool IsDev;
 
-        //private static ServiceContainer _DI;
-        public static IServiceProvider DiBox;
+        //null! 表示在使用前設定
+        public static IServiceProvider DiBox = null!;
 
         //database type
         public static DbTypeEnum DbType;
@@ -92,27 +104,34 @@ namespace Base.Services
         //ap physical path, has right slash
         public static string DirRoot = _Str.GetLeft(AppDomain.CurrentDomain.BaseDirectory, "bin" + DirSep);
 
+        //_data folder
+        public static string DirData = DirRoot + "_data" + DirSep;
+
+        //image folder
+        public static string DirImage = DirRoot + "_image" + DirSep;
+        public static string NoImagePath = DirImage + "NoImage.jpg";
+
         //temp folder
         public static string DirTemp = DirRoot + "_temp" + DirSep;
         #endregion
 
         #region Db variables
         //datetime format for read/write db
-        public static string DbDtFmt;
-        public static string DbDateFmt;
+        public static string DbDtFmt = "";
+        public static string DbDateFmt = "";
 
         //for read page rows
-        public static string ReadPageSql;
+        public static string ReadPageSql = "";
 
         //for delete rows
-        public static string DeleteRowsSql;
+        public static string DeleteRowsSql = "";
         #endregion
 
         #region others variables
         //from config file
-        public static ConfigDto Config;
+        public static ConfigDto Config = null!;
 
-        public static SmtpDto Smtp = default;
+        public static SmtpDto? Smtp;
         #endregion
 
         /*
@@ -130,8 +149,8 @@ namespace Base.Services
         /// <param name="dbType"></param>
         /// <param name="authType"></param>
         /// <returns>error msg if any</returns>
-        public static string Init(bool isDev, IServiceProvider diBox, DbTypeEnum dbType = DbTypeEnum.MSSql, 
-            AuthTypeEnum authType = AuthTypeEnum.None)
+        public static string Init(bool isDev, IServiceProvider diBox, 
+            DbTypeEnum dbType = DbTypeEnum.MSSql, AuthTypeEnum authType = AuthTypeEnum.None)
         {
             //set instance variables
             IsDev = isDev;
@@ -139,7 +158,7 @@ namespace Base.Services
             DbType = dbType;
             AuthType = authType;
 
-            Config.HtmlImageUrl = _Str.AddSlash(Config.HtmlImageUrl);
+            Config!.HtmlImageUrl = _Str.AddSlash(Config.HtmlImageUrl);
 
             #region set smtp
             var smtp = Config.Smtp;
@@ -217,7 +236,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
         //get current userId
         public static string Dir(string folder, bool tailSep = true)
         {
-            return _Fun.DirRoot + folder + (tailSep ? DirSep : "");
+            return DirRoot + folder + (tailSep ? DirSep : "");
         }
 
         //get current userId
@@ -231,7 +250,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return GetBaseUser().DeptId;
         }
 
-        //check is AuthType=Data
+        //check is AuthType=Row
         public static bool IsAuthTypeRow()
         {
             return (AuthType == AuthTypeEnum.Row);
@@ -260,7 +279,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// <returns>BaseUserDto(not null)</returns>
         public static BaseUserDto GetBaseUser()
         {
-            var service = (IBaseUserService)DiBox.GetService(typeof(IBaseUserService));
+            var service = (IBaseUserS)DiBox!.GetService(typeof(IBaseUserS))!;
             return service.GetData() ?? new BaseUserDto();
         }
 
@@ -271,7 +290,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
 
         public static string GetHtmlImageUrl(string subPath)
         {
-            return $"{Config.HtmlImageUrl}{subPath}";
+            return $"{Config!.HtmlImageUrl}{subPath}";
         }
 
     } //class
