@@ -66,7 +66,7 @@ namespace Base.Services
 
                 //A/D + fidNo(base 0) for jquery dataTables
                 easyDto.sort = (dtDto.order![0].dir == OrderTypeEnum.Asc ? "A" : "D") +
-                    dtDto.order[0].column;
+                    dtDto.order[0].fid;
             }
             return await GetPageA(readDto, easyDto, ctrl);
         }
@@ -134,7 +134,7 @@ namespace Base.Services
             {
                 //jquery dataTables 傳入排序欄位號碼
                 var sortFid = dtDto.sort[1..];
-                if (int.TryParse(sortFid, out var sortFno)) sortFid = sqlDto.Columns[sortFno].Trim();
+                //if (int.TryParse(sortFid, out var sortFno)) sortFid = sqlDto.Columns[sortFno].Trim();
                 sqlDto.Order = "Order By " + sortFid + 
                     (dtDto.sort[..1] == "D" ? " Desc" : "");
             }

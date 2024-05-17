@@ -43,6 +43,9 @@ namespace Base.Models
         //sorting column index, base 0
         public int column { get; set; }
 
+        //sorting column name
+        public string fid { get; set; }
+
         //sorting type: ASC(default), DESC
         public OrderTypeEnum dir { get; set; }
     }
