@@ -9,7 +9,7 @@ namespace Base.Services
     /// Redis cache server(use StackExchange)
     /// 配合 MemoryCache 使用同步取值
     /// </summary>
-    public class CacheRedisSvc : ICacheS
+    public class CacheRedisSvc : ICacheSvc
     {
         private readonly IDatabase _db = null!;     //current redis database
         private readonly bool _status;      //redis connection status

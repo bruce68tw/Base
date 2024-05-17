@@ -2,7 +2,7 @@
 
 namespace Base.Interfaces
 {
-    public interface IBaseUserS
+    public interface IBaseUserSvc
     {
         //get base info dto
         BaseUserDto GetData();

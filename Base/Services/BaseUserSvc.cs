@@ -3,7 +3,7 @@ using Base.Models;
 
 namespace Base.Services
 {
-    public class BaseUserSvc : IBaseUserS
+    public class BaseUserSvc : IBaseUserSvc
     {
         //private BaseUserDto _baseUser;
 

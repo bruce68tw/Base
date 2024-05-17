@@ -2,7 +2,7 @@
 
 namespace Base.Interfaces
 {
-    public interface ICacheS
+    public interface ICacheSvc
     {
 
         string? GetStr(string userId, string key);

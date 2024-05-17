@@ -9,9 +9,9 @@ namespace Base.Services
     public class _Cache
     {
 
-        private static ICacheS GetService()
+        private static ICacheSvc GetService()
         {
-            return (ICacheS)_Fun.DiBox!.GetService(typeof(ICacheS))!;
+            return (ICacheSvc)_Fun.DiBox!.GetService(typeof(ICacheSvc))!;
         }
 
         public static string? GetStr(string userId, string key)

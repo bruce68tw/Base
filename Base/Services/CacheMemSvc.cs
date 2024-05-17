@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     //memory cache server
-    public class CacheMemSvc : ICacheS
+    public class CacheMemSvc : ICacheSvc
     {
         private readonly IMemoryCache _cache;
         //private string _preKey;

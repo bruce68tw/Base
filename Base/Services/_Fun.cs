@@ -279,7 +279,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// <returns>BaseUserDto(not null)</returns>
         public static BaseUserDto GetBaseUser()
         {
-            var service = (IBaseUserS)DiBox!.GetService(typeof(IBaseUserS))!;
+            var service = (IBaseUserSvc)DiBox!.GetService(typeof(IBaseUserSvc))!;
             return service.GetData() ?? new BaseUserDto();
         }
 
