@@ -117,11 +117,11 @@ namespace Base.Services
             var sql = _Str.IsEmpty(edit.ReadSql)
                 ? GetSql(edit, key)
                 : GetSqlByField(edit, key);
-            var row = await db!.GetJsonA(sql, _sqlArgs!);
+            var row = await db!.GetRowA(sql, _sqlArgs!);
             */
             var row = _Str.IsEmpty(edit.ReadSql)
-                ? await db!.GetJsonA(GetSql(edit, key), _sqlArgs!)
-                : await db!.GetJsonA(edit.ReadSql, new() { "Id", key });
+                ? await db!.GetRowA(GetSql(edit, key), _sqlArgs!)
+                : await db!.GetRowA(edit.ReadSql, new() { "Id", key });
             await _Db.CheckCloseDbA(db, newDb);
             return row;
         }
@@ -214,7 +214,7 @@ namespace Base.Services
                 var sql = emptyReadSql
                     ? GetSqlByWhere(edit, edit.FkeyFid + "=@Id")
                     : edit.ReadSql;
-                rows = await db.GetJsonsA(sql, new() { "Id", keys[0] });
+                rows = await db.GetRowsA(sql, new() { "Id", keys[0] });
             }
             else
             {
@@ -223,13 +223,13 @@ namespace Base.Services
                 var sql = emptyReadSql
                     ? GetSqlByWhere(edit, edit.FkeyFid + $" in ({keyList})")
                     : string.Format(edit.ReadSql, keyList);     //GetSqlByField(edit, keyList);
-                rows = await db.GetJsonsA(sql);
+                rows = await db.GetRowsA(sql);
             }
             /*
             var sql = _Str.IsEmpty(edit.ReadSql)
                 ? GetSqlByWhere(edit, edit.FkeyFid + " in (" + keyList + ")")
                 : string.Format(edit.ReadSql, keyList);     //GetSqlByField(edit, keyList);
-            var rows = await db.GetJsonsA(sql);
+            var rows = await db.GetRowsA(sql);
             */
             if (rows == null) return null;
 

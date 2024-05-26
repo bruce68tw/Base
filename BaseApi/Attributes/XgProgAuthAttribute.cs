@@ -45,8 +45,8 @@ namespace BaseApi.Attributes
             //_Log.Error("No Permission: " + Prog + "->" + filterContext.ActionDescriptor.ActionName);
             //error msg when need
             var error = isLogin
-                ? "You can not Run this Program." //? _Locale.GetBaseRes().NoAuthProg
-                : "Please Login First.";//: _Locale.GetBaseRes().NotLogin;
+                ? "You can not Run this Program."   //_Locale.GetBaseRes().NoAuthProg   //
+                : "Please Login First.";   //_Locale.GetBaseRes().NotLogin;    //
 
             //get return type
             var returnType = (context.ActionDescriptor is ControllerActionDescriptor actor)

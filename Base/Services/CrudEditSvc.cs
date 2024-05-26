@@ -324,7 +324,7 @@ namespace Base.Services
             //var edit = _edit;
             var rowKey = inputRow[edit.PkeyFid].ToString();
             var sql = GetSql(edit, rowKey);
-            var dbRow = db.GetJson(sql, _sqlArgs);
+            var dbRow = db.GetRow(sql, _sqlArgs);
             if (dbRow == null)
             {
                 _Log.Error("CrudEdit.cs UpdateRow() found no row: " + sql + db.GetArgsText(_sqlArgs));
@@ -774,7 +774,7 @@ namespace Base.Services
             List<string>? deletes = (inputJson[Deletes] == null)
                 ? null : _Str.ToList(inputJson[Deletes]!.ToString());
             if (upDeletes != null)
-                deletes = _List.Concat(deletes!, await GetKeysByUpKeysA(edit, upDeletes, db));
+                deletes = _List.Concat(deletes!, await GetKeysByUpKeysA(edit, upDeletes!, db));
 
             if (deletes != null)
             {

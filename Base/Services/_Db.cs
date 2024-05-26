@@ -34,7 +34,7 @@ namespace Base.Services
             if (newDb) await db.DisposeAsync();
         }
 
-        #region GetJson(s)
+        #region GetRow(s)
         /// <summary>
         /// get json
         /// </summary>
@@ -42,19 +42,19 @@ namespace Base.Services
         /// <param name="args">ex: new() { "Id", id }</param>
         /// <param name="db"></param>
         /// <returns></returns>
-        public static async Task<JObject?> GetJsonA(string sql, List<object>? args = null, Db? db = null)
+        public static async Task<JObject?> GetRowA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
-            var rows = await GetJsonsA(sql, args, db);
+            var rows = await GetRowsA(sql, args, db);
             await CheckCloseDbA(db!, newDb);
             return (rows == null || rows.Count == 0) 
                 ? null : (JObject)rows[0];
         }
 
-        public static async Task<JArray?> GetJsonsA(string sql, List<object>? args = null, Db? db = null)
+        public static async Task<JArray?> GetRowsA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
-            var rows = await db!.GetJsonsA(sql, args);
+            var rows = await db!.GetRowsA(sql, args);
             await CheckCloseDbA(db, newDb);
             return rows;
         }

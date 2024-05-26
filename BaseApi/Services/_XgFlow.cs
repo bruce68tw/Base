@@ -158,6 +158,8 @@ insert into dbo.{signTable}(
                 #region 7.get signer Id/name by rules
                 var line = flowLines[idx];
                 var signerId = "";
+                var signerIds = new List<string?>();
+                var hasRows = false;
                 DateTime? signTime = null;
                 if (level == 0)
                 {
@@ -191,41 +193,49 @@ insert into dbo.{signTable}(
                                 signerId = await db.GetStrA(string.Format(SqlDeptMgr, line.SignerValue));
                             break;
                         case SignerTypeEstr.Role:
+                            hasRows = true;
                             userType = "Role";
                             if (line.SignerValue != null)
-                                signerId = await db.GetStrA(string.Format(SqlRole, line.SignerValue));
+                                signerIds = await db.GetStrsA(string.Format(SqlRole, line.SignerValue));
                             break;
                     }
                 }
 
-                if (string.IsNullOrEmpty(signerId))
+                if (!hasRows)
+                    signerIds!.Add(signerId);
+
+                foreach(var userId in signerIds!)
                 {
-                    error = $"SignerId is empty. ({userType})";
-                    goto lab_exit;
+                    if (string.IsNullOrEmpty(userId))
+                    {
+                        error = $"SignerId is empty. ({userType})";
+                        goto lab_exit;
+                    }
+
+                    //get signer name
+                    var signerName = await db.GetStrA(string.Format(SqlUserName, userId));
+                    if (string.IsNullOrEmpty(signerName))
+                    {
+                        error = $"SignerId not existed. ({userType}={userId})";
+                        goto lab_exit;
+                    }
+                    #endregion
+
+                    #region 8.insert XpFlowSign/XpFlowSignTest
+                    await db.ExecSqlA(sql, new List<object>() {
+                        "Id", _Str.NewId(),
+                        "FlowId", line.FlowId,
+                        "SourceId", sourceId,
+                        "NodeName", line.StartNodeName,
+                        "FlowLevel", level,
+                        "TotalLevel", totalLevel,
+                        "SignerId", userId,
+                        "SignerName", signerName,
+                        "SignStatus", (level == 0) ? "1" : "0",
+                        "SignTime", signTime!,
+                    });
                 }
 
-                //get signer Name
-                var signerName = await db.GetStrA(string.Format(SqlUserName, signerId));
-                if (string.IsNullOrEmpty(signerName))
-                {
-                    error = $"SignerId not existed. ({userType}={signerId})";
-                    goto lab_exit;
-                }
-                #endregion
-
-                #region 8.insert XpFlowSign/XpFlowSignTest
-                await db.ExecSqlA(sql, new List<object>() {
-                    "Id", _Str.NewId(),
-                    "FlowId", line.FlowId,
-                    "SourceId", sourceId,
-                    "NodeName", line.StartNodeName,
-                    "FlowLevel", level,
-                    "TotalLevel", totalLevel,
-                    "SignerId", signerId,
-                    "SignerName", signerName,
-                    "SignStatus", (level == 0) ? "1" : "0",
-                    "SignTime", signTime!,
-                });
                 level++;
                 #endregion
             }
@@ -379,7 +389,7 @@ insert into dbo.{signTable}(
             //get XpFlowSign/XpFlowSignTest row
             var signTable = GetSignTable(isTest);
             var sql = $"select SourceId, FlowLevel, TotalLevel from dbo.{signTable} where Id='{flowSignId}' and SignStatus='0'";
-            var row = await db.GetJsonA(sql);
+            var row = await db.GetRowA(sql);
             if (row == null)
             {
                 error = $"not found {signTable} row.(Id={flowSignId})";

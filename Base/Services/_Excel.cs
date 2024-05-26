@@ -182,7 +182,7 @@ namespace Base.Services
         public static async Task DocxBySqlA(string sql, SpreadsheetDocument docx, int srcRowNo, Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
-            var rows = await db!.GetJsonsA(sql);
+            var rows = await db!.GetRowsA(sql);
             await _Db.CheckCloseDbA(db, newDb);
             if (rows != null)
                 DocxByRows(rows, docx, srcRowNo);

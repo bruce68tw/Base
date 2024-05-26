@@ -26,7 +26,7 @@ select Id, Str={dataFid}
 from {table} 
 where {whereFid}=@Id
 ";
-            return await _Db.GetJsonsA(sql, new() { "Id", key }, db);
+            return await _Db.GetRowsA(sql, new() { "Id", key }, db);
         }
 
     }//class

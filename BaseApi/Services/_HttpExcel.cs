@@ -58,7 +58,7 @@ namespace BaseApi.Services
         public static async Task ExportBySqlA(string sql, string fileName, string tplPath, 
             int srcRowNo)
         {
-            var rows = await _Db.GetJsonsA(sql);
+            var rows = await _Db.GetRowsA(sql);
             if (rows != null)
                 await ExportByRowsA(rows, fileName, tplPath, srcRowNo);
         }

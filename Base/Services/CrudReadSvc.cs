@@ -116,7 +116,7 @@ namespace Base.Services
                     sqlDto.From + " " +
                     sqlDto.Where +
                     group;
-                var row = await db.GetJsonA(sql, _sqlArgs); //for log carrier
+                var row = await db.GetRowA(sql, _sqlArgs); //for log carrier
                 if (row == null)
                 {
                     rowCount = 0;
@@ -142,7 +142,7 @@ namespace Base.Services
 
             #region 5.get page rows 
             sql = _Sql.DtoToSql(sqlDto, dtDto.start, dtDto.length);
-            rows = await db.GetJsonsA(sql, _sqlArgs);
+            rows = await db.GetRowsA(sql, _sqlArgs);
             #endregion
 
         lab_exit:
@@ -208,7 +208,7 @@ namespace Base.Services
                     sqlDto.From + " " +
                     sqlDto.Where +
                     group;
-                var row = await db.GetJsonA(sql, _sqlArgs); //for log carrier
+                var row = await db.GetRowA(sql, _sqlArgs); //for log carrier
                 if (row == null)
                 {
                     filterRows = 0;
@@ -312,7 +312,7 @@ namespace Base.Services
 
             //get data
             sql = _Sql.DtoToSql(sqlDto, 0, readRows);
-            return await db.GetJsonsA(sql, _sqlArgs);
+            return await db.GetRowsA(sql, _sqlArgs);
         }
 
         /// <summary>
@@ -769,7 +769,7 @@ namespace Base.Services
                     return null;
 
                 sql = "SELECT COUNT(*) AS _count " + sqlModel.From + " WITH (NOLOCK) " + where;
-                var row = _db.GetJsonRow(sql);
+                var row = _db.GetRow(sql);
                 rowCount = (row == null) ? 0 : Convert.ToInt32(row["_count"]);
             }
 

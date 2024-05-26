@@ -248,15 +248,15 @@ namespace Base.Services
             }
         }        
 
-        #region GetJson(s)
-        public async Task<JObject?> GetJsonA(string sql, List<object>? sqlArgs = null)
+        #region GetRow(s)
+        public async Task<JObject?> GetRowA(string sql, List<object>? sqlArgs = null)
         {
-            var rows = await GetJsonsA(sql, sqlArgs);
+            var rows = await GetRowsA(sql, sqlArgs);
             return (rows == null || rows.Count == 0) 
                 ? null : (JObject)rows[0];
         }
 
-        public async Task<JArray?> GetJsonsA(string sql, List<object>? sqlArgs = null)
+        public async Task<JArray?> GetRowsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderA(sql, sqlArgs);
             if (reader == null) return null;
@@ -266,14 +266,14 @@ namespace Base.Services
                 //read db rows into JArray
                 var rows = new JArray();
                 while (reader.Read())
-                    rows.Add(ReaderGetJson(reader));
+                    rows.Add(GetRowByReader(reader));
 
                 reader.Close();
                 return (rows.Count == 0) ? null : rows;
             }
             catch (Exception ex)
             {
-                await _Log.ErrorRootA($"Db.cs GetJsonsA() failed: {ex.Message}");
+                await _Log.ErrorRootA($"Db.cs GetRowsA() failed: {ex.Message}");
                 return null;
             }
 
@@ -388,7 +388,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        public JObject ReaderGetJson(IDataReader reader)
+        public JObject GetRowByReader(IDataReader reader)
         {
             //var dtFormat = _Fun.DbDtFormat;
             //var dtFormat = _Fun.CsDtFmt;
@@ -523,11 +523,11 @@ namespace Base.Services
 
         #region cache remark
         /*
-        private JArray GetJsonRowsByCache(DbReadModel sqlArg, CacheReadModel cacheModel)
+        private JArray GetRowsByCache(DbReadModel sqlArg, CacheReadModel cacheModel)
         {
             //如果無法初始化 cache, 則直接讀取DB
             if (!InitCache())
-                return GetJsonRowsByDb(sqlArg);
+                return GetRowsByDb(sqlArg);
 
             //=== join table 的情形 ===
             //get sql hash
@@ -544,7 +544,7 @@ namespace Base.Services
                     return _Json.StrToArray(str);
 
                 //以下讀取DB
-                rows = GetJsonRowsByDb(sqlArg);
+                rows = GetRowsByDb(sqlArg);
 
                 //寫入cache(new thread)
                 new Thread(delegate () { CacheSetQuery(_cacheModel, sqlHash, rows); }).Start();
@@ -572,7 +572,7 @@ namespace Base.Services
                 return null;
 
             //case of 讀不到cache資料
-            rows = GetJsonRowsByDb(sqlArg);
+            rows = GetRowsByDb(sqlArg);
             if (rows == null || rows.Count == 0)
             {
                 //記錄 cache的結果為null(new thread)
