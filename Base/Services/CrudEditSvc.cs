@@ -390,13 +390,13 @@ namespace Base.Services
             var setCol4 = "";
             if (edit.Col4 != null && edit.Col4.Length == 4)
             {
-                var fldUser = edit.Col4[2];
-                var fldDate = edit.Col4[3];
-                setCol4 = (fldUser != null && fldDate != null)
+                var fldUser = _Str.EmptyToValue(edit.Col4[2], "");
+                var fldDate = _Str.EmptyToValue(edit.Col4[3], "");
+                setCol4 = (fldUser != "" && fldDate != "")
                     ? $",{fldUser}='{_Fun.UserId()}',{fldDate}='{_Date.ToDbStr(_now)}'" :
-                (fldUser != null)
+                (fldUser != "")
                     ? $",{fldUser}='{_Fun.UserId()}'" :
-                (fldDate != null)
+                (fldDate != "")
                     ? $",{fldDate}='{_Date.ToDbStr(_now)}'" : "";
             }
 

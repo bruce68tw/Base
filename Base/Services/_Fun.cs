@@ -47,7 +47,7 @@ namespace Base.Services
         //default auto Id length
         public const int AutoIdShort = 6;
         public const int AutoIdMid = 10;
-        public const int AutoIdLong = 16;
+        public const int AutoIdLong = 22;
 
         //錯誤處理方式:(1)for User Msg (2)聯絡管理者 (3)無訊息,傳回空值 ex讀取資料 (4)
         //indicate error
