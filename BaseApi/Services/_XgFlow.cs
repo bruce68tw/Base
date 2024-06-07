@@ -376,7 +376,7 @@ insert into dbo.{signTable}(
         /// <param name="sourceTable">source Table for update FlowLevel, FlowStatus columns</param>
         /// <returns>ResultDto for called by controller</returns>
         public static async Task<ResultDto> SignRowA(string flowSignId, bool signYes,
-            string signNote, string sourceTable, bool isTest)
+            string signNote, string sourceTable, bool isTest, FlowBackTypeEnum backType)
         {
             #region 1.check XpFlowSign/XpFlowSignTest row existed
             Db? db = null;
@@ -409,7 +409,7 @@ where Id='{flowSignId}'
             var count = await db.ExecSqlA(sql, new List<object>() { "SignStatus", signStatus, "Note", signNote });
             if (count != 1)
             {
-                error = "_XpFlow.cs SignRow() failed, should update one row: " + sql;
+                error = "_XpFlow.cs SignRowA() failed, should update one row: " + sql;
                 goto lab_error;
             }
             #endregion
@@ -417,11 +417,18 @@ where Id='{flowSignId}'
             #region 3.update source row FlowLevel/FlowStatus
             //flowStatus: Y(agree flow), N(not agree), 0(signing)
             var nowLevel = Convert.ToInt32(row["FlowLevel"]);
-            var flowStatus = !signYes ? "N" :
+
+            //拒絶時, 如果中止則flowStatus=N, 否則為0(表示繼續流程)
+            var flowStatus = !signYes ? (backType == FlowBackTypeEnum.Close ? "N" : "0") :
                 (nowLevel == Convert.ToInt32(row["TotalLevel"])) ? "Y" : 
                 "0";
+
             //final flowLevel must between 0-totalLevel
-            var flowLevel = (flowStatus == "0") ? nowLevel + 1 : 0;
+            //繼續流程時(flowStatus=0), 如果拒絶&&回上一關, 則關卡減1
+            var flowLevel = (flowStatus != "0") ? 0 :
+                signYes ? nowLevel + 1 :
+                (backType == FlowBackTypeEnum.ToFirst) ? 1 :
+                (nowLevel <= 1) ? 1 : nowLevel - 1;
 
             //update source table
             var sourceId = row["SourceId"]!.ToString();

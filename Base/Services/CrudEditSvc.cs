@@ -720,6 +720,7 @@ namespace Base.Services
                 goto lab_error;
 
             //call AfterSave() if need
+            log = true;
             if (fnAfterSaveA != null)
             {
                 try
@@ -729,8 +730,7 @@ namespace Base.Services
                 }
                 catch (Exception ex)
                 {
-                    log = true;
-                    error = "AfterSave error: " + ex.Message;
+                    error = "fnAfterSaveA error: " + ex.Message;
                     goto lab_error;
                 }
             }
