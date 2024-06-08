@@ -29,13 +29,13 @@
         public string TipDeleteRow { get; set; } = "";
 
         //no access right for program
-        public string NoAuthProg { get; set; } = "";
+        //public string NoAuthProg { get; set; } = "";
 
         //no auth for row
         //public string NoAuthRow { get; set; }
 
         //not login
-        public string NotLogin { get; set; } = "";
+        //public string NotLogin { get; set; } = "";
 
         //validation
         public string Required { get; set; } = "";
