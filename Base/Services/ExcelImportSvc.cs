@@ -239,7 +239,14 @@ namespace Base.Services
             if (_Str.IsEmpty(importDto.LogRowId))
                 importDto.LogRowId = _Str.NewId();
             var fileStem = _Str.AddDirSep(dirUpload) + importDto.LogRowId;
-            docx.SaveAs(fileStem + ".xlsx");
+
+            //todo: 未測試新方法
+            //docx.SaveAs(fileStem + ".xlsx");
+            // 新版 SpreadsheetDocument 移除 SaveAs 代碼，改為使用 Clone 方法
+            using (var newDocx = (SpreadsheetDocument)docx.Clone(fileStem + ".xlsx"))
+            {
+                newDocx.Dispose(); // 儲存並關閉新文件
+            }
             #endregion
 
             #region 5.save fail excel file (tail _fail.xlsx)
