@@ -1,15 +1,18 @@
 ﻿using Base.Enums;
 using Base.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Base.Services
 {
     /// <summary>
+    /// _XgProg -> _Auth
     /// program function, 適用於其他專案, 所以使用 _XgProg, 字首_Xg表示內含商業規則
+    /// _Excel.cs >> CrudReadSvc.cs >> this, 所以此檔放在 Base Project !!
     /// </summary>
-    public static class _XgProg
+    public static class _Auth
     {
         /// <summary>
         /// 檢查個人資料權限是否符合目前登入者
@@ -104,7 +107,8 @@ namespace Base.Services
             var result = "";
             string sql;
             //List<IdStrDto> rows;
-            switch (_Fun.AuthType)
+            var authType = _Fun.IsNeedLogin() ? _Fun.AuthType : AuthTypeEnum.None;
+            switch (authType)
             {
                 case AuthTypeEnum.Ctrl:
                     //return format: code,...
@@ -188,6 +192,94 @@ group by p.Code
             return authRow
                 ? $"cast((case when p.{fid}=0 then 0 when p.AuthRow=1 then a.{fid} when a.{fid} > 0 then 1 else 0 end) as char(1))"
                 : $"cast((case when p.{fid}=0 then 0 when a.{fid} > 0 then 1 else 0 end) as char(1))";
+        }
+
+
+        /// <summary>
+        /// get auth prog id list
+        /// </summary>
+        /// <returns>return [] if null</returns>
+        public static List<string> GetAuthProgs()
+        {
+            //get authStrs
+            var progs = new List<string>();
+            var baseUser = _Fun.GetBaseUser();
+            var authStrs = baseUser.ProgAuthStrs;
+            if (_Str.IsEmpty(authStrs))
+                return progs;
+
+            //remove ',' at start/end
+            authStrs = authStrs[1..^1];
+
+            //get prog string list
+            switch (_Fun.AuthType)
+            {
+                case AuthTypeEnum.Ctrl:
+                    //do nothing
+                    progs = _Str.ToList(authStrs);
+                    break;
+
+                case AuthTypeEnum.Action:
+                case AuthTypeEnum.Row:
+                    var list = authStrs.Split(',');
+                    foreach (var item in list)
+                        progs.Add(_Str.GetLeft(item, ":"));
+                    break;
+            }
+            return progs;
+        }
+
+        /// <summary>
+        /// get prog menu from session, called by _Layout.cshtml for show menu
+        /// </summary>
+        /// <returns>return [] if null</returns>
+        public static async Task<List<MenuDto>> GetMenuA()
+        {
+            /*
+            //get authStrs
+            var data = new List<MenuDto>();
+            var baseUser = _Fun.GetBaseUser();
+            var authStrs = baseUser.ProgAuthStrs;
+            if (_Str.IsEmpty(authStrs))
+                return data;
+
+            //remove ',' at start/end
+            authStrs = authStrs[1..^1];
+            */
+
+            //get prog string list
+            var progs = GetAuthProgs();
+            if (progs.Count == 0)
+                return [];
+
+            //get Program name from XpProg
+            var sql = $@"
+select Code, Name, Url, Sort
+from dbo.XpProg
+where Code in ({_List.ToStr(progs!, true)})
+order by Sort
+";
+            return await _Db.GetModelsA<MenuDto>(sql) ?? [];
+        }
+
+        /// <summary>
+        /// 過濾 menu
+        /// </summary>
+        /// <param name="fid"></param>
+        /// <param name="authRow"></param>
+        /// <returns></returns>
+        public static void FilterMenu(List<MenuDto> menus)
+        {
+            //移除第2層(無權限功能)
+            var progs = GetAuthProgs();
+            foreach (var menu in menus)
+                menu.Items.RemoveAll(a => !progs.Contains(a.Code));
+
+            //移除第1層功能(Code有值表示沒有Items)
+            menus.RemoveAll(a => !string.IsNullOrEmpty(a.Code) && !progs.Contains(a.Code));
+
+            //移除第1層功能空的子功能上層
+            menus.RemoveAll(a => string.IsNullOrEmpty(a.Code) && a.Items.Count == 0);
         }
 
     } //class

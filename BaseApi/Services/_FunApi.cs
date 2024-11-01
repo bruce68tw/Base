@@ -1,9 +1,6 @@
-﻿using Base.Enums;
-using Base.Models;
-using Base.Services;
+﻿using Base.Services;
 using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Web;
@@ -84,53 +81,6 @@ namespace BaseApi.Services
             await resp.Body.FlushAsync();
             //resp.End();
             //resp.Body..EndWrite();
-        }
-
-        /// <summary>
-        /// get prog menu from session, called by _Layout.cshtml for show menu
-        /// </summary>
-        /// <param name="locale">consider multiple language if not empty</param>
-        /// <returns>return [] if null</returns>
-        public static async Task<List<MenuDto>> GetMenuA()
-        {
-            //get authStrs
-            var data = new List<MenuDto>();
-            var baseUser = _Fun.GetBaseUser();
-            var authStrs = baseUser.ProgAuthStrs;
-            if (_Str.IsEmpty(authStrs))
-                return data;
-
-            //remove ',' at start/end
-            authStrs = authStrs[1..^1];
-
-            //get prog string list
-            var progList = new List<string>();
-            switch (_Fun.AuthType)
-            {
-                case AuthTypeEnum.Ctrl:
-                    //do nothing
-                    progList = _Str.ToList(authStrs);
-                    break;
-
-                case AuthTypeEnum.Action:
-                case AuthTypeEnum.Row:
-                    var list = authStrs.Split(',');
-                    foreach (var item in list)
-                        progList.Add(_Str.GetLeft(item, ":"));
-                    break;
-
-                default:
-                    return data;
-            }
-
-            //get Program name from XpProg
-            var sql = $@"
-select Code, Name, Url, Sort
-from dbo.XpProg
-where Code in ({_List.ToStr(progList!, true)})
-order by Sort
-";
-            return await _Db.GetModelsA<MenuDto>(sql) ?? new();
         }
 
     }//class

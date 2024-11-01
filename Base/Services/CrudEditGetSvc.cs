@@ -146,7 +146,7 @@ namespace Base.Services
             if (result == null) goto lab_exit;
 
             //check for AuthType=Row if need
-            if (_Fun.IsAuthTypeRow())
+            if (_Fun.IsAuthRowAndLogin())
             {
                 var brError = CheckAuthRow(result, crudEnum);
                 if (_Str.NotEmpty(brError))
@@ -178,7 +178,7 @@ namespace Base.Services
         /// <returns>BR error code if any</returns>
         protected string CheckAuthRow(JObject row, CrudEnum crudEnum)
         {
-            var range = _XgProg.GetAuthRange(_Fun.GetBaseUser().ProgAuthStrs, _ctrl, crudEnum);
+            var range = _Auth.GetAuthRange(_Fun.GetBaseUser().ProgAuthStrs, _ctrl, crudEnum);
             if (range == AuthRangeEnum.User)
             {
                 if (!_Json.IsFidEqual(row, _Fun.FidUser, _Fun.UserId()))

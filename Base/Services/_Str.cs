@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -52,10 +53,14 @@ namespace Base.Services
             return _Fun.PreError + EmptyToValue(error, _Fun.SystemError);
         }
 
-        //get BR code error
-        public static string GetBrError(string error)
+        /// <summary>
+        /// get error msg of _BR.js code
+        /// </summary>
+        /// <param name="errCode"></param>
+        /// <returns></returns>
+        public static string GetBrError(string errCode)
         {
-            return _Fun.PreBrError + error;
+            return _Fun.PreBrError + errCode;
         }
 
         public static string ToSystemError(string error)
@@ -154,26 +159,42 @@ namespace Base.Services
         /// </summary>
         /// <param name="len">total string length</param>
         /// <param name="obj">now string</param>
+        /// <param name="c1">fill char</param>
+        /// <param name="matchLen">match length or not</param>
         /// <returns></returns>
-        public static string PreChar(int len, object obj, char c1)
+        public static string PreChar(int len, object obj, char c1, bool matchLen = false)
         {
+            //var str = obj.ToString();
+            //return (str!.Length >= len) ? str : new string(c1, len - str.Length) + str;
             var str = obj.ToString();
-            return (str!.Length >= len) ? str : new string(c1, len - str.Length) + str;
+            return (str!.Length < len) ? new string(c1, len - str.Length) + str :
+                matchLen ? str[..len] : str;
         }
 
         //add pre zero
         public static string PreZero(int len, object obj, bool matchLen = false)
         {
+            return PreChar(len, obj, '0', matchLen);
+            /*
             var str = obj.ToString();
             return (str!.Length < len) ? new string('0', len - str.Length) + str :
                 matchLen ? str[..len] : str;
+            */
         }
 
         //字串後面補字元
-        public static string TailChar(int len, object obj, char c1 = '0')
+        public static string TailChar(int len, object obj, char c1, bool matchLen = false)
         {
             var str = obj.ToString();
-            return (str!.Length >= len) ? str : str + new string(c1, len - str.Length);
+            return (str!.Length < len) ? str + new string(c1, len - str.Length) :
+                matchLen ? str[..len] : str;
+            //return (str!.Length >= len) ? str : str + new string(c1, len - str.Length);
+        }
+
+        //字串後面補'0'
+        public static string TailZero(int len, object obj, bool matchLen = false)
+        {
+            return TailChar(len, obj, '0', matchLen);
         }
 
         /*
@@ -221,6 +242,18 @@ namespace Base.Services
             return sour;
         }    
         */
+
+        //Base64 字串編碼
+        public static string Base64Encode(string str)
+        {
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(str));
+        }
+
+        //Base64 字串解碼
+        public static string Base64Decode(string str)
+        {
+            return Encoding.UTF8.GetString(Convert.FromBase64String(str));
+        }
 
         /// <summary>
         /// convert json string to json object
@@ -330,7 +363,7 @@ namespace Base.Services
             var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(DateTime.Now.Ticks.ToString()));
             return _Fun.Config.ServerId + string.Concat(Convert.ToBase64String(hash)
                 .ToCharArray()
-                .Where(a => char.IsLetterOrDigit(a))
+                .Where(a => char.IsLetterOrDigit(a))    //取英數字
                 .Take(len - _Fun.Config.ServerId.Length));
         }
 
@@ -550,22 +583,103 @@ namespace Base.Services
             return (pos < 0) ? source : source[(pos + 1)..];
         }
 
+        /*
         /// <summary>
-        /// AES encode, ECB mode, padding PKCS7
+        /// 加密重要資料(組態欄位), 加密後以base64編碼
+        /// 在專案 KeyCon 呼叫 for 加密
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static string EncodeByKey(string data, string key)
+        {
+            return EncodeDecodeByKey(true, data, key);
+        }
+        */
+
+        /// <summary>
+        /// 解密組態欄位, 在一般專案呼叫 for 解密
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static string Decode(string data)
+        {
+            return EncodeDecode(false, data);
+        }
+
+        /// <summary>
+        /// 加/解密重要資料(組態欄位), 加解密後以base64編碼/解碼
+        /// 先判斷是否需要加密, 再從目前目錄讀取key.xxx.txt
+        /// </summary>
+        /// <param name="isEncode">true(加密), false(解密)</param>
+        /// <param name="data"></param>
+        /// <returns>加解密後以base64編碼/解碼</returns>
+        private static string EncodeDecode(bool isEncode, string data)
+        {
+            if (!_Fun.Config.Encode) return data;
+
+            //讀取專案目錄下 key.xxx.txt, 檔案不存在會傳回null
+            var fileName = $"key.{_Fun.RunModeName}.txt";
+            var key = _File.ToStr(_Fun.DirRoot + fileName);
+            if (key == null)
+            {
+                _Log.Error("_Str.cs EncodeDecode() failed, no file: " + fileName);
+                return data;
+            }
+
+            //key內容為base64, 必須先解碼
+            return EncodeDecodeByKey(isEncode, data, Base64Decode(key));
+        }
+
+        /// <summary>
+        /// 加/解密重要資料(組態欄位)
+        /// </summary>
+        /// <param name="isEncode"></param>
+        /// <param name="data"></param>
+        /// <param name="key">如果空值則取用目前目錄下的key.xxx.txt</param>
+        /// <returns>加解密後以base64編碼/解碼</returns>
+        public static string EncodeDecodeByKey(bool isEncode, string data, string key)
+        {
+            //AES加解密, AES iv 使用空白
+            return isEncode
+                ? AesEncode(data, key)
+                : AesDecode(data, key);
+        }
+
+        private static void AesInit(System.Security.Cryptography.Aes aes, string key)
+        {
+            var len = key.Length;
+            key = (len >= 32) ? key[..32] :
+                (len >= 24) ? key[..24] :
+                (len >= 16) ? key[..16] :
+                TailZero(16, key, true);
+
+            aes.Key = Encoding.ASCII.GetBytes(key);
+            //取 key 第2個字以後, 以增加變化
+            aes.IV = Encoding.ASCII.GetBytes(TailZero(16, key[2..], true));
+            aes.Mode = CipherMode.ECB;
+            aes.Padding = PaddingMode.PKCS7;
+        }
+
+        /// <summary>
+        /// AES encode, ECB mode, padding PKCS7, iv 使用key
         /// </summary>
         /// <param name="data">source data</param>
         /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns>encoded base64 string</returns>
-        public static string AesEncode(string data, string key, string iv)
+        public static string AesEncode(string data, string key)
         {
             byte[] bytes;
-            using (var aes = Aes.Create())
+            //key = GetAesKey(key);
+            using (var aes = System.Security.Cryptography.Aes.Create())
             {
+                AesInit(aes, key);
+                /*
                 aes.Key = Encoding.ASCII.GetBytes(key);
-                aes.IV = Encoding.ASCII.GetBytes(iv);
+                aes.IV = AesKeyToIv(key);
                 aes.Mode = CipherMode.ECB;
                 aes.Padding = PaddingMode.PKCS7;
+                */
                 var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
                 using var ms = new MemoryStream();
                 using var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write);
@@ -578,6 +692,18 @@ namespace Base.Services
             return Convert.ToBase64String(bytes);
         }
 
+        /*
+        //key長度必須為16,24,32
+        public static string GetAesKey(string key)
+        {
+            var len  = key.Length;
+            return (len >= 32) ? key[..32] :
+                (len >= 24) ? key[..24] :
+                (len >= 16) ? key[..16] :
+                TailZero(16, key, true);
+        }
+        */
+
         /// <summary>
         /// AES decode, ECB mode, padding PKCS7
         /// </summary>
@@ -585,16 +711,19 @@ namespace Base.Services
         /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns>decoded plain text</returns>
-        public static string AesDecode(string data, string key, string iv)
+        public static string AesDecode(string data, string key)
         {
             string result;
             var bytes = Convert.FromBase64String(data);
-            using (var aes = Aes.Create())
+            using (var aes = System.Security.Cryptography.Aes.Create())
             {
+                AesInit(aes, key);
+                /*
                 aes.Key = Encoding.ASCII.GetBytes(key);
-                aes.IV = Encoding.ASCII.GetBytes(iv);
+                aes.IV = AesKeyToIv(key);
                 aes.Mode = CipherMode.ECB;
                 aes.Padding = PaddingMode.PKCS7;
+                */
                 var encryptor = aes.CreateDecryptor(aes.Key, aes.IV);
                 using var ms = new MemoryStream(bytes);
                 using var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Read);

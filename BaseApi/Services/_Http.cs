@@ -1,15 +1,15 @@
-﻿using Base.Services;
+﻿using Base.Models;
+using Base.Services;
 using Microsoft.AspNetCore.Http;
+using SkiaSharp;
+using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using System;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-using System.Drawing;
-using SkiaSharp;
-using DocumentFormat.OpenXml.Vml;
 
 namespace BaseApi.Services
 {
@@ -31,9 +31,12 @@ namespace BaseApi.Services
             return service.HttpContext;
         }
 
-        public static string GetIp()
+        public static string GetIp(bool hasDot = true)
         {
-            return GetHttp().Connection.RemoteIpAddress.ToString();
+            var ip = GetHttp().Connection.RemoteIpAddress.ToString();
+            return hasDot
+                ? ip
+                : ip.Replace(".", "");
         }
 
         public static string GetContentTypeByExt(string ext)
@@ -123,6 +126,54 @@ namespace BaseApi.Services
             //stream.Close();
             stream.Dispose();
             return result;
+        }
+
+        /// <summary>
+        /// get JWT and read BR
+        /// ajax呼叫時從http header讀取jwt
+        /// form submit時(模擬form submit)從hidden欄位_jwtToken讀取jwt
+        /// </summary>
+        /// <returns></returns>
+        public static BaseUserDto JwtToBr()
+        {
+            //for get userId, get jwt from http header first
+            var request = GetRequest();
+            var token = request.Headers["Authorization"]
+                .ToString().Replace("Bearer ", "");
+
+            //如果不存在則從 hidden 欄位_jwtToken讀取
+            if (token == "" && IsPost() && request.Form != null)
+                token = request.Form["_jwtToken"].ToString();
+
+            //re-check 
+            if (token == "")
+                return new ();
+
+            var tokenDto = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            var userId = tokenDto.Claims.First(c => c.Type == ClaimTypes.Name).Value;  //is also session key
+            var br = _Cache.GetModel<BaseUserDto>(userId, _Fun.FidBaseUser)!;
+            return br;
+        }
+
+        /// <summary>
+        /// cookie to BR
+        /// </summary>
+        /// <returns></returns>
+        public static BaseUserDto CookieToBr()
+        {
+            var key = GetCookie(_Fun.FidClientKey);
+            return (key == "")
+                ? new()
+                : _Cache.GetModel<BaseUserDto>(key + GetIp(false), _Fun.FidBaseUser)!;
+        }
+
+        /// <summary>
+        /// is post or not
+        /// </summary>
+        /// <returns></returns>
+        public static bool IsPost()
+        {
+            return _Http.GetRequest().Method.Equals("POST", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

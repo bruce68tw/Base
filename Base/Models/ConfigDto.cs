@@ -1,4 +1,6 @@
-﻿namespace Base.Models
+﻿using Base.Enums;
+
+namespace Base.Models
 {
     /// <summary>
     /// get from appSettings.json Config section
@@ -27,6 +29,12 @@
             HtmlImageUrl = "";
         }
         */
+
+        //是否加密組態檔重要欄位, ex: Db,Smtp,Redis
+        public bool Encode { get; set; } = false;
+
+        //refer LoginTypeEstr
+        public string LoginType { get; set; } = LoginTypeEstr.None;
 
         //db connect string
         public string Db { get; set; } = "";

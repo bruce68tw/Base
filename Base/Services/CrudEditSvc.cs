@@ -649,7 +649,7 @@ namespace Base.Services
             _isNew = false;
 
             //check for AuthType=Row if need
-            if (_Fun.IsAuthTypeRow())
+            if (_Fun.IsAuthRowAndLogin())
             {
                 var data = await GetDbRowA(_editDto, key);    //return data
                 var brError = CheckAuthRow(data!, CrudEnum.Update);
@@ -1057,7 +1057,7 @@ namespace Base.Services
         public async Task<ResultDto> DeleteA(string key)
         {
             //check for AuthType=Row if need
-            if (_Fun.IsAuthTypeRow())
+            if (_Fun.IsAuthRowAndLogin())
             {
                 var data = await GetDbRowA(_editDto, key);    //return data
                 var brError = CheckAuthRow(data!, CrudEnum.Delete);

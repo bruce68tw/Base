@@ -34,7 +34,7 @@ namespace BaseApi.Attributes
                 : _ctrl;
             var baseUser = _Fun.GetBaseUser();
             var isLogin = (baseUser.UserId != "");
-            if (isLogin && _XgProg.CheckAuth(baseUser.ProgAuthStrs, ctrl, _crudEnum))
+            if (isLogin && _Auth.CheckAuth(baseUser.ProgAuthStrs, ctrl, _crudEnum))
             {
                 //case of ok
                 base.OnActionExecuting(context);

@@ -19,6 +19,9 @@ namespace Base.Services
         public const string FidUser = "_userId";
         public const string FidDept = "_deptId";
 
+        //auth client key, for cookie、JWT
+        public const string FidClientKey = "_jwt";
+
         public const string NoAuthUser = "NoAuthUser";
         public const string NoAuthDept = "NoAuthDept";
 
@@ -90,8 +93,11 @@ namespace Base.Services
         //is devironment or not
         public static bool IsDev;
 
+        //執行模式, Development/Production, 會使用這個字串來讀取固定檔名
+        public static string RunModeName = "";
+
         //null! 表示在使用前設定
-        public static IServiceProvider DiBox = null!;
+        public static IServiceProvider? DiBox = null!;
 
         //database type
         public static DbTypeEnum DbType;
@@ -149,16 +155,26 @@ namespace Base.Services
         /// <param name="dbType"></param>
         /// <param name="authType"></param>
         /// <returns>error msg if any</returns>
-        public static string Init(bool isDev, IServiceProvider diBox, 
+        public static string Init(bool isDev, IServiceProvider? diBox = null, 
             DbTypeEnum dbType = DbTypeEnum.MSSql, AuthTypeEnum authType = AuthTypeEnum.None)
         {
             //set instance variables
             IsDev = isDev;
+            RunModeName = isDev ? "Development" : "Production";
             DiBox = diBox;
             DbType = dbType;
+            //AuthType = (Config.LoginType == LoginTypeEstr.None) ? AuthTypeEnum.None : authType; //無登入必為無權限 !!
             AuthType = authType;
 
             Config!.HtmlImageUrl = _Str.AddSlash(Config.HtmlImageUrl);
+
+            //解密敏感組態資料 if need
+            if (Config.Encode)
+            {
+                Config.Db = _Str.Decode(Config.Db).Replace("\\\\","\\");    //config的\到字串會變\\
+                Config.Smtp = _Str.Decode(Config.Smtp);
+                Config.Redis = _Str.Decode(Config.Redis);
+            }
 
             #region set smtp
             var smtp = Config.Smtp;
@@ -245,15 +261,31 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return GetBaseUser().UserId;
         }
 
+        public static bool HasPwd()
+        {
+            return GetBaseUser().HasPwd;
+        }
+
         public static string DeptId()
         {
             return GetBaseUser().DeptId;
+        }
+
+        public static bool IsAuthRowAndLogin()
+        {
+            return IsAuthTypeRow() && IsNeedLogin();
         }
 
         //check is AuthType=Row
         public static bool IsAuthTypeRow()
         {
             return (AuthType == AuthTypeEnum.Row);
+        }
+
+        //是否需要登入
+        public static bool IsNeedLogin()
+        {
+            return (Config.LoginType != LoginTypeEstr.None);
         }
 
         /*

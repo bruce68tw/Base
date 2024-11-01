@@ -71,6 +71,20 @@ namespace Base.Services
         */
 
         /// <summary>
+        /// read utf8 text file to string, synchronous for big file size
+        /// </summary>
+        /// <param name="path">file path</param>
+        /// <returns>file string, return null if no file</returns>
+        public static string? ToStr(string path)
+        {
+            if (!File.Exists(path)) return null;
+
+            //utf8 file only !!
+            using var file = new StreamReader(path, Encoding.UTF8);
+            return file.ReadToEnd();
+        }
+
+        /// <summary>
         /// read utf8 text file to string, asynchronous for big file size
         /// </summary>
         /// <param name="path">file path</param>

@@ -338,7 +338,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="findJson">query condition</param>
         /// <param name="inputSearch">quick search string</param>
-        /// <returns>where string, -1(error), -2(timeout cannot get BaseUser for Auth)</returns>
+        /// <returns>where string, -1(input error), -2(timeout or none BaseUser for Auth)</returns>
         private string GetWhere(string ctrl, ReadDto readDto, JObject? findJson, 
             CrudEnum crudEnum, string inputSearch = "")
         {
@@ -351,7 +351,7 @@ namespace Base.Services
             string error;
             #endregion
 
-            #region 1.where add condition
+            #region 1.where add condition, when error return "-1"
             var where = "";
             var and = "";
             if (items != null && items.Length > 0 && findJson != null)
@@ -669,13 +669,14 @@ namespace Base.Services
             }//if
             #endregion
 
-            #region 2.where add for AuthType=Row if need
-            if (_Fun.IsAuthTypeRow() && _Str.NotEmpty(ctrl))
+            #region 2.where add for AuthType=Row if need, 同時檢查登入狀態, when error return "-2"
+            if (_Fun.IsAuthRowAndLogin() && _Str.NotEmpty(ctrl))
             {
+                //權限等級為資料, 但是沒有登入userId
                 var baseUser = _Fun.GetBaseUser();
                 if (baseUser.UserId == "") return "-2";
 
-                var range = _XgProg.GetAuthRange(baseUser.ProgAuthStrs, ctrl, crudEnum);
+                var range = _Auth.GetAuthRange(baseUser.ProgAuthStrs, ctrl, crudEnum);
                 if (range == AuthRangeEnum.User)
                 {
                     //by user
