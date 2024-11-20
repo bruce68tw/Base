@@ -41,7 +41,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.1.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.0" />
   </ItemGroup>
 
   <ItemGroup>

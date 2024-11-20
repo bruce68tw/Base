@@ -75,7 +75,7 @@
     <PackageReference Include="Handlebars.Net" Version="2.1.6" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="SkiaSharp" Version="2.88.9" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
     <PackageReference Include="System.Data.OleDb" Version="8.0.1" />
     <PackageReference Include="System.Drawing.Common" Version="8.0.10" />

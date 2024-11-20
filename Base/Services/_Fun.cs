@@ -70,7 +70,9 @@ namespace Base.Services
         #endregion
 
         #region variables PG can modify
-        //session timeout(unit: minutes)
+        /// <summary>
+        /// session timeout(unit: minutes)
+        /// </summary>
         public static int TimeOut = 120;
 
         //max login fail count

@@ -137,21 +137,22 @@ namespace BaseApi.Services
         public static BaseUserDto JwtToBr()
         {
             //for get userId, get jwt from http header first
-            var request = GetRequest();
-            var token = request.Headers["Authorization"]
+            //var request = GetRequest();
+            var token = GetRequest().Headers["Authorization"]
                 .ToString().Replace("Bearer ", "");
 
+            /*
             //如果不存在則從 hidden 欄位_jwtToken讀取
             if (token == "" && IsPost() && request.Form != null)
                 token = request.Form["_jwtToken"].ToString();
+            */
 
             //re-check 
-            if (token == "")
-                return new ();
+            if (token == "") return new ();
 
             var tokenDto = new JwtSecurityTokenHandler().ReadJwtToken(token);
             var userId = tokenDto.Claims.First(c => c.Type == ClaimTypes.Name).Value;  //is also session key
-            var br = _Cache.GetModel<BaseUserDto>(userId, _Fun.FidBaseUser)!;
+            var br = _Cache.GetModel<BaseUserDto>(userId + GetIp(false), _Fun.FidBaseUser)!;
             return br;
         }
 

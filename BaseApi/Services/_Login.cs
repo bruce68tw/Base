@@ -1,6 +1,5 @@
 ﻿using Base.Models;
 using Base.Services;
-using BaseApi.Services;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -9,18 +8,18 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BaseWeb.Services
+namespace BaseApi.Services
 {
 
     public static class _Login
     {
         /// <summary>
-        /// 使用JWT登入
+        /// 使用 View Object 登入
         /// </summary>
         /// <param name="vo">login view object</param>
         /// <param name="encodePwd">是否加密密碼欄位</param>
         /// <returns></returns>
-        public static async Task<bool> LoginA(LoginVo vo, bool encodePwd)
+        public static async Task<bool> LoginByVoA(LoginVo vo, bool encodePwd)
         {
             //reset UI msg first
             vo.AccountMsg = "";
@@ -96,34 +95,6 @@ where u.Account=@Account
             //寫入cookie
             _Http.SetCookie(_Fun.FidClientKey, key);
 
-            //JWT在網頁重載時http header會消失, 改用cookie
-            /*
-            //return JWT token
-            var token = new JwtSecurityToken(
-                claims: [
-                    new Claim(ClaimTypes.Name, userId), //userId as session key
-                ],
-                signingCredentials: new SigningCredentials(
-                    GetJwtKey(),
-                    SecurityAlgorithms.HmacSha256
-                ),
-                expires: DateTime.Now.AddMinutes(_Fun.TimeOut)
-            );
-            vo.Token = new JwtSecurityTokenHandler().WriteToken(token);
-            */
-
-            /*
-            result = new JObject()
-            {
-                ["token"] = new JwtSecurityTokenHandler().WriteToken(token),
-                ["authStrs"] = authStrs,  //for filter client menu
-                ["userName"] = userName,
-            };
-            */
-
-            //4.set session of base user info
-            //_Http.GetSession().Set(_Fun.FidBaseUser, userInfo);   //extension method
-
             //5.redirect if need
             //var url = _Str.IsEmpty(vo.FromUrl) ? "/Home/Index" : vo.FromUrl;
             //return Redirect(url);
@@ -134,14 +105,64 @@ where u.Account=@Account
             return false;
         }
 
+        /// <summary>
+        /// 使用 UserId 登入(用在手機 app), 如果IP不同則進行2FA
+        /// </summary>
+        /// <param name="userId">user Id</param>
+        /// <returns>1(成功),0(IP不同),-1(失敗, 帳號不存在)</returns>
+        public static async Task<int> LoginByUidA(string userId, Db? db = null)
+        {
+            const int Error = -1;
+            const int Ok = 1;
+            const int IpWrong = 0;
+
+            //1.check input account & password
+            var result = Error;
+            if (_Str.IsEmpty(userId)) return result;
+
+            //2.get user row Ip
+            var newDb = _Db.CheckOpenDb(ref db);
+            var sql = "select Ip from dbo.[User] where Id=@Id";
+            var row = await _Db.GetRowA(sql, ["Id", userId], db);
+            if (row == null) goto lab_exit;
+
+            //check Ip
+            result = (_Http.GetIp(true) == row["Ip"]!.ToString()) 
+                ? Ok : IpWrong;
+
+        lab_exit:
+            await _Db.CheckCloseDbA(db!, newDb);
+            return result;
+        }
+
+        /// <summary>
+        /// get JWT key(256), 使用 IP
+        /// </summary>
+        /// <returns></returns>
         public static SymmetricSecurityKey GetJwtKey()
         {
             //return _jwtKey16;
             return new(Encoding.UTF8.GetBytes(_Str.PreZero(32, _Http.GetIp(), true)));
         }
 
+        public static string GetJwtStr(string userId)
+        {
+            var token = new JwtSecurityToken(
+                claims:
+                [
+                    new Claim(ClaimTypes.Name, userId),
+                ],
+                signingCredentials: new SigningCredentials(
+                    GetJwtKey(),
+                    SecurityAlgorithms.HmacSha256
+                ),
+                expires: DateTime.Now.AddMinutes(_Fun.TimeOut)
+            );
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
         /// <summary>
-        /// 記錄登入成功
+        /// 記錄登入成功 (Login table)
         /// </summary>
         /// <param name="account"></param>
         /// <param name="db"></param>
