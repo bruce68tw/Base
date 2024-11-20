@@ -182,12 +182,12 @@ namespace Base.Services
             if (range == AuthRangeEnum.User)
             {
                 if (!_Json.IsFidEqual(row, _Fun.FidUser, _Fun.UserId()))
-                    return _Fun.NoAuthUser;
+                    return _Fun.FidNoAuthUser;
             }
             else if (range == AuthRangeEnum.Dept)
             {
                 if (!_Json.IsFidEqual(row, _Fun.FidDept, _Fun.DeptId()))
-                    return _Fun.NoAuthDept;
+                    return _Fun.FidNoAuthDept;
             }
 
             //case else

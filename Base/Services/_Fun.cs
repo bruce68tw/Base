@@ -22,8 +22,11 @@ namespace Base.Services
         //auth client key, for cookie、JWT
         public const string FidClientKey = "_jwt";
 
-        public const string NoAuthUser = "NoAuthUser";
-        public const string NoAuthDept = "NoAuthDept";
+        //對應 _BR.js 欄位
+        public const string FidNoAuthUser = "NoAuthUser";  //您只能存取個人資料，請聯絡管理者。
+        public const string FidNoAuthDept = "NoAuthDept";  //您只能存取同部門資料，請聯絡管理者。
+        public const string FidNoAuthProg = "NoAuthProg";  //您沒有此功能的權限，請聯絡管理者。
+        public const string FidNotLogin = "NotLogin";      //您尚未登入系統。
 
         //session timeout(or not login), map to _BR.js
         public const string FidTimeOut = "TimeOut";

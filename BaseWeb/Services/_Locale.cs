@@ -13,7 +13,7 @@ namespace BaseWeb.Services
     //for web system only
     public static class _Locale
     {
-        public static string CookieName = CookieRequestCultureProvider.DefaultCookieName;     //cookie field id for locale
+        //public static string CookieName = CookieRequestCultureProvider.DefaultCookieName;     //cookie field id for locale
 
         //loaded localization list, <locale, BaseResDto>
         private static Dictionary<string, BaseResDto> _brList = new();
@@ -32,7 +32,7 @@ namespace BaseWeb.Services
                 var br = await ReadBaseResA(locale);
                 if (br == null)
                 {
-                    _Log.Error($"_Locale.cs SetCulture() failed, no locale ({locale})");
+                    _Log.Error($"_Locale.cs SetCultureA() failed, no locale ({locale})");
                     return false;
                 }
                 _brList.Add(locale, br);    //add first

@@ -28,15 +28,15 @@ namespace Base.Services
         public static async Task<string> CheckAuthUserA(string ctrl, CrudEnum crudEnum, string table, 
             string userFid, string key, Db? db = null)
         {
-            var br = _Fun.GetBaseUser();
-            var authRange = GetAuthRange(br.ProgAuthStrs, ctrl, crudEnum);
-            if (authRange == AuthRangeEnum.None) return _Str.GetBrError(_Fun.NoAuthUser);
+            var user = _Fun.GetBaseUser();
+            var authRange = GetAuthRange(user.ProgAuthStrs, ctrl, crudEnum);
+            if (authRange == AuthRangeEnum.None) return _Str.GetBrError(_Fun.FidNoAuthUser);
             if (authRange == AuthRangeEnum.All) return "";
 
             var sql = $"select {userFid} from {table} where Id=@Id";
             var value = await _Db.GetStrA(sql, new() { "Id", key }, db) ?? "";
-            return (value == br.UserId) 
-                ? "" : _Str.GetBrError(_Fun.NoAuthUser);
+            return (value == user.UserId) 
+                ? "" : _Str.GetBrError(_Fun.FidNoAuthUser);
         }
 
         /// <summary>
@@ -203,8 +203,8 @@ group by p.Code
         {
             //get authStrs
             var progs = new List<string>();
-            var baseUser = _Fun.GetBaseUser();
-            var authStrs = baseUser.ProgAuthStrs;
+            var user = _Fun.GetBaseUser();
+            var authStrs = user.ProgAuthStrs;
             if (_Str.IsEmpty(authStrs))
                 return progs;
 

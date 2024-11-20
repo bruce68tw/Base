@@ -25,9 +25,6 @@
         //select input
         public string PlsSelect { get; set; } = "";
 
-        //tip delete row
-        public string TipDeleteRow { get; set; } = "";
-
         //no access right for program
         //public string NoAuthProg { get; set; } = "";
 
@@ -38,11 +35,15 @@
         //public string NotLogin { get; set; } = "";
 
         //validation
-        public string Required { get; set; } = "";
-        public string StrLen { get; set; } = "";
+        //public string Required { get; set; } = "";
+        //public string StrLen { get; set; } = "";
 
         public string TipUpdate { get; set; } = "";
         public string TipDelete { get; set; } = "";
         public string TipView { get; set; } = "";
+
+        //tip delete row
+        public string TipDeleteRow { get; set; } = "";
+
     }
 }
