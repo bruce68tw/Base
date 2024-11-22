@@ -157,6 +157,24 @@ namespace BaseApi.Services
         }
 
         /// <summary>
+        /// get userId from JWT string
+        /// </summary>
+        /// <returns></returns>
+        public static string JwtToUserId()
+        {
+            //for get userId, get jwt from http header first
+            //var request = GetRequest();
+            var token = GetRequest().Headers["Authorization"]
+                .ToString().Replace("Bearer ", "");
+
+            //re-check 
+            if (token == "") return "";
+
+            var tokenDto = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            return tokenDto.Claims.First(c => c.Type == ClaimTypes.Name).Value;  //is also session key
+        }
+
+        /// <summary>
         /// cookie to BR
         /// </summary>
         /// <returns></returns>

@@ -116,13 +116,13 @@ where u.Account=@Account
             const int Ok = 1;
             const int IpWrong = 0;
 
-            //1.check input account & password
+            //1.check empty
             var result = Error;
             if (_Str.IsEmpty(userId)) return result;
 
-            //2.get user row Ip
+            //2.compare Ip
             var newDb = _Db.CheckOpenDb(ref db);
-            var sql = "select Ip from dbo.[User] where Id=@Id";
+            var sql = "select Ip from dbo.[UserApp] where Id=@Id";
             var row = await _Db.GetRowA(sql, ["Id", userId], db);
             if (row == null) goto lab_exit;
 
@@ -141,11 +141,15 @@ where u.Account=@Account
         /// <returns></returns>
         public static SymmetricSecurityKey GetJwtKey()
         {
-            //return _jwtKey16;
             return new(Encoding.UTF8.GetBytes(_Str.PreZero(32, _Http.GetIp(), true)));
         }
 
-        public static string GetJwtStr(string userId)
+        /// <summary>
+        /// 傳回 JWT 授權字串
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public static string GetJwtAuthStr(string userId)
         {
             var token = new JwtSecurityToken(
                 claims:
