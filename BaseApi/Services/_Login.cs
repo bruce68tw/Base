@@ -165,6 +165,25 @@ where u.Account=@Account
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        public static TokenValidationParameters GetJwtArg()
+        {
+            return new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,    //是否驗證密鑰
+                IssuerSigningKey = GetJwtKey(),     //SecurityKey
+                ValidateLifetime = true,            //是否驗證超時  當設置exp和nbf時有效 
+                ClockSkew = TimeSpan.FromMinutes(_Fun.TimeOut),   //設置過期時間，如無設定則預設為5分鐘
+                ValidateAudience = false,   //default true !!
+                ValidateIssuer = false,     //default true !!
+
+                //ValidateIssuer = false,   //簽發者
+                //ValidateAudience = false, //接收者
+                //ValidAudience = "http://localhost:49999",//Audience
+                //ValidIssuer = "http://localhost:49998",//Issuer，這兩項和登入時頒發的一致
+                //緩衝過期時間，總的有效時間等於這個時間加上jwt的過期時間，預設為5分鐘                                                                                                            //注意這是緩衝過期時間，總的有效時間等於這個時間加上jwt的過期時間，如果不配置，默認是5分鐘
+            };
+        }
+
         /// <summary>
         /// 記錄登入成功 (Login table)
         /// </summary>
