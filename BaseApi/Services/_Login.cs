@@ -141,7 +141,7 @@ where u.Account=@Account
         /// <returns></returns>
         public static SymmetricSecurityKey GetJwtKey()
         {
-            return new(Encoding.UTF8.GetBytes(_Str.PreZero(32, _Http.GetIp(), true)));
+            return new(Encoding.UTF8.GetBytes(_Str.PreZero(32, _Fun.JwtKey, true)));
         }
 
         /// <summary>
