@@ -51,10 +51,10 @@ join dbo.Dept d on u.DeptId=d.Id
 where u.Account=@Account
 ";
             var status = false;
-            var row = await _Db.GetRowA(sql, new List<object>() { "Account", vo.Account });
+            var row = await _Db.GetRowA(sql, ["Account", vo.Account]);
             if (row != null)
             {
-                var dbPwd = row["Pwd"].ToString();
+                var dbPwd = row["Pwd"]!.ToString();
                 if (hasPwd)
                 {
                     var inputPwd = encodePwd ? _Str.Md5(vo.Pwd) : vo.Pwd;   //encode if need
@@ -75,7 +75,7 @@ where u.Account=@Account
 
             #region 3.set base user info
             var key = _Str.NewId(15);
-            var userId = row["UserId"]!.ToString();
+            var userId = row!["UserId"]!.ToString();
             var userInfo = new BaseUserDto()
             {
                 UserId = userId,

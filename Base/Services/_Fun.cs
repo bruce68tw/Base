@@ -22,7 +22,7 @@ namespace Base.Services
         //auth client key, for cookie、JWT
         public const string FidClientKey = "_jwt";
 
-        //對應 _BR.js 欄位
+        //對應 _BR.js(多國語) 欄位
         public const string FidNoAuthUser = "NoAuthUser";  //您只能存取個人資料，請聯絡管理者。
         public const string FidNoAuthDept = "NoAuthDept";  //您只能存取同部門資料，請聯絡管理者。
         public const string FidNoAuthProg = "NoAuthProg";  //您沒有此功能的權限，請聯絡管理者。
@@ -63,7 +63,7 @@ namespace Base.Services
         //public const string SysErrCode = "_SE";    //decode at front side
 
         //default horizontal columns: view cols for layout(row div, label=2, input=3)(horizontal) 
-        public static List<int> DefHoriCols = new() { 2, 3 };
+        public static List<int> DefHoriCols = [2, 3];
 
         //directory tail seperator
         public static char DirSep = Path.DirectorySeparatorChar;
