@@ -91,7 +91,8 @@ namespace Base.Services
         public static string UserEqual = "u.Id='{0}'";
         public static string DeptEqual = "u.DeptId='{0}'";
 
-        //JWT key, be set when initial
+        //AES & JWT key, be set when initial
+        public static string AesKey = "YourAesKey";
         public static string JwtKey = "YourJwtKey";
 
         public static string SystemError = "System Error, Please Contact Administrator.";

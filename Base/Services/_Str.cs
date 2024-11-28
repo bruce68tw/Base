@@ -627,9 +627,13 @@ namespace Base.Services
             }
 
             //key內容為base64, 必須先解碼
-            return EncodeDecodeByKey(isEncode, data, Base64Decode(key));
+            //return EncodeDecodeByKey(isEncode, data, Base64Decode(key));
+            return isEncode
+                ? AesEncode(data)
+                : AesDecode(data);
         }
 
+        /*
         /// <summary>
         /// 加/解密重要資料(組態欄位)
         /// </summary>
@@ -644,6 +648,7 @@ namespace Base.Services
                 ? AesEncode(data, key)
                 : AesDecode(data, key);
         }
+        */
 
         private static void AesInit(System.Security.Cryptography.Aes aes, string key)
         {
@@ -667,13 +672,13 @@ namespace Base.Services
         /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns>encoded base64 string</returns>
-        public static string AesEncode(string data, string key)
+        public static string AesEncode(string data)
         {
             byte[] bytes;
             //key = GetAesKey(key);
             using (var aes = System.Security.Cryptography.Aes.Create())
             {
-                AesInit(aes, key);
+                AesInit(aes, _Fun.AesKey);
                 /*
                 aes.Key = Encoding.ASCII.GetBytes(key);
                 aes.IV = AesKeyToIv(key);
@@ -711,13 +716,13 @@ namespace Base.Services
         /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns>decoded plain text</returns>
-        public static string AesDecode(string data, string key)
+        public static string AesDecode(string data)
         {
             string result;
             var bytes = Convert.FromBase64String(data);
             using (var aes = System.Security.Cryptography.Aes.Create())
             {
-                AesInit(aes, key);
+                AesInit(aes, _Fun.AesKey);
                 /*
                 aes.Key = Encoding.ASCII.GetBytes(key);
                 aes.IV = AesKeyToIv(key);
