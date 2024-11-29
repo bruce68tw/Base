@@ -65,7 +65,7 @@ namespace Base.Models
         /// field list for empty to null, usually for data field
         /// 空的日期欄位存入DB會變成1900/1/1, 必須先轉成null !!
         /// </summary>
-        public string[] EmptyToNulls = new string[] { };
+        public string[] EmptyToNulls = [];
 
         /// <summary>
         /// Col4可為null, 元素也可為null
@@ -73,7 +73,7 @@ namespace Base.Models
         /// consider time difference
         /// default has 4 fields, set this to null if none
         /// </summary>
-        public string?[]? Col4 = new string[] { "Creator", "Created", "Reviser", "Revised" };
+        public string?[]? Col4 = ["Creator", "Created", "Reviser", "Revised"];
 
         /// <summary>
         /// (2nd)order by string (not include "order by")

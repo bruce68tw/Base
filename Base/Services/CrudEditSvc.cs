@@ -273,14 +273,16 @@ namespace Base.Services
             //var setCol4 = "";
             if (edit.Col4 != null && edit.Col4.Length >= 2)
             {
+                var hasUser = _Str.NotEmpty(edit.Col4[0]);
+                var hasDate = _Str.NotEmpty(edit.Col4[1]);
                 var fldUser = edit.Col4[0];
                 var fldDate = edit.Col4[1];
-                if (fldUser != null && fldDate != null)
+                if (hasUser && hasDate)
                 {
                     fids += fldUser + "," + fldDate + ",";
                     values += $"'{userId}','{_Date.ToDbStr(_now)}',";
                 }
-                else if (fldUser != null)
+                else if (hasUser)
                 {
                     fids += fldUser + ",";
                     values += $"'{userId}',";
@@ -390,14 +392,13 @@ namespace Base.Services
             var setCol4 = "";
             if (edit.Col4 != null && edit.Col4.Length == 4)
             {
-                var fldUser = _Str.EmptyToValue(edit.Col4[2], "");
-                var fldDate = _Str.EmptyToValue(edit.Col4[3], "");
-                setCol4 = (fldUser != "" && fldDate != "")
-                    ? $",{fldUser}='{_Fun.UserId()}',{fldDate}='{_Date.ToDbStr(_now)}'" :
-                (fldUser != "")
-                    ? $",{fldUser}='{_Fun.UserId()}'" :
-                (fldDate != "")
-                    ? $",{fldDate}='{_Date.ToDbStr(_now)}'" : "";
+                var hasUser = _Str.NotEmpty(edit.Col4[2]);
+                var hasDate = _Str.NotEmpty(edit.Col4[3]);
+                var fldUser = edit.Col4[2];
+                var fldDate = edit.Col4[3];
+                setCol4 = (hasUser && hasDate) ? $",{fldUser}='{_Fun.UserId()}',{fldDate}='{_Date.ToDbStr(_now)}'" :
+                    hasUser ? $",{fldUser}='{_Fun.UserId()}'" :
+                    hasDate ? $",{fldDate}='{_Date.ToDbStr(_now)}'" : "";
             }
 
             //update db
