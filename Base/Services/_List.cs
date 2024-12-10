@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Base.Models;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Base.Services
@@ -50,6 +51,17 @@ namespace Base.Services
             if (list2 != null && list2.Count > 0)
                 list.AddRange(list2);
             return (list.Count == 0) ? null : list;
+        }
+
+        public static List<IdStrDto> CodesAddEmpty(List<IdStrDto>? codes, string plsSelect)
+        {
+            codes ??= [];
+            codes.Insert(0, new IdStrDto()
+            {
+                Id = "",
+                Str = plsSelect,
+            });
+            return codes;
         }
 
     }//class
