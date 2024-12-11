@@ -19,14 +19,14 @@ namespace BaseApi.Services
         //get user's dept manager
         public static string SqlUserMgr = @"
 select d.MgrId 
-from dbo.Dept d
-inner join dbo.[User] u on d.Id=u.DeptId
+from dbo.XpDept d
+inner join dbo.XpUser u on d.Id=u.DeptId
 where u.Id='{0}'
 ";
         //get user name
-        public static string SqlUserName = "select Name from dbo.[User] where Id='{0}'";
+        public static string SqlUserName = "select Name from dbo.XpUser where Id='{0}'";
         //get dept manager Id
-        public static string SqlDeptMgr = "select MgrId from dbo.Dept where Id='{0}'";
+        public static string SqlDeptMgr = "select MgrId from dbo.XpDept where Id='{0}'";
         //get first role member
         public static string SqlRole = "select UserId from dbo.XpUserRole where RoleId='{0}'";
 

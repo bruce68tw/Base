@@ -603,17 +603,17 @@ namespace Base.Services
         /// <returns></returns>
         public static string Decode(string data)
         {
-            return EncodeDecode(false, data);
+            return AesEnDecodeByFile(false, data);
         }
 
         /// <summary>
-        /// 加/解密重要資料(組態欄位), 加解密後以base64編碼/解碼
+        /// AES 加/解密重要資料(組態欄位), 加解密後以base64編碼/解碼
         /// 先判斷是否需要加密, 再從目前目錄讀取key.xxx.txt
         /// </summary>
         /// <param name="isEncode">true(加密), false(解密)</param>
         /// <param name="data"></param>
         /// <returns>加解密後以base64編碼/解碼</returns>
-        private static string EncodeDecode(bool isEncode, string data)
+        public static string AesEnDecodeByFile(bool isEncode, string data)
         {
             if (!_Fun.Config.Encode) return data;
 
@@ -629,26 +629,24 @@ namespace Base.Services
             //key內容為base64, 必須先解碼
             //return EncodeDecodeByKey(isEncode, data, Base64Decode(key));
             return isEncode
-                ? AesEncode(data)
-                : AesDecode(data);
+                ? AesEncode(data, key)
+                : AesDecode(data, key);
         }
 
-        /*
         /// <summary>
-        /// 加/解密重要資料(組態欄位)
+        /// AES 加/解密重要資料(組態欄位), called by KeyCmd
         /// </summary>
         /// <param name="isEncode"></param>
         /// <param name="data"></param>
         /// <param name="key">如果空值則取用目前目錄下的key.xxx.txt</param>
         /// <returns>加解密後以base64編碼/解碼</returns>
-        public static string EncodeDecodeByKey(bool isEncode, string data, string key)
+        public static string AesEnDecodeByKey(bool isEncode, string data, string key)
         {
             //AES加解密, AES iv 使用空白
             return isEncode
                 ? AesEncode(data, key)
                 : AesDecode(data, key);
         }
-        */
 
         private static void AesInit(System.Security.Cryptography.Aes aes, string key)
         {
@@ -672,13 +670,14 @@ namespace Base.Services
         /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns>encoded base64 string</returns>
-        public static string AesEncode(string data)
+        public static string AesEncode(string data, string key)
         {
+            //key ??= _Fun.AesKey;
             byte[] bytes;
             //key = GetAesKey(key);
             using (var aes = System.Security.Cryptography.Aes.Create())
             {
-                AesInit(aes, _Fun.AesKey);
+                AesInit(aes, key);
                 /*
                 aes.Key = Encoding.ASCII.GetBytes(key);
                 aes.IV = AesKeyToIv(key);
@@ -716,13 +715,14 @@ namespace Base.Services
         /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns>decoded plain text</returns>
-        public static string AesDecode(string data)
+        public static string AesDecode(string data, string key)
         {
+            //key ??= _Fun.AesKey;
             string result;
             var bytes = Convert.FromBase64String(data);
             using (var aes = System.Security.Cryptography.Aes.Create())
             {
-                AesInit(aes, _Fun.AesKey);
+                AesInit(aes, key);
                 /*
                 aes.Key = Encoding.ASCII.GetBytes(key);
                 aes.IV = AesKeyToIv(key);

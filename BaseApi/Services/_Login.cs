@@ -46,8 +46,8 @@ namespace BaseApi.Services
             var sql = @"
 select u.Id as UserId, u.Name as UserName, u.Pwd,
     u.DeptId, d.Name as DeptName
-from dbo.[User] u
-join dbo.Dept d on u.DeptId=d.Id
+from dbo.XpUser u
+join dbo.XpDept d on u.DeptId=d.Id
 where u.Account=@Account
 ";
             var status = false;
