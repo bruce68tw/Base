@@ -748,7 +748,7 @@ namespace Base.Services
                 await db.DisposeAsync();
             }
 
-            if (log) await _Log.ErrorRootA("CrudEdit.cs SaveJsonA() failed: " + error);
+            if (log) await _Log.ErrorRootA("CrudEditSvc.cs SaveJsonA() failed: " + error);
             return _Model.GetError();
         }
 
