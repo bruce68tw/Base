@@ -13,7 +13,7 @@ namespace BaseWeb.Helpers
         public HtmlString Invoke(XiDtDto dto)
         {
             string date = "", hour = "", min = "";
-            if (!_Str.IsEmpty(dto.Value))
+            if (_Str.NotEmpty(dto.Value))
             {
                 var dt = _Date.CsToDt(dto.Value)!.Value;
                 date = dt.Date.ToString();
@@ -35,12 +35,8 @@ _Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, dto.Edit, false,
 _Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit, false, inputAttr: width, boxClass: "xg-inline")
 );
 
-            if (!_Str.IsEmpty(dto.Title))
-            {
-                var cols = dto.Cols ?? "2,5";
-                html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, cols);
-            }
-
+            if (_Str.NotEmpty(dto.Title))
+                html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols ?? "2,5");
             return new HtmlString(html);
         } 
 

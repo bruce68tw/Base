@@ -24,7 +24,7 @@ namespace BaseWeb.ViewComponents
             var html = $"<a href='#' {attr} class='xi-unsave {dto.BoxClass}'>{dto.Value}</a>";
 
             //add title if need
-            if (!_Str.IsEmpty(dto.Title))
+            if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols);
             return new HtmlString(html);
         }

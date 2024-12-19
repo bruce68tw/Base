@@ -14,7 +14,7 @@ namespace BaseWeb.ViewComponents
         public HtmlString Invoke(XiHideDto dto)
         {
             var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.InputAttr);
-            if (!_Str.IsEmpty(dto.BoxClass))
+            if (_Str.NotEmpty(dto.BoxClass))
                 attr += $" class='{dto.BoxClass}'";
 
             var html = $"<input{attr} data-type='text' type='hidden' value='{dto.Value}'>";

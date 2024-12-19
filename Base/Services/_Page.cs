@@ -9,7 +9,8 @@ namespace Base.Services
     /// </summary>
     public class _Page
     {
-        private static List<int> PageRowRanges = new() { 10, 25, 50, 100 };
+        //private static List<int> PageRowRanges = new() { 10, 25, 50, 100 };
+        private static List<int> PageRowRanges = [10, 20, 50, 100]; //for more friendly !!
 
         public static PageIn GetPageIn(int pageNo, int pageRows, int filterRows, List<object>? args = null)
         {

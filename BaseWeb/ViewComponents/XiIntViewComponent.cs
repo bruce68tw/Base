@@ -27,7 +27,7 @@ namespace BaseWeb.ViewComponents
             var html = $"<input{attr} class='form-control xi-box {dto.BoxClass}'>";
 
             //add title
-            if (!_Str.IsEmpty(dto.Title))
+            if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
             return new HtmlString(html);
         } 

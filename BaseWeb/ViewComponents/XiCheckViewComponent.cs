@@ -28,7 +28,7 @@ namespace BaseWeb.ViewComponents
             var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, false, dto.InputAttr);
             if (dto.IsCheck)
                 attr += " checked";
-            if (!_Str.IsEmpty(dto.FnOnClick))
+            if (_Str.NotEmpty(dto.FnOnClick))
                 attr += $" onclick='{dto.FnOnClick}'";
 
             //ext class
@@ -44,7 +44,7 @@ namespace BaseWeb.ViewComponents
 </label>";
 
             //add title
-            if (!_Str.IsEmpty(dto.Title))
+            if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols, true);
 
             return new HtmlString(html);

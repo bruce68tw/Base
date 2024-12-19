@@ -104,7 +104,7 @@ order by l.StartNode, l.Sort
                         findLine = line;
                         break;
                     }
-                    else if(!_Str.IsEmpty(error)) goto lab_exit;
+                    else if(_Str.NotEmpty(error)) goto lab_exit;
                 }
 
                 //return error if no matched line

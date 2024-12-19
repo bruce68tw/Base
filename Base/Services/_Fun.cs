@@ -308,7 +308,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
         public static bool IsError(string msg)
         {
             var len = PreError.Length;
-            return !_Str.IsEmpty(msg) &&
+            return _Str.NotEmpty(msg) &&
                 msg.Length >= len &&
                 msg.Substring(0, len) == PreError;
         }

@@ -163,7 +163,11 @@ namespace Base.Services
             }
         }
 
-        //get key list
+        /// <summary>
+        /// get key list
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
         public static List<string> GetKeys(JObject row)
         {
             var data = new List<string>();
@@ -292,7 +296,24 @@ namespace Base.Services
                 ? null : upJson[fid]![childIdx] as JObject;
         }
 
-        /*
+		/// <summary>
+		/// get json fid value
+		/// </summary>
+		/// <param name="json"></param>
+		/// <param name="fid"></param>
+		/// <param name="defaultValue"></param>
+		/// <returns></returns>
+		public static string GetFidStr(JObject? json, string fid, string defaultValue)
+		{
+			if (json == null || json[fid] == null)
+				return defaultValue;
+
+			var value = json[fid]!.ToString();
+			return _Str.IsEmpty(value) ? defaultValue : value;
+		}
+
+
+		/*
         //copy json to static class
         public static void CopyToModel<T>(JObject from, T to) where T : class
         {
@@ -309,8 +330,8 @@ namespace Base.Services
         }
         */
 
-        #region remark code
-        /*
+		#region remark code
+		/*
         /// <summary>
         /// convert IEnumerable<dynamic> to json string
         /// </summary>
@@ -502,6 +523,6 @@ namespace Base.Services
             return src;
         }
         */
-        #endregion
-    }//class
+		#endregion
+	}//class
 }

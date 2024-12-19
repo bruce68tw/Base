@@ -11,7 +11,7 @@ namespace BaseWeb.ViewComponents
         public HtmlString Invoke(XiReadDto dto)
         {
             var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.InputAttr);
-            if (!_Str.IsEmpty(dto.Format))
+            if (_Str.NotEmpty(dto.Format))
                 attr += $" data-format='{dto.Format}'";
 
             //add class xi-unsave for not save DB, _form.js toJson() will filter out it !!
@@ -21,7 +21,7 @@ namespace BaseWeb.ViewComponents
             //xi-read for css style
             var html = $"<label{attr} data-type='read' class='form-control {cls}'>{dto.Value}</label>";
 
-            if (!_Str.IsEmpty(dto.Title))
+            if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols);
             return new HtmlString(html);
         }

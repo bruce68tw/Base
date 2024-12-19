@@ -28,7 +28,7 @@ namespace BaseApi.Services
         /// <returns></returns>
         public static string RemoveHtmlTag(string html)
         {
-            if (!_Str.IsEmpty(html))
+            if (_Str.NotEmpty(html))
             {
                 //remove js code.
                 html = Regex.Replace(html, @"<script[\d\D]*?>[\d\D]*?</script>", string.Empty);

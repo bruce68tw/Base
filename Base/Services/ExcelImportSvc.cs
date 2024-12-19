@@ -227,7 +227,7 @@ namespace Base.Services
                 {
                     foreach (var result in saveResults)
                     {
-                        if (!_Str.IsEmpty(result))
+                        if (_Str.NotEmpty(result))
                             AddError(_okRowNos[idx], result);
                         idx++;
                     }

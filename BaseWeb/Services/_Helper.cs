@@ -185,12 +185,12 @@ namespace BaseWeb.Services
             string inputTip = "", string inputAttr = "", string boxClass = "",
             string fnOnChange = "")
         {
-            var hasType = !_Str.IsEmpty(type);
+            var hasType = _Str.NotEmpty(type);
             string attr = hasType
                 ? GetInputAttr(fid, edit, required, inputAttr) + $" data-type='{type}'"
                 : GetInputAttr("", edit, required, inputAttr);
             attr += GetPlaceHolder(inputTip);
-            if (!_Str.IsEmpty(fnOnChange))
+            if (_Str.NotEmpty(fnOnChange))
                 attr += $" onchange='{fnOnChange}'";
 
             //ext class
@@ -236,12 +236,12 @@ namespace BaseWeb.Services
                 GetPlaceHolder(inputTip) +
                 GetRequired(required) +
                 GetMaxLength(maxLen);
-            if (!_Str.IsEmpty(extAttr))
+            if (_Str.NotEmpty(extAttr))
                 attr += " " + extAttr;
 
             //html
             var html = $"<textarea{attr} data-type='{type}' class='form-control xi-box {extClass}'></textarea>";
-            if (!_Str.IsEmpty(title))
+            if (_Str.NotEmpty(title))
                 html = InputAddLayout(html, title, required, labelTip, inRow, cols);
 
             //html = String.Format(html, attr, _Html.Decode(value), extClass, fid + _WebFun.Error, _WebFun.ErrorLabelClass);
@@ -257,22 +257,27 @@ namespace BaseWeb.Services
         /// <param name="title"></param>
         /// <param name="required"></param>
         /// <param name="labelTip"></param>
+        /// <param name="inRow">如果false則會在外面包一層row class</param>
         /// <param name="cols">ary0(是否含 row div), ary1,2(for 水平), ary1(for 垂直)</param>
         /// <param name="labelHideRwd">RWD(phone) hide label</param>
         /// <returns></returns>
         public static string InputAddLayout(string html, string title, bool required, 
             string labelTip, bool inRow, string cols, bool labelHideRwd = false)
         {
+            //加上 label tip(title)
             //cols = cols ?? _Fun.DefHCols;
             var colList = GetCols(cols);
             var labelTip2 = "";
             var iconTip = "";
-            if (!_Str.IsEmpty(labelTip))
+            if (_Str.NotEmpty(labelTip))
             {
                 labelTip2 = " title='" + labelTip + "'";
                 iconTip = GetIconTip();
             }
+
+            //加上 required
             var reqSpan = GetRequiredSpan(required);
+
             var labelClass = labelHideRwd ? _Fun.HideRwd : "";
             string result;
             if (colList.Count > 1)
@@ -352,7 +357,7 @@ namespace BaseWeb.Services
                     className += " " + prop.ClassName;
 
                 //add onchange
-                if (!_Str.IsEmpty(prop.OnChange))
+                if (_Str.NotEmpty(prop.OnChange))
                     result += " onchange='" + prop.OnChange + "(this)'";
 
                 //data-separator 用來傳遞自訂參數

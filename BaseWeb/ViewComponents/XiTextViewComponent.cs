@@ -33,7 +33,7 @@ namespace BaseWeb.ViewComponents
 
             //add title,required,tip,cols for single form
             //consider this field could in datatable(no title) !!
-            if (!_Str.IsEmpty(dto.Title))
+            if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
             return new HtmlString(html);
         } 

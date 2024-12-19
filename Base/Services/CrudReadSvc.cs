@@ -24,21 +24,21 @@ namespace Base.Services
         //private DtDto _dtDto;
 
         //sql args, (id, value), be set in GetWhereAsync()
-        private List<object> _sqlArgs = new();
+        private List<object> _sqlArgs = [];
 
-        //constructor
+		//constructor
         public CrudReadSvc(string dbStr = "")
         {
-            _dbStr = dbStr;
-        }
+			_dbStr = dbStr;
+		}
 
-        //constructor, db can not be null
+		//constructor, db can not be null
         public CrudReadSvc(Db db)
         {
-            _db = db;
+			_db = db;
         }
 
-        private Db GetDb()
+		private Db GetDb()
         {
             return _db ?? new Db(_dbStr);
         }
@@ -261,7 +261,7 @@ namespace Base.Services
         /// <returns></returns>
         public async Task<JArray?> GetExportRowsA(string ctrl, ReadDto readDto, JObject findJson)
         {
-            return await GetRows2A(ctrl, CrudEnum.Export, readDto, findJson, _Fun.MaxExportCount, readDto.ExportSql);
+            return await GetRowsByAuthA(ctrl, CrudEnum.Export, readDto, findJson, _Fun.MaxExportCount, readDto.ExportSql);
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace Base.Services
         /// <returns></returns>
         public async Task<JArray?> GetRowsA(ReadDto readDto, JObject findJson, int readRows)
         {
-            return await GetRows2A("", CrudEnum.Empty, readDto, findJson, readRows);
+            return await GetRowsByAuthA("", CrudEnum.Empty, readDto, findJson, readRows);
         }
 
         /// <summary>
@@ -286,7 +286,7 @@ namespace Base.Services
         /// <param name="readRows">讀取資料筆數</param>
         /// <param name="readSql">如果有值則會用來查詢資料</param>
         /// <returns></returns>
-        private async Task<JArray?> GetRows2A(string ctrl, CrudEnum crudEnum, ReadDto readDto, 
+        private async Task<JArray?> GetRowsByAuthA(string ctrl, CrudEnum crudEnum, ReadDto readDto, 
             JObject findJson, int readRows, string readSql = "")
         {
             //convert sql to model
@@ -659,7 +659,7 @@ namespace Base.Services
                 {
                     foreach (var orWhere in orWheres)
                     {
-                        if (!_Str.IsEmpty(orWhere))
+                        if (_Str.NotEmpty(orWhere))
                         {
                             where += and + "(" + orWhere[0..^4] + ")";
                             and = " And ";
@@ -695,7 +695,7 @@ namespace Base.Services
             #region 3.where add quick search
             //var search = (_dtIn.search == null) ? "" : _dtIn.search.value;
             var search = inputSearch;
-            if (!_Str.IsEmpty(search))
+            if (_Str.NotEmpty(search))
             {
                 //by finding string
                 itemWhere = "";
@@ -727,8 +727,8 @@ namespace Base.Services
             return "-1";
         }
 
-        #region remark code    
-        /*
+		#region remark code    
+		/*
         public MemoryStream ExportExcel(ReadCrud crud, JObject findJson, string sheetName, List<string> headers = null, List<string> cols = null)
         {
             var rows = GetAllRows(crud, findJson);
@@ -736,14 +736,14 @@ namespace Base.Services
         }
         */
 
-        /// <summary>
-        /// 傳回dataTables資料, 含多筆Json資料列
-        /// </summary>
-        /// <param name="crud"></param>
-        /// <param name="dtIn"></param>
-        /// <param name="findJson"></param>
-        /// <returns></returns>
-        /*
+		/// <summary>
+		/// 傳回dataTables資料, 含多筆Json資料列
+		/// </summary>
+		/// <param name="crud"></param>
+		/// <param name="dtIn"></param>
+		/// <param name="findJson"></param>
+		/// <returns></returns>
+		/*
         public object GetModelRows<T>(CrudJsonModel crud, DataTableIn dtIn, object findJson) where T : class
         {
             //設定傳入參數
@@ -819,7 +819,7 @@ namespace Base.Services
         }
         */
 
-        /*
+		/*
         //處理日期欄位的 where 條件
         private string GetWhereByDate(CrudItemModel item, string col, DateTime date1, DateTime date2)
         {
@@ -832,7 +832,7 @@ namespace Base.Services
             return where;
         }
         */
-        #endregion
+		#endregion
 
-    }//class
+	}//class
 }

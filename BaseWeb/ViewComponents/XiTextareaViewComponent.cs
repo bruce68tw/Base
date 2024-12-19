@@ -27,7 +27,7 @@ namespace BaseWeb.ViewComponents
 
             //html
             var html = $"<textarea{attr} data-type='textarea' class='form-control xi-box {dto.BoxClass}'></textarea>";
-            if (!_Str.IsEmpty(dto.Title))
+            if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
             return new HtmlString(html);
         }

@@ -16,7 +16,7 @@ namespace BaseApi.Attributes
         {
             //_Locale.GetBaseRes()!.Required
             var result = base.IsValid(value, validationContext);
-            if (!_Str.IsEmpty(ErrorMessage))
+            if (_Str.NotEmpty(ErrorMessage))
                 ErrorMessage = validationContext.MemberName + " Required";
             return result!;
         }

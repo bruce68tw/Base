@@ -271,12 +271,13 @@ namespace Base.Services
 
             //set creator, created if need
             //var setCol4 = "";
-            if (edit.Col4 != null && edit.Col4.Length >= 2)
+            var col4Len = (edit.Col4 == null) ? 0 : edit.Col4.Length;
+            if (col4Len > 0)
             {
-                var hasUser = _Str.NotEmpty(edit.Col4[0]);
-                var hasDate = _Str.NotEmpty(edit.Col4[1]);
+                var hasUser = _Str.NotEmpty(edit.Col4![0]);
+                var hasDate = col4Len > 1 && _Str.NotEmpty(edit.Col4![1]);
                 var fldUser = edit.Col4[0];
-                var fldDate = edit.Col4[1];
+                var fldDate = hasDate ? edit.Col4[1] : "";
                 if (hasUser && hasDate)
                 {
                     fids += fldUser + "," + fldDate + ",";
@@ -389,13 +390,14 @@ namespace Base.Services
                 return true;
 
             //set reviser, revised
+            var col4Len = (edit.Col4 == null) ? 0 : edit.Col4.Length;
             var setCol4 = "";
-            if (edit.Col4 != null && edit.Col4.Length == 4)
+            if (col4Len > 2)
             {
-                var hasUser = _Str.NotEmpty(edit.Col4[2]);
-                var hasDate = _Str.NotEmpty(edit.Col4[3]);
+                var hasUser = _Str.NotEmpty(edit.Col4![2]);
+                var hasDate = col4Len > 3 && _Str.NotEmpty(edit.Col4[3]);
                 var fldUser = edit.Col4[2];
-                var fldDate = edit.Col4[3];
+                var fldDate = hasDate ? edit.Col4[3] : "";
                 setCol4 = (hasUser && hasDate) ? $",{fldUser}='{_Fun.UserId()}',{fldDate}='{_Date.ToDbStr(_now)}'" :
                     hasUser ? $",{fldUser}='{_Fun.UserId()}'" :
                     hasDate ? $",{fldDate}='{_Date.ToDbStr(_now)}'" : "";
