@@ -13,9 +13,9 @@ namespace BaseApi.Services
 select * from dbo.XpEasyRpt
 order by Id
 ",
-            Items = new QitemDto[] {
+            Items = [
                 new() { Fid = "Name" },
-            },
+            ],
         };
 
         public async Task<JObject?> GetPageA(string ctrl, DtDto dt)

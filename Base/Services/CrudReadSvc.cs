@@ -265,13 +265,26 @@ namespace Base.Services
         }
 
         /// <summary>
+        /// 讀取資料(考慮權限)
+        /// </summary>
+        /// <param name="readDto"></param>
+        /// <param name="findJson"></param>
+        /// <param name="readRows"></param>
+        /// <returns></returns>
+        public async Task<JArray?> GetRowsA(string ctrl, ReadDto readDto, JObject findJson)
+        {
+            return await GetRowsByAuthA(ctrl, CrudEnum.Read, readDto, findJson, _Fun.MaxExportCount, readDto.ReadSql);
+        }
+
+        /// <summary>
+        /// GetRowsA -> GetRowsNoAuthA
         /// 讀取資料(不考慮權限), ex:KeyModal資料
         /// </summary>
         /// <param name="readDto"></param>
         /// <param name="findJson"></param>
         /// <param name="readRows"></param>
         /// <returns></returns>
-        public async Task<JArray?> GetRowsA(ReadDto readDto, JObject findJson, int readRows)
+        public async Task<JArray?> GetRowsNoAuthA(ReadDto readDto, JObject findJson, int readRows)
         {
             return await GetRowsByAuthA("", CrudEnum.Empty, readDto, findJson, readRows);
         }

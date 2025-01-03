@@ -81,7 +81,7 @@ namespace Base.Services
         //max login fail count
         public static int MaxLoginFail = 3;
 
-        //max export rows count
+        //max export rows count, also for 非分頁功能讀取資料
         public static int MaxExportCount = 3000;
 
         //密碼強度: 0(無限制), 1(中等:英數字), 2(強:大小寫英文,數字,特殊符號,長度10以上)
