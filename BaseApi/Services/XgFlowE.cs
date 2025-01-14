@@ -13,6 +13,7 @@ namespace BaseApi.Services
         {
             return new EditDto()
             {
+                FnSetNewKeyJsonA = FnSetNewKeyJsonA,
                 Table = "dbo.XpFlow",
                 PkeyFid = "Id",
                 Col4 = null,
@@ -65,14 +66,33 @@ namespace BaseApi.Services
             };
         }
 
-        public async Task<ResultDto> CreateA(JObject json, FnSetNewKeyJsonA fnSetNewKeyA)
+        public async Task<ResultDto> CreateA(JObject json)
         {
-            return await EditService().CreateA(json, fnSetNewKeyA);
+            return await EditService().CreateA(json);
         }
 
-        public async Task<ResultDto> UpdateA(string key, JObject json, FnSetNewKeyJsonA fnSetNewKeyA)
+        public async Task<ResultDto> UpdateA(string key, JObject json)
         {
-            return await EditService().UpdateA(key, json, fnSetNewKeyA);
+            return await EditService().UpdateA(key, json);
+        }
+
+        /// <summary>
+        /// delegate for setNewKey
+        /// </summary>
+        /// <param name="inputJson"></param>
+        /// <param name="editDto"></param>
+        /// <returns></returns>
+        private async Task<string> FnSetNewKeyJsonA(bool isNew, CrudEditSvc crudEditSvc, JObject inputJson, EditDto editDto)
+        {
+            var error = await crudEditSvc.SetNewKeyJsonA(inputJson, editDto);
+            if (_Str.NotEmpty(error))
+                return error;
+
+            error = crudEditSvc.SetChildFkey(inputJson, 1, "StartNode", "00");
+            if (_Str.NotEmpty(error))
+                return error;
+
+            return crudEditSvc.SetChildFkey(inputJson, 1, "EndNode", "00");
         }
 
     } //class

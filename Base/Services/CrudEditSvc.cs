@@ -317,7 +317,7 @@ namespace Base.Services
 
         //update one row
         //return error msg if any
-        private async Task<bool> UpdateRowA(bool isLevel0, EditDto edit, JObject inputRow, Db db)
+        private async Task<bool> UpdateRowA(bool isLevel0, EditDto editDto, JObject inputRow, Db db)
         {
             //skip if empty
             if (_Json.IsEmpty(inputRow)) return true;
@@ -342,7 +342,7 @@ namespace Base.Services
 
             //get updated sql, compare db/input row
             var sql = "";
-            var rowKey = isLevel0 ? GetMainKey() : inputRow[edit.PkeyFid]!.ToString();
+            var rowKey = isLevel0 ? GetMainKey() : inputRow[editDto.PkeyFid]!.ToString();
             foreach (var field in inputRow)
             {
                 //if no fid then log error !!
@@ -350,19 +350,19 @@ namespace Base.Services
                 if (IsSpecEditFid(fid))
                     continue;
 
-                if (edit._FidNo![fid] == null)
+                if (editDto._FidNo![fid] == null)
                 {
-                    await _Log.ErrorRootA($"CrudEdit.cs UpdateRowA() field not existed({edit.Table}.{fid})");
+                    await _Log.ErrorRootA($"CrudEdit.cs UpdateRowA() field not existed({editDto.Table}.{fid})");
                     return false;
                 }
 
                 //key is not updated
-                if (fid == edit.PkeyFid)
+                if (fid == editDto.PkeyFid)
                     continue;
 
                 //skip un-update fid
-                var fidNo = Convert.ToInt32(edit._FidNo[fid]);
-                var eitem = edit.Items[fidNo];
+                var fidNo = Convert.ToInt32(editDto._FidNo[fid]);
+                var eitem = editDto.Items[fidNo];
                 if (eitem.Read || !eitem.Update)
                     continue;
 
@@ -376,7 +376,7 @@ namespace Base.Services
 
                 //set empty date to null, or will be 1900/1/1 !!
                 //object value = (inputRow[key].ToString() == "" && (type == EnumDataType.Datetime || type == EnumDataType.Date))
-                object? value = (inputRow[fid]!.ToString() == "" && edit.EmptyToNulls.Contains(fid))
+                object? value = (inputRow[fid]!.ToString() == "" && editDto.EmptyToNulls.Contains(fid))
                     ? null
                     : inputRow[fid]!.ToString();
 
@@ -390,21 +390,21 @@ namespace Base.Services
                 return true;
 
             //set reviser, revised
-            var col4Len = (edit.Col4 == null) ? 0 : edit.Col4.Length;
+            var col4Len = (editDto.Col4 == null) ? 0 : editDto.Col4.Length;
             var setCol4 = "";
             if (col4Len > 2)
             {
-                var hasUser = _Str.NotEmpty(edit.Col4![2]);
-                var hasDate = col4Len > 3 && _Str.NotEmpty(edit.Col4[3]);
-                var fldUser = edit.Col4[2];
-                var fldDate = hasDate ? edit.Col4[3] : "";
+                var hasUser = _Str.NotEmpty(editDto.Col4![2]);
+                var hasDate = col4Len > 3 && _Str.NotEmpty(editDto.Col4[3]);
+                var fldUser = editDto.Col4[2];
+                var fldDate = hasDate ? editDto.Col4[3] : "";
                 setCol4 = (hasUser && hasDate) ? $",{fldUser}='{_Fun.UserId()}',{fldDate}='{_Date.ToDbStr(_now)}'" :
                     hasUser ? $",{fldUser}='{_Fun.UserId()}'" :
                     hasDate ? $",{fldDate}='{_Date.ToDbStr(_now)}'" : "";
             }
 
             //update db
-            sql = $"Update {edit.Table} Set {sql[0..^1] + setCol4} Where {GetWhereAndArg(edit, rowKey)}";
+            sql = $"Update {editDto.Table} Set {sql[0..^1] + setCol4} Where {GetWhereAndArg(editDto, rowKey)}";
             if (await db.ExecSqlA(sql, _sqlArgs!) == 0)
             {
                 await _Log.ErrorRootA($"CrudEdit.cs UpateRowA() failed, update 0 row.({sql})");
@@ -420,20 +420,20 @@ namespace Base.Services
         /// <summary>
         /// set edit validate variables: _FidNo, _FidRequires
         /// </summary>
-        /// <param name="edit"></param>
-        private void SetValidVar(EditDto edit)
+        /// <param name="editDto"></param>
+        private void SetValidVar(EditDto editDto)
         {
-            var items = edit.Items;
+            var items = editDto.Items;
             if (items == null || items.Length == 0) return;
 
             //_FidNo
-            edit._FidNo = new JObject();
-            var fidNo = edit._FidNo;
+            editDto._FidNo = new JObject();
+            var fidNo = editDto._FidNo;
             for (var i = 0; i < items.Length; i++)
                 fidNo[items[i].Fid] = i;
 
             //_FidRequires
-            edit._FidRequires = edit.Items
+            editDto._FidRequires = editDto.Items
                 .Where(a => a.Required == true)
                 .Select(a => a.Fid)
                 .ToList();
@@ -443,10 +443,10 @@ namespace Base.Services
         /// validate json (recursive)
         /// </summary>
         /// <param name="editLevel">for debug</param>
-        /// <param name="edit"></param>
+        /// <param name="editDto"></param>
         /// <param name="json"></param>
         /// <returns>error msg if any</returns>
-        private string ValidJsonLoop(int editLevel, EditDto edit, JObject json)
+        private string ValidJsonLoop(int editLevel, EditDto editDto, JObject json)
         {
             //if (json == null) return "";
 
@@ -456,29 +456,29 @@ namespace Base.Services
             if (rows != null)
             {
                 //prepare edit validate variables
-                SetValidVar(edit);
+                SetValidVar(editDto);
 
                 //master-detail 類型時 master無異動時 rows[0]為null, 這裡必須使用var row, 不可用JObject row
                 foreach(var row in rows)
                 {
                     if (row == null) continue;
-                    error = ValidRow(edit, (row as JObject)!);
+                    error = ValidRow(editDto, (row as JObject)!);
                     if (error != "") return error;
                 }
             }
 
             //validate this
-            error = ValidRow(edit, json);
+            error = ValidRow(editDto, json);
             if (error != "") return error;
 
             //validate childs (recursive)
-            var childLen = GetEditChildLen(edit);
+            var childLen = GetEditChildLen(editDto);
             for(var i=0; i<childLen; i++)
             {
                 var json2 = GetChildJson(json, i);
                 if (json2 == null) continue;
 
-                error = ValidJsonLoop(editLevel + 1, edit.Childs![i], json2);
+                error = ValidJsonLoop(editLevel + 1, editDto.Childs![i], json2);
                 if (error != "") return error;
             }            
             return "";  //case of ok
@@ -487,31 +487,31 @@ namespace Base.Services
         /// <summary>
         /// validate one  row
         /// </summary>
-        /// <param name="edit"></param>
+        /// <param name="editDto"></param>
         /// <param name="row"></param>
         /// <returns>error msg if any</returns>
-        private string ValidRow(EditDto edit, JObject row)
+        private string ValidRow(EditDto editDto, JObject row)
         {
-            if (edit.Items == null || edit.Items.Length == 0) return "";
+            if (editDto.Items == null || editDto.Items.Length == 0) return "";
             if (_Json.IsEmptyNoSpec(row)) return "";
 
             #region check required & fid existed
-            if (IsNewKey(row, edit.PkeyFid))
+            if (IsNewKey(row, editDto.PkeyFid))
             {
                 //check required
-                if (edit._FidRequires != null)
+                if (editDto._FidRequires != null)
                 {
-                    foreach (var fid in edit._FidRequires)
+                    foreach (var fid in editDto._FidRequires)
                     {
                         if (_Object.IsEmpty(row[fid]))
-                            return "field is required for insert.(" + edit.Table + "." + fid + ")";
+                            return "field is required for insert.(" + editDto.Table + "." + fid + ")";
                     }
                 }
             }
             else
             {
                 //check required
-                var  required = edit._FidRequires != null;
+                var  required = editDto._FidRequires != null;
                 foreach (var item in row!)
                 {
                     //底線欄位不檢查是否存在DB
@@ -519,12 +519,12 @@ namespace Base.Services
                     if (IsSpecEditFid(fid)) continue;
 
                     //log error if fid not existed
-                    if (edit._FidNo![fid] == null)
-                        return string.Format("input field is wrong ({0}.{1})", edit.Table, fid);
+                    if (editDto._FidNo![fid] == null)
+                        return string.Format("input field is wrong ({0}.{1})", editDto.Table, fid);
 
                     //check required
-                    if (required && _Object.IsEmpty(row[fid]) && edit._FidRequires!.Contains(fid))
-                        return "field is required for update.(" + edit.Table + "." + fid + ")";
+                    if (required && _Object.IsEmpty(row[fid]) && editDto._FidRequires!.Contains(fid))
+                        return "field is required for update.(" + editDto.Table + "." + fid + ")";
                 }
             }
             #endregion
@@ -539,8 +539,8 @@ namespace Base.Services
                     if (IsSpecEditFid(fid)) continue;
 
                     var value = row[fid]!.ToString();
-                    var itemNo = Convert.ToInt32(edit._FidNo![fid]);
-                    var item = edit.Items[itemNo];
+                    var itemNo = Convert.ToInt32(editDto._FidNo![fid]);
+                    var item = editDto.Items[itemNo];
                     switch (item.CheckType)
                     {
                         //TODO: add others checkType
@@ -617,9 +617,9 @@ namespace Base.Services
         }
 
         //is transaction or not
-        private bool IsTrans(EditDto edit)
+        private bool IsTrans(EditDto editDto)
         {
-            var childLen = GetEditChildLen(edit);
+            var childLen = GetEditChildLen(editDto);
             return (_editDto.Transaction != null)
                 ? _editDto.Transaction.Value
                 : (childLen > 0);
@@ -631,10 +631,9 @@ namespace Base.Services
         /// <param name="json"></param>
         /// <param name="fnAfterSaveA"></param>
         /// <returns>ResultDto</returns>
-        public async Task<ResultDto> CreateA(JObject json,
-            FnSetNewKeyJsonA? fnSetNewKeyA = null, FnAfterSaveA? fnAfterSaveA = null)
+        public async Task<ResultDto> CreateA(JObject json)
         {
-            return await SaveJsonA(json, fnSetNewKeyA, fnAfterSaveA);
+            return await SaveJsonA(true, json);
         }
 
         /// <summary>
@@ -644,8 +643,7 @@ namespace Base.Services
         /// <param name="json"></param>
         /// <param name="fnAfterSaveA"></param>
         /// <returns>ResultDto</returns>
-        public async Task<ResultDto> UpdateA(string key, JObject json,
-            FnSetNewKeyJsonA? fnSetNewKeyA = null, FnAfterSaveA? fnAfterSaveA = null)
+        public async Task<ResultDto> UpdateA(string key, JObject json)
         {
             //return error if empty key
             if (key == "")
@@ -670,7 +668,7 @@ namespace Base.Services
                 rows[0][_editDto.PkeyFid] = key;
             */
 
-            return await SaveJsonA(json, fnSetNewKeyA, fnAfterSaveA);
+            return await SaveJsonA(false, json);
         }
 
         /// <summary>
@@ -681,8 +679,7 @@ namespace Base.Services
         /// <param name="fnSetNewKeyA">custom function for set newKeyJson</param>
         /// <param name="fnAfterSaveA"></param>
         /// <returns></returns>
-        private async Task<ResultDto> SaveJsonA(JObject inputJson, 
-            FnSetNewKeyJsonA? fnSetNewKeyA = null, FnAfterSaveA? fnAfterSaveA = null)
+        private async Task<ResultDto> SaveJsonA(bool isNew, JObject inputJson)
         {
             //check input & set fidNos same time
             var log = false;
@@ -709,7 +706,7 @@ namespace Base.Services
             //validateion
             if (_editDto.FnValidate != null)
             {
-                validErrors = _editDto.FnValidate(inputJson);
+                validErrors = _editDto.FnValidate(isNew, inputJson);
                 if (_List.NotEmpty(validErrors))
                     goto lab_error;
             }
@@ -718,9 +715,9 @@ namespace Base.Services
             //addFunName = false;
             if (_editDto.AutoIdLen > 0)
             {
-                error = (fnSetNewKeyA == null)
+                error = (_editDto.FnSetNewKeyJsonA == null)
                     ? await SetNewKeyJsonA(inputJson, _editDto)
-                    : await fnSetNewKeyA(this, inputJson, _editDto);
+                    : await _editDto.FnSetNewKeyJsonA(isNew, this, inputJson, _editDto);
                 if (_Str.NotEmpty(error)) goto lab_error;
             }
 
@@ -737,16 +734,16 @@ namespace Base.Services
 
             //call AfterSave() if need
             log = true;
-            if (fnAfterSaveA != null)
+            if (_editDto.FnAfterSaveA != null)
             {
                 try
                 {
-                    error = await fnAfterSaveA(this, db, _newKeyJson);
+                    error = await _editDto.FnAfterSaveA(isNew, this, db, _newKeyJson);
                     if (_Str.NotEmpty(error)) goto lab_error;
                 }
                 catch (Exception ex)
                 {
-                    error = "fnAfterSaveA error: " + ex.Message;
+                    error = "Your FnAfterSaveA error: " + ex.Message;
                     goto lab_error;
                 }
             }
@@ -777,11 +774,11 @@ namespace Base.Services
         /// <param name="levelStr">level concat string, ex:0,00,012</param>
         /// <param name="upDeletes">null for level0</param>
         /// <param name="inputJson">JObject for level0, JArray for level1/2</param>
-        /// <param name="edit"></param>
+        /// <param name="editDto"></param>
         /// <param name="db"></param>
         /// <returns></returns>
         private async Task<bool> SaveJsonLoopA(string levelStr, List<string>? upDeletes, 
-            JObject inputJson, EditDto edit, Db db)
+            JObject inputJson, EditDto editDto, Db db)
         {
             //var hasInput = (inputJson != null);
             //if (inputJson == null)
@@ -794,7 +791,7 @@ namespace Base.Services
             List<string>? deletes = (inputJson[Deletes] == null)
                 ? null : _Str.ToList(inputJson[Deletes]!.ToString());
             if (upDeletes != null)
-                deletes = _List.Concat(deletes!, await GetKeysByUpKeysA(edit, upDeletes!, db));
+                deletes = _List.Concat(deletes!, await GetKeysByUpKeysA(editDto, upDeletes!, db));
 
             if (deletes != null)
             {
@@ -805,7 +802,7 @@ namespace Base.Services
                 //if (!hasFkey)
                     //deletes = _List.Concat(deletes, await GetKeysByUpKeysAsync(edit, upDeletes, db));
 
-                if (!await DeleteRowsByKeysA(edit, deletes, db)) return false;
+                if (!await DeleteRowsByKeysA(editDto, deletes, db)) return false;
             }
             #endregion
 
@@ -818,7 +815,7 @@ namespace Base.Services
             if (inputRows != null)
             {
                 //使用JToken再轉型JObject則不會出現null error的情形 !!
-                var kid = edit.PkeyFid;
+                var kid = editDto.PkeyFid;
                 foreach (JToken token in inputRows)
                 {
                     //inputRow0 could be null, save to var first, or will error
@@ -834,14 +831,14 @@ namespace Base.Services
                     //注意: 移除if括號時無法執行else區段!!
                     if (IsNewRow(inputRow!))
                     {
-                        if (!await InsertRowA(edit, inputRow!, db))
+                        if (!await InsertRowA(editDto, inputRow!, db))
                         {
                             return false;
                         }
                     }
                     else
                     {
-                        if (!await UpdateRowA(isLevel0, edit, inputRow!, db))
+                        if (!await UpdateRowA(isLevel0, editDto, inputRow!, db))
                         {
                             return false;
                         }
@@ -851,14 +848,14 @@ namespace Base.Services
             #endregion
 
             #region insert/update childs(recursive)
-            var childLen = GetEditChildLen(edit);
+            var childLen = GetEditChildLen(editDto);
             for (var i = 0; i < childLen; i++)
             {
                 var childJson = GetChildJson(inputJson, i);
                 if (childJson == null) continue;
 
                 //recursive call
-                if (!await SaveJsonLoopA(levelStr + i, deletes, childJson, edit.Childs![i], db))
+                if (!await SaveJsonLoopA(levelStr + i, deletes, childJson, editDto.Childs![i], db))
                     return false;
             }//for childs
             #endregion
@@ -876,11 +873,11 @@ namespace Base.Services
         /// set new key & _newKeyJson variables
         /// </summary>
         /// <param name="inputJson"></param>
-        /// <param name="edit"></param>
+        /// <param name="editDto"></param>
         /// <returns>return error msg if any</returns>
-        public async Task<string> SetNewKeyJsonA(JObject inputJson, EditDto edit)
+        public async Task<string> SetNewKeyJsonA(JObject inputJson, EditDto editDto)
         {
-            return await SetNewKeyJsonLoopA("0", null, inputJson, edit);
+            return await SetNewKeyJsonLoopA("0", null, inputJson, editDto);
         }
 
         /// <summary>
@@ -890,9 +887,9 @@ namespace Base.Services
         /// <param name="levelStr">level concat string, ex:0,00,012</param>
         /// <param name="upNewKey">null for level0, JObject for level1 after(f+idx(base 1)=value)
         /// <param name="inputJson">不可null, JObject 包含rows、childs欄位</param>
-        /// <param name="edit"></param>
+        /// <param name="editDto"></param>
         /// <returns>error msg if any</returns>
-        private async Task<string> SetNewKeyJsonLoopA(string levelStr, JObject? upNewKey, JObject inputJson, EditDto edit)
+        private async Task<string> SetNewKeyJsonLoopA(string levelStr, JObject? upNewKey, JObject inputJson, EditDto editDto)
         {
             //if (inputJson == null) return "";
 
@@ -908,7 +905,7 @@ namespace Base.Services
             JObject myNewKey = new(); //new pkey for childs fkey
             if (inputRows != null)
             {
-                var kid = edit.PkeyFid;
+                var kid = editDto.PkeyFid;
                 foreach (JToken token in inputRows)
                 {
                     //inputRow0 could be null, save to var first, or will error
@@ -960,7 +957,7 @@ namespace Base.Services
                                 {
                                     if (!isLevel1)
                                     {
-                                        error = $"no FkeyFid ({edit.FkeyFid})";
+                                        error = $"no FkeyFid ({editDto.FkeyFid})";
                                         goto lab_error;
                                     }
 
@@ -970,24 +967,24 @@ namespace Base.Services
 
                                 //case of fkeyIdx >= 0
                                 if (fkeyIdx == 0)
-                                    inputRow![edit.FkeyFid] = inputRow[FkeyFid]!.ToString();  //是否必要??
+                                    inputRow![editDto.FkeyFid] = inputRow[FkeyFid]!.ToString();  //是否必要??
                                 else if (upNewKey == null)
                                 {
-                                    error = $"can not get upNewKey by FkeyFid ({edit.FkeyFid})";
+                                    error = $"can not get upNewKey by FkeyFid ({editDto.FkeyFid})";
                                     goto lab_error;
                                 }
                                 else
                                 {
                                     //set fkey
-                                    inputRow![edit.FkeyFid] = upNewKey["f" + fkeyIdx];
+                                    inputRow![editDto.FkeyFid] = upNewKey["f" + fkeyIdx];
                                 }
                             }
                             #endregion
 
                             //set new key if need & set newKeyJson
-                            var key = (edit.FnGetNewKeyA == null)
-                                ? _Str.NewId(edit.AutoIdLen)
-                                : await edit.FnGetNewKeyA();
+                            var key = (editDto.FnGetNewKeyA == null)
+                                ? _Str.NewId(editDto.AutoIdLen)
+                                : await editDto.FnGetNewKeyA();
                             inputRow![IsNew] = "1";  //string
                             inputRow![kid] = key;
 
@@ -1004,14 +1001,14 @@ namespace Base.Services
                 myNewKey["f1"] = _key;
 
             #region set childs new key (recursive)
-            var childLen = GetEditChildLen(edit);
+            var childLen = GetEditChildLen(editDto);
             for (var i = 0; i < childLen; i++)
             {
                 var childJson = GetChildJson(inputJson, i);
                 if (childJson == null) continue;
 
                 //recursive call
-                error = await SetNewKeyJsonLoopA(levelStr + i, myNewKey, childJson, edit.Childs![i]);
+                error = await SetNewKeyJsonLoopA(levelStr + i, myNewKey, childJson, editDto.Childs![i]);
                 if (_Str.NotEmpty(error)) return error;
             }
             #endregion

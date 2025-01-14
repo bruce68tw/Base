@@ -1,8 +1,8 @@
 ﻿using Base.Services;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Base.Models
 {
@@ -27,11 +27,6 @@ namespace Base.Models
         /// values: _Fun.AutoIdShort(6)、_Fun.AutoIdMid(10)、_Fun.AutoIdLong(16)
         /// </summary>
         public int AutoIdLen = _Fun.AutoIdMid;
-
-        /// <summary>
-        /// 自行函數 for 設定 new key
-        /// </summary>
-        public FnGetNewKeyA? FnGetNewKeyA = null;
 
         /// <summary>
         /// table name
@@ -100,8 +95,38 @@ namespace Base.Models
 
         /// <summary>
         /// 後端自定義欄位驗證
+        /// <param name="bool">isNew fun or not</param>
+        /// <returns>validate error list if any</returns>
         /// </summary>
-        public Func<JObject, List<ErrorRowDto>?>? FnValidate { get; set; }
+        //public Func<bool, JObject, List<ErrorRowDto>?>? FnValidate = null;
+        public FnValidate? FnValidate = null;
+
+        /// <summary>
+        /// crud edit AfterSave, inside transaction
+        /// 參考 HrAdm LeaveEdit.cs CreateA()、BaoAdm BaoEdit.cs
+        /// </summary>
+        /// <param name="bool">isNew fun or not</param>
+        /// <param name="CrudEditSvc"></param>
+        /// <param name="Db"></param>
+        /// <param name="JObject">keyJson</param>
+        /// <returns>error msg if any</returns>
+        public FnAfterSaveA? FnAfterSaveA = null;
+
+        /// <summary>
+        /// 自行函數 for 設定 new key
+        /// </summary>
+        public FnGetNewKeyA? FnGetNewKeyA = null;
+
+        /// <summary>
+        /// set new keyJson
+        /// </summary>
+        /// <param name="isNew">isNew fun or not</param>
+        /// <param name="crudEditSvc">CrudEdit service</param>
+        /// <param name="inputJson">input json</param>
+        /// <param name="editDto">edit dto</param>
+        /// <returns>error msg if any</returns>
+        public FnSetNewKeyJsonA? FnSetNewKeyJsonA = null;
+        //(bool isNew, CrudEditSvc crudEditSvc, JObject inputJson, EditDto editDto);
 
     }//class
 }
