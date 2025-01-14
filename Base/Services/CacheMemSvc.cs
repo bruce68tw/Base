@@ -29,6 +29,13 @@ namespace Base.Services
             return result ?? null;
         }
 
+        /// <summary>
+        /// 設定內容, 同時指定有效期限
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool SetStr(string userId, string key, string value)
         {
             _cache.Set(GetKey(userId, key), value, new MemoryCacheEntryOptions()

@@ -484,8 +484,12 @@ namespace Base.Services
             return "";  //case of ok
         }
 
-        //validate one  row
-        //return error msg if any
+        /// <summary>
+        /// validate one  row
+        /// </summary>
+        /// <param name="edit"></param>
+        /// <param name="row"></param>
+        /// <returns>error msg if any</returns>
         private string ValidRow(EditDto edit, JObject row)
         {
             if (edit.Items == null || edit.Items.Length == 0) return "";
@@ -685,6 +689,7 @@ namespace Base.Services
             Db? db = null;
             string error;
             var trans = IsTrans(_editDto);
+            List<ErrorRowDto>? validErrors = null;
             if (inputJson == null)
             {
                 log = true;
@@ -699,6 +704,14 @@ namespace Base.Services
             {
                 log = true;
                 goto lab_error;
+            }
+
+            //validateion
+            if (_editDto.FnValidate != null)
+            {
+                validErrors = _editDto.FnValidate(inputJson);
+                if (_List.NotEmpty(validErrors))
+                    goto lab_error;
             }
 
             //set new key if need
@@ -750,8 +763,12 @@ namespace Base.Services
                 await db.DisposeAsync();
             }
 
-            if (log) await _Log.ErrorRootA("CrudEditSvc.cs SaveJsonA() failed: " + error);
-            return _Model.GetError();
+            if (log) 
+                await _Log.ErrorRootA("CrudEditSvc.cs SaveJsonA() failed: " + error);
+            //here!!
+            return _List.IsEmpty(validErrors)
+                ? _Model.GetError()
+                : _Model.GetValidError(validErrors!);
         }
 
         /// <summary>

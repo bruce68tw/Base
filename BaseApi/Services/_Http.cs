@@ -60,6 +60,11 @@ namespace BaseApi.Services
                 ? value : "";
         }
 
+        /// <summary>
+        /// cookie有效期限預設7天, 所以不必特別限定
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         public static void SetCookie(string key, string value)
         {
             GetHttp().Response.Cookies.Append(key, value);

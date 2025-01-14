@@ -6,7 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BaseWeb.ViewComponents
 {
-    //text input
+    /// <summary>
+    /// text input
+    /// xi-box用來顯示 validation error(相鄰位置), 大多數欄位的xi-box即為輸入欄位
+    /// BoxClass會加到 xi-box上面
+    /// </summary>
     public class XiTextViewComponent : ViewComponent
     {
         public HtmlString Invoke(XiTextDto dto)
@@ -25,7 +29,7 @@ namespace BaseWeb.ViewComponents
             var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
                 $" type='{type}' value='{dto.Value}' style='width:{dto.Width}'" +     //default 100%
                 _Helper.GetPlaceHolder(dto.InputTip) +
-                _Helper.GetRequired(dto.Required) +
+                //_Helper.GetRequired(dto.Required) +
                 _Helper.GetMaxLength(dto.MaxLen);
 
             //get input html

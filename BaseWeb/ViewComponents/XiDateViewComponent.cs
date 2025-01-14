@@ -21,8 +21,8 @@ namespace BaseWeb.Helpers
             string labelTip = "", string inputTip = "", string extAttr = "", 
             string extClass = "", string cols = ""
              */
-            var html = _Helper.GetDateHtml(dto.Fid, dto.Value, "date",
-                dto.Required, dto.Edit, dto.InputTip, dto.InputAttr, dto.BoxClass);
+            var html = _Helper.GetDateHtml(dto.Fid, dto.Value, "date", dto.Required, 
+                dto.Edit, dto.InputTip, dto.InputAttr, dto.BoxClass);
             if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
 

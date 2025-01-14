@@ -1,5 +1,7 @@
 ﻿using Base.Models;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
+using System;
 using System.Threading.Tasks;
 
 namespace Base.Services
@@ -10,7 +12,16 @@ namespace Base.Services
     /// </summary>
     abstract public class BaseEditSvc
     {
+        /// <summary>
+        /// controller name, auto set
+        /// </summary>
         public string Ctrl;
+
+        /// <summary>
+        /// 自行函數 for 設定 new key
+        /// </summary>
+        //public FnValidate? fnValidate { get; set; }
+        //public Func<JObject, List<ErrorRowDto>?>? FnValidate { get; set; }
 
         public BaseEditSvc(string ctrl) 
         {

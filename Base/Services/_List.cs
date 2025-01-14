@@ -64,5 +64,13 @@ namespace Base.Services
             return codes;
         }
 
+        public static bool IsEmpty<T>(List<T>? rows) where T : class
+        {
+            return rows == null || rows.Count == 0;
+        }
+        public static bool NotEmpty<T>(List<T>? rows) where T : class
+        {
+            return !IsEmpty(rows);
+        }
     }//class
 }

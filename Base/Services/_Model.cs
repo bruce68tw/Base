@@ -177,6 +177,11 @@ namespace Base.Services
             return new ResultDto() { ErrorMsg = _Str.EmptyToValue(error, _Fun.SystemError) };
         }
 
+        public static ResultDto GetValidError(List<ErrorRowDto> errors)
+        {
+            return new ResultDto() { ErrorRows = errors };
+        }
+
         /// <summary>
         /// get js _BR error
         /// </summary>

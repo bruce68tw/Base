@@ -1,4 +1,6 @@
 ﻿
+using System.Collections.Generic;
+
 namespace Base.Models
 {
     /// <summary>
@@ -7,14 +9,14 @@ namespace Base.Models
     public class ResultDto
     {
         /// <summary>
-        /// error code if any
-        /// </summary>
-        public string Code = "";
-
-        /// <summary>
         /// result value
         /// </summary>
         public string Value = "";
+
+        /// <summary>
+        /// error code if any
+        /// </summary>
+        public string Code = "";
 
         /// <summary>
         /// error msg if any (necessary field for resultXXX dto)
@@ -22,9 +24,14 @@ namespace Base.Models
         public string ErrorMsg = "";
 
         /// <summary>
+        /// validation error list
+        /// </summary>
+        public List<ErrorRowDto>? ErrorRows = null;
+
+        /// <summary>
         /// error js _BR fid
         /// </summary>
         //public string ErrorBrFid = "";
-        
+
     }
 }

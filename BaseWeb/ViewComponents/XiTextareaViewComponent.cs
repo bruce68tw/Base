@@ -22,7 +22,7 @@ namespace BaseWeb.ViewComponents
             var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
                 $" value='{dto.Value}' rows='{dto.RowsCount}' style='width:{dto.Width}'" +
                 _Helper.GetPlaceHolder(dto.InputTip) +
-                _Helper.GetRequired(dto.Required) +
+                //_Helper.GetRequired(dto.Required) +
                 _Helper.GetMaxLength(dto.MaxLen);
 
             //html

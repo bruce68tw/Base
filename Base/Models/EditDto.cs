@@ -1,6 +1,7 @@
 ﻿using Base.Services;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 
 namespace Base.Models
@@ -96,6 +97,11 @@ namespace Base.Models
         /// 必填欄位清單, 儲存資料時會系統重新設定, PG不必處理
         /// </summary>
         public List<string>? _FidRequires = null;
+
+        /// <summary>
+        /// 後端自定義欄位驗證
+        /// </summary>
+        public Func<JObject, List<ErrorRowDto>?>? FnValidate { get; set; }
 
     }//class
 }

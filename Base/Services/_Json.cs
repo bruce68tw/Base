@@ -303,7 +303,7 @@ namespace Base.Services
 		/// <param name="fid"></param>
 		/// <param name="defaultValue"></param>
 		/// <returns></returns>
-		public static string GetFidStr(JObject? json, string fid, string defaultValue)
+		public static string GetFidStr(JObject? json, string fid, string defaultValue = "")
 		{
 			if (json == null || json[fid] == null)
 				return defaultValue;

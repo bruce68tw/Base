@@ -42,4 +42,9 @@ namespace Base.Services
     /// <returns>list error string, '' for success</returns>
     public delegate Task<string> FnGetNewKeyA();
 
+    /// <summary>
+    /// 檢查輸入欄位, 無誤傳回null
+    /// </summary>
+    /// <returns>list error string, '' for success</returns>
+    //public delegate List<ErrorRowDto> FnValidate(JObject json);
 }

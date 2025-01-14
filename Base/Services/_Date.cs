@@ -177,12 +177,10 @@ namespace Base.Services
             return DateTime.Now.ToString("yyyyMM");
         }
 
-        /*
         public static DateTime Today()
         {
             return DateTime.Today;
         }
-        */
 
         /// <summary>
         /// now db datetime string

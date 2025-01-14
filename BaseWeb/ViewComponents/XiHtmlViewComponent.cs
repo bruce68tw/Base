@@ -16,7 +16,7 @@ namespace BaseWeb.ViewComponents
             var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
                 $" value='{dto.Value}' style='width:{dto.Width}'" +
                 _Helper.GetPlaceHolder(dto.InputTip) +
-                _Helper.GetRequired(dto.Required) +
+                //_Helper.GetRequired(dto.Required) +
                 _Helper.GetMaxLength(dto.MaxLen);
 
             //summernote will add div below textarea, so add div outside for validate msg

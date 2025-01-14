@@ -81,7 +81,7 @@ namespace BaseWeb.Services
                 : " placeholder='" + inputTip + "'";
         }
 
-        //get required attribute
+        //get required attribute ??
         public static string GetRequired(bool required)
         {
             return required ? " required" : "";
@@ -136,8 +136,7 @@ namespace BaseWeb.Services
             else
             {
                 //only fid
-                attr = GetInputAttr(fid, edit, required) +
-                    $" data-type='{type}'";
+                attr = GetInputAttr(fid, edit, required) + $" data-type='{type}'";
                 boxClass += " xi-box";
             }
             attr += GetPlaceHolder(inputTip);
@@ -146,6 +145,7 @@ namespace BaseWeb.Services
             value = _Date.GetDateStr(value);
             //var dataEdit = GetDataEdit(edit);
 
+            //使用 .date 執行 _idate 初始化, 因為包含多個元素, 所以必須將box對應datepicker !!
             //input-group & input-group-addon are need for datepicker !!
             return $@"
 <div class='input-group date {boxClass}' data-provide='datepicker' {inputAttr}>
