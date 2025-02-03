@@ -27,7 +27,7 @@ namespace Base.Services
         public static T? GetModel<T>(string userId, string key)
         {
             var str = GetService().GetStr(userId, key);
-            return (_Str.IsEmpty(str)) 
+            return _Str.IsEmpty(str)
                 ? default : _Model.JsonStrToModel<T>(str!);
         }
 

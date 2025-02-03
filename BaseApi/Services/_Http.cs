@@ -67,7 +67,22 @@ namespace BaseApi.Services
         /// <param name="value"></param>
         public static void SetCookie(string key, string value)
         {
-            GetHttp().Response.Cookies.Append(key, value);
+            GetHttp().Response.Cookies.Append(key, value, new CookieOptions
+            {
+                Expires = DateTime.UtcNow.AddMinutes(_Fun.TimeOut),
+                HttpOnly = true,                      // 避免 JavaScript 存取此 Cookie
+                //Secure = true,                        // 僅透過 HTTPS 傳輸（建議）
+                //SameSite = SameSiteMode.Strict        // 嚴格限制跨站請求攜帶 Cookie
+            });
+        }
+
+        /// <summary>
+        /// remove cookie
+        /// </summary>
+        /// <param name="key"></param>
+        public static void DeleteCookie(string key)
+        {
+            GetHttp().Response.Cookies.Delete(key);
         }
 
         //get http response
@@ -157,11 +172,12 @@ namespace BaseApi.Services
 
             var tokenDto = new JwtSecurityTokenHandler().ReadJwtToken(token);
             var userId = tokenDto.Claims.First(c => c.Type == ClaimTypes.Name).Value;  //is also session key
-            var br = _Cache.GetModel<BaseUserDto>(userId + GetIp(false), _Fun.FidBaseUser)!;
+            var br = _Cache.GetModel<BaseUserDto>(UserKeyIp(userId), _Fun.FidBaseUser)!;
             return br;
         }
 
         /// <summary>
+        /// 前端(ex:手機)使用JWT
         /// get userId from JWT string
         /// </summary>
         /// <returns></returns>
@@ -180,15 +196,26 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// cookie to BR
+        /// 前端(ex:browser)使用cookie, cookie to BR
+        /// 因為網頁重整無法重送JWT, 所以網頁必須使用cookie !!
         /// </summary>
         /// <returns></returns>
         public static BaseUserDto CookieToBr()
         {
-            var key = GetCookie(_Fun.FidClientKey);
-            return (key == "")
+            var clientKey = GetCookie(_Fun.FidClientKey);
+            return (clientKey == "")
                 ? new()
-                : _Cache.GetModel<BaseUserDto>(key + GetIp(false), _Fun.FidBaseUser)!;
+                : _Cache.GetModel<BaseUserDto>(UserKeyIp(clientKey), _Fun.FidBaseUser)!;
+        }
+
+        /// <summary>
+        /// user key + IP for session
+        /// </summary>
+        /// <param name="clientKey"></param>
+        /// <returns></returns>
+        public static string UserKeyIp(string clientKey)
+        {
+            return clientKey + GetIp(false);
         }
 
         /// <summary>

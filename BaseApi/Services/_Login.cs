@@ -74,7 +74,7 @@ where u.Account=@Account
             #endregion
 
             #region 3.set base user info
-            var key = _Str.NewId(15);
+            var newKey = _Str.NewId(15);
             var userId = row!["UserId"]!.ToString();
             var userInfo = new BaseUserDto()
             {
@@ -90,10 +90,10 @@ where u.Account=@Account
             #endregion
 
             //write cache server for base user info, key值加上IP
-            _Cache.SetModel(key + _Http.GetIp(false), _Fun.FidBaseUser, userInfo);
+            _Cache.SetModel(_Http.UserKeyIp(newKey), _Fun.FidBaseUser, userInfo);
 
             //寫入cookie
-            _Http.SetCookie(_Fun.FidClientKey, key);
+            _Http.SetCookie(_Fun.FidClientKey, newKey);
 
             //5.redirect if need
             //var url = _Str.IsEmpty(vo.FromUrl) ? "/Home/Index" : vo.FromUrl;

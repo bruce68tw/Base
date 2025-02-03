@@ -76,7 +76,7 @@ namespace Base.Services
         /// <summary>
         /// session timeout(unit: minutes)
         /// </summary>
-        public static int TimeOut = 480;
+        public static int TimeOut = 880;
 
         //max login fail count
         public static int MaxLoginFail = 3;
