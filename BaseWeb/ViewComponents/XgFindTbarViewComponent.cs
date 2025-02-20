@@ -19,7 +19,7 @@ namespace BaseWeb.ViewComponents
 
             //set toolbar buttons
             var baseR = _Locale.GetBaseRes();
-            var html = string.Format("<button type='button' class='btn xg-btn-size btn-primary' onclick='_crudR.onFind()'>{0}<i class='ico-find'></i></button>", baseR.BtnFind);
+            var html = string.Format("<button type='button' class='btn xg-btn-size btn-primary xd-read' onclick='_crudR.onFind()'>{0}<i class='ico-find'></i></button>", baseR.BtnFind);
             if (dto.HasReset)
                 html += string.Format("<button type='button' class='btn xg-btn' onclick='_crudR.onResetFind()'>{0}<i class='ico-delete'></i></button>", baseR.BtnReset);
             if (dto.HasFind2)

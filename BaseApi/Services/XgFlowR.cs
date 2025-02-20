@@ -7,7 +7,7 @@ namespace BaseApi.Services
 {
     public class XgFlowR
     {
-        private ReadDto dto = new()
+        private readonly ReadDto dto = new()
         {
             ReadSql = @"
 select *

@@ -26,9 +26,9 @@ from dbo.XpImportLog
 where Type='{_importType}'
 order by Id desc
 ",
-                Items = new QitemDto[] {
+                Items = [
                     new() { Fid = "FileName", Op = ItemOpEstr.Like },
-                },
+                ],
             };
         }
 

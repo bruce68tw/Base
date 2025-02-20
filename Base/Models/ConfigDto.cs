@@ -36,6 +36,8 @@ namespace Base.Models
         //refer LoginTypeEstr
         public string LoginType { get; set; } = LoginTypeEstr.None;
 
+        public string AdServer { get; set; } = "";
+
         //db connect string
         public string Db { get; set; } = "";
 

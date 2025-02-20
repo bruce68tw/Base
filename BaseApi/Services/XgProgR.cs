@@ -14,10 +14,10 @@ namespace BaseApi.Services
 select * from dbo.XpProg
 order by Sort
 ",
-            Items = new QitemDto[] {
+            Items = [
                 new() { Fid = "Code", Op = ItemOpEstr.Like },
                 new() { Fid = "Name", Op = ItemOpEstr.Like },
-            },
+            ],
         };
 
         public async Task<JObject?> GetPageA(string ctrl, DtDto dt)

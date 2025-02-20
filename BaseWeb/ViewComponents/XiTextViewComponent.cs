@@ -30,7 +30,8 @@ namespace BaseWeb.ViewComponents
                 $" type='{type}' value='{dto.Value}' style='width:{dto.Width}'" +     //default 100%
                 _Helper.GetPlaceHolder(dto.InputTip) +
                 //_Helper.GetRequired(dto.Required) +
-                _Helper.GetMaxLength(dto.MaxLen);
+                _Helper.GetMaxLength(dto.MaxLen) +
+                _Helper.GetPattern(dto.Pattern);
 
             //get input html
             var html = $"<input{attr} data-type='text' class='form-control xi-box {dto.BoxClass}'>";

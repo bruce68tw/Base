@@ -1,4 +1,6 @@
-﻿namespace BaseWeb.Models
+﻿using Base.Enums;
+
+namespace BaseWeb.Models
 {
     public class XiTextareaDto : XiBaseDto
     {
@@ -10,5 +12,10 @@
 
         public int MaxLen { get; set; }
         public int RowsCount { get; set; }
+
+        /// <summary>
+        /// 對應 InputPatternEstr
+        /// </summary>
+        public string Pattern { get; set; } = InputPatternEstr.EngNumExt;
     }
 }

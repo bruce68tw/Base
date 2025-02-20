@@ -1,5 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
+using Ganss.Xss;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -209,20 +210,20 @@ namespace Base.Services
         /// <summary>
         /// insert one row
         /// </summary>
-        /// <param name="edit"></param>
+        /// <param name="editDto"></param>
         /// <param name="inputRow"></param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        private async Task<bool> InsertRowA(EditDto edit, JObject inputRow, Db db)
+        private async Task<bool> InsertRowA(EditDto editDto, JObject inputRow, Db db)
         {
-            if (edit.Items == null || edit.Items.Length == 0) return true;
+            if (editDto.Items == null || editDto.Items.Length == 0) return true;
 
             #region insert row if need
             var error = "";            
             ResetArg();     //reset sqlArgs first
 
             //set default value
-            edit.Items
+            editDto.Items
                 .Where(a => a.Value != null)
                 .ToList()
                 .ForEach(a =>
@@ -241,20 +242,21 @@ namespace Base.Services
                 if (IsSpecEditFid(fid)) continue;
 
                 //if no fid then log error !!
-                if (edit._FidNo![fid] == null)
+                if (editDto._FidNo![fid] == null)
                 {
-                    error = $"CrudEdit.cs InsertRow() field not existed({edit.Table}.{fid})";
+                    error = $"CrudEdit.cs InsertRow() field not existed({editDto.Table}.{fid})";
                     goto lab_error;
                 }
 
                 //skip not created field
-                var itemNo = Convert.ToInt32(edit._FidNo[fid]);
-                var eitem = edit.Items[itemNo];
-                if (eitem.Read || !eitem.Create) continue;
+                var itemNo = Convert.ToInt32(editDto._FidNo[fid]);
+                var eitemDto = editDto.Items[itemNo];
+                if (eitemDto.Read || !eitemDto.Create) continue;
 
                 //get value and check EmptyToNulls
-                var value = (inputRow[fid]!.ToString() == "" && edit.EmptyToNulls.Contains(fid))
-                    ? null : inputRow[fid]!.ToString();
+                //var value = (inputRow[fid]!.ToString() == "" && edit.EmptyToNulls.Contains(fid))
+                //    ? null : inputRow[fid]!.ToString();
+                var value = GetInputValue(editDto, eitemDto, inputRow, fid);
 
                 //add keys & values
                 fids += fid + ",";
@@ -271,13 +273,13 @@ namespace Base.Services
 
             //set creator, created if need
             //var setCol4 = "";
-            var col4Len = (edit.Col4 == null) ? 0 : edit.Col4.Length;
+            var col4Len = (editDto.Col4 == null) ? 0 : editDto.Col4.Length;
             if (col4Len > 0)
             {
-                var hasUser = _Str.NotEmpty(edit.Col4![0]);
-                var hasDate = col4Len > 1 && _Str.NotEmpty(edit.Col4![1]);
-                var fldUser = edit.Col4[0];
-                var fldDate = hasDate ? edit.Col4[1] : "";
+                var hasUser = _Str.NotEmpty(editDto.Col4![0]);
+                var hasDate = col4Len > 1 && _Str.NotEmpty(editDto.Col4![1]);
+                var fldUser = editDto.Col4[0];
+                var fldDate = hasDate ? editDto.Col4[1] : "";
                 if (hasUser && hasDate)
                 {
                     fids += fldUser + "," + fldDate + ",";
@@ -296,7 +298,7 @@ namespace Base.Services
             }
 
             //insert db
-            var sql = $"Insert Into {edit.Table} ({fids[0..^1]}) Values ({values[0..^1]})";
+            var sql = $"Insert Into {editDto.Table} ({fids[0..^1]}) Values ({values[0..^1]})";
             if (await db.ExecSqlA(sql, _sqlArgs!) == 0)
             {
                 //not log error here, Db.cs already log it.
@@ -362,8 +364,8 @@ namespace Base.Services
 
                 //skip un-update fid
                 var fidNo = Convert.ToInt32(editDto._FidNo[fid]);
-                var eitem = editDto.Items[fidNo];
-                if (eitem.Read || !eitem.Update)
+                var eitemDto = editDto.Items[fidNo];
+                if (eitemDto.Read || !eitemDto.Update)
                     continue;
 
                 /* old code
@@ -376,10 +378,9 @@ namespace Base.Services
 
                 //set empty date to null, or will be 1900/1/1 !!
                 //object value = (inputRow[key].ToString() == "" && (type == EnumDataType.Datetime || type == EnumDataType.Date))
-                object? value = (inputRow[fid]!.ToString() == "" && editDto.EmptyToNulls.Contains(fid))
-                    ? null
-                    : inputRow[fid]!.ToString();
-
+                //object? value = (inputRow[fid]!.ToString() == "" && editDto.EmptyToNulls.Contains(fid))
+                //    ? null : inputRow[fid]!.ToString();
+                var value = GetInputValue(editDto, eitemDto, inputRow, fid);
                 //add into sql
                 sql += fid + "=@" + fid + ",";
                 AddArg(fid, value);
@@ -415,6 +416,14 @@ namespace Base.Services
             _saveRows++;
             return true;
             #endregion
+        }
+
+        private object? GetInputValue(EditDto editDto, EitemDto eitemDto, JObject inputRow, string fid)
+        {
+            string value = inputRow[fid]!.ToString();
+            return (value == "" && editDto.EmptyToNulls.Contains(fid)) ? null :
+                eitemDto.IsHtml ? new HtmlSanitizer().Sanitize(value) :
+                value;
         }
 
         /// <summary>

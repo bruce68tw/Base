@@ -14,9 +14,9 @@ namespace BaseApi.Services
 				Table = "dbo.XpProg",
                 PkeyFid = "Id",
                 Col4 = null,
-                Items = new EitemDto[] 
-				{
-					new() { Fid = "Id" },
+                Items =
+                [
+                    new() { Fid = "Id" },
 					new() { Fid = "Code", Required = true },
 					new() { Fid = "Name", Required = true },
 					//new() { Fid = "Icon" },
@@ -30,18 +30,18 @@ namespace BaseApi.Services
                     new() { Fid = "FunPrint" },
                     new() { Fid = "FunExport" },
                     new() { Fid = "FunView" },
-                },
-                Childs = new EditDto[]
-                {
+                ],
+                Childs =
+                [
                     new EditDto
                     {
                         Table = "dbo.XpRoleProg",
                         PkeyFid = "Id",
                         FkeyFid = "ProgId",
                         Col4 = null,
-                        Items = new EitemDto[] 
-						{
-							new() { Fid = "Id" },
+                        Items =
+                        [
+                            new() { Fid = "Id" },
 							new() { Fid = "ProgId" },
 							new() { Fid = "RoleId", Required = true },
                             new() { Fid = "FunCreate" },
@@ -51,9 +51,9 @@ namespace BaseApi.Services
                             new() { Fid = "FunPrint" },
                             new() { Fid = "FunExport" },
                             new() { Fid = "FunView" },
-                        },
+                        ],
                     },
-                },
+                ],
             };
         }
         

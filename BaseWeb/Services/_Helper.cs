@@ -1,4 +1,5 @@
-﻿using Base.Models;
+﻿using Base.Enums;
+using Base.Models;
 using Base.Services;
 using System.Collections.Generic;
 
@@ -93,6 +94,13 @@ namespace BaseWeb.Services
             return (maxLen > 0) 
                 ? " maxlength='" + maxLen + "'" 
                 : "";
+        }
+
+        public static string GetPattern(string pattern)
+        {
+            return (string.IsNullOrEmpty(pattern) || pattern == InputPatternEstr.None)
+                ? ""
+                : " pattern='" + pattern + "'";
         }
 
         /*

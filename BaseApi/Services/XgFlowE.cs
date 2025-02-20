@@ -17,23 +17,23 @@ namespace BaseApi.Services
                 Table = "dbo.XpFlow",
                 PkeyFid = "Id",
                 Col4 = null,
-                Items = new EitemDto[] {
+                Items = [
                     new() { Fid = "Id" },
                     new() { Fid = "Code", Required = true },
                     new() { Fid = "Name", Required = true },
                     new() { Fid = "Portrait", Value = "1" },
                     new() { Fid = "Status", Value = "1" },
-                },
-                Childs = new EditDto[]
-                {
+                ],
+                Childs =
+                [
                     new EditDto
                     {
                         Table = "dbo.XpFlowNode",
                         PkeyFid = "Id",
                         FkeyFid = "FlowId",
                         Col4 = null,
-                        Items = new EitemDto[]
-                        {
+                        Items =
+                        [
                             new() { Fid = "Id" },
                             new() { Fid = "FlowId" },
                             new() { Fid = "Name",    Required = true },
@@ -44,7 +44,7 @@ namespace BaseApi.Services
                             new() { Fid = "SignerValue" },
                             new() { Fid = "PassType", Value = "0" },
                             //new() { Fid = "PassNum" },
-                        },
+                        ],
                     },
                     new EditDto
                     {
@@ -52,17 +52,17 @@ namespace BaseApi.Services
                         PkeyFid = "Id",
                         FkeyFid = "FlowId",
                         Col4 = null,
-                        Items = new EitemDto[]
-                        {
+                        Items =
+                        [
                             new() { Fid = "Id" },
                             new() { Fid = "FlowId" },
                             new() { Fid = "CondStr" },
                             new() { Fid = "StartNode", Required = true },
                             new() { Fid = "EndNode",   Required = true },
                             new() { Fid = "Sort", Required = true },
-                        },
+                        ],
                     },
-                },
+                ],
             };
         }
 

@@ -10,7 +10,7 @@ namespace BaseWeb.ViewComponents
         {
             var label = _Locale.GetBaseRes().BtnCreate;
             return new HtmlString($@"
-<button type='button' class='btn btn-success xg-btn-size' onclick='{fnOnClick}'>
+<button type='button' class='btn btn-success xg-btn-size xd-create' onclick='{fnOnClick}'>
     {label}
     <i class='ico-plus'></i>
 </button>");

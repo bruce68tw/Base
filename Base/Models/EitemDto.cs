@@ -39,5 +39,8 @@ namespace Base.Models
 
         //allow update
         public bool Update = true;
+
+        //allow update
+        public bool IsHtml = false;
     }
 }

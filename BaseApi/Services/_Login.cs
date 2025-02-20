@@ -1,4 +1,5 @@
-﻿using Base.Models;
+﻿using Base.Enums;
+using Base.Models;
 using Base.Services;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -17,9 +18,9 @@ namespace BaseApi.Services
         /// 使用 View Object 登入
         /// </summary>
         /// <param name="vo">login view object</param>
-        /// <param name="encodePwd">是否加密密碼欄位</param>
+        /// <param name="encodePwd">是否加密密碼欄位(only for 密碼驗証</param>
         /// <returns></returns>
-        public static async Task<bool> LoginByVoA(LoginVo vo, bool encodePwd)
+        public static async Task<bool> LoginByVoA(LoginVo vo, bool encodePwd = true)
         {
             //reset UI msg first
             vo.AccountMsg = "";
@@ -54,16 +55,35 @@ where u.Account=@Account
             var row = await _Db.GetRowA(sql, ["Account", vo.Account]);
             if (row != null)
             {
-                var dbPwd = row["Pwd"]!.ToString();
-                if (hasPwd)
+                #region case AD
+                if (_Fun.Config.LoginType == LoginTypeEstr.Ad)
                 {
-                    var inputPwd = encodePwd ? _Str.Md5(vo.Pwd) : vo.Pwd;   //encode if need
-                    status = (inputPwd == dbPwd);
+                    if (!string.IsNullOrEmpty(_Fun.Config.AdServer))
+                    {
+                        var user = _Ad.Login(_Fun.Config.AdServer, vo.Account, vo.Pwd);
+                        if (user != null)
+                        {
+                            status = true;
+                        }
+                    }
                 }
-                else
+                #endregion
+
+                #region case Pwd
+                else if (_Fun.Config.LoginType == LoginTypeEstr.Pwd)
                 {
-                    status = (dbPwd == "");
+                    var dbPwd = row["Pwd"]!.ToString();
+                    if (hasPwd)
+                    {
+                        var inputPwd = encodePwd ? _Str.Md5(vo.Pwd) : vo.Pwd;   //encode if need
+                        status = (inputPwd == dbPwd);
+                    }
+                    else
+                    {
+                        status = (dbPwd == "");
+                    }
                 }
+                #endregion
             }
 
             if (!status)

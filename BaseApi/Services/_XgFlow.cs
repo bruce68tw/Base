@@ -222,7 +222,7 @@ insert into dbo.{signTable}(
                     #endregion
 
                     #region 8.insert XpFlowSign/XpFlowSignTest
-                    await db.ExecSqlA(sql, new List<object>() {
+                    await db.ExecSqlA(sql, [
                         "Id", _Str.NewId(),
                         "FlowId", line.FlowId,
                         "SourceId", sourceId,
@@ -233,7 +233,7 @@ insert into dbo.{signTable}(
                         "SignerName", signerName,
                         "SignStatus", (level == 0) ? "1" : "0",
                         "SignTime", signTime!,
-                    });
+                    ]);
                 }
 
                 level++;

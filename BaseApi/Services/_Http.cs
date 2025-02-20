@@ -91,6 +91,7 @@ namespace BaseApi.Services
             return GetHttp().Response;
         }
 
+        //program.cs必須啟用Session
         public static ISession GetSession()
         {
             return GetHttp().Session;
