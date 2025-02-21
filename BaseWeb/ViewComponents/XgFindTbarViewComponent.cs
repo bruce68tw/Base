@@ -3,6 +3,7 @@ using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 
+//查詢畫面右上方工具列
 namespace BaseWeb.ViewComponents
 {
     //配合 _xp.js

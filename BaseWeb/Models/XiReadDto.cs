@@ -18,7 +18,12 @@
         public string BoxClass  { get; set; } = "";
         public string Cols { get; set; } = "";
         public string Format { get; set; } = "";
+
+        /// <summary>
+        /// 是否儲存DB, default false
+        /// </summary>
         public bool SaveDb { get; set; }
+
         /// <summary>
         /// edit field style, default false
         /// </summary>

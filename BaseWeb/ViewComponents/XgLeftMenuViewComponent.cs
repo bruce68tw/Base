@@ -56,7 +56,7 @@ namespace BaseWeb.ViewComponents
         <i class='{0}'></i>{1}
         <b class='xg-arrow'></b>
     </a>
-    <ul class='collapse xg-leftmenu-panel' role='menu'>
+    <ul class='collapse xg-leftmenu-subbox' role='menu'>
         {2}
     </ul>
 </li>

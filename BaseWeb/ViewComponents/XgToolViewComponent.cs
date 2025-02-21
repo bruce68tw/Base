@@ -17,17 +17,18 @@ namespace BaseWeb.ViewComponents
             var baseR = _Locale.GetBaseRes();
 /*
 <!-- wait -->
-<div id='xgWait'>
+<div class='xg-wait'>
     <i class='fa fa-spinner fa-spin fa-3x fa-fw'></i>
 </div> 
 */
             var html = $@"
 <!-- alert -->
-<div id='xgAlert' class='alert alert-success alert-dismissable' style='display:none;'>
+<div class='alert alert-success alert-dismissable xg-alert' style='display:none;'>
     <a href='#' class='close' onclick='_tool.onAlertClose();'>&times;</a>
     <span class='xd-msg'></span>
 </div>
 
+<!-- msg/ans class 都有 xg-msg for style, 使用id建立jQuery object -->
 <!-- msg -->
 <div id='xgMsg' class='modal fade xg-msg'>
     <div class='modal-dialog' role='document'>
