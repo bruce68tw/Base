@@ -24,7 +24,7 @@ namespace Base.Models
 
         /// <summary>
         /// auto Id length, empty for default.<br/>
-        /// values: _Fun.AutoIdShort(6)、_Fun.AutoIdMid(10)、_Fun.AutoIdLong(16)
+        /// values: 0表示允許前端傳入新Id、_Fun.AutoIdShort(6)、_Fun.AutoIdMid(10)、_Fun.AutoIdLong(16)
         /// </summary>
         public int AutoIdLen = _Fun.AutoIdMid;
 
