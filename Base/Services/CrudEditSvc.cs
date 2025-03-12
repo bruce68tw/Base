@@ -1,5 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Ganss.Xss;
 using Newtonsoft.Json.Linq;
 using System;
@@ -25,7 +26,7 @@ namespace Base.Services
         private const string Deletes = "_deletes";  //delete key string list
         //private const string Childs = "_childs";    //child json list
         private const string FkeyFid = "_fkeyfid";  //foreign key fid, 欄位內容如果是數字表示必須參考上一層key值
-        private const string IsNew = "_isNew";      //crud field for is new row or not
+        private const string IsNew = "_IsNew";      //crud field for is new row or not, 前後端一致
 
         //master edit
         //private readonly EditDto _editDto;
@@ -39,14 +40,14 @@ namespace Base.Services
         //private List<object> _sqlArgs = new();
 
         private string _key = "";
-        private bool _isNew = true;
+        private bool _isNewMaster = false;   //主檔是否新增
 
         //now time
         private DateTime _now;
 
         //new key json, format: t + levelStr = json, 
         //ex: t02 = { fxx = key1, fxx = key2}, xx is row index(base 1 !!)
-        private JObject _newKeyJson = new();
+        private JObject _newKeyJson = [];
 
         /// <summary>
         /// constructor
@@ -132,11 +133,13 @@ namespace Base.Services
             */
         }
 
+        /*
         //parse foreign key
         private int GetFkeyIndex(JObject row)
         {
-            return GetKeyIndex(row, FkeyFid);
+            return GetNewRowUpNo(row, FkeyFid);
         }
+        */
 
         //get master table key for update
         public string GetMainKey()
@@ -145,19 +148,21 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// for Pkey/Fkey, 讀取欄位的資料序號, 新增資料時, Key欄位會存入上一層的資料序號(前端傳入), 在後端寫入
+        /// for Pkey/Fkey, 讀取欄位的資料序號, 新增資料時, Key欄位會存入上一層的資料序號(base 1 前端傳入), 在後端寫入
         /// 如果欄位內容不為數字則表示為正常key值(傳回0)
         /// </summary>
         /// <param name="row"></param>
         /// <param name="kid">key field id</param>
         /// <returns>-1(error/not found), 0(正常key值), n(new key)</returns>
-        private int GetKeyIndex(JObject row, string kid)
+        private int GetNewRowUpNo(JObject row, string kid)
         {
             return _Object.IsEmpty(row[kid]) ? -1 :
+                !IsNewRow(row) ? 0 :
                 Int32.TryParse(row[kid]!.ToString(), out int num) ? num : 
                 0;
         }
 
+        /*
         /// <summary>
         /// check is new key or not by kid
         /// </summary>
@@ -166,8 +171,9 @@ namespace Base.Services
         /// <returns></returns>
         private bool IsNewKey(JObject row, string kid)
         {
-            return GetKeyIndex(row, kid) < 0;
+            return GetNewRowUpNo(row, kid) < 0;
         }
+        */
 
         /// <summary>
         /// check is new row or not by IsNew field
@@ -505,7 +511,7 @@ namespace Base.Services
             if (_Json.IsEmptyNoSpec(row)) return "";
 
             #region check required & fid existed
-            if (IsNewKey(row, editDto.PkeyFid))
+            if (IsNewRow(row))
             {
                 //check required
                 if (editDto._FidRequires != null)
@@ -642,6 +648,7 @@ namespace Base.Services
         /// <returns>ResultDto</returns>
         public async Task<ResultDto> CreateA(JObject json)
         {
+            _isNewMaster = true;
             return await SaveJsonA(true, json);
         }
 
@@ -660,7 +667,7 @@ namespace Base.Services
 
             //set instance variables
             _key = key;
-            _isNew = false;
+            _isNewMaster = false;
 
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin())
@@ -722,13 +729,10 @@ namespace Base.Services
 
             //set new key if need
             //addFunName = false;
-            if (_editDto.AutoIdLen > 0)
-            {
-                error = (_editDto.FnSetNewKeyJsonA == null)
-                    ? await SetNewKeyJsonA(inputJson, _editDto)
-                    : await _editDto.FnSetNewKeyJsonA(isNew, this, inputJson, _editDto);
-                if (_Str.NotEmpty(error)) goto lab_error;
-            }
+            error = (_editDto.FnSetNewKeyJsonA == null)
+                ? await SetNewKeyJsonA(inputJson, _editDto)
+                : await _editDto.FnSetNewKeyJsonA(isNew, this, inputJson, _editDto);
+            if (_Str.NotEmpty(error)) goto lab_error;
 
             //transaction if need
             db = GetDb();
@@ -893,12 +897,12 @@ namespace Base.Services
         /// (recursive)set new pkey & fkey (寫入inputJson), called by SetNewKeyJson()
         /// 前端會將所有空白pkey填入數字(上層資料序號, base 1)
         /// </summary>
-        /// <param name="levelStr">level concat string, ex:0,00,012</param>
-        /// <param name="upNewKey">null for level0, JObject for level1 after(f+idx(base 1)=value)
+        /// <param name="levelStr">level concat string, 包含多層, ex:0,00,012</param>
+        /// <param name="upKeyJson">null for level0, JObject for after level1(f+idx(base 1)=value)
         /// <param name="inputJson">不可null, JObject 包含rows、childs欄位</param>
         /// <param name="editDto"></param>
         /// <returns>error msg if any</returns>
-        private async Task<string> SetNewKeyJsonLoopA(string levelStr, JObject? upNewKey, JObject inputJson, EditDto editDto)
+        private async Task<string> SetNewKeyJsonLoopA(string levelStr, JObject? upKeyJson, JObject inputJson, EditDto editDto)
         {
             //if (inputJson == null) return "";
 
@@ -910,8 +914,8 @@ namespace Base.Services
             var error = "";
             var inputRows = (inputJson[_Fun.FidRows] == null)
                 ? null : inputJson[_Fun.FidRows] as JArray;
-            var setNewKey = false;  //flag
-            JObject myNewKey = new(); //new pkey for childs fkey
+            var setKeyJson = false;  //flag
+            JObject myKeyJson = [];  //new pkey for childs fkey
             if (inputRows != null)
             {
                 var kid = editDto.PkeyFid;
@@ -925,67 +929,63 @@ namespace Base.Services
                     var inputRow = inputRow0 as JObject;
                     if (HasInputField(inputRow, kid))
                     {
-                        //adjust pkeyIdx if need
-                        var pkeyIdx = GetKeyIndex(inputRow!, kid);   //傳回0表示有key值
-                        if (pkeyIdx < 0)
+                        int pkeyNewUpNo;    //上一層row no(base 1) for 設定pkey/fkey
+                        if (isLevel0 && _isNewMaster)
                         {
-                            //case of 前端沒有傳入key欄位
-                            //< 0 means empty pkey, main edit allows empty pkey
-                            //if (isLevel0 && inputRows.Count == 1)
-
-                            if ((_isNew && isLevel0) || isLevel1)
-                                pkeyIdx = 1;    //表示新增
-
-                            /*
-                            if (isLevel0)
+                            //AutoIdLen=0表示不自動給號
+                            inputRow![IsNew] = "1";     //前台不會寫入, 這裡手動寫入
+                            pkeyNewUpNo = editDto.AutoIdLen == 0 ? 0 : 1;
+                        }
+                        else
+                        {
+                            //利用pkey來尋找新row對應的上層row位置(base 1), 傳回0表示非新rows, 以update處理
+                            pkeyNewUpNo = GetNewRowUpNo(inputRow!, kid);
+                            if (pkeyNewUpNo < 0)
                             {
-                                key = _isNew ? _Str.NewId(edit.AutoIdLen) : _key;
-                                //if () pkeyIdx = 1;    //adjust, let it be new
+                                //case of 前端沒有傳入key欄位
+                                if (isLevel1)
+                                    pkeyNewUpNo = 1;    //表示新增, 位置為第一筆
                             }
-                            else if (isLevel1)
-                            {
-                                key = _Str.NewId(edit.AutoIdLen);
-                                //pkeyIdx = 1;    //表示新增
-                            }
-                            else
-                            {
-                                error = $"no PkeyFid ({edit.PkeyFid})";
-                                goto lab_error;
-                            }
-                            */
                         }
 
                         //case of insert row
-                        if (pkeyIdx > 0)
+                        if (pkeyNewUpNo > 0)
                         {
                             #region set foreign key value for not level0
                             if (!isLevel0)
-                            {
-                                var fkeyIdx = GetFkeyIndex(inputRow!);   //from 系統欄位(_fkeyfid)
-                                if (fkeyIdx < 0)
+                            {                                
+                                //var fkeyIdx = GetFkeyIndex(inputRow!);   //from 系統欄位(_fkeyfid)
+                                var fkeyUpRowNo = GetNewRowUpNo(inputRow!, FkeyFid);   //from 系統欄位(_fkeyfid)
+                                if (fkeyUpRowNo < 0)
                                 {
+                                    //如果不是第一層child, 則表示錯誤!!
                                     if (!isLevel1)
                                     {
-                                        error = $"no FkeyFid ({editDto.FkeyFid})";
+                                        error = $"not found FkeyFid ({editDto.FkeyFid})";
                                         goto lab_error;
                                     }
 
                                     //case isLevel1, adjust, 由系統設定fkey(參考上一層, //todo: level0為多筆會出錯 !!)
-                                    fkeyIdx = 1;    
+                                    fkeyUpRowNo = 1;    
                                 }
 
+                                /*
                                 //case of fkeyIdx >= 0
-                                if (fkeyIdx == 0)
-                                    inputRow![editDto.FkeyFid] = inputRow[FkeyFid]!.ToString();  //是否必要??
-                                else if (upNewKey == null)
+                                if (fkeyUpRowNo == 0)
                                 {
-                                    error = $"can not get upNewKey by FkeyFid ({editDto.FkeyFid})";
+                                    inputRow![editDto.FkeyFid] = inputRow[FkeyFid]!.ToString();  //是否必要??
+                                }
+                                else 
+                                */
+                                if (upKeyJson == null)
+                                {
+                                    error = $"upKeyJson is null for FkeyFid ({editDto.FkeyFid})";
                                     goto lab_error;
                                 }
                                 else
                                 {
                                     //set fkey
-                                    inputRow![editDto.FkeyFid] = upNewKey["f" + fkeyIdx];
+                                    inputRow![editDto.FkeyFid] = upKeyJson["f" + fkeyUpRowNo];
                                 }
                             }
                             #endregion
@@ -998,16 +998,16 @@ namespace Base.Services
                             inputRow![kid] = key;
 
                             //set newKeyJson for child, pkeyIdx is base 1 
-                            myNewKey["f" + pkeyIdx] = key;
-                            setNewKey = true;
+                            myKeyJson["f" + pkeyNewUpNo] = key;
+                            setKeyJson = true;
                         }
                     }//if row has fields
                 }//for rows
             }//if has rows
             #endregion
 
-            if (!setNewKey && isLevel0 && !_isNew)
-                myNewKey["f1"] = _key;
+            if (!setKeyJson && isLevel0 && !_isNewMaster)
+                myKeyJson["f1"] = _key;
 
             #region set childs new key (recursive)
             var childLen = GetEditChildLen(editDto);
@@ -1017,13 +1017,13 @@ namespace Base.Services
                 if (childJson == null) continue;
 
                 //recursive call
-                error = await SetNewKeyJsonLoopA(levelStr + i, myNewKey, childJson, editDto.Childs![i]);
+                error = await SetNewKeyJsonLoopA(levelStr + i, myKeyJson, childJson, editDto.Childs![i]);
                 if (_Str.NotEmpty(error)) return error;
             }
             #endregion
 
             //set instance variables & return
-            _newKeyJson["t" + levelStr] = myNewKey;
+            _newKeyJson["t" + levelStr] = myKeyJson;
             return "";
 
         lab_error:
@@ -1055,7 +1055,7 @@ namespace Base.Services
 
                 //has row need set or not
                 //var row = row0 as JObject;
-                var keyIndex = GetKeyIndex(row!, fid);
+                var keyIndex = GetNewRowUpNo(row!, fid);
                 if (keyIndex > 0)
                 {
                     if (json == null)

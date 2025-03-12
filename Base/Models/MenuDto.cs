@@ -14,6 +14,9 @@ namespace Base.Models
         }
         */
 
+        //如果功能表有2層, 使用GroupName分群
+        public string GroupName { get; set; } = "";
+
         //program Id
         public string Code { get; set; } = "";
 
