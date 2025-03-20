@@ -14,6 +14,7 @@ namespace Base.Models
         }
         */
 
+        //yves 250320 測試Git checkout and create new branch
         //如果功能表有2層, 使用GroupName分群
         public string GroupName { get; set; } = "";
 
