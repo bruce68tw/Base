@@ -180,9 +180,9 @@ namespace Base.Services
             //解密敏感組態資料 if need
             if (Config.Encode)
             {
-                Config.Db = _Str.Decode(Config.Db).Replace("\\\\","\\");    //config的\到字串會變\\
-                Config.Smtp = _Str.Decode(Config.Smtp);
-                Config.Redis = _Str.Decode(Config.Redis);
+                Config.Db = _Str.DecodeByFile(Config.Db).Replace("\\\\","\\");    //config的\到字串會變\\
+                Config.Smtp = _Str.DecodeByFile(Config.Smtp);
+                Config.Redis = _Str.DecodeByFile(Config.Redis);
             }
 
             #region set smtp

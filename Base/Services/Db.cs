@@ -19,7 +19,7 @@ namespace Base.Services
         private DbTransaction? _tran;
 
         //column mapping for update/insert, key-type-欄位序號
-        private List<IdNumDto> _colMaps = new();
+        private List<IdNumDto> _colMaps = [];
 
         //status
         private bool _status;    //db status
@@ -35,8 +35,7 @@ namespace Base.Services
         /// constructor, new db, 
         /// note: if db server live but not access right, it still connect ok !!
         /// </summary>
-        /// <param name="dbStr">db field name in config, default to "db"</param>
-        /// <param name="di">for lightinject DI, for different database engine, use object type, or called must include LightInject !!</param>
+        /// <param name="dbStr">db connection string, default to _Fun.Config.Db</param>
         public Db(string dbStr = "")
         {
             //_dbStr: db field name at config, if length > 30, it will be connection string !!
@@ -63,7 +62,7 @@ namespace Base.Services
             //when _dbStr length > 30, treat it as connection string
             //var connStr = (_dbStr.Length > 30) ? _dbStr : _Config.GetDbStr(_dbStr);
 
-            _conn = (DbConnection)_Fun.DiBox.GetService(typeof(DbConnection))!;
+            _conn = (DbConnection)_Fun.DiBox!.GetService(typeof(DbConnection))!;
             //set connect string will get error when connecting state
             //if (_conn.ConnectionString == null || _conn.ConnectionString != _dbStr)
             //_conn.State = ConnectionState.Connecting
@@ -143,7 +142,7 @@ namespace Base.Services
             if (_cmd == null)
             {
                 //_cmd = new SqlCommand();
-                _cmd = (DbCommand)_Fun.DiBox.GetService(typeof(DbCommand))!;
+                _cmd = (DbCommand)_Fun.DiBox!.GetService(typeof(DbCommand))!;
                 _cmd!.Connection = _conn;
             }
             else

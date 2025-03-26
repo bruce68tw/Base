@@ -135,7 +135,7 @@ namespace Base.Services
 select Id, Name as Str
 from dbo.[{table}]
 order by Id";
-            return await SqlToCodesA(sql, db);
+            return await SqlToCodesA(sql, null, db);
         }
 
         //加上排序欄位
@@ -145,7 +145,7 @@ order by Id";
 select Id, Name as Str
 from dbo.[{table}]
 order by {sort}";
-            return await SqlToCodesA(sql, db);
+            return await SqlToCodesA(sql, null, db);
         }
 
         public static async Task<List<IdStrExtDto>?> TableToCodeExtsA(string table, string extFid, Db? db = null)
@@ -154,7 +154,7 @@ order by {sort}";
 select Id, Name as Str, {extFid} as Ext
 from dbo.[{table}]
 order by Id";
-            return await SqlToCodeExtsA(sql, db);
+            return await SqlToCodeExtsA(sql, null, db);
         }
 
         //加上排序欄位
@@ -164,7 +164,7 @@ order by Id";
 select Id, Name as Str, {extFid} as Ext
 from dbo.[{table}]
 order by {sort}";
-            return await SqlToCodeExtsA(sql, db);
+            return await SqlToCodeExtsA(sql, null, db);
         }
 
         public static async Task<List<IdStrExt2Dto>?> TableToCodeExt2sA(string table, string extFid, string ext2Fid, Db? db = null)
@@ -173,7 +173,7 @@ order by {sort}";
 select Id, Name as Str, {extFid} as Ext, {ext2Fid} as Ext2
 from dbo.[{table}]
 order by Id";
-            return await SqlToCodeExt2sA(sql, db);
+            return await SqlToCodeExt2sA(sql, null, db);
         }
 
         //get code table rows
@@ -186,28 +186,28 @@ select
 from dbo.XpCode
 where Type='{type}'
 order by Sort";
-            return await SqlToCodesA(sql, db);
+            return await SqlToCodesA(sql, null, db);
         }
 
         //get codes from sql 
-        public static async Task<List<IdStrDto>?> SqlToCodesA(string sql, Db? db = null)
+        public static async Task<List<IdStrDto>?> SqlToCodesA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
-            var rows = await db!.GetModelsA<IdStrDto>(sql);
+            var rows = await db!.GetModelsA<IdStrDto>(sql, args);
             await CheckCloseDbA(db, newDb);
             return rows;
         }
-        public static async Task<List<IdStrExtDto>?> SqlToCodeExtsA(string sql, Db? db = null)
+        public static async Task<List<IdStrExtDto>?> SqlToCodeExtsA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
-            var rows = await db!.GetModelsA<IdStrExtDto>(sql);
+            var rows = await db!.GetModelsA<IdStrExtDto>(sql, args);
             await CheckCloseDbA(db, newDb);
             return rows;
         }
-        public static async Task<List<IdStrExt2Dto>?> SqlToCodeExt2sA(string sql, Db? db = null)
+        public static async Task<List<IdStrExt2Dto>?> SqlToCodeExt2sA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
-            var rows = await db!.GetModelsA<IdStrExt2Dto>(sql);
+            var rows = await db!.GetModelsA<IdStrExt2Dto>(sql, args);
             await CheckCloseDbA(db, newDb);
             return rows;
         }

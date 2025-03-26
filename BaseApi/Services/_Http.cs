@@ -1,5 +1,6 @@
 ﻿using Base.Models;
 using Base.Services;
+using DocumentFormat.OpenXml.Presentation;
 using Microsoft.AspNetCore.Http;
 using SkiaSharp;
 using System;
@@ -10,6 +11,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace BaseApi.Services
 {
@@ -24,6 +26,16 @@ namespace BaseApi.Services
             _http = service.HttpContext;
         }
         */
+
+        public static string UrlEncode(string data)
+        {
+            return HttpUtility.UrlEncode(data);
+        }
+        public static string UrlDecode(string data)
+        {
+            return HttpUtility.UrlDecode(data);
+        }
+
 
         public static HttpContext GetHttp()
         {

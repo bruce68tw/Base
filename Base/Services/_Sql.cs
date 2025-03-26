@@ -83,6 +83,13 @@ namespace Base.Services
             return result;
         }
 
+        /// <summary>
+        /// SqlDto to Sql string
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <param name="start"></param>
+        /// <param name="length">0表示讀取全部資料, 並且不使用order by</param>
+        /// <returns></returns>
         public static string DtoToSql(SqlDto dto, int start, int length)
         {
             var group = (dto.Group == "") ? "" : " " + dto.Group;
@@ -90,15 +97,10 @@ namespace Base.Services
                 dto.From + " " +
                 dto.Where + group;
 
-            return string.Format(_Fun.ReadPageSql, sql, dto.Order, start, length).Replace("  ", " ");   //2012
-            /*
-            var sql = "select " + dto.Select + " " +
-                dto.From + " " +
-                dto.Where + " " +
-                dto.Group + " " +
-                dto.Order;
-            return sql.Replace("  ", " ");
-            */
+            var sql2 = (length > 0)
+                ? string.Format(_Fun.ReadPageSql, sql, dto.Order, start, length)
+                : "select " + sql;
+            return sql2.Replace("  ", " ");   //2012
         }
 
         /// <summary>

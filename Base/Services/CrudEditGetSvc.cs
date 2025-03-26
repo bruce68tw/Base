@@ -58,7 +58,7 @@ namespace Base.Services
         //clear argument
         protected void ResetArg()
         {
-            _sqlArgs = new();
+            _sqlArgs = [];
         }
 
         //get where by pkey for query 1st table & updata tables, set sql args at the same time

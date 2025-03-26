@@ -23,7 +23,7 @@ namespace Base.Services
         //jQuery dataTables input arg
         //private DtDto _dtDto;
 
-        //sql args, (id, value), be set in GetWhereAsync()
+        //sql args, (id, value), 只在 GetWhere() 設定
         private List<object> _sqlArgs = [];
 
 		//constructor
@@ -271,9 +271,10 @@ namespace Base.Services
         /// <param name="findJson"></param>
         /// <param name="readRows"></param>
         /// <returns></returns>
-        public async Task<JArray?> GetRowsA(string ctrl, ReadDto readDto, JObject findJson)
+        public async Task<JArray?> GetRowsA(string ctrl, ReadDto readDto, JObject findJson, bool readPage = true)
         {
-            return await GetRowsByAuthA(ctrl, CrudEnum.Read, readDto, findJson, _Fun.MaxExportCount, readDto.ReadSql);
+            var rows = readPage ? _Fun.MaxExportCount : 0;  //0表示不分頁
+            return await GetRowsByAuthA(ctrl, CrudEnum.Read, readDto, findJson, rows, readDto.ReadSql);
         }
 
         /// <summary>
@@ -296,7 +297,7 @@ namespace Base.Services
         /// <param name="crudEnum">crud功能種類 for authorize</param>
         /// <param name="readDto"></param>
         /// <param name="findJson"></param>
-        /// <param name="readRows">讀取資料筆數</param>
+        /// <param name="readRows">讀取資料筆數, 0表示讀取全部, 不分頁</param>
         /// <param name="readSql">如果有值則會用來查詢資料</param>
         /// <returns></returns>
         private async Task<JArray?> GetRowsByAuthA(string ctrl, CrudEnum crudEnum, ReadDto readDto, 
@@ -338,6 +339,7 @@ namespace Base.Services
         }
 
         //add argument into _argFids, _argValues
+        //called by GetWhere() only !!
         private void AddArg(string fid, object value)
         {
             _sqlArgs.Add(fid);
@@ -352,7 +354,7 @@ namespace Base.Services
         /// <param name="findJson">query condition</param>
         /// <param name="inputSearch">quick search string</param>
         /// <returns>where string, -1(input error), -2(timeout or none BaseUser for Auth)</returns>
-        private string GetWhere(string ctrl, ReadDto readDto, JObject? findJson, 
+        public string GetWhere(string ctrl, ReadDto readDto, JObject? findJson, 
             CrudEnum crudEnum, string inputSearch = "")
         {
             #region set variables

@@ -1,17 +1,14 @@
 ﻿using Base.Models;
-using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Base.Services
 {
@@ -28,6 +25,9 @@ namespace Base.Services
 
         //random string for reptcha
         //private static Random _random = new Random();
+
+        //AES key inside KeyCmd file, 使用變數儲存, 避免一直開啟
+        private static string _fileKey = null!;
 
         /// <summary>
         /// get random string, no upper alpha O,I
@@ -601,7 +601,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public static string Decode(string data)
+        public static string DecodeByFile(string data)
         {
             return AesEnDecodeByFile(false, data);
         }
@@ -613,24 +613,29 @@ namespace Base.Services
         /// <param name="isEncode">true(加密), false(解密)</param>
         /// <param name="data"></param>
         /// <returns>加解密後以base64編碼/解碼</returns>
-        public static string AesEnDecodeByFile(bool isEncode, string data)
+        private static string AesEnDecodeByFile(bool isEncode, string data)
         {
             if (!_Fun.Config.Encode) return data;
-
-            //讀取專案目錄下 key.xxx.txt, 檔案不存在會傳回null
-            var fileName = $"key.{_Fun.RunModeName}.txt";
-            var key = _File.ToStr(_Fun.DirRoot + fileName);
-            if (key == null)
+            if (_fileKey == null)
             {
-                _Log.Error("_Str.cs EncodeDecode() failed, no file: " + fileName);
-                return data;
+                //讀取專案目錄下 key.xxx.txt, 檔案不存在會傳回null
+                var fileName = $"key.{_Fun.RunModeName}.txt";
+                var key = _File.ToStr(_Fun.DirRoot + fileName);
+                if (key == null)
+                {
+                    _fileKey = "";
+                    _Log.Error("_Str.cs AesEnDecodeByFile() failed, no file: " + fileName);
+                }
+                else
+                {
+                    //key內容為base64, 必須先解碼
+                    _fileKey = Base64Decode(key);
+                }
             }
 
-            //key內容為base64, 必須先解碼
-            //return EncodeDecodeByKey(isEncode, data, Base64Decode(key));
-            return isEncode
-                ? AesEncode(data, key)
-                : AesDecode(data, key);
+            return (_fileKey == "") ? "" :
+                isEncode ? Encode(data, _fileKey) :
+                Decode(data, _fileKey);
         }
 
         /// <summary>
@@ -640,12 +645,12 @@ namespace Base.Services
         /// <param name="data"></param>
         /// <param name="key">如果空值則取用目前目錄下的key.xxx.txt</param>
         /// <returns>加解密後以base64編碼/解碼</returns>
-        public static string AesEnDecodeByKey(bool isEncode, string data, string key)
+        private static string AesEnDecodeByKey(bool isEncode, string data, string key)
         {
             //AES加解密, AES iv 使用空白
             return isEncode
-                ? AesEncode(data, key)
-                : AesDecode(data, key);
+                ? Encode(data, key)
+                : Decode(data, key);
         }
 
         private static void AesInit(System.Security.Cryptography.Aes aes, string key)
@@ -664,15 +669,14 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// AES encode, ECB mode, padding PKCS7, iv 使用key
+        /// 資料加密, 使用 AES ECB mode, padding PKCS7, iv 使用key
         /// </summary>
         /// <param name="data">source data</param>
         /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns>encoded base64 string</returns>
-        public static string AesEncode(string data, string key)
+        public static string Encode(string data, string key)
         {
-            //key ??= _Fun.AesKey;
             byte[] bytes;
             //key = GetAesKey(key);
             using (var aes = System.Security.Cryptography.Aes.Create())
@@ -709,17 +713,26 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// AES decode, ECB mode, padding PKCS7
+        /// 資料解密, 使用 AES ECB mode, padding PKCS7, iv 使用key
         /// </summary>
         /// <param name="data">encoded base64 string</param>
         /// <param name="key"></param>
-        /// <param name="iv"></param>
         /// <returns>decoded plain text</returns>
-        public static string AesDecode(string data, string key)
+        public static string Decode(string data, string key)
         {
             //key ??= _Fun.AesKey;
             string result;
-            var bytes = Convert.FromBase64String(data);
+            byte[] bytes;
+            try
+            {
+                bytes = Convert.FromBase64String(data);
+            }
+            catch
+            {
+                _Log.Error("_Str.cs Decode() Convert.FromBase64String failed: " + data);
+                return "";
+            }
+
             using (var aes = System.Security.Cryptography.Aes.Create())
             {
                 AesInit(aes, key);

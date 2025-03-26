@@ -947,23 +947,23 @@ namespace Base.Services
                             }
                         }
 
-                        //get/set PKey value
-                        string pkey;
-                        if (autoIdZero)
-                        {
-                            pkey = (string)inputRow![kid]!;
-                        }
-                        else
-                        {
-                            pkey = (editDto.FnGetNewKeyA == null)
-                                ? _Str.NewId(editDto.AutoIdLen)
-                                : await editDto.FnGetNewKeyA();
-                            inputRow![kid] = pkey;
-                        }
-
-                        //寫入外部鍵欄位 for new row
+                        //寫入主鍵&外部鍵欄位 for new row(這2種情形都是新增)
                         if (IsNewRow(inputRow!) || pkeyNewUpNo > 0)
                         {
+                            //get/set PKey value
+                            string pkey;
+                            if (autoIdZero)
+                            {
+                                pkey = (string)inputRow![kid]!;
+                            }
+                            else
+                            {
+                                pkey = (editDto.FnGetNewKeyA == null)
+                                    ? _Str.NewId(editDto.AutoIdLen)
+                                    : await editDto.FnGetNewKeyA();
+                                inputRow![kid] = pkey;
+                            }
+
                             #region set foreign key value for not level0
                             if (!isLevel0)
                             {                                
