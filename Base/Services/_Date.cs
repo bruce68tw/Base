@@ -191,6 +191,12 @@ namespace Base.Services
             return ToDbStr(DateTime.Now);
         }
 
+        //for c# & form display
+        public static string NowCsStr()
+        {
+            return ToCsStr(DateTime.Now);
+        }
+
         /*
         //today string
         public static string TodayStr()
@@ -222,6 +228,12 @@ namespace Base.Services
                 ? dt.ToString(_Fun.DbDtFmt)
                 : "";
             */
+        }
+
+        //for c# & form display
+        public static string ToCsStr(DateTime dt)
+        {
+            return dt.ToString(_Fun.CsDtFmt);
         }
 
         public static string ToDbDateStr(DateTime dt)

@@ -1,5 +1,6 @@
 ﻿using Base.Models;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.EMMA;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -80,7 +81,14 @@ namespace Base.Services
         /// <param name="rowTpl"></param>
         /// <param name="row"></param>
         /// <returns></returns>
-        public static string TplFillRow<T>(string rowTpl, T row)
+        public static string TplFillRow(string rowTpl, dynamic row)
+        {
+            return (row is JObject)
+                ? TplFillJson(rowTpl, row) 
+                : TplFillModel(rowTpl, row);
+        }
+
+        public static string TplFillModel<T>(string rowTpl, T row)
         {
             //if (row == null) return rowTpl;
 
@@ -90,6 +98,16 @@ namespace Base.Services
             {
                 var value = prop.GetValue(row, null);
                 result = result.Replace("[" + prop.Name + "]", (value == null) ? "" : value.ToString());
+            }
+            return result;
+        }
+
+        public static string TplFillJson(string rowTpl, JObject row)
+        {
+            var result = rowTpl;
+            foreach (var item in row)
+            {
+                result = result.Replace("[" + item.Key + "]", item.Value!.ToString());
             }
             return result;
         }
@@ -109,17 +127,28 @@ namespace Base.Services
             //if (rows.Count == 0)
             //    return "";
 
-            var props = rows.First().GetType().GetProperties();
             var result = "";
-            foreach (var row in rows)
+            var row0 = rows.First();
+            if (row0 is JObject)
             {
-                var text = rowTpl;
-                foreach (var prop in props)
+                foreach (var row in rows)
                 {
-                    var value = prop.GetValue(row, null);
-                    text = text.Replace("[" + prop.Name + "]", (value == null) ? "" : value.ToString());
+                    result += TplFillJson(rowTpl, row);
                 }
-                result += text;
+            }
+            else
+            {
+                var props = row0.GetType().GetProperties(); //減少在loop取值
+                foreach (var row in rows)
+                {
+                    var text = rowTpl;
+                    foreach (var prop in props)
+                    {
+                        var value = prop.GetValue(row, null);
+                        text = text.Replace("[" + prop.Name + "]", (value == null) ? "" : value.ToString());
+                    }
+                    result += text;
+                }
             }
             return result;
         }
@@ -129,7 +158,7 @@ namespace Base.Services
         {
             if (images.Count == 0) return;
 
-            var mainPart = docx.MainDocumentPart;
+            MainDocumentPart mainPart = docx.MainDocumentPart!;
             foreach (var image in images)
             {
                 //var imagePath = images[i];

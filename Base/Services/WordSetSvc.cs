@@ -3,13 +3,14 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+//using System.Drawing;
 using System.IO;
-using System.Threading.Tasks;
 
-//for docx image
+//for GetImageRun() only (原檔案所使用的變數名稱, 無修改)
 using D = DocumentFormat.OpenXml.Drawing;
 using P = DocumentFormat.OpenXml.Drawing.Pictures;
 using WP = DocumentFormat.OpenXml.Drawing.Wordprocessing;
@@ -79,7 +80,7 @@ namespace Base.Services
             if (imageDtos == null || imageDtos.Count == 0)
                 return "";
 
-            var mainPart = _docx.MainDocumentPart;
+            MainDocumentPart mainPart = _docx.MainDocumentPart!;    //not null
             foreach (var imageInfo in imageDtos)
             {
                 //get image file info
@@ -214,7 +215,7 @@ namespace Base.Services
             }; 
 
         lab_error:
-            _Log.Error($"WordSetService.cs GetRangeStr() get empty result.(findStart='{findStart}', findMid='{findMid}')");
+            _Log.Error($"WordSetSvc.cs GetRangeTpl() get empty result.(findStart='{findStart}', findMid='{findMid}')");
             return null;
         }
 
@@ -260,6 +261,7 @@ namespace Base.Services
             const double PixelToEmu = 304.8;    
 
             var ms = new MemoryStream(File.ReadAllBytes(filePath));
+            /*
             var img = new Bitmap(ms);   //for get width/height
             var result = new WordImageRunDto()
             {
@@ -268,6 +270,17 @@ namespace Base.Services
                 WidthEmu = Convert.ToInt64(img.Width * PixelToEmu),
                 HeightEmu = Convert.ToInt64(img.Height * PixelToEmu),
                 ImageCode = $"IMG{_Str.NewId()}",
+            };
+            */
+            // 使用 ImageSharp 讀取圖片尺寸
+            using var img = Image.Load<Rgba32>(ms);
+            var result = new WordImageRunDto()
+            {
+                DataStream = ms,
+                FileName = Path.GetFileName(filePath),
+                WidthEmu = Convert.ToInt64(img.Width * PixelToEmu),
+                HeightEmu = Convert.ToInt64(img.Height * PixelToEmu),
+                ImageCode = $"IMG{Guid.NewGuid()}",
             };
 
             //important !!, or cause docx show image failed: not have enough memory.

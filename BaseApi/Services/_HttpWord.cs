@@ -56,8 +56,8 @@ namespace BaseApi.Services
         /// </summary>
         /// <param name="tplPath">tpl path</param>
         /// <param name="fileName">export file name</param>
-        /// <param name="row"></param>
-        /// <param name="childs">IEnumerable for anonymous type</param>
+        /// <param name="row">可為JObject或Model</param>
+        /// <param name="childs">可為JArray或List<Model>, IEnumerable for anonymous type</param>
         /// <param name="images"></param>
         /// <returns>error msg if any</returns>
         public static async Task<bool> ExportByTplRowA(string tplPath, string fileName, 

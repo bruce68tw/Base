@@ -76,7 +76,7 @@ namespace Base.Services
             for (var i=0; i<result.Columns.Length; i++)
             {
                 var col = result.Columns[i].Trim();
-                var pos = col.IndexOf(" ");
+                var pos = col.IndexOf(' ');
                 result.Columns[i] = (pos > 0) ? col[..pos] : col;
             }
             //result.Columns = result.Select.Replace(" ","").Split(',');

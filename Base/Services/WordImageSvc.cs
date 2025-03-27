@@ -1,6 +1,8 @@
 ﻿using System;
-using System.Drawing;
+//using System.Drawing;
 using System.IO;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Base.Services
 {
@@ -35,22 +37,32 @@ namespace Base.Services
             if (!File.Exists(fileName))
                 return;
 
+            /*
             var data = File.ReadAllBytes(fileName);
             DataStream = new MemoryStream(data);
-
             FileName = fileName;
-            //BinaryData = data;
             Bitmap img = new Bitmap(new MemoryStream(data));
-            //SourceWidth = img.Width;
-            //SourceHeight = img.Height;
-            //Width = ((decimal)SourceWidth) / dpi * INCH_TO_CM;
-            //Height = ((decimal)SourceHeight) / dpi * INCH_TO_CM;
-            //WidthInEMU = Convert.ToInt64(width / dpi * INCH_TO_CM * CM_TO_EMU);
-            //HeightInEMU = Convert.ToInt64(height / dpi * INCH_TO_CM * CM_TO_EMU);
+            WidthInEMU = Convert.ToInt64((decimal)width * CM_TO_EMU);
+            HeightInEMU = Convert.ToInt64((decimal)height * CM_TO_EMU);
+            ImageName = $"IMG_{Guid.NewGuid().ToString()[..8]}";
+            */
+
+            var data = File.ReadAllBytes(fileName);
+            DataStream = new MemoryStream(data);
+            FileName = fileName;
+
+            // 使用 ImageSharp 讀取圖片
+            using var image = Image.Load<Rgba32>(DataStream);
+
+            // 轉換為 EMU 單位
             WidthInEMU = Convert.ToInt64((decimal)width * CM_TO_EMU);
             HeightInEMU = Convert.ToInt64((decimal)height * CM_TO_EMU);
 
+            // 產生圖片名稱
             ImageName = $"IMG_{Guid.NewGuid().ToString()[..8]}";
+
+            // 重要：重置 MemoryStream 位置，避免後續讀取錯誤
+            DataStream.Position = 0;
         }
 
         /*
