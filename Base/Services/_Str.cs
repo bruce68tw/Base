@@ -501,7 +501,7 @@ namespace Base.Services
         {
             if (IsEmpty(str)) return true;
 
-            Regex rg = new(@"^[a-zA-Z0-9,]*$");
+            Regex rg = new(@"^[a-zA-Z0-9_,]*$");    //key值允許底線
             if (rg.IsMatch(str)) return true;
 
             if (logError)
