@@ -24,8 +24,10 @@ namespace BaseWeb.ViewComponents
             var html = $@"
 <!-- alert -->
 <div class='alert alert-success alert-dismissable xg-alert' style='display:none;'>
-    <a href='#' class='close' onclick='_tool.onAlertClose();'>&times;</a>
     <span class='xd-msg'></span>
+    <button type='button' class='btn btn-link' onclick='_tool.onAlertClose();'>
+        <i class='ico-delete'></i>
+    </button>
 </div>
 
 <!-- msg/ans class 都有 xg-msg for style, 使用id建立jQuery object -->
