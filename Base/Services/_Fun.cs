@@ -270,6 +270,11 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return GetBaseUser().UserId;
         }
 
+        public static string UserName()
+        {
+            return GetBaseUser().UserName;
+        }
+
         public static bool HasPwd()
         {
             return GetBaseUser().HasPwd;

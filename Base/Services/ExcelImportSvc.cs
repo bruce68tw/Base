@@ -1,4 +1,5 @@
-﻿using Base.Models;
+﻿using Base.Enums;
+using Base.Models;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Newtonsoft.Json.Linq;
@@ -20,10 +21,10 @@ namespace Base.Services
         const string RowSep = "\r\n";  //row seperator
         
         //ok excel row no
-        private List<int> _okRowNos = new();
+        private List<int> _okRowNos = [];
 
         //failed excel row no/msg
-        private List<SnStrDto> _failRows = new();
+        private List<SnStrDto> _failRows = [];
 
         //cell x-way name(no number)
         private string CellXname(string colName)
@@ -38,13 +39,14 @@ namespace Base.Services
         /// <param name="importDto"></param>
         /// <param name="fileName"></param>
         /// <param name="uiDtFormat"></param>
+        /// <param name="writeLog">是否寫入XpImportLog table, 如果要自行控制寫入log, 則設為false</param>
         /// <returns></returns>
         public async Task<ResultImportDto> ImportByStreamA(Stream stream, ExcelImportDto<T> importDto, 
-            string dirUpload, string fileName, string uiDtFormat)
+            string dirUpload, string fileName, string uiDtFormat, bool writeLog)
         {
             stream.Position = 0;
             var docx = _Excel.StreamToDocx(stream);
-            var result = await ImportByDocxA(docx, importDto, dirUpload, fileName, uiDtFormat);
+            var result = await ImportByDocxA(docx, importDto, dirUpload, fileName, uiDtFormat, writeLog);
 
             //release docx
             docx = null;
@@ -58,10 +60,11 @@ namespace Base.Services
         /// <param name="docx"></param>
         /// <param name="importDto"></param>
         /// <param name="fileName">imported excel file name</param>
-        /// <param name="uiDtFormat"></param>
+        /// <param name="uiDtFormat">excel裡面的datetime日期格式</param>
+        /// <param name="writeLog">是否寫入XpImportLog table, 如果要自行控制寫入log, 則設為false</param>
         /// <returns>error msg if any</returns>
         public async Task<ResultImportDto> ImportByDocxA(SpreadsheetDocument docx, 
-            ExcelImportDto<T> importDto, string dirUpload, string fileName, string uiDtFormat)
+            ExcelImportDto<T> importDto, string dirUpload, string fileName, string uiDtFormat, bool writeLog)
         {
             #region 1.set variables
             #region set docx, excelRows, ssTable
@@ -112,15 +115,16 @@ namespace Base.Services
             */
 
             //initial excelIsDates & set excelFidLen
-            var excelIsDates = new List<bool>();        //是否為是日期欄位
+            //var excelIsDates = new List<bool>();        //是否為是日期欄位
             var excelFidLen = excelFids.Count;
-            for (var i = 0; i < excelFidLen; i++)
-                excelIsDates.Add(false);    //initial
+            //for (var i = 0; i < excelFidLen; i++)
+            //    excelIsDates.Add(false);    //initial
             #endregion
 
             #region set excelIsDates, modelFids, modelDateFids/Fno/Len, modelNotDateFids/Fno/Len
             int fno;
             var modelFids = new List<string>();         //全部欄位
+            var modelTypes = new List<string>();        //欄位種類
             var model = new T();
             foreach (var prop in model.GetType().GetProperties())
             {
@@ -130,9 +134,15 @@ namespace Base.Services
                 fno = excelFids.FindIndex(a => a == fid);
                 if (fno < 0) continue;
 
+                var typeName = prop.PropertyType.Name;
+                var ftype = typeName.Contains("DateTime") ? ModelTypeEstr.Datetime :
+                    typeName.Contains("Int") ? ModelTypeEstr.Int :
+                    ModelTypeEstr.String;
+
                 modelFids.Add(fid);
-                if (prop.PropertyType == typeof(DateTime?))
-                    excelIsDates[fno] = true;
+                modelTypes.Add(ftype);
+                //if (prop.PropertyType == typeof(DateTime?))
+                //    excelIsDates[fno] = true;
             }
 
             //var modelDateFidLen = modelDateFids.Count;
@@ -172,13 +182,15 @@ namespace Base.Services
                     //var cell = excelRow.Descendants<Cell>().ElementAt(modelNotDateFnos[j]);
                     //colName = ;
                     fno = (int)colMap[CellXname(cell.CellReference!)]!;
-                    var value = (cell.DataType! == CellValues.SharedString) 
-                        ? ssTable.ChildElements[int.Parse(cell.CellValue!.Text)].InnerText 
-                        : cell.CellValue!.Text;
-                    _Model.SetValue(fileRow, excelFids[fno], excelIsDates[fno]
-                        ? DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat)
-                        : value
-                    );
+                    var ftype = modelTypes[fno];
+                    var value = cell.CellValue!.Text;
+                    object value2 = (cell.DataType != null && cell.DataType! == CellValues.SharedString) 
+                            ? ssTable.ChildElements[int.Parse(value)].InnerText :
+                        (ftype == ModelTypeEstr.Datetime) ? DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat) :
+                        (ftype == ModelTypeEstr.Int) ? Convert.ToInt32(value) :
+                        value;
+                    
+                    _Model.SetValue(fileRow, excelFids[fno], value2);
                 }
 
                 fileRows.Add(fileRow);
@@ -243,7 +255,7 @@ namespace Base.Services
             //todo: 未測試新方法
             //docx.SaveAs(fileStem + ".xlsx");
             // 新版 SpreadsheetDocument 移除 SaveAs 代碼，改為使用 Clone 方法
-            using (var newDocx = (SpreadsheetDocument)docx.Clone(fileStem + ".xlsx"))
+            using (var newDocx = docx.Clone(fileStem + ".xlsx"))
             {
                 newDocx.Dispose(); // 儲存並關閉新文件
             }
@@ -302,10 +314,12 @@ namespace Base.Services
             }
             #endregion
 
-            #region 6.insert ImportLog table
+            #region 6.insert XpImportLog table if need
             var totalCount = fileRows.Count;
             var okCount = totalCount - failCount;
-            var sql = $@"
+            if (writeLog)
+            {
+                var sql = $@"
 insert into dbo.XpImportLog(Id, Type, FileName,
 OkCount, FailCount, TotalCount,
 CreatorName, Created)
@@ -313,12 +327,14 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
 {okCount}, {failCount}, {totalCount}, 
 '{importDto.CreatorName}', '{_Date.NowDbStr()}')
 ";
-            await _Db.ExecSqlA(sql);
+                await _Db.ExecSqlA(sql);
+            }
             #endregion
 
             //7.return import result
             return new ResultImportDto()
             {
+                LogRowId = importDto.LogRowId,
                 OkCount = okCount,
                 FailCount = failCount,
                 TotalCount = totalCount,

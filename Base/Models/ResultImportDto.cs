@@ -7,6 +7,11 @@ namespace Base.Models
     public class ResultImportDto
     {
         /// <summary>
+        /// row id
+        /// </summary>
+        public string LogRowId = "";
+
+        /// <summary>
         /// ok rows count
         /// </summary>
         public int OkCount;

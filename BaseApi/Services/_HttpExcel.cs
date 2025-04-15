@@ -17,8 +17,9 @@ namespace BaseApi.Services
         /// <param name="importType"></param>
         /// <param name="importDto"></param>
         /// <param name="uiDtFormat">skip if excel no datetime cell</param>
+        /// <param name="writeLog">是否寫入XpImportLog table, 如果要自行控制寫入log, 則設為false</param>
         public static async Task<ResultImportDto> ImportByFileA<T>(IFormFile file, string dirUpload,
-            ExcelImportDto<T> importDto, string uiDtFormat = "") where T : class, new()
+            ExcelImportDto<T> importDto, string uiDtFormat = "", bool writeLog = true) where T : class, new()
         {
             //check
             if (file == null || file.Length == 0)
@@ -27,7 +28,7 @@ namespace BaseApi.Services
                     ErrorMsg = "Upload file is empty.",
                 };
 
-            return await new ExcelImportSvc<T>().ImportByStreamA(file.OpenReadStream(), importDto, dirUpload, file.FileName, uiDtFormat);
+            return await new ExcelImportSvc<T>().ImportByStreamA(file.OpenReadStream(), importDto, dirUpload, file.FileName, uiDtFormat, writeLog);
         }
 
         /// <summary>
