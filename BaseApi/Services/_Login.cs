@@ -46,7 +46,8 @@ namespace BaseApi.Services
             #region 2.check DB password & get user info
             var sql = @"
 select u.Id as UserId, u.Name as UserName, u.Pwd,
-    u.DeptId, d.Name as DeptName
+    u.DeptId, d.Name as DeptName,
+    u.TopDeptId
 from dbo.XpUser u
 join dbo.XpDept d on u.DeptId=d.Id
 where u.Account=@Account
@@ -103,6 +104,7 @@ where u.Account=@Account
                 HasPwd = hasPwd,
                 DeptId = row["DeptId"]!.ToString(),
                 DeptName = row["DeptName"]!.ToString(),
+                TopDeptId = row["TopDeptId"]!.ToString(),
                 Locale = _Fun.Config.Locale,
                 ProgAuthStrs = await _Auth.GetAuthStrsA(userId),
                 //IsLogin = true,

@@ -285,6 +285,11 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return GetBaseUser().DeptId;
         }
 
+        public static string TopDeptId()
+        {
+            return GetBaseUser().TopDeptId;
+        }
+
         public static bool IsAuthRowAndLogin()
         {
             return IsAuthTypeRow() && IsNeedLogin();
