@@ -20,10 +20,6 @@
         public string DeptId = "";
         public string DeptName = "";
 
-        //最上層 dept id/name
-        public string TopDeptId = "";
-        //public string TopDeptName = "";
-
         //user type, PG define
         public string UserType = "";
 

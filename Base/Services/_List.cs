@@ -1,5 +1,6 @@
 ﻿using Base.Models;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Base.Services
@@ -62,6 +63,16 @@ namespace Base.Services
                 Str = plsSelect,
             });
             return codes;
+        }
+
+        public static string? StrToId(List<IdStrDto>? codes, string str)
+        {
+            if (codes == null || codes.Count == 0)
+                return null;
+
+            return codes.Where(a => a.Str == str)
+                .Select(a => a.Id)
+                .FirstOrDefault();
         }
 
         public static bool IsEmpty<T>(List<T>? rows) where T : class
