@@ -56,9 +56,10 @@ namespace BaseApi.Services
                         [
                             new() { Fid = "Id" },
                             new() { Fid = "FlowId" },
+                            new() { Fid = "FromNodeId", Required = true },
+                            new() { Fid = "ToNodeId",   Required = true },
+                            new() { Fid = "FromType" },
                             new() { Fid = "CondStr" },
-                            new() { Fid = "StartNode", Required = true },
-                            new() { Fid = "EndNode",   Required = true },
                             new() { Fid = "Sort", Required = true },
                         ],
                     },
@@ -88,11 +89,11 @@ namespace BaseApi.Services
             if (_Str.NotEmpty(error))
                 return error;
 
-            error = crudEditSvc.SetChildFkey(inputJson, 1, "StartNode", "00");
+            error = crudEditSvc.SetChildFkey(inputJson, 1, "FromNodeId", "00");
             if (_Str.NotEmpty(error))
                 return error;
 
-            return crudEditSvc.SetChildFkey(inputJson, 1, "EndNode", "00");
+            return crudEditSvc.SetChildFkey(inputJson, 1, "ToNodeId", "00");
         }
 
     } //class
