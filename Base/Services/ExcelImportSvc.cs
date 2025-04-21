@@ -1,5 +1,7 @@
 ﻿using Base.Enums;
 using Base.Models;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Office2016.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Newtonsoft.Json.Linq;
@@ -73,46 +75,61 @@ namespace Base.Services
             var wsPart = (WorksheetPart)wbPart!.GetPartById(
                 wbPart.Workbook.Descendants<Sheet>().ElementAt(importDto.SheetNo).Id!);
 
-            var excelRows = wsPart.Worksheet.Descendants<Row>();    //include empty rows
+            //加上where後只傳回非空白列
+            var excelRows = wsPart.Worksheet.Descendants<Row>()    //include empty rows
+                .Where(r => r.Elements<Cell>().Any(c => !string.IsNullOrWhiteSpace(c.InnerText)));
+
             var ssTable = wbPart.GetPartsOfType<SharedStringTablePart>().First().SharedStringTable;
             #endregion
 
             #region set importDto.ExcelFids, excelFidLen
-            int idx;
-            var colMap = new JObject();     //col x-way name(ex:A) -> col index
+            int no;
+            //var colMap = new JObject();     //col x-way name(ex:A) -> col index
+            var colNameNos = new Dictionary<string, int>();     //excel位置字母,位置對應, ex:(A,0)
             var cells = excelRows.ElementAt(importDto.FidRowNo - 1).Elements<Cell>();
             var excelFids = new List<string>();
-            //if (importDto.ExcelFids == null || importDto.ExcelFids.Count == 0)
-            //{
-                //如果沒有傳入excel欄位名稱, 則使用第一行excel做為欄位名稱
-                idx = 0;
+            var excelFnos = new List<int>();
+            if (importDto.ExcelFids == null || importDto.ExcelFids.Count == 0)
+            {
+                //如果沒有傳入excel欄位名稱, 則使用第一行excel做為欄位名稱(不可有合併儲存格!!)
+                no = 0;
                 foreach (var cell in cells)
                 {
                     excelFids.Add(GetCellValue(ssTable, cell));
-                    colMap[CellXname(cell.CellReference!)] = idx;
-                    idx++;
+                    excelFnos.Add(no);
+                    colNameNos[CellXname(cell.CellReference!)] = no;
+                    no++;
                 }
-            /*
             }
             else
             {
-                //有傳入excel欄位名稱
+                //有傳入excel欄位名稱(最多到Z)
                 //check
                 var cellLen = cells.Count();
                 if (cellLen != importDto.ExcelFids.Count)
                 {
-                    errorMsg = "importDto.ExcelFids length should be " + cellLen;
-                    goto lab_error;
+                    return new ResultImportDto()
+                    {
+                        ErrorMsg = "importDto.ExcelFids length should be " + cellLen,
+                    };
                 }
 
                 //set colMap
-                for (var i=0; i< cellLen; i++)
+                no = 0;
+                for (var i=0; i< importDto.ExcelFids.Count; i++)
                 {
-                    var colName = CellXname(cells.ElementAt(i).CellReference);
-                    colMap[colName] = i;
+                    //空白表示有合併儲存格
+                    if (importDto.ExcelFids[i] == "")
+                        continue;
+
+                    excelFids.Add(importDto.ExcelFids[i]);
+                    excelFnos.Add(i);
+                    //var colName = CellXname(cells.ElementAt(no).CellReference!);
+                    var colName = ((char)('A' + i)).ToString();
+                    colNameNos[colName] = i;
+                    no++;
                 }
             }
-            */
 
             //initial excelIsDates & set excelFidLen
             //var excelIsDates = new List<bool>();        //是否為是日期欄位
@@ -123,8 +140,9 @@ namespace Base.Services
 
             #region set excelIsDates, modelFids, modelDateFids/Fno/Len, modelNotDateFids/Fno/Len
             int fno;
-            var modelFids = new List<string>();         //全部欄位
-            var modelTypes = new List<string>();        //欄位種類
+            //var modelFids = new List<string>();         //全部欄位
+            //var modelTypes = new List<string>();        //欄位種類
+            var modelFidTypes = new Dictionary<string, string>();
             var model = new T();
             foreach (var prop in model.GetType().GetProperties())
             {
@@ -139,8 +157,9 @@ namespace Base.Services
                     typeName.Contains("Int") ? ModelTypeEstr.Int :
                     ModelTypeEstr.String;
 
-                modelFids.Add(fid);
-                modelTypes.Add(ftype);
+                //modelFids.Add(fid);
+                //modelTypes.Add(ftype);
+                modelFidTypes.Add(fid, ftype);
                 //if (prop.PropertyType == typeof(DateTime?))
                 //    excelIsDates[fno] = true;
             }
@@ -176,21 +195,28 @@ namespace Base.Services
                 //write not date column
                 //for (var j = 0; j < modelNotDateFidLen; j++)
                 //var j = 0;
-                foreach (Cell cell in excelRow)
+                //foreach (Cell cell in excelRow)
+                no = 0;
+                foreach (var col in colNameNos)
                 {
                     //var cell = cells.ElementAt(modelNotDateFnos[j]);
                     //var cell = excelRow.Descendants<Cell>().ElementAt(modelNotDateFnos[j]);
                     //colName = ;
-                    fno = (int)colMap[CellXname(cell.CellReference!)]!;
-                    var ftype = modelTypes[fno];
+                    //fno = (int)colMap[CellXname(cell.CellReference!)]!;
+                    var cname = col.Key;    //cell name
+                    var cno = col.Value;
+                    var fid = excelFids[no];
+                    var ftype = modelFidTypes[fid];
+                    var cell = excelRow.Elements<Cell>().ElementAt(cno);
                     var value = cell.CellValue!.Text;
                     object value2 = (cell.DataType != null && cell.DataType! == CellValues.SharedString) 
                             ? ssTable.ChildElements[int.Parse(value)].InnerText :
                         (ftype == ModelTypeEstr.Datetime) ? DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat) :
                         (ftype == ModelTypeEstr.Int) ? Convert.ToInt32(value) :
-                        value;
+                        value.ToString();
                     
-                    _Model.SetValue(fileRow, excelFids[fno], value2);
+                    _Model.SetValue(fileRow, fid, value2);
+                    no++;
                 }
 
                 fileRows.Add(fileRow);
@@ -199,7 +225,7 @@ namespace Base.Services
             #endregion
 
             #region 2.validate fileRows loop
-            idx = 0;
+            no = 0;
             //var error = "";
             foreach (var fileRow in fileRows)
             {
@@ -212,15 +238,15 @@ namespace Base.Services
                     //if (importDto.FnCheckImportRow != null)
                     //    error = importDto.FnCheckImportRow(fileRow);
                     //if (_Str.IsEmpty(error))
-                        _okRowNos.Add(idx);
+                        _okRowNos.Add(no);
                     //else
                     //    AddError(idx, error);
                 }
                 else
                 {
-                    AddErrorByResults(idx, results);
+                    AddErrorByResults(no, results);
                 }
-                idx++;
+                no++;
             }
             #endregion
 
@@ -233,15 +259,15 @@ namespace Base.Services
                     okRows.Add(fileRows[okRowNo]);
 
                 //call FnSaveImportRows
-                idx = 0;
+                no = 0;
                 var saveResults = importDto.FnSaveImportRows!(okRows);
                 if (saveResults != null)
                 {
                     foreach (var result in saveResults)
                     {
                         if (_Str.NotEmpty(result))
-                            AddError(_okRowNos[idx], result);
-                        idx++;
+                            AddError(_okRowNos[no], result);
+                        no++;
                     }
                 }
             }
@@ -265,13 +291,15 @@ namespace Base.Services
             var failCount = _failRows.Count;
             if (failCount > 0)
             {
+                /*
                 //set excelFnos: excel column map model column
                 var excelFnos = new List<int>();
                 for (var i = 0; i < excelFidLen; i++)
                 {
-                    fno = modelFids.FindIndex(a => a == excelFids[i]);
+                    fno = colNameNos[excelFids[i]];
                     excelFnos.Add(fno);    //<0 means no mapping
                 }
+                */
 
                 //get docx
                 var failFilePath = fileStem + "_fail.xlsx";
@@ -283,31 +311,45 @@ namespace Base.Services
                     wbPart2.Workbook.Descendants<Sheet>().ElementAt(0).Id!);
                 var sheetData2 = wsPart2.Worksheet.GetFirstChild<SheetData>();
 
+                //新增空白列(含格式, 合併儲存格)
                 var startRow = importDto.FidRowNo;    //insert position
+                if (failCount > 1)
+                    CopyTplRow(sheetData2!, startRow, failCount - 1);
+
                 for (var i = 0; i < failCount; i++)
                 {
+                    //var row = sheetData2!.ElementAt[startRow + i];
+                    var row = sheetData2!.Elements<Row>().ElementAt(startRow + i + 1);  //base 0
+                    //var row = sheetData2!.Elements<Row>().FirstOrDefault(r => r.RowIndex! == (uint)(startRow + i + 1));
+
                     //add row, fill value & copy row style
                     var modelRow = fileRows[_failRows[i].Sn];
                     var newRow = new Row();     //new excel row
-                    for (var colNo = 0; colNo < excelFidLen; colNo++)
+                    for (var ci = 0; ci < excelFidLen; ci++)
                     {
-                        fno = excelFnos[colNo];
-                        var value2 = _Model.GetValue(modelRow, excelFids[colNo]);
+                        fno = excelFnos[ci];
+                        var value2 = _Model.GetValue(modelRow, excelFids[ci]);
+                        
+                        var cell = row.Elements<Cell>().ElementAt(fno);
+                        cell.CellValue = new CellValue(value2?.ToString() ?? string.Empty);
+                        cell.DataType = CellValues.String; // 設定為字串
+                        /*
                         newRow.Append(new Cell()
                         {
                             CellValue = new CellValue(fno < 0 || value2 == null ? "" : value2.ToString()!),
                             DataType = CellValues.String,
                         });
+                        */
                     }
 
                     //write cell for error msg
-                    newRow.Append(new Cell()
+                    row.Append(new Cell()
                     {
                         CellValue = new CellValue(_failRows[i].Str),
                         DataType = CellValues.String,
                     });
 
-                    sheetData2!.InsertAt(newRow, startRow + i);
+                    //sheetData2!.InsertAt(newRow, startRow + i);
                 }
                 docx2.Save();
                 docx2.Dispose();
@@ -339,6 +381,58 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                 FailCount = failCount,
                 TotalCount = totalCount,
             };
+        }
+
+        private void CopyTplRow(SheetData sheet, int fromRow, int newRows)
+        {
+            // 找出範本列
+            //var tplRow = sheet.Elements<Row>().FirstOrDefault(r => r.RowIndex! == (uint)fromRow);
+            var tplRow = sheet.Elements<Row>().ElementAt(fromRow);  //base 0
+            if (tplRow == null) return;
+
+            // 找到範本列在 SheetData 中的 index
+            int insertIndex = sheet.Elements<Row>().ToList().IndexOf(tplRow) + 1;
+
+            // 取得 MergeCells
+            var mergeCells = sheet.Elements<MergeCells>().FirstOrDefault() ?? new MergeCells();
+
+            // 複製合併儲存格
+            var tplMerges = mergeCells.Elements<MergeCell>()
+                .Where(mc => mc.Reference!.Value!.Contains(fromRow.ToString()))
+                .ToList();
+
+            // 插入新列
+            uint nowRowIndex = (uint)(fromRow + 1);
+            for (int i = 0; i < newRows; i++)
+            {
+                Row newRow = new Row() { RowIndex = nowRowIndex };
+                foreach (var cell in tplRow.Elements<Cell>())
+                {
+                    string col = new string(cell.CellReference!.Value!.Where(char.IsLetter).ToArray());
+                    newRow.Append(new Cell()
+                    {
+                        CellReference = col + nowRowIndex,
+                        StyleIndex = cell.StyleIndex,
+                        DataType = CellValues.String,
+                        CellValue = new CellValue("") // 空資料
+                    });
+                }
+                sheet.InsertAt(newRow, insertIndex + i);
+
+                // 複製合併儲存格
+                foreach (var mc in tplMerges)
+                {
+                    var parts = mc.Reference!.Value!.Split(':');
+                    string newRef = $"{parts[0].First()} {nowRowIndex}: {parts[1]}{nowRowIndex}";
+                    mergeCells.Append(new MergeCell() { Reference = new StringValue(newRef) });
+                }
+
+                nowRowIndex++;
+            }
+
+            // 如果新增了 mergeCells，更新回 SheetData
+            if (mergeCells.Elements<MergeCell>().Any())
+                sheet.InsertAfter(mergeCells, sheet);
         }
 
         private string GetCellValue(SharedStringTable ssTable, Cell cell)

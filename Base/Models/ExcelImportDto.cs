@@ -1,4 +1,5 @@
 ﻿using Base.Services;
+using System.Collections.Generic;
 
 namespace Base.Models
 {
@@ -33,7 +34,7 @@ namespace Base.Models
         /// <summary>
         /// empty means excel row0 is fid, order should same to imported file
         /// </summary>
-        //public List<string> ExcelFids = new List<string>();
+        public List<string> ExcelFids = [];
 
         /// <summary>
         /// excel col name, ex:A,B.., if not empty then array/order should map th ExcelFids
@@ -46,7 +47,7 @@ namespace Base.Models
         public int SheetNo = 0;
 
         /// <summary>
-        /// excel fid start row(base 1), default 1
+        /// excel fid start row(base 1, 與excel相同), default 1
         /// </summary>
         public int FidRowNo = 1;
 
