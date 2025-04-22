@@ -35,6 +35,13 @@ namespace BaseApi.Services
             return ("," + exts.ToLower() + ",").Contains("," + ext + ",");
         }
 
+        public static string GetFileExt(IFormFile? file)
+        {
+            return (file == null)
+                ? ""
+                : Path.GetExtension(file.FileName).Replace(".", "").ToLower();
+        }
+
         /// <summary>
         /// save file
         /// </summary>

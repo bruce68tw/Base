@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -36,6 +37,24 @@ namespace Base.Services
         public static string GetFileExt(string path)
         {
             return Path.GetExtension(path).Replace(".", "").ToLower();
+        }
+
+        //目錄下是否存在符合檔名的圖檔
+        public static string? DirHasImage(string dir, string fileName)
+        {
+            if (!Directory.Exists(dir))
+                return "";
+
+            string[] imageExts = { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
+            foreach (var ext in imageExts)
+            {
+                var fileName2 = fileName + ext;
+                var filePath = Path.Combine(dir, fileName2);
+                if (File.Exists(filePath))
+                    return fileName2;
+            }
+
+            return null;
         }
 
         /*
