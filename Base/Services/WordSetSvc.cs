@@ -85,6 +85,8 @@ namespace Base.Services
             {
                 //get image file info
                 var runDto = GetImageRunDto(imageInfo.FilePath);
+                if (runDto == null) continue;
+
                 ImagePart imagePart = mainPart!.AddImagePart(ImagePartType.Jpeg);
                 var imageId = mainPart.GetIdOfPart(imagePart);
                 imagePart.FeedData(runDto!.DataStream!);
