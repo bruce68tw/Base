@@ -39,13 +39,18 @@ namespace Base.Services
             return Path.GetExtension(path).Replace(".", "").ToLower();
         }
 
-        //目錄下是否存在符合檔名的圖檔
+        /// <summary>
+        /// 目錄下是否存在符合檔名的各種圖檔
+        /// </summary>
+        /// <param name="dir"></param>
+        /// <param name="fileName">不含副檔名</param>
+        /// <returns>傳回第一個符合的圖檔名稱, 不含路徑</returns>
         public static string? DirHasImage(string dir, string fileName)
         {
             if (!Directory.Exists(dir))
                 return "";
 
-            string[] imageExts = { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
+            string[] imageExts = [".jpg", ".jpeg", ".png", ".gif", ".bmp"];
             foreach (var ext in imageExts)
             {
                 var fileName2 = fileName + ext;
