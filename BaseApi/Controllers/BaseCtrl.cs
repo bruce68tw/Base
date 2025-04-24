@@ -38,7 +38,9 @@ namespace BaseApi.Controllers
 
         protected ContentResult JsonsToCnt(JArray? rows)
         {
-            return Content(rows == null ? "" : rows.ToString(), ContentTypeEstr.Json);
+            //如果傳回空字串前端會parser error !!
+            string json = rows?.ToString(Newtonsoft.Json.Formatting.None) ?? "[]";
+            return Content(json, ContentTypeEstr.Json);
         }
 
     }//class
