@@ -6,13 +6,13 @@ namespace Base.Models
     public class SignLineDto
     {
         public string FlowId { get; set; } = "";
-        public string StartNodeId { get; set; } = "";
-        public string StartNodeName { get; set; } = "";
-        public string StartNodeType { get; set; } = "";
+        public string FromNodeId { get; set; } = "";
+        public string FromNodeName { get; set; } = "";
+        public string FromNodeType { get; set; } = "";
 
-        public string EndNodeId { get; set; } = "";
-        public string EndNodeName { get; set; } = "";
-        public string EndNodeType { get; set; } = "";
+        public string ToNodeId { get; set; } = "";
+        public string ToNodeName { get; set; } = "";
+        public string ToNodeType { get; set; } = "";
 
         public string SignerType { get; set; } = "";
         public string SignerValue { get; set; } = "";
