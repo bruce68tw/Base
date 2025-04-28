@@ -37,8 +37,9 @@ namespace BaseWeb.ViewComponents
 
             //get html (span for checkbox checked sign)
             //value attr will disappear, use data-value instead !!
+            var css = _Helper.GetCssClass("xi-check", dto.BoxClass, dto.Width);
             var html = $@"
-<label class='xi-check {dto.BoxClass}'>
+<label class='{css}'>
     <input{attr} type='checkbox' data-type='check' data-value='{dto.Value}'>{dto.Label}
     <span class='xi-cspan'></span>
 </label>";

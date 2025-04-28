@@ -20,9 +20,10 @@ namespace BaseWeb.ViewComponents
                 _Helper.GetMaxLength(dto.MaxLen);
 
             //summernote will add div below textarea, so add div outside for validate msg
+            var css = _Helper.GetCssClass("form-control xd-valid", dto.BoxClass, dto.Width);
             var html = $@"
-<div class='xi-box {dto.BoxClass}'>
-    <textarea{attr} data-type='html' class='form-control xd-valid'></textarea>
+<div class='xi-box'>
+    <textarea{attr} data-type='html' class='{css}'></textarea>
 </div>";
             if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);

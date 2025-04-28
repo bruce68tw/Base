@@ -22,11 +22,11 @@ namespace BaseWeb.ViewComponents
             var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
                 $" value='{dto.Value}' rows='{dto.RowsCount}' style='width:{dto.Width}'" +
                 _Helper.GetPlaceHolder(dto.InputTip) +
-                //_Helper.GetRequired(dto.Required) +
                 _Helper.GetMaxLength(dto.MaxLen);
 
             //html
-            var html = $"<textarea{attr} data-type='textarea' class='form-control xi-box {dto.BoxClass}'></textarea>";
+            var css = _Helper.GetCssClass("form-control xi-box", dto.BoxClass, dto.Width);
+            var html = $"<textarea{attr} data-type='textarea' class='{css}'></textarea>";
             if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
             return new HtmlString(html);

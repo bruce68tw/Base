@@ -21,7 +21,9 @@ namespace BaseWeb.ViewComponents
             var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.InputAttr) +
                 $" data-type='link' onclick='{dto.FnOnViewFile}'" +
                 " style='height:32px; display:table-cell; vertical-align:middle;'";
-            var html = $"<a href='#' {attr} class='xi-unsave {dto.BoxClass}'>{dto.Value}</a>";
+
+            var css = _Helper.GetCssClass("xi-unsave", dto.BoxClass, dto.Width);
+            var html = $"<a href='#' {attr} class='{css}'>{dto.Value}</a>";
 
             //add title if need
             if (_Str.NotEmpty(dto.Title))
