@@ -314,12 +314,12 @@ namespace Base.Services
                 //新增空白列(含格式, 合併儲存格)
                 var startRow = importDto.FidRowNo;    //insert position
                 if (failCount > 1)
-                    CopyTplRow(sheetData2!, startRow, failCount - 1);
+                    CopyTplRows(sheetData2!, startRow, failCount - 1);
 
                 for (var i = 0; i < failCount; i++)
                 {
                     //var row = sheetData2!.ElementAt[startRow + i];
-                    var row = sheetData2!.Elements<Row>().ElementAt(startRow + i + 1);  //base 0
+                    var row = sheetData2!.Elements<Row>().ElementAt(startRow + i);  //base 0
                     //var row = sheetData2!.Elements<Row>().FirstOrDefault(r => r.RowIndex! == (uint)(startRow + i + 1));
 
                     //add row, fill value & copy row style
@@ -333,12 +333,15 @@ namespace Base.Services
                         var cell = row.Elements<Cell>().ElementAt(fno);
                         cell.CellValue = new CellValue(value2?.ToString() ?? string.Empty);
                         cell.DataType = CellValues.String; // 設定為字串
+
                         /*
-                        newRow.Append(new Cell()
-                        {
-                            CellValue = new CellValue(fno < 0 || value2 == null ? "" : value2.ToString()!),
-                            DataType = CellValues.String,
-                        });
+                        fno = excelFnos[ci]; // 例如 0 = A, 1 = B
+                        string colName = GetExcelColumnName(fno);
+                        var value2 = _Model.GetValue(modelRow, excelFids[ci]);
+
+                        var cell = GetOrCreateCell(row, colName, row.RowIndex!.Value);
+                        cell.CellValue = new CellValue(value2?.ToString() ?? string.Empty);
+                        cell.DataType = CellValues.String;
                         */
                     }
 
@@ -351,6 +354,7 @@ namespace Base.Services
 
                     //sheetData2!.InsertAt(newRow, startRow + i);
                 }
+
                 docx2.Save();
                 docx2.Dispose();
             }
@@ -383,56 +387,136 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
             };
         }
 
-        private void CopyTplRow(SheetData sheet, int fromRow, int newRows)
+        private static string GetExcelColumnName(int index)
         {
-            // 找出範本列
-            //var tplRow = sheet.Elements<Row>().FirstOrDefault(r => r.RowIndex! == (uint)fromRow);
-            var tplRow = sheet.Elements<Row>().ElementAt(fromRow);  //base 0
+            const string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            string columnName = "";
+
+            while (index >= 0)
+            {
+                columnName = letters[index % 26] + columnName;
+                index = index / 26 - 1;
+            }
+
+            return columnName;
+        }
+
+        private Cell GetOrCreateCell(Row row, string columnName, uint rowIndex)
+        {
+            string cellRef = columnName + rowIndex;
+
+            // 嘗試根據 CellReference 找出現有的 Cell
+            var cell = row.Elements<Cell>()
+                .FirstOrDefault(c => c.CellReference?.Value == cellRef);
+
+            if (cell == null)
+            {
+                // 如果找不到，就建立新的 Cell 並加入該列
+                cell = new Cell()
+                {
+                    CellReference = cellRef,
+                    DataType = CellValues.String
+                };
+
+                row.Append(cell); // 直接加到 Row 尾端。可依需求改為 Insert 排序
+            }
+
+            return cell;
+        }
+
+        /// <summary>
+        /// 從template row 複製多筆空白列
+        /// </summary>
+        /// <param name="sheet"></param>
+        /// <param name="fromRow">來源Row, base 0</param>
+        /// <param name="newRows">需要新增加的列數, 扣除範本這一列</param>
+        private void CopyTplRows(SheetData sheetData, int fromRowZeroBased, int newRows)
+        {
+            var worksheet = (Worksheet)sheetData.Parent!;
+            var colNames = new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };
+            var baseRowIndex = (uint)(fromRowZeroBased + 1); // OpenXML 是從 1 開始的 RowIndex
+
+            // 取得範本列
+            var tplRow = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex! == baseRowIndex);
             if (tplRow == null) return;
 
-            // 找到範本列在 SheetData 中的 index
-            int insertIndex = sheet.Elements<Row>().ToList().IndexOf(tplRow) + 1;
-
-            // 取得 MergeCells
-            var mergeCells = sheet.Elements<MergeCells>().FirstOrDefault() ?? new MergeCells();
-
-            // 複製合併儲存格
-            var tplMerges = mergeCells.Elements<MergeCell>()
-                .Where(mc => mc.Reference!.Value!.Contains(fromRow.ToString()))
-                .ToList();
-
-            // 插入新列
-            uint nowRowIndex = (uint)(fromRow + 1);
-            for (int i = 0; i < newRows; i++)
+            // 取得或建立 MergeCells 並加入到 Worksheet
+            var mergeCells = worksheet.Elements<MergeCells>().FirstOrDefault();
+            if (mergeCells == null)
             {
-                Row newRow = new Row() { RowIndex = nowRowIndex };
-                foreach (var cell in tplRow.Elements<Cell>())
-                {
-                    string col = new string(cell.CellReference!.Value!.Where(char.IsLetter).ToArray());
-                    newRow.Append(new Cell()
-                    {
-                        CellReference = col + nowRowIndex,
-                        StyleIndex = cell.StyleIndex,
-                        DataType = CellValues.String,
-                        CellValue = new CellValue("") // 空資料
-                    });
-                }
-                sheet.InsertAt(newRow, insertIndex + i);
+                mergeCells = new MergeCells();
+                worksheet.InsertAfter(mergeCells, sheetData); // 正確插入位置
+            }
 
-                // 複製合併儲存格
+            // 取得範本列的合併儲存格
+            var tplMerges = mergeCells.Elements<MergeCell>()
+                .Where(mc =>
+                {
+                    if (mc.Reference == null) return false;
+                    var parts = mc.Reference.Value!.Split(':');
+                    if (parts.Length != 2) return false;
+
+                    var startRow = new string(parts[0].Where(char.IsDigit).ToArray());
+                    var endRow = new string(parts[1].Where(char.IsDigit).ToArray());
+                    return startRow == baseRowIndex.ToString() && endRow == baseRowIndex.ToString();
+                }).ToList();
+
+            // 插入點：在範本列後
+            int insertIndex = sheetData.Elements<Row>().ToList().FindIndex(r => r.RowIndex! == baseRowIndex) + 1;
+
+            // 建立新列
+            for (int i = 1; i <= newRows; i++)
+            {
+                var newRowIndex = baseRowIndex + (uint)i;
+                var newRow = new Row() { RowIndex = newRowIndex };
+
+                foreach (var col in colNames)
+                {
+                    var tplCell = tplRow.Elements<Cell>().FirstOrDefault(c =>
+                        c.CellReference!.Value!.StartsWith(col));
+
+                    var newCell = new Cell()
+                    {
+                        CellReference = col + newRowIndex,
+                        DataType = CellValues.String,
+                        CellValue = new CellValue(""),
+                    };
+
+                    if (tplCell?.StyleIndex != null)
+                        newCell.StyleIndex = tplCell.StyleIndex;
+
+                    newRow.Append(newCell);
+                }
+
+                sheetData.InsertAt(newRow, insertIndex++);
+
+                // 複製合併格（更新為新列號）
                 foreach (var mc in tplMerges)
                 {
                     var parts = mc.Reference!.Value!.Split(':');
-                    string newRef = $"{parts[0].First()} {nowRowIndex}: {parts[1]}{nowRowIndex}";
+
+                    var startCol = new string(parts[0].Where(char.IsLetter).ToArray());
+                    var endCol = new string(parts[1].Where(char.IsLetter).ToArray());
+
+                    var newRef = $"{startCol}{newRowIndex}:{endCol}{newRowIndex}";
                     mergeCells.Append(new MergeCell() { Reference = new StringValue(newRef) });
                 }
-
-                nowRowIndex++;
             }
 
-            // 如果新增了 mergeCells，更新回 SheetData
-            if (mergeCells.Elements<MergeCell>().Any())
-                sheet.InsertAfter(mergeCells, sheet);
+            // Ensure page setup and DPI values are correctly set
+            var pageSetup = worksheet.Elements<PageSetup>().FirstOrDefault();
+            if (pageSetup == null)
+            {
+                pageSetup = new PageSetup();
+                worksheet.Append(pageSetup);
+            }
+
+            // Set default DPI values
+            pageSetup.VerticalDpi = new UInt32Value((uint)96); // Default DPI
+            pageSetup.HorizontalDpi = new UInt32Value((uint)96); // Default DPI
+
+            // Optionally, set other PageSetup values to ensure compatibility
+            pageSetup.PaperSize = (UInt32Value)9; // Set to A4 Paper Size (common default)
         }
 
         private string GetCellValue(SharedStringTable ssTable, Cell cell)
