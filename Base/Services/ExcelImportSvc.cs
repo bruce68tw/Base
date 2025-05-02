@@ -503,6 +503,8 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                 }
             }
 
+            // OpenXml工具出現valid error: the attribute 'verticalDpi' has invalid value '0'
+            // 但以下解法無效 !!
             // Ensure page setup and DPI values are correctly set
             var pageSetup = worksheet.Elements<PageSetup>().FirstOrDefault();
             if (pageSetup == null)
