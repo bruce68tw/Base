@@ -29,12 +29,12 @@ namespace BaseWeb.ViewComponents
             var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
                 $" type='{type}' value='{dto.Value}' style='width:{dto.Width}'" +     //default 100%
                 _Helper.GetPlaceHolder(dto.InputTip) +
-                //_Helper.GetRequired(dto.Required) +
                 _Helper.GetMaxLength(dto.MaxLen) +
                 _Helper.GetPattern(dto.Pattern);
 
-            //get input html
-            var html = $"<input{attr} data-type='text' class='form-control xi-box {dto.BoxClass}'>";
+            //get input html, xi-box for 控制 validate error 位置
+            var css = _Helper.GetCssClass("form-control xi-box", dto.BoxClass, dto.Width);
+            var html = $"<input{attr} data-type='text' class='{css}'>";
 
             //add title,required,tip,cols for single form
             //consider this field could in datatable(no title) !!

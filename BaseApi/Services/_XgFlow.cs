@@ -47,27 +47,27 @@ where u.Id='{0}'
             var sql = string.Format(@"
 select 
     FlowId=f.Id,
-    StartNodeId=l.StartNode,
-	StartNodeName=nf.Name,
-	StartNodeType=nf.NodeType,
-    EndNodeId=l.EndNode,
-    EndNodeName=nt.Name,
-	EndNodeType=nt.NodeType,
+    l.FromNodeId,
+	FromNodeName=nf.Name,
+	FromNodeType=nf.NodeType,
+    l.ToNodeId,
+    ToNodeName=nt.Name,
+	ToNodeType=nt.NodeType,
 	nf.SignerType, nf.SignerValue,
     l.Sort, l.CondStr
 from dbo.XpFlowLine l
 join dbo.XpFlow f on l.FlowId=f.Id
-join dbo.XpFlowNode nf on l.StartNode=nf.Id
-join dbo.XpFlowNode nt on l.EndNode=nt.Id
+join dbo.XpFlowNode nf on l.FromNodeId=nf.Id
+join dbo.XpFlowNode nt on l.ToNodeId=nt.Id
 where f.Code='{0}'
-order by l.StartNode, l.Sort
+order by l.FromNodeId, l.Sort
 ", flowCode);
             var flowLines = await db.GetModelsA<SignLineDto>(sql);
             #endregion
 
             #region 2.get start node id/name
             var firstLine = flowLines!
-                .Where(a => a.StartNodeType == NodeTypeEstr.Start)
+                .Where(a => a.FromNodeType == NodeTypeEstr.Start)
                 .OrderBy(a => a.Sort)
                 .FirstOrDefault();
             if (firstLine == null)
@@ -76,19 +76,19 @@ order by l.StartNode, l.Sort
                 goto lab_exit;
             }
 
-            var nowNodeId = firstLine.StartNodeId;
-            var nowNodeName = firstLine.StartNodeName;
+            var nowNodeId = firstLine.FromNodeId;
+            var nowNodeName = firstLine.FromNodeName;
             #endregion
 
             //3.get matched lines
             var signTable = GetSignTable(isTest);
-            var findIdxs = new List<int>(); //found lines for insert XpFlowSign/XpFlowSignTest
+            var findIdxs = new List<int>(); //found lines for insert XpFlowSign/XpTestFlowSign
             while (true)
             {
                 #region 4.get lines of current node
                 //CondStr with value will check first !!
                 var nodeLines = flowLines!
-                    .Where(a => a.StartNodeId == nowNodeId)
+                    .Where(a => a.FromNodeId == nowNodeId)
                     //.OrderByDescending(a => string.IsNullOrEmpty(a.CondStr))
                     .OrderBy(a => string.IsNullOrEmpty(a.CondStr))
                     .ThenBy(a => a.Sort)
@@ -110,7 +110,7 @@ order by l.StartNode, l.Sort
                 //return error if no matched line
                 if (findLine == null)
                 {
-                    error = "No Match Line for StartNode=" + nowNodeName;
+                    error = "No Match Line for FromNode=" + nowNodeName;
                     goto lab_exit;
                 }
 
@@ -118,7 +118,7 @@ order by l.StartNode, l.Sort
                 var idx = flowLines!.IndexOf(findLine);
                 if (findIdxs.IndexOf(idx) >= 0)
                 {
-                    error = "Find Node Twice(" + nodeLines[idx].StartNodeName + ")";
+                    error = "Find Node Twice(" + nodeLines[idx].FromNodeName + ")";
                     goto lab_exit;
                 }
                 #endregion
@@ -127,15 +127,15 @@ order by l.StartNode, l.Sort
                 findIdxs.Add(idx);
 
                 //when end node then exit loop
-                if (findLine.EndNodeType == NodeTypeEstr.End)
+                if (findLine.ToNodeType == NodeTypeEstr.End)
                     break;
 
                 //set node id/name for next loop
-                nowNodeId = findLine.EndNodeId;
-                nowNodeName = findLine.EndNodeName;
+                nowNodeId = findLine.ToNodeId;
+                nowNodeName = findLine.ToNodeName;
             }//loop
 
-            #region 6.prepare sql for insert XpFlowSign/XpFlowSignTest
+            #region 6.prepare sql for insert XpFlowSign/XpTestFlowSign
             sql = $@"
 insert into dbo.{signTable}(
     Id, FlowId, SourceId, 
@@ -149,7 +149,7 @@ insert into dbo.{signTable}(
 ";
             #endregion
 
-            //insert XpFlowSign/XpFlowSignTest rows
+            //insert XpFlowSign/XpTestFlowSign rows
             var totalLevel = findIdxs.Count - 1;
             var level = 0;  //current flow level, start 0
             var userType = "";
@@ -221,12 +221,12 @@ insert into dbo.{signTable}(
                     }
                     #endregion
 
-                    #region 8.insert XpFlowSign/XpFlowSignTest
+                    #region 8.insert XpFlowSign/XpTestFlowSign
                     await db.ExecSqlA(sql, [
                         "Id", _Str.NewId(),
                         "FlowId", line.FlowId,
                         "SourceId", sourceId,
-                        "NodeName", line.StartNodeName,
+                        "NodeName", line.FromNodeName,
                         "FlowLevel", level,
                         "TotalLevel", totalLevel,
                         "SignerId", userId,
@@ -252,7 +252,7 @@ insert into dbo.{signTable}(
 
         private static string GetSignTable(bool isTest)
         {
-            return isTest ? "XpFlowSignTest" : "XpFlowSign";
+            return isTest ? "XpTestFlowSign" : "XpFlowSign";
         }
 
         /// <summary>
@@ -378,7 +378,7 @@ insert into dbo.{signTable}(
         public static async Task<ResultDto> SignRowA(string flowSignId, bool signYes,
             string signNote, string sourceTable, bool isTest, FlowBackTypeEnum backType)
         {
-            #region 1.check XpFlowSign/XpFlowSignTest row existed
+            #region 1.check XpFlowSign/XpTestFlowSign row existed
             Db? db = null;
             var error = "";
             if (!_Str.CheckKey(flowSignId)) goto lab_error;
@@ -386,7 +386,7 @@ insert into dbo.{signTable}(
             db = new Db();
             await db.BeginTranA();
 
-            //get XpFlowSign/XpFlowSignTest row
+            //get XpFlowSign/XpTestFlowSign row
             var signTable = GetSignTable(isTest);
             var sql = $"select SourceId, FlowLevel, TotalLevel from dbo.{signTable} where Id='{flowSignId}' and SignStatus='0'";
             var row = await db.GetRowA(sql);
@@ -397,7 +397,7 @@ insert into dbo.{signTable}(
             }
             #endregion
 
-            #region 2.update XpFlowSign/XpFlowSignTest row
+            #region 2.update XpFlowSign/XpTestFlowSign row
             var signStatus = signYes ? "Y" : "N";
             sql = $@"
 update dbo.{signTable} set 

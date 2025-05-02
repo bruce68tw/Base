@@ -24,7 +24,8 @@ namespace BaseWeb.ViewComponents
                 attr += " max='" + dto.Max + "'";
 
             //html
-            var html = $"<input{attr} class='form-control xi-box {dto.BoxClass}'>";
+            var css = _Helper.GetCssClass("form-control xi-box", dto.BoxClass, dto.Width);
+            var html = $"<input{attr} class='{css}'>";
 
             //add title
             if (_Str.NotEmpty(dto.Title))
