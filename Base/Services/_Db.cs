@@ -129,12 +129,13 @@ namespace Base.Services
         #endregion
 
         #region get List<IdStrDto>
-        public static async Task<List<IdStrDto>?> TableToCodesA(string table, Db? db = null)
+        public static async Task<List<IdStrDto>?> TableToCodesA(string table, Db? db = null, string? order = null)
         {
-            var sql = @$"
+            order ??= "Id";
+            var sql = $@"
 select Id, Name as Str
 from dbo.[{table}]
-order by Id";
+order by {order}";
             return await SqlToCodesA(sql, null, db);
         }
 
