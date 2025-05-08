@@ -916,6 +916,8 @@ namespace Base.Services
                     //inputRow0 could be null, save to var first, or will error
                     var inputRow = token as JObject;
                     if (_Json.IsEmpty(inputRow) || !HasInputField(inputRow, inputKid)) continue;
+
+                    //master層、本層都不是new row, 則不必處理
                     if (!_isNewMaster && !IsNewRow(inputRow!)) continue;
 
                     /*
@@ -967,10 +969,12 @@ namespace Base.Services
                     {
                         inputRow![editDto.FkeyFid] = _key;
                     }
-                    else if (!isLevel0)
+                    else
                     {
                         var fkeyUpRowNo = GetNewRowUpNo(inputRow!, FkeyFid);   //from 系統欄位(_fkeyfid)                                                                               
-                        inputRow![editDto.FkeyFid] = upKeyJson!["f" + fkeyUpRowNo];
+                        inputRow![editDto.FkeyFid] = (fkeyUpRowNo == 0)
+                            ? inputRow![FkeyFid]!.ToString()
+                            : upKeyJson!["f" + fkeyUpRowNo];
                     }
 
                     /*

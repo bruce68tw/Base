@@ -8,6 +8,38 @@ namespace Base.Services
     public class _List
     {
         /// <summary>
+        /// sql string to list for select input
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public static async Task<List<IdStrDto>?> SqlToListA(string sql, Db? db = null)
+        {
+            var newDb = _Db.CheckOpenDb(ref db);
+            var rows = await db!.GetModelsA<IdStrDto>(sql);
+            await _Db.CheckCloseDbA(db, newDb);
+            return rows;
+        }
+
+        /// <summary>
+        /// get code table rows
+        /// type to list for select input
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public static async Task<List<IdStrDto>?> TypeToListA(string type, Db? db = null)
+        {
+            var sql = $@"
+select 
+    Value as Id, Name as Str
+from dbo.XpCode
+where Type='{type}'
+order by Sort";
+            return await SqlToListA(sql, db);
+        }
+
+        /// <summary>
         /// convert list<string> to string
         /// </summary>
         /// <param name="list"></param>
