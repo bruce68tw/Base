@@ -19,8 +19,9 @@ namespace BaseApi.Services
         /// </summary>
         /// <param name="vo">login view object</param>
         /// <param name="encodePwd">是否加密密碼欄位(only for 密碼驗証</param>
+        /// <param name="extCol">要寫入session的一個額外欄位, 必須加上正確的 table 別名</param>
         /// <returns></returns>
-        public static async Task<bool> LoginByVoA(LoginVo vo, bool encodePwd = true)
+        public static async Task<bool> LoginByVoA(LoginVo vo, bool encodePwd = true, string extCol = "")
         {
             //reset UI msg first
             vo.AccountMsg = "";
@@ -44,9 +45,13 @@ namespace BaseApi.Services
             #endregion
 
             #region 2.check DB password & get user info
-            var sql = @"
+            var hasExtCol = !string.IsNullOrEmpty(extCol);
+            if (hasExtCol)
+                extCol = $", ExtCol={extCol}";
+
+            var sql = $@"
 select u.Id as UserId, u.Name as UserName, u.Pwd,
-    u.DeptId, d.Name as DeptName
+    u.DeptId, d.Name as DeptName{extCol}
 from dbo.XpUser u
 join dbo.XpDept d on u.DeptId=d.Id
 where u.Account=@Account
@@ -107,6 +112,9 @@ where u.Account=@Account
                 ProgAuthStrs = await _Auth.GetAuthStrsA(userId),
                 //IsLogin = true,
             };
+            //加上 ExtCol if need
+            if (hasExtCol)
+                userInfo.ExtCol = row["ExtCol"]!.ToString();
             #endregion
 
             //write cache server for base user info, key值加上IP

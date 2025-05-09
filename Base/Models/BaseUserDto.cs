@@ -23,6 +23,9 @@
         //user type, PG define
         public string UserType = "";
 
+        //額外欄位值, 呼叫 _Login.cs LoginByVoA() 傳入, 後續透過 _Fun.GetBaseUser().ExtCol 讀取
+        public string ExtCol = "";
+
         //diffence hours to GMT for Db saving
         //public double HourDiff = 0;
 

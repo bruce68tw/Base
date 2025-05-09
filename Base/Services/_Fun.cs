@@ -321,6 +321,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
 
         /// <summary>
         /// get base user info for base component
+        /// 此為session等級資料, 無法以靜態變數常駐
         /// </summary>
         /// <returns>BaseUserDto(not null)</returns>
         public static BaseUserDto GetBaseUser()
