@@ -208,12 +208,14 @@ namespace Base.Services
                     var fid = excelFids[no];
                     var ftype = modelFidTypes[fid];
                     var cell = excelRow.Elements<Cell>().ElementAt(cno);
-                    var value = cell.CellValue!.Text;
-                    object value2 = (cell.DataType != null && cell.DataType! == CellValues.SharedString) 
-                            ? ssTable.ChildElements[int.Parse(value)].InnerText :
+                    var value = cell.CellValue!.Text;   //字串時儲存address !!
+                    //有時數值欄位會被判斷為字串, 所有先判斷字串以外型態
+                    object value2 = 
                         (ftype == ModelTypeEstr.Datetime) ? DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat) :
                         (ftype == ModelTypeEstr.Int) ? Convert.ToInt32(value) :
-                        value.ToString();
+                        (cell.DataType != null && cell.DataType! == CellValues.SharedString)
+                            ? ssTable.ChildElements[int.Parse(value)].InnerText 
+                            : value.ToString();
                     
                     _Model.SetValue(fileRow, fid, value2);
                     no++;
@@ -329,11 +331,17 @@ namespace Base.Services
                     {
                         fno = excelFnos[ci];
                         var value2 = _Model.GetValue(modelRow, excelFids[ci]);
-                        
-                        var cell = row.Elements<Cell>().ElementAt(fno);
-                        cell.CellValue = new CellValue(value2?.ToString() ?? string.Empty);
-                        cell.DataType = CellValues.String; // 設定為字串
 
+                        try
+                        {
+                            var cell = row.Elements<Cell>().ElementAt(fno);
+                            cell.CellValue = new CellValue(value2?.ToString() ?? string.Empty);
+                            cell.DataType = CellValues.String; // 設定為字串
+                        }
+                        catch
+                        {
+                            //do nothing
+                        }
                         /*
                         fno = excelFnos[ci]; // 例如 0 = A, 1 = B
                         string colName = GetExcelColumnName(fno);
