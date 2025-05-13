@@ -210,13 +210,13 @@ namespace Base.Services
                     var cell = excelRow.Elements<Cell>().ElementAt(cno);
                     var value = cell.CellValue!.Text;   //字串時儲存address !!
                     //有時數值欄位會被判斷為字串, 所有先判斷字串以外型態
+                    if (cell.DataType != null && cell.DataType! == CellValues.SharedString)
+                        value = ssTable.ChildElements[int.Parse(value)].InnerText;
+
                     object value2 = 
                         (ftype == ModelTypeEstr.Datetime) ? DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat) :
                         (ftype == ModelTypeEstr.Int) ? Convert.ToInt32(value) :
-                        (cell.DataType != null && cell.DataType! == CellValues.SharedString)
-                            ? ssTable.ChildElements[int.Parse(value)].InnerText 
-                            : value.ToString();
-                    
+                        value!;                    
                     _Model.SetValue(fileRow, fid, value2);
                     no++;
                 }
