@@ -196,6 +196,7 @@ namespace Base.Services
                 //for (var j = 0; j < modelNotDateFidLen; j++)
                 //var j = 0;
                 //foreach (Cell cell in excelRow)
+                var rowIndex = excelRow.RowIndex;
                 no = 0;
                 foreach (var col in colNameNos)
                 {
@@ -203,14 +204,20 @@ namespace Base.Services
                     //var cell = excelRow.Descendants<Cell>().ElementAt(modelNotDateFnos[j]);
                     //colName = ;
                     //fno = (int)colMap[CellXname(cell.CellReference!)]!;
-                    var cname = col.Key;    //cell name
-                    var cno = col.Value;
+                    //var cname = col.Key;    //cell english name, ex: "A"
+                    //var cno = col.Value;
                     var fid = excelFids[no];
                     var ftype = modelFidTypes[fid];
-                    var cell = excelRow.Elements<Cell>().ElementAt(cno);
-                    var value = cell.CellValue!.Text;   //字串時儲存address !!
+
+                    //cell空白會造成讀取錯誤, 使用查詢方式
+                    //var cell = excelRow.Elements<Cell>().ElementAt(cno);
+                    var cell = excelRow.Elements<Cell>()
+                        .FirstOrDefault(c => c.CellReference == col.Key + rowIndex);
+
+                    var isNull = (cell == null || cell.CellValue == null);
+                    var value = isNull ? "" : cell.CellValue!.Text;   //字串時儲存address !!
                     //有時數值欄位會被判斷為字串, 所有先判斷字串以外型態
-                    if (cell.DataType != null && cell.DataType! == CellValues.SharedString)
+                    if (!isNull && cell!.DataType != null && cell.DataType! == CellValues.SharedString)
                         value = ssTable.ChildElements[int.Parse(value)].InnerText;
 
                     object value2 = 
