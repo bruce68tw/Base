@@ -60,18 +60,33 @@ namespace BaseApi.Services
         /// <param name="childs">可為JArray或List<Model>, IEnumerable for anonymous type</param>
         /// <param name="images"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<bool> ExportByTplRowA(string tplPath, string fileName, 
-            dynamic row, List<IEnumerable<dynamic>>? childs = null, 
-            List <WordImageDto>? images = null)
+        public static async Task<bool> ExportByTplRowA(string tplPath, string fileName, dynamic row,
+            List<IEnumerable<dynamic>>? childs = null, List<WordImageDto>? images = null)
         {
-            #region 1.check template file
+            //1.check template file
             if (!File.Exists(tplPath))
             {
-                await _Log.ErrorRootA($"_WebWord.cs ExportByTplRow() no tpl file ({tplPath})");
+                await _Log.ErrorRootA($"_HttpWord.cs ExportByTplRow() no tpl file ({tplPath})");
                 return false;
             }
-            #endregion
 
+            var ms = MsByTplRow(tplPath, row, childs, images);
+            await _FunApi.ExportByStreamA(ms, fileName);
+            return true;
+        }
+
+        /// <summary>
+        /// word to memoryStream for convert pdf
+        /// </summary>
+        /// <param name="tplPath"></param>
+        /// <param name="fileName"></param>
+        /// <param name="row"></param>
+        /// <param name="childs"></param>
+        /// <param name="images"></param>
+        /// <returns></returns>
+        public static MemoryStream MsByTplRow(string tplPath, dynamic row,
+            List<IEnumerable<dynamic>>? childs = null, List<WordImageDto>? images = null)
+        { 
             #region 2.prepare memory stream
             var ms = new MemoryStream();
             var tplBytes = File.ReadAllBytes(tplPath);
@@ -142,9 +157,7 @@ namespace BaseApi.Services
             //check (for debug)
             //_Word.IsDocxValid(docx);
 
-            //6.export file by stream
-            await _FunApi.ExportByStreamA(ms, fileName);
-            return true;
+            return ms;
         }
 
     }//class
