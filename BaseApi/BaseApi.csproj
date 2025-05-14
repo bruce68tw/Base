@@ -9,6 +9,8 @@
   <ItemGroup>
     <None Remove="Attributes\XgRB0Attribute.cs_old" />
     <None Remove="Attributes\XgRBAttribute.cs_old" />
+    <None Remove="Services\_HttpWord.cs_new" />
+    <None Remove="Services\_HttpWord.cs_old" />
   </ItemGroup>
 
   <ItemGroup>

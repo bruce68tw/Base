@@ -53,6 +53,7 @@
     <None Remove="Services\LogError.cs_old" />
     <None Remove="Services\UserDataService.cs_old" />
     <None Remove="Services\UserProfile0Service.cs_old" />
+    <None Remove="Services\WordSetSvc.cs_old" />
     <None Remove="Services\zz_Cache0Service.cs_old" />
     <None Remove="Services\zz_CacheDb.cs_old" />
     <None Remove="Services\_Cache.cs_old" />
@@ -75,6 +76,7 @@
     <PackageReference Include="HtmlSanitizer" Version="9.0.876" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NPOI" Version="2.7.3" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
     <PackageReference Include="SkiaSharp" Version="2.88.9" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
