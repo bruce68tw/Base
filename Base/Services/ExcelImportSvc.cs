@@ -1,7 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
 using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Office2016.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Newtonsoft.Json.Linq;
@@ -9,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -29,7 +29,7 @@ namespace Base.Services
         private List<SnStrDto> _failRows = [];
 
         //cell x-way name(no number)
-        private string CellXname(string colName)
+        private string GetCellXname(string colName)
         {
             return Regex.Replace(colName, @"[\d]", string.Empty);
         }
@@ -97,7 +97,7 @@ namespace Base.Services
                 {
                     excelFids.Add(GetCellValue(ssTable, cell));
                     excelFnos.Add(no);
-                    colNameNos[CellXname(cell.CellReference!)] = no;
+                    colNameNos[GetCellXname(cell.CellReference!)] = no;
                     no++;
                 }
             }
@@ -152,13 +152,16 @@ namespace Base.Services
                 fno = excelFids.FindIndex(a => a == fid);
                 if (fno < 0) continue;
 
-                var typeName = prop.PropertyType.Name;
+                // 判斷是否為可空類型，提取基礎類型
+                var type = prop.PropertyType;
+                var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+                var typeName = underlyingType.Name;
+
+                //var typeName = prop.PropertyType.Name;
                 var ftype = typeName.Contains("DateTime") ? ModelTypeEstr.Datetime :
                     typeName.Contains("Int") ? ModelTypeEstr.Int :
                     ModelTypeEstr.String;
 
-                //modelFids.Add(fid);
-                //modelTypes.Add(ftype);
                 modelFidTypes.Add(fid, ftype);
                 //if (prop.PropertyType == typeof(DateTime?))
                 //    excelIsDates[fno] = true;
@@ -215,7 +218,7 @@ namespace Base.Services
                         .FirstOrDefault(c => c.CellReference == col.Key + rowIndex);
 
                     var isNull = (cell == null || cell.CellValue == null);
-                    var value = isNull ? "" : cell.CellValue!.Text;   //字串時儲存address !!
+                    var value = isNull ? "" : cell!.CellValue!.Text;   //字串時儲存address !!
                     //有時數值欄位會被判斷為字串, 所有先判斷字串以外型態
                     if (!isNull && cell!.DataType != null && cell.DataType! == CellValues.SharedString)
                         value = ssTable.ChildElements[int.Parse(value)].InnerText;
@@ -347,7 +350,7 @@ namespace Base.Services
                         }
                         catch
                         {
-                            //do nothing
+                            //todo: do nothing
                         }
                         /*
                         fno = excelFnos[ci]; // 例如 0 = A, 1 = B
@@ -402,7 +405,9 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
             };
         }
 
-        private static string GetExcelColumnName(int index)
+        /*
+        //get excel column english name
+        private static string GetColName(int index)
         {
             const string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             string columnName = "";
@@ -415,6 +420,7 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
 
             return columnName;
         }
+        */
 
         private Cell GetOrCreateCell(Row row, string columnName, uint rowIndex)
         {

@@ -1,7 +1,6 @@
 ﻿using Base.Services;
 using BaseWeb.Models;
 using BaseWeb.Services;
-using DocumentFormat.OpenXml.Office2016.Drawing.Charts;
 using Microsoft.AspNetCore.Html;
 
 namespace BaseWeb.ViewComponents
