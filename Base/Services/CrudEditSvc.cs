@@ -822,7 +822,7 @@ namespace Base.Services
             if (inputRows != null)
             {
                 //使用JToken再轉型JObject則不會出現null error的情形 !!
-                var kid = (editDto.AutoIdLen == 0) ? "" : editDto.PkeyFid;  //autoId=0 則Id可傳入
+                var kid = editDto.CanAddKey ? "" : editDto.PkeyFid;  //autoId=0 則Id可傳入
                 foreach (JToken token in inputRows)
                 {
                     //inputRow0 could be null, save to var first, or will error
@@ -912,8 +912,8 @@ namespace Base.Services
             if (inputRows != null)
             {
                 var kid = editDto.PkeyFid;
-                var autoIdZero = (editDto.AutoIdLen == 0);
-                var inputKid = autoIdZero ? "" : kid;   //autoId 0 則Id可傳入
+                var canAddKey = editDto.CanAddKey;
+                var inputKid = canAddKey ? "" : kid;
                 foreach (JToken token in inputRows)
                 {
                     //inputRow0 could be null, save to var first, or will error
@@ -951,7 +951,7 @@ namespace Base.Services
 
                     //get/set PKey value
                     string pkey;
-                    if (autoIdZero)
+                    if (canAddKey)
                     {
                         pkey = (string)inputRow![kid]!;
                     }

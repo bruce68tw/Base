@@ -23,6 +23,11 @@ namespace Base.Models
         //public bool HasFKey = true;
 
         /// <summary>
+        /// 是否可以新增key值
+        /// </summary>
+        public bool CanAddKey = false;
+
+        /// <summary>
         /// auto Id length, empty for default.<br/>
         /// values: 0表示允許前端傳入新Id、_Fun.AutoIdShort(6)、_Fun.AutoIdMid(10)、_Fun.AutoIdLong(16)
         /// </summary>
