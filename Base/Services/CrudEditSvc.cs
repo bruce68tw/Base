@@ -38,7 +38,7 @@ namespace Base.Services
         //sql args pair(fid,value)
         //private List<object> _sqlArgs = new();
 
-        private string _key = "";
+        private string _key = "";   //for new/update
         private bool _isNewMaster = false;   //主檔是否新增
 
         //now time
@@ -132,7 +132,10 @@ namespace Base.Services
             */
         }
 
-        //get master table key for update
+        /// <summary>
+        /// get master table key for new/update
+        /// </summary>
+        /// <returns></returns>
         public string GetMainKey()
         {
             return _key;
