@@ -1,67 +1,126 @@
 ﻿using Base.Models;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Newtonsoft.Json.Linq;
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Base.Services
 {
-    public class _Excel
+    public class _Excel2
     {
-        /*
-        public static IWorkbook StreamToDocx(Stream stream)
+        /// <summary>
+        /// convert excel Stream to Openxml Workbook(Docx)
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public static SpreadsheetDocument StreamToDocx(Stream stream)
         {
-            return new XSSFWorkbook(stream);
+            //return SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook).WorkbookPart.Workbook;
+            return SpreadsheetDocument.Open(stream, false);
         }
-        */
 
+        /// <summary>
+        /// import db by excel file, table first column must be LineNo
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="insertSql">sql for import</param>
+        /// <param name="excelCols">import excel column no, base 0</param>
+        /// <param name="excelStartRow"></param>
+        /// <param name="isDates">excel column flag of date</param>
+        /// <param name="sheetNo"></param>
+        /// <param name="db"></param>
+        /// <returns>error msg if any</returns>
         public static async Task<string> ImportByFileA(string uiDtFormat, string filePath, string insertSql, int[] excelCols, int excelStartRow, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
         {
+            //check
             if (!File.Exists(filePath))
                 return "_Excel.ToTable() failed, no file: " + filePath;
 
-            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            var docx = new XSSFWorkbook(stream);
+            var docx = SpreadsheetDocument.Open(filePath, false);
             return await ImportByDocxA(uiDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
         }
 
-        public static async Task<string> ImportByDocxA(string uiDtFormat, IWorkbook docx, string insertSql, int[] excelCols, int excelStartRow, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
+        /// <summary>
+        /// import db by openXml object
+        /// </summary>
+        /// <param name="docx"></param>
+        /// <param name="insertSql"></param>
+        /// <param name="excelCols"></param>
+        /// <param name="excelStartRow"></param>
+        /// <param name="isDates"></param>
+        /// <param name="sheetNo"></param>
+        /// <param name="db"></param>
+        /// <returns>error msg if any</returns>
+        public static async Task<string> ImportByDocxA(string uiDtFormat, SpreadsheetDocument docx, string insertSql, int[] excelCols, int excelStartRow, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
         {
+            //open excel
             var newDb = _Db.CheckOpenDb(ref db);
-            var sheet = docx.GetSheetAt(sheetNo);
-            var rowLen = sheet.PhysicalNumberOfRows;
-            var colLen = excelCols.Length;
-            var dateLen = isDates?.Length ?? 0;
-            var cols = new string[colLen + 1];
-            var error = "";
+            var wbPart = docx.WorkbookPart;
+            var ssPart = wbPart!.GetPartsOfType<SharedStringTablePart>().First();
+            var ssTable = ssPart.SharedStringTable;
 
+            //var ok = true;
+            var error = "";
+            var colLen = excelCols.Length;
+            var dateLen = (isDates == null) ? 0 : isDates.Length;
+            var cols = new string[colLen + 1];  //first column must be LineNo
+            var rows = wbPart.WorksheetParts.ElementAt(sheetNo).Worksheet.Descendants<Row>();
+            var rowLen = rows.LongCount();
             for (var i = excelStartRow - 1; i < rowLen; i++)
             {
-                var row = sheet.GetRow(i);
-                if (row == null) continue;
-                cols[0] = (i + 1).ToString();
-
+                var rowHasCol = false;
+                cols[0] = (i + 1).ToString(); //base 1
+                var row = rows.ElementAt(i);
+                var cells = row.Elements<Cell>();
+                int colNo;
+                Cell cell;
                 for (int j = 0; j < colLen; j++)
                 {
-                    var cell = row.GetCell(excelCols[j]);
-                    var value = cell?.ToString() ?? "";
-                    if (dateLen > j && isDates[j] && double.TryParse(value, out var dateVal))
-                        value = DateTime.FromOADate(dateVal).ToString(uiDtFormat);
-                    cols[j + 1] = string.IsNullOrEmpty(value) ? (isDates?[j] == true ? "null" : "") : value;
+                    colNo = excelCols[j];
+                    cell = cells.ElementAt(colNo);
+                    var value = "";
+                    if (cell.DataType != null && cell.DataType == CellValues.SharedString)
+                    {
+                        var ssid = int.Parse(cell.CellValue!.Text);
+                        value = ssTable.ChildElements[ssid].InnerText;
+                    }
+                    else if (cell.CellValue != null)
+                    {
+                        value = cell.CellValue.Text;
+                    }
+
+                    //excel date column is double type, must transfer to datetime with format !!
+                    cols[j + 1] = (value == "")
+                        ? (dateLen > j && isDates![j])
+                            ? "null"
+                            : ""
+                        : (dateLen > j && isDates![j])
+                            ? DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat)
+                            : value;
+
+                    if (cols[j + 1] != "" && cols[j + 1] != "null")
+                        rowHasCol = true;
                 }
 
+                //insert into only when all columns has value
+                //transfer emtpy datetime to null, or it will be 1900/1/1
                 var sql2 = string.Format(insertSql, cols).Replace("'null'", "null");
-                if (await db!.ExecSqlA(sql2) == 0)
+                if (rowHasCol && await db!.ExecSqlA(sql2) == 0)
                 {
+                    //ok = false;
                     error = "_Excel.cs ImportByDocx failed, sql is empty.";
                     break;
                 }
             }
 
             await _Db.CheckCloseDbA(db!, newDb);
+
+            //book = null;    //can not Dispose(), must close by caller
+            //sheet = null;
             return error;
         }
 
@@ -71,18 +130,12 @@ namespace Base.Services
         /// <param name="ms"></param>
         /// <param name="filePath"></param>
         /// <returns></returns>
-        public static IWorkbook FileToMsDocx(string filePath, MemoryStream ms)
+        public static SpreadsheetDocument FileToMsDocx(string filePath, MemoryStream ms)
         {
-            // 讀取檔案 bytes
             var tplBytes = File.ReadAllBytes(filePath);
-
-            // 將 bytes 寫入 MemoryStream
+            //ms.Position = 0;
             ms.Write(tplBytes, 0, tplBytes.Length);
-            ms.Position = 0;  // 一定要重置位置
-
-            // 用 NPOI 讀取 Excel Workbook
-            IWorkbook workbook = new XSSFWorkbook(ms);
-            return workbook;
+            return SpreadsheetDocument.Open(ms, true);
         }
 
         /// <summary>
@@ -94,12 +147,12 @@ namespace Base.Services
         /// <param name="findJson"></param>
         /// <param name="srcRowNo"></param>
         /// <param name="dbStr"></param>
-        public static async Task DocxByReadA(string ctrl, IWorkbook workbook, ReadDto readDto,
+        public static async Task DocxByReadA(string ctrl, SpreadsheetDocument docx, ReadDto readDto,
             JObject findJson, int srcRowNo, string dbStr = "")
         {
             var rows = await new CrudReadSvc(dbStr).GetExportRowsA(ctrl, readDto, findJson);
             if (rows != null)
-                DocxByRows(rows, workbook, srcRowNo);
+                DocxByRows(rows, docx, srcRowNo);
         }
 
         /// <summary>
@@ -108,13 +161,13 @@ namespace Base.Services
         /// <param name="filePath">excel file path to save</param>
         /// <param name="sql"></param>
         /// <param name="dbStr">db property name in config file</param>
-        public static async Task DocxBySqlA(string sql, IWorkbook workbook, int srcRowNo, Db? db = null)
+        public static async Task DocxBySqlA(string sql, SpreadsheetDocument docx, int srcRowNo, Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
             var rows = await db!.GetRowsA(sql);
             await _Db.CheckCloseDbA(db, newDb);
             if (rows != null)
-                DocxByRows(rows, workbook, srcRowNo);
+                DocxByRows(rows, docx, srcRowNo);
         }
 
         /// <summary>
@@ -125,9 +178,9 @@ namespace Base.Services
         /// <param name="docx"></param>
         /// <param name="srcRowNo">excel start row, base 1</param>
         /// <returns>error msg if any</returns>
-        public static string DocxByRows(JArray rows, IWorkbook workbook, int srcRowNo)
+        public static string DocxByRows(JArray rows, SpreadsheetDocument docx, int srcRowNo)
         {
-            //if (workbook == null) return "_Excel.cs RowsToDocx() failed, workbook is null.";
+            //if (docx == null) return "_Excel.cs RowsToDocx() failed, docx is null.";
 
             //2.get col name list from source rows[0]
             var rowCount = rows.Count;
@@ -139,33 +192,30 @@ namespace Base.Services
             }
 
             #region prepare excel variables
+            //SheetData? sheetData = null;
             var colCount = cols.Count;
-
-            // 取得第一個工作表
-            var sheet = workbook.GetSheetAt(0);
-
-            // 設定插入起始列 (NPOI 的 row index 從 0 開始)
-            int startRowIndex = srcRowNo - 1;
+            var sheet = docx.WorkbookPart!.Workbook.Descendants<Sheet>().FirstOrDefault();
+            var wsPart = (WorksheetPart)docx.WorkbookPart.GetPartById(sheet!.Id!);
+            var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
             #endregion
 
             //3.loop of write excel rows, use template
             for (var rowNo = 0; rowNo < rowCount; rowNo++)
             {
-                var rowData = (JObject)rows[rowNo];
-                // 取得或建立該列
-                IRow newRow = sheet.GetRow(startRowIndex + rowNo) ?? sheet.CreateRow(startRowIndex + rowNo);
-
+                //add row and fill data, TODO: copy row style
+                var row = (JObject)rows![rowNo];
+                var newRow = new Row();
                 for (var colNo = 0; colNo < colCount; colNo++)
                 {
-                    var cell = newRow.GetCell(colNo) ?? newRow.CreateCell(colNo);
-
-                    var value = rowData[cols[colNo]] == null ? "" : rowData[cols[colNo]]!.ToString();
-
-                    cell.SetCellValue(value);
-
-                    // 設定為字串型態 (NPOI 預設為字串)
-                    // 如果需要特別格式化，可以在此加
+                    newRow.Append(new Cell()
+                    {
+                        CellValue = new CellValue(row[cols[colNo]] == null ? "" : row[cols[colNo]]!.ToString()),
+                        DataType = CellValues.String,
+                    });
                 }
+
+                //insert row into sheet
+                sheetData!.InsertAt(newRow, rowNo + srcRowNo);
             }
 
             //case of ok
@@ -188,7 +238,7 @@ namespace Base.Services
         public static async Task<string> ImportByStreamA(string uiDtFormat, Stream stream, string insertSql, int excelStartRow, int[] excelCols, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
         {
             stream.Position = 0;
-            var docx = new XSSFWorkbook(stream);
+            var docx = StreamToDocx(stream);
             return await ImportByDocxA(uiDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
         }
 

@@ -8,7 +8,7 @@ namespace Base.Models
         public string FileName = "";
         public string ImageCode = "";
         public Stream? DataStream;
-        public long WidthEmu;
-        public long HeightEmu;
+        public int WidthEmu;
+        public int HeightEmu;
     }
 }

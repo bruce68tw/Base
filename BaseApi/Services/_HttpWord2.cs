@@ -1,14 +1,16 @@
 ﻿using Base.Models;
 using Base.Services;
-using NPOI.XWPF.UserModel;
+using DocumentFormat.OpenXml.Packaging;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace BaseApi.Services
 {
+
     /// <summary>
-    /// use NPOI output word(docx), cause duplicate, put here(not in _Http.cs)
+    /// use OpenXml output word(docx), cause duplicate, put here(not in _Http.cs)
     /// temlate has 2 type data: (need cancel spell check at word editor !!)
     ///   1.single row: ex:[StartDate], fixed rows could use copy/paste then change font !!
     ///   //2.multi rows: ex:[m_Schools], must put bookmark in docx(named m_Schools)
@@ -18,7 +20,7 @@ namespace BaseApi.Services
     /// note:
     ///   1.when edit word template file, word will cut your word auto, must keyin your word at one time !!
     /// </summary>
-    public static class _HttpWord
+    public static class _HttpWord2
     {
         /// <summary>
         /// export file by template and row
@@ -55,7 +57,7 @@ namespace BaseApi.Services
         /// <returns></returns>
         public static MemoryStream MsByTplRow(string tplPath, dynamic row,
             List<IEnumerable<dynamic>>? childs = null, List<WordImageDto>? images = null)
-        {
+        { 
             #region 2.prepare memory stream
             var ms = new MemoryStream();
             var tplBytes = File.ReadAllBytes(tplPath);
@@ -64,10 +66,10 @@ namespace BaseApi.Services
 
             //3.binding stream && docx
             var fileStr = "";
-            using (var docx = new XWPFDocument(ms))
+            using (var docx = WordprocessingDocument.Open(ms, true))
             {
                 //initial 
-                var wordSet = new WordSetSvc(docx);
+                var wordSet = new WordSetSvc2(docx);
                 var mainStr = wordSet.GetMainPartStr();
 
                 //4.add images first
@@ -75,6 +77,7 @@ namespace BaseApi.Services
                     mainStr = wordSet.AddImages(mainStr, images);
 
                 //get word body start/end pos
+                //int bodyStart = 0, bodyEnd = 0; //no start/end tag
                 var bodyTpl = wordSet.GetBodyTpl(mainStr);
 
                 #region 5.fill row && childs rows
@@ -85,6 +88,7 @@ namespace BaseApi.Services
                     int oldStart = 0, oldEnd = 0;
                     for (var i = 0; i < childLen; i++)
                     {
+                        //int rowStart = 0, rowEnd = 0;
                         var rowTpl = wordSet.GetRowTpl(bodyTpl.TplStr, i);
                         if (rowTpl.TplStr == "") continue;
 
@@ -106,7 +110,7 @@ namespace BaseApi.Services
                         oldEnd = rowTpl.EndPos;
                     }//for childs
 
-                    //set word file string
+                     //set word file string
                     fileStr = mainStr[..bodyTpl.StartPos] +
                         fileStr +
                         mainStr[(bodyTpl.EndPos + 1)..];
@@ -120,6 +124,9 @@ namespace BaseApi.Services
                 //write into docx
                 wordSet.SetMainPartStr(fileStr);
             }
+
+            //check (for debug)
+            //_Word.IsDocxValid(docx);
 
             return ms;
         }

@@ -1,15 +1,22 @@
 ﻿using Base.Models;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using NPOI.XWPF.UserModel;
+
+//for GetImageRun() only (原檔案所使用的變數名稱, 無修改)
+using D = DocumentFormat.OpenXml.Drawing;
+using P = DocumentFormat.OpenXml.Drawing.Pictures;
+using WP = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 
 namespace Base.Services
 {
-    public class WordSetSvc
+    public class WordSetSvc2
     {
         //word carrier
         public const string Carrier = "<w:br/>";
@@ -21,83 +28,143 @@ namespace Base.Services
         public const int CharV = 3;     //V char
 
         //instance variables
-        private XWPFDocument _docx;
+        private WordprocessingDocument _docx;
+
+        //template start/end position
+        //private int _tplStartPos, _tplEndPos;
 
         //constructor
-        public WordSetSvc(XWPFDocument docx)
+        public WordSetSvc2(WordprocessingDocument docx)
         {
             _docx = docx;
         }
 
         /// <summary>
-        /// Word docx add images
+        /// word docx add images
         /// </summary>
         /// <param name="srcTpl">(ref) source template string</param>
-        /// <param name="imageDtos">List of image data</param>
-        /// <returns>New template string</returns>
+        /// <param name="imageDtos"></param>
+        /// <returns>new template string</returns>
         public string AddImages(string srcTpl, List<WordImageDto> imageDtos)
         {
             if (imageDtos == null || imageDtos.Count == 0)
-                return srcTpl;
+                return "";
 
-            // Load the main document part
-            var docx = new XWPFDocument();
+            MainDocumentPart mainPart = _docx.MainDocumentPart!;    //not null
             foreach (var imageInfo in imageDtos)
             {
-                try
-                {
-                    // Load image from file path
-                    using var fileStream = new FileStream(imageInfo.FilePath, FileMode.Open, FileAccess.Read);
-                    var runDto = GetImageRunDto(imageInfo.FilePath);
-                    if (runDto == null) continue;
+                //get image file info
+                var runDto = GetImageRunDto(imageInfo.FilePath);
+                if (runDto == null) continue;
 
-                    // Create paragraph and run for image insertion
-                    var paragraph = docx.CreateParagraph();
-                    var run = paragraph.CreateRun();
+                ImagePart imagePart = mainPart!.AddImagePart(ImagePartType.Jpeg);
+                var imageId = mainPart.GetIdOfPart(imagePart);
+                imagePart.FeedData(runDto!.DataStream!);
+                var newRun = GetImageRun(imageId, runDto);
 
-                    // Add picture to the run
-                    var pictureType = GetPictureType(imageInfo.FilePath);
-                    run.AddPicture(fileStream, pictureType, imageInfo.FilePath, runDto.WidthEmu, runDto.HeightEmu);
+                //find drawing object from srcTpl
+                var drawTpl = GetDrawTpl(srcTpl, imageInfo.Code);
+                if (drawTpl == null) continue;
 
-                    // Replace the placeholder in the template string
-                    var placeholder = $"{{{{{imageInfo.Code}}}}}";
-                    srcTpl = srcTpl.Replace(placeholder, $"<img src='{imageInfo.FilePath}' width='{runDto.WidthEmu}' height='{runDto.HeightEmu}' />");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error adding image: {ex.Message}");
-                }
+                //find graphicData object(map to D.Graphic) from drawing object
+                var graphTpl = GetGraphDataTpl(drawTpl.TplStr);
+                if (graphTpl == null) continue;
+
+                //replace graphic section
+                //newRun.Descendants<D.Graphic>().First().InnerXml cause .docx open failed !!
+                var newGraph = GetGraphDataTpl(newRun.InnerXml);
+                //int newStart = _tplStartPos, newEnd = _tplEndPos;
+
+                //update srcTpl string
+                srcTpl = srcTpl[..(drawTpl.StartPos + graphTpl.StartPos)] +
+                    //newRun.Descendants<D.Graphic>().First().InnerXml +    //.docx open failed !!
+                    newGraph.TplStr +
+                    srcTpl[(drawTpl.StartPos + graphTpl.EndPos + 1)..];
             }
 
+            //return new tpl string
             return srcTpl;
         }
 
         /// <summary>
-        /// Determine the picture type based on the file extension
-        /// </summary>
-        /// <param name="filePath">Image file path</param>
-        /// <returns>PictureType for NPOI</returns>
-        private int GetPictureType(string filePath)
-        {
-            var ext = Path.GetExtension(filePath).ToLower();
-            return ext switch
-            {
-                ".jpeg" or ".jpg" => (int)PictureType.JPEG,
-                ".png" => (int)PictureType.PNG,
-                ".bmp" => (int)PictureType.BMP,
-                ".gif" => (int)PictureType.GIF,
-                ".wmf" => (int)PictureType.WMF,
-                ".emf" => (int)PictureType.EMF,
-                _ => (int)PictureType.JPEG,  // Default to JPEG if unknown
-            };
-        }
-
-        /// <summary>
         /// image file to Run for docx
+        /// https://msdn.microsoft.com/zh-tw/library/office/bb497430.aspx
         /// </summary>
-        private string GetImageRun(string imagePartId, WordImageRunDto imageRun)
+        /// <param name="imagePartId"></param>
+        /// <param name="imageRun"></param>
+        /// <returns></returns>
+        private D.Run GetImageRun(string imagePartId, WordImageRunDto imageRun)
         {
-            return $"<img src=\"{imagePartId}\" alt=\"{imageRun.ImageCode}\" width=\"{imageRun.WidthEmu}\" height=\"{imageRun.HeightEmu}\">";
+            // Define the reference of the image.
+            var element =
+                 new Drawing(
+                     new WP.Inline(
+                         //Size of image, unit = EMU(English Metric Unit)
+                         //1 cm = 360000 EMUs
+                         new WP.Extent() { Cx = imageRun.WidthEmu, Cy = imageRun.HeightEmu },
+                         new WP.EffectExtent()
+                         {
+                             LeftEdge = 0L,
+                             TopEdge = 0L,
+                             RightEdge = 0L,
+                             BottomEdge = 0L
+                         },
+                         new WP.DocProperties()
+                         {
+                             Id = (UInt32Value)1U,
+                             Name = imageRun.ImageCode,
+                         },
+                         new WP.NonVisualGraphicFrameDrawingProperties(
+                             new D.GraphicFrameLocks() { NoChangeAspect = true }),
+                         new D.Graphic(
+                             new D.GraphicData(
+                                 new P.Picture(
+                                     new P.NonVisualPictureProperties(
+                                         new P.NonVisualDrawingProperties()
+                                         {
+                                             Id = (UInt32Value)0U,
+                                             Name = imageRun.FileName,
+                                         },
+                                         new P.NonVisualPictureDrawingProperties()),
+                                     new P.BlipFill(
+                                         new D.Blip(
+                                             new D.BlipExtensionList(
+                                                 new D.BlipExtension()
+                                                 {
+                                                     Uri =
+                                                        "{28A0092B-C50C-407E-A947-70E740481C1C}"
+                                                 })
+                                         )
+                                         {
+                                             Embed = imagePartId,
+                                             CompressionState =
+                                             D.BlipCompressionValues.Print
+                                         },
+                                         new D.Stretch(
+                                             new D.FillRectangle())),
+                                     new P.ShapeProperties(
+                                         new D.Transform2D(
+                                             new D.Offset() { X = 0L, Y = 0L },
+                                             new D.Extents()
+                                             {
+                                                 Cx = imageRun.WidthEmu,
+                                                 Cy = imageRun.HeightEmu
+                                             }),
+                                         new D.PresetGeometry(
+                                             new D.AdjustValueList()
+                                         )
+                                         { Preset = D.ShapeTypeValues.Rectangle }))
+                             )
+                             { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" })
+                     )
+                     {
+                         DistanceFromTop = (UInt32Value)0U,
+                         DistanceFromBottom = (UInt32Value)0U,
+                         DistanceFromLeft = (UInt32Value)0U,
+                         DistanceFromRight = (UInt32Value)0U,
+                         //EditId = "50D07946", //remark, coz word 2007 open failed !!
+                     });
+            return new D.Run(element);
         }
 
 
@@ -112,28 +179,23 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// Get the main content of the Word document as a string
+        /// read docx MainDocumentPart to string
         /// </summary>
-        /// <returns>Main document content as a string</returns>
+        /// <returns></returns>
         public string GetMainPartStr()
         {
-            using var ms = new MemoryStream();
-            _docx.Write(ms);
-            ms.Position = 0;
-
-            using var sr = new StreamReader(ms);
+            using var sr = new StreamReader(_docx.MainDocumentPart!.GetStream());
             return sr.ReadToEnd();
         }
 
         /// <summary>
         /// write string into docx mainpart
-        /// Sets the main content of the Word document from a string
         /// </summary>
-        /// <param name="str">The content to be written to the Word document</param>
         public void SetMainPartStr(string str)
         {
-            using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(str));
-            _docx = new XWPFDocument(ms);
+            //string to docx stream, must use FileMode.Create, or target file can not open !!
+            using var sw = new StreamWriter(_docx.MainDocumentPart!.GetStream(FileMode.Create));
+            sw.Write(str);
         }
 
         /// <summary>
@@ -300,8 +362,8 @@ namespace Base.Services
             {
                 DataStream = ms,
                 FileName = Path.GetFileName(filePath),
-                WidthEmu = Convert.ToInt32(img.Width * PixelToEmu),
-                HeightEmu = Convert.ToInt32(img.Height * PixelToEmu),
+                //WidthEmu = Convert.ToInt64(img.Width * PixelToEmu),
+                //HeightEmu = Convert.ToInt64(img.Height * PixelToEmu),
                 ImageCode = $"IMG{Guid.NewGuid()}",
             };
 

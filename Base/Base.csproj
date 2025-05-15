@@ -47,6 +47,7 @@
     <None Remove="Services\CrudEdit.cs_bak" />
     <None Remove="Services\Date2.cs_old" />
     <None Remove="Services\Db0Service.cs_old" />
+    <None Remove="Services\ExcelImportSvc.cs_old" />
     <None Remove="Services\Extension.cs_old" />
     <None Remove="Services\Hashids.cs_old" />
     <None Remove="Services\IBaseResService.cs_old" />
@@ -61,6 +62,7 @@
     <None Remove="Services\_Cast.cs_old" />
     <None Remove="Services\_Config.cs_old" />
     <None Remove="Services\_Error.cs_old" />
+    <None Remove="Services\_Excel.cs_old" />
     <None Remove="Services\_Linq.cs_old" />
     <None Remove="Services\_Locale.cs_old" />
     <None Remove="Services\_Login.cs_old" />
