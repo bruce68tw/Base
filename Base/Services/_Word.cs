@@ -1,10 +1,12 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Base.Models;
+using Newtonsoft.Json.Linq;
 using NPOI.SS.Formula;
 using NPOI.Util;
 using NPOI.XWPF.UserModel;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Base.Services
 {
@@ -14,6 +16,32 @@ namespace Base.Services
         public const int Checkbox = 1;  //checkbox
         public const int Radio = 2;     //radio
         public const int CharV = 3;     //V char
+
+        /// <summary>
+        /// _HttpWord.MsByTplRow -> _Word.TplToMsA
+        /// word to memoryStream for convert pdf
+        /// </summary>
+        /// <param name="tplPath"></param>
+        /// <param name="fileName"></param>
+        /// <param name="row"></param>
+        /// <param name="childs"></param>
+        /// <param name="images"></param>
+        /// <returns></returns>
+        public static async Task<MemoryStream?> TplToMsA(string tplPath, dynamic row,
+            List<IEnumerable<dynamic>>? childs = null, List<WordImageDto>? images = null)
+        {
+            //1.check template file
+            if (!File.Exists(tplPath))
+            {
+                await _Log.ErrorRootA($"_Word.cs TplToMsA() no template file ({tplPath})");
+                return null;
+            }
+
+            //2.read word template file to docx
+            using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
+            var docx = new XWPFDocument(fs);
+            return await new WordSetSvc(docx).GetMsA(row, childs, images);
+        }
 
         /// <summary>
         /// merge word files into one
@@ -107,35 +135,6 @@ namespace Base.Services
 
 
         //=== no change ===
-        public static void DocxFillRow(XWPFDocument docx, dynamic row)
-        {
-            if (row is JObject)
-                DocxFillJson(docx, row);
-            else
-                DocxFillModel(docx, row);
-        }
-
-        public static void DocxFillModel<T>(XWPFDocument docx, T row)
-        {
-            //if (row == null) return rowTpl;
-            var props = row!.GetType().GetProperties();
-            foreach (var paragraph in docx.Paragraphs)
-                foreach (var run in paragraph.Runs)
-                    foreach (var prop in props)
-                    {
-                        var value = prop.GetValue(row, null);
-                        run.SetText(run.Text.Replace($"[{prop.Name}]", (value == null) ? "" : value.ToString()), 0);
-                    }
-        }
-
-        public static void DocxFillJson(XWPFDocument docx, JObject row)
-        {
-            foreach (var paragraph in docx.Paragraphs)
-                foreach (var run in paragraph.Runs)
-                    foreach (var item in row)
-                        run.SetText(run.Text.Replace($"[{item.Key}]", item.Value!.ToString()), 0);
-        }
-
         /*
         /// <summary>
         /// fill template string and return row string
@@ -175,41 +174,6 @@ namespace Base.Services
             return result;
         }
         */
-
-        //XWPFTable
-        public static void DocxFillRows(string rowTpl, IEnumerable<dynamic> rows)
-        {
-            if (!rows.Any()) return;
-
-            //var rows = (List<T>)row0s;
-            //if (rows.Count == 0)
-            //    return "";
-
-            var result = "";
-            var row0 = rows.First();
-            if (row0 is JObject)
-            {
-                foreach (var row in rows)
-                {
-                    result += TplFillJson(rowTpl, row);
-                }
-            }
-            else
-            {
-                var props = row0.GetType().GetProperties(); //減少在loop取值
-                foreach (var row in rows)
-                {
-                    var text = rowTpl;
-                    foreach (var prop in props)
-                    {
-                        var value = prop.GetValue(row, null);
-                        text = text.Replace("[" + prop.Name + "]", (value == null) ? "" : value.ToString());
-                    }
-                    result += text;
-                }
-            }
-            return result;
-        }
 
         /// <summary>
         /// fill template string and return rows string

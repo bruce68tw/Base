@@ -6,9 +6,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NPOI.XWPF.UserModel;
+using System.Linq;
+using System.Threading.Tasks;
+using DocumentFormat.OpenXml.ExtendedProperties;
+using DocumentFormat.OpenXml.Wordprocessing;
+using NPOI.SS.Formula;
 
 namespace Base.Services
 {
+    //word套表
     public class WordSetSvc
     {
         //word carrier
@@ -27,6 +33,195 @@ namespace Base.Services
         public WordSetSvc(XWPFDocument docx)
         {
             _docx = docx;
+        }
+
+        /// <summary>
+        /// get memory stream
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="childs"></param>
+        /// <param name="images"></param>
+        /// <returns></returns>
+        public async Task<MemoryStream?> GetMsA(dynamic row,
+            List<IEnumerable<dynamic>>? childs = null, List<WordImageDto>? images = null)
+        {
+            //fill row
+            FillRow(row);
+
+            //fill childs
+            if (childs != null)
+            {
+                for (var i = 0; i < childs.Count; i++)
+                    FillRows(i, childs[i]);
+            }
+
+            //3.binding stream && docx
+            var fileStr = "";
+
+            //initial 
+            var mainStr = wordSet.GetMainPartStr();
+
+            //fill main json row
+
+            //4.add images first
+            if (images != null)
+                mainStr = wordSet.AddImages(mainStr, images);
+
+            //get word body start/end pos
+            var bodyTpl = wordSet.GetBodyTpl(mainStr);
+
+            #region 5.fill row && childs rows
+            var hasChild = (childs != null && childs.Count > 0);
+            if (hasChild)
+            {
+                var childLen = childs!.Count;
+                int oldStart = 0, oldEnd = 0;
+                //set word file string
+                fileStr = mainStr[..bodyTpl.StartPos] +
+                    fileStr +
+                    mainStr[(bodyTpl.EndPos + 1)..];
+            }
+            else
+            {
+                _Word.DocxFillRow(docx, row);
+            }
+            #endregion
+
+            //write into docx
+            wordSet.SetMainPartStr(fileStr);
+
+            return ms;
+        }
+
+        private void FillRow(dynamic row)
+        {
+            if (row == null) 
+                return;
+            else if (row is JObject)
+                FillJson(row);
+            else
+                FillModel(row);
+        }
+
+        private void FillModel<T>(T row)
+        {
+            var props = row!.GetType().GetProperties();
+            foreach (var paragraph in _docx.Paragraphs)
+                foreach (var run in paragraph.Runs)
+                    foreach (var prop in props)
+                    {
+                        var value = prop.GetValue(row, null);
+                        run.SetText(run.Text.Replace($"[{prop.Name}]", (value == null) ? "" : value.ToString()), 0);
+                    }
+        }
+
+        private void FillJson(JObject row)
+        {
+            foreach (var paragraph in _docx.Paragraphs)
+                foreach (var run in paragraph.Runs)
+                    foreach (var item in row)
+                        run.SetText(run.Text.Replace($"[{item.Key}]", item.Value!.ToString()), 0);
+        }
+
+        //XWPFTable
+        private void FillRows(int index, IEnumerable<dynamic> rows)
+        {
+            if (!rows.Any()) return;
+
+            //找含有 [x!] 的範本列, base 0
+            var tplRow = _docx.Tables
+                .SelectMany(t => t.Rows)   // 展開所有表格的所有列
+                .FirstOrDefault(r => r.GetTableCells().Any(c => c.GetText().Contains("[0!]")));
+            if (tplRow == null) return;
+
+            //get table
+            var table = tplRow.GetTable();
+
+            //是否json
+            if (rows.First() is JObject)
+                FillJsons(table, tplRow, rows as JArray);
+            else
+                FillModels(table, tplRow, rows);
+        }
+
+        private void FillJsons(XWPFTable table, XWPFTableRow tplRow, JArray rows)
+        {
+            //todo
+            // get欄位資訊
+            var nos = new List<int>();
+            var props = rows.First()!.GetType().GetProperties(); //減少在loop取值
+            foreach (var prop in props)
+            {
+                var index = tplRow.GetTableCells()
+                    .Select((cell, index) => new { cell, index })
+                    .FirstOrDefault(ci => ci.cell.GetText().Contains($"[{prop.Name}]"))?.index ?? -1;
+                if (index >= 0)
+                    nos.Add(index);
+            }
+
+            //新增資料列
+            foreach (var row in rows)
+            {
+                // 複製範本列
+                var newRow = new XWPFTableRow(tplRow.GetCTRow().Copy(), table);
+
+                // 動態替換欄位，例如 [Name]、[Age]
+                foreach (var item in row)
+                    run.SetText(run.Text.Replace($"[{item.Key}]", item.Value!.ToString()), 0);
+
+                foreach (var no in nos)
+                {
+                    //var prop = props[no];
+                    //var value = prop.GetValue(row)?.ToString() ?? "";
+                    var cell = newRow.GetCell(no);
+                    cell.SetText(value);
+                }
+
+                // 將新列加入表格
+                table.AddRow(newRow);
+            }
+
+            // 新增完成後刪除範本列
+            table.RemoveRow(table.Rows.IndexOf(tplRow));
+
+        }
+        private void FillModels<T>(XWPFTable table, XWPFTableRow tplRow, List<T> rows)
+        {
+            // get欄位資訊
+            var nos = new List<int>();
+            var props = rows.First()!.GetType().GetProperties(); //減少在loop取值
+            foreach (var prop in props)
+            {
+                var index = tplRow.GetTableCells()
+                    .Select((cell, index) => new { cell, index })
+                    .FirstOrDefault(ci => ci.cell.GetText().Contains($"[{prop.Name}]"))?.index ?? -1;
+                if (index >= 0)
+                    nos.Add(index);
+            }
+
+            //範本列移除標記
+
+            //新增資料列
+            foreach (var row in rows)
+            {
+                // 複製範本列
+                var newRow = new XWPFTableRow(tplRow.GetCTRow().Copy(), table);
+
+                // 動態替換欄位，例如 [Name]、[Age]
+                foreach (var no in nos)
+                {
+                    var prop = props[no];
+                    var value = prop.GetValue(row)?.ToString() ?? "";
+                    var cell = newRow.GetCell(no);
+                    cell.SetText(value);
+                }
+
+                // 將新列加入表格
+                table.AddRow(newRow);
+            }
+
+            // 新增完成後刪除範本列
+            table.RemoveRow(table.Rows.IndexOf(tplRow));
         }
 
         /// <summary>

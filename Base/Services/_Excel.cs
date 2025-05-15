@@ -21,10 +21,10 @@ namespace Base.Services
         public static async Task<string> ImportByFileA(string uiDtFormat, string filePath, string insertSql, int[] excelCols, int excelStartRow, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
         {
             if (!File.Exists(filePath))
-                return "_Excel.ToTable() failed, no file: " + filePath;
+                return "_Excel.cs ImportByFileA() failed, no file: " + filePath;
 
-            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            var docx = new XSSFWorkbook(stream);
+            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            var docx = new XSSFWorkbook(fs);
             return await ImportByDocxA(uiDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
         }
 
@@ -56,7 +56,7 @@ namespace Base.Services
                 var sql2 = string.Format(insertSql, cols).Replace("'null'", "null");
                 if (await db!.ExecSqlA(sql2) == 0)
                 {
-                    error = "_Excel.cs ImportByDocx failed, sql is empty.";
+                    error = "_Excel.cs ImportByDocxA() failed, sql is empty.";
                     break;
                 }
             }
@@ -153,14 +153,12 @@ namespace Base.Services
             {
                 var rowData = (JObject)rows[rowNo];
                 // 取得或建立該列
-                IRow newRow = sheet.GetRow(startRowIndex + rowNo) ?? sheet.CreateRow(startRowIndex + rowNo);
+                var newRow = sheet.GetRow(startRowIndex + rowNo) ?? sheet.CreateRow(startRowIndex + rowNo);
 
                 for (var colNo = 0; colNo < colCount; colNo++)
                 {
                     var cell = newRow.GetCell(colNo) ?? newRow.CreateCell(colNo);
-
                     var value = rowData[cols[colNo]] == null ? "" : rowData[cols[colNo]]!.ToString();
-
                     cell.SetCellValue(value);
 
                     // 設定為字串型態 (NPOI 預設為字串)
@@ -218,13 +216,13 @@ namespace Base.Services
         /// <returns>col index, base 1</returns>
         public static string ColIdxToName(int idx)
         {
-            var div = idx;  //商數
+            var value = idx;  //商數
             //var mod = 0;    //餘數
             var colName = String.Empty;
-            while (div > 0)
+            while (value > 0)
             {
-                var mod = (div - 1) % 26;   //餘數
-                div = (div - mod) / 26;
+                var mod = (value - 1) % 26;   //餘數
+                value = (value - mod) / 26;
                 colName = (char)(65 + mod) + colName;
             }
             return colName;
