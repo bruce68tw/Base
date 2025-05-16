@@ -28,7 +28,7 @@ namespace Base.Services
         /// <param name="images"></param>
         /// <returns></returns>
         public static async Task<MemoryStream?> TplToMsA(string tplPath, dynamic row,
-            List<IEnumerable<dynamic>>? childs = null, List<WordImageDto>? images = null)
+            List<dynamic>? childs = null, List<WordImageDto>? images = null)
         {
             //1.check template file
             if (!File.Exists(tplPath))
@@ -40,7 +40,7 @@ namespace Base.Services
             //2.read word template file to docx
             using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
             var docx = new XWPFDocument(fs);
-            return await new WordSetSvc(docx).GetMsA(row, childs, images);
+            return new WordSetSvc(docx).GetMs(row, childs, images);
         }
 
         /// <summary>
@@ -182,6 +182,7 @@ namespace Base.Services
         /// <param name="rowTpl"></param>
         /// <param name="rows"></param>
         /// <returns></returns>
+        /*
         public static string TplFillRows(string rowTpl, IEnumerable<dynamic> rows)
         {
             if (!rows.Any()) return "";
@@ -215,6 +216,7 @@ namespace Base.Services
             }
             return result;
         }
+        */
 
         /// <summary>
         /// if multiple area has fixed rows, can treat as single row

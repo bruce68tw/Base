@@ -94,16 +94,16 @@ namespace BaseApi.Services
 
                         //set head or add left string of rows
                         if (i == 0)
-                            fileStr = _Word.TplFillRow(bodyTpl.TplStr[..rowTpl.StartPos], row);
+                            fileStr = _Word2.TplFillRow(bodyTpl.TplStr[..rowTpl.StartPos], row);
                         else
                             fileStr += bodyTpl.TplStr[(oldEnd + 1)..rowTpl.StartPos];
 
                         //add middle
-                        fileStr += _Word.TplFillRows(rowTpl.TplStr, childs[i]);
+                        fileStr += _Word2.TplFillRows(rowTpl.TplStr, childs[i]);
 
                         //add tail
                         if (i == childLen - 1)
-                            fileStr += _Word.TplFillRow(bodyTpl.TplStr[(rowTpl.EndPos + 1)..], row);
+                            fileStr += _Word2.TplFillRow(bodyTpl.TplStr[(rowTpl.EndPos + 1)..], row);
 
                         //set old pos
                         oldStart = rowTpl.StartPos;
@@ -117,7 +117,7 @@ namespace BaseApi.Services
                 }
                 else
                 {
-                    fileStr = _Word.TplFillRow(bodyTpl.TplStr, row);
+                    fileStr = _Word2.TplFillRow(bodyTpl.TplStr, row);
                 }
                 #endregion
 

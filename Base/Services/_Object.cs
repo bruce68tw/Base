@@ -1,10 +1,29 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Reflection;
 
 namespace Base.Services
 {
     public static class _Object
     {
+        /// <summary>
+        /// 判斷是否為JObject
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public static bool IsJObject(dynamic item)
+        {
+            try
+            {
+                // 嘗試轉型為 JObject，如果成功則回傳 true
+                return item is JObject || item.GetType() == typeof(JObject);
+            }
+            catch
+            {
+                // 動態物件類型不符，回傳 false
+                return false;
+            }
+        }
 
         public static bool IsEmpty(object? data)
         {

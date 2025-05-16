@@ -29,7 +29,7 @@ namespace BaseApi.Services
         /// <param name="images"></param>
         /// <returns>error msg if any</returns>
         public static async Task<bool> OutputTplA(string tplPath, string fileName, dynamic row,
-            List<IEnumerable<dynamic>>? childs = null, List<WordImageDto>? images = null)
+            List<dynamic>? childs = null, List<WordImageDto>? images = null)
         {
             var ms = await _Word.TplToMsA(tplPath, row, childs, images);
             if (ms == null) return false;
