@@ -1,6 +1,7 @@
 ﻿using Base.Models;
 using Base.Services;
 using System.Collections.Generic;
+using System.Runtime.Intrinsics.Arm;
 using System.Threading.Tasks;
 
 namespace BaseApi.Services
@@ -38,5 +39,13 @@ namespace BaseApi.Services
             return true;
         }
 
+        public static bool OutputTplA2()
+        {
+            var oldWordPath = "C:\\_project\\HrAdm\\_template\\zh-TW\\UserExt.docx";
+            var newWordPath = "C:\\_project\\HrAdm\\_template\\zh-TW\\UserExt_new.docx";
+            var newImagePath = "C:\\_project\\HrAdm\\_upload\\UserExt\\PhotoFile_Alex.png";
+            _Word.AddImage(oldWordPath, newWordPath, newImagePath);
+            return false;
+        }
     }//class
 }

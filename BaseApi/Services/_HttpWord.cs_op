@@ -20,9 +20,10 @@ namespace BaseApi.Services
     /// note:
     ///   1.when edit word template file, word will cut your word auto, must keyin your word at one time !!
     /// </summary>
-    public static class _HttpWord2
+    public static class _HttpWord
     {
         /// <summary>
+        /// ExportByTplRowA -> OutputTplA
         /// export file by template and row
         /// </summary>
         /// <param name="tplPath">tpl path</param>
@@ -31,8 +32,8 @@ namespace BaseApi.Services
         /// <param name="childs">可為JArray或List<Model>, IEnumerable for anonymous type</param>
         /// <param name="images"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<bool> ExportByTplRowA(string tplPath, string fileName, dynamic row,
-            List<IEnumerable<dynamic>>? childs = null, List<WordImageDto>? images = null)
+        public static async Task<bool> OutputTplA(string tplPath, string fileName, dynamic row,
+            List<dynamic>? childs = null, List<WordImageDto>? images = null)
         {
             //1.check template file
             if (!File.Exists(tplPath))
@@ -56,7 +57,7 @@ namespace BaseApi.Services
         /// <param name="images"></param>
         /// <returns></returns>
         public static MemoryStream MsByTplRow(string tplPath, dynamic row,
-            List<IEnumerable<dynamic>>? childs = null, List<WordImageDto>? images = null)
+            List<dynamic>? childs = null, List<WordImageDto>? images = null)
         { 
             #region 2.prepare memory stream
             var ms = new MemoryStream();
@@ -69,7 +70,7 @@ namespace BaseApi.Services
             using (var docx = WordprocessingDocument.Open(ms, true))
             {
                 //initial 
-                var wordSet = new WordSetSvc2(docx);
+                var wordSet = new WordSetSvc(docx);
                 var mainStr = wordSet.GetMainPartStr();
 
                 //4.add images first
@@ -94,16 +95,16 @@ namespace BaseApi.Services
 
                         //set head or add left string of rows
                         if (i == 0)
-                            fileStr = _Word2.TplFillRow(bodyTpl.TplStr[..rowTpl.StartPos], row);
+                            fileStr = _Word.TplFillRow(bodyTpl.TplStr[..rowTpl.StartPos], row);
                         else
                             fileStr += bodyTpl.TplStr[(oldEnd + 1)..rowTpl.StartPos];
 
                         //add middle
-                        fileStr += _Word2.TplFillRows(rowTpl.TplStr, childs[i]);
+                        fileStr += _Word.TplFillRows(rowTpl.TplStr, childs[i]);
 
                         //add tail
                         if (i == childLen - 1)
-                            fileStr += _Word2.TplFillRow(bodyTpl.TplStr[(rowTpl.EndPos + 1)..], row);
+                            fileStr += _Word.TplFillRow(bodyTpl.TplStr[(rowTpl.EndPos + 1)..], row);
 
                         //set old pos
                         oldStart = rowTpl.StartPos;
@@ -117,7 +118,7 @@ namespace BaseApi.Services
                 }
                 else
                 {
-                    fileStr = _Word2.TplFillRow(bodyTpl.TplStr, row);
+                    fileStr = _Word.TplFillRow(bodyTpl.TplStr, row);
                 }
                 #endregion
 

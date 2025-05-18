@@ -11,6 +11,7 @@
     <None Remove="Attributes\XgRBAttribute.cs_old" />
     <None Remove="Services\_HttpWord.cs_new" />
     <None Remove="Services\_HttpWord.cs_old" />
+    <None Remove="Services\_HttpWord.cs_op" />
   </ItemGroup>
 
   <ItemGroup>

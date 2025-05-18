@@ -1,17 +1,27 @@
 ﻿using Base.Models;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Validation;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
-using NPOI.SS.Formula;
-using NPOI.Util;
-using NPOI.XWPF.UserModel;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+//for docx image
+using A = DocumentFormat.OpenXml.Drawing;
+using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
+
 namespace Base.Services
 {
     public static class _Word
     {
+        //word carrier
+        //public const string Carrier = "<w:br/>";
+        //public const string PageBreak = "<w:p><w:pPr><w:sectPr><w:type w:val=\"nextPage\" /></w:sectPr></w:pPr></w:p>";
+
         //checked char type(yes/no)
         public const int Checkbox = 1;  //checkbox
         public const int Radio = 2;     //radio
@@ -30,17 +40,61 @@ namespace Base.Services
         public static async Task<MemoryStream?> TplToMsA(string tplPath, dynamic row,
             List<dynamic>? childs = null, List<WordImageDto>? images = null)
         {
-            //1.check template file
+            // 1. 檢查模板檔案
             if (!File.Exists(tplPath))
             {
                 await _Log.ErrorRootA($"_Word.cs TplToMsA() no template file ({tplPath})");
                 return null;
             }
 
-            //2.read word template file to docx
-            using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
-            var docx = new XWPFDocument(fs);
-            return new WordSetSvc(docx).GetMs(row, childs, images);
+            // 開啟 Word 文件 (唯讀)
+            //using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
+            //using var docx = WordprocessingDocument.Open(fs, false);  // false 代表唯讀
+
+            /*
+            // 2. 使用 OpenXML 讀取 Word 模板
+            var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
+
+            // 2. 將模板讀入記憶體流
+            var ms = new MemoryStream();
+            fs.CopyTo(ms);
+            ms.Position = 0;  // 重設流位置
+
+            var wordDoc = WordprocessingDocument.Open(ms, true);
+            */
+
+            // 將 WordprocessingDocument 傳入自訂的處理服務
+            return new WordSetSvc(tplPath).GetResultMs(row, childs, images);
+        }
+
+        public static void AddImage(string oldWordPath, string newWordPath, string newImagePath)
+        {
+            // Copy the original file to the new path
+            File.Copy(oldWordPath, newWordPath, true);
+
+            using (WordprocessingDocument wordDoc = WordprocessingDocument.Open(newWordPath, true))
+            {
+                var mainPart = wordDoc.MainDocumentPart;
+                var images = mainPart.Document.Body.Descendants<Drawing>()
+                    .Where(d => d.Inline.DocProperties.Description == "Photo");
+
+                var aa = mainPart.Document.Body.Descendants<Drawing>().Select(d => d.Inline.DocProperties).ToList();
+
+                foreach (var drawing in images)
+                {
+                    var blip = drawing.Inline.Graphic.GraphicData.Descendants<DocumentFormat.OpenXml.Drawing.Blip>().FirstOrDefault();
+                    if (blip != null)
+                    {
+                        var imagePart = (ImagePart)mainPart.GetPartById(blip.Embed);
+
+                        using (var stream = new FileStream(newImagePath, FileMode.Open, FileAccess.Read))
+                        {
+                            imagePart.FeedData(stream);
+                        }
+                    }
+                }
+                wordDoc.MainDocumentPart.Document.Save();
+            }
         }
 
         /// <summary>
@@ -51,34 +105,38 @@ namespace Base.Services
         /// <param name="deleteSrc">delete source file or not</param>
         public static void MergeFiles(string[] srcFiles, string toFile, bool deleteSrc)
         {
-            // copy first file to target
+            //copy first file to target
             File.Copy(srcFiles[0], toFile, true);
 
-            using (var fs = new FileStream(toFile, FileMode.Open, FileAccess.ReadWrite))
+            using (var docx = WordprocessingDocument.Open(toFile, true))
             {
-                var docx = new XWPFDocument(fs);
+                var mainPart = docx.MainDocumentPart;
+
+                //skip first file
                 for (var i = 1; i < srcFiles.Length; i++)
                 {
-                    // add page break
-                    var paragraph = docx.CreateParagraph();
-                    paragraph.CreateRun().AddBreak(BreakType.PAGE);
+                    //add page break
+                    mainPart!.Document.Body!.AppendChild(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
 
-                    // add file content
-                    using var srcFs = new FileStream(srcFiles[i], FileMode.Open, FileAccess.Read);
-                    var srcDoc = new XWPFDocument(srcFs);
-                    foreach (var para in srcDoc.Paragraphs)
+                    //add file
+                    var altChunkId = "AltChunkId" + i;
+                    var chunk = mainPart.AddAlternativeFormatImportPart(
+                        AlternativeFormatImportPartType.WordprocessingML, altChunkId);
+                    using (var fileStream = File.Open(srcFiles[i], FileMode.Open))
                     {
-                        var newParagraph = docx.CreateParagraph();
-                        newParagraph.Alignment = para.Alignment;
-                        var run = newParagraph.CreateRun();
-                        run.SetText(para.Text);
+                        chunk.FeedData(fileStream);
                     }
+                    var altChunk = new AltChunk
+                    {
+                        Id = altChunkId
+                    };
+                    mainPart.Document.Body.InsertAfter(altChunk, mainPart.Document.Body.Elements<Paragraph>().Last());
                 }
-
-                docx.Write(fs);
+                mainPart!.Document.Save();
+                //docx.Close();
             }
 
-            // delete source files if needed
+            //delete source files if need
             if (deleteSrc)
             {
                 foreach (var file in srcFiles)
@@ -86,56 +144,122 @@ namespace Base.Services
             }
         }
 
-        /// <summary>
-        /// Check if a DOCX file is valid
-        /// </summary>
-        public static bool IsDocxValid(string filePath)
+        //word doc add image, and convert image to text
+        public static void DocxAddImage(WordprocessingDocument docx, ref string text, List<WordImageDto> images)
         {
-            try
+            if (images.Count == 0) return;
+
+            MainDocumentPart mainPart = docx.MainDocumentPart!;
+            foreach (var image in images)
             {
-                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-                var docx = new XWPFDocument(fs);
-                return true;
-            }
-            catch
-            {
-                return false;
+                //var imagePath = images[i];
+                //var width = Convert.ToDouble(images[i + 1]);
+                //var height = Convert.ToDouble(images[i + 2]);
+                //var tag = images[i + 3];
+                var imageService = new WordImageSvc(image.FilePath, image.Width, image.Height);
+                var newText = "";
+                if (imageService.DataStream != null)
+                {
+                    //TODO: how multiple images ??
+                    var imagePart = mainPart!.AddImagePart(ImagePartType.Jpeg);
+                    imagePart.FeedData(imageService.DataStream);
+                    var imagePartId = mainPart.GetIdOfPart(imagePart);
+                    newText = GetImageRun(imagePartId, imageService).InnerXml;
+                }
+
+                text.Replace(image.Tag, newText);
             }
         }
 
-        /// <summary>
-        /// Add an image to a DOCX file
-        /// </summary>
-        public static void DocxAddImage(string filePath, string imagePath)
+        //check docx content has error or not
+        public static bool IsDocxValid(WordprocessingDocument docx)
         {
-            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite);
-            var docx = new XWPFDocument(fs);
-            var run = docx.CreateParagraph().CreateRun();
-            using (var imgFs = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+            OpenXmlValidator validator = new OpenXmlValidator();
+            var errors = validator.Validate(docx);
+            foreach (ValidationErrorInfo error in errors)
             {
-                run.AddPicture(imgFs, (int)PictureType.JPEG, imagePath, Units.ToEMU(200), Units.ToEMU(200));
+                var aa = error.Description;
             }
-            docx.Write(fs);
+            return (errors.Count() == 0);
         }
 
-        /// <summary>
-        /// Retrieve text from a DOCX file
-        /// </summary>
-        public static string GetDocxText(string filePath)
+        //for add word image
+        //http://blog.darkthread.net/post-2017-11-06-insert-image-to-docx.aspx
+        //https://msdn.microsoft.com/zh-tw/library/office/bb497430.aspx
+        public static Run GetImageRun(string imagePartId, WordImageSvc imageService)
         {
-            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            var docx = new XWPFDocument(fs);
-            var text = new StringWriter();
-            foreach (var para in docx.Paragraphs)
-            {
-                text.WriteLine(para.Text);
-            }
-            return text.ToString();
+            // Define the reference of the image.
+            var element =
+                 new Drawing(
+                     new DW.Inline(
+                         //Size of image, unit = EMU(English Metric Unit)
+                         //1 cm = 360000 EMUs
+                         new DW.Extent() { Cx = imageService.WidthInEMU, Cy = imageService.HeightInEMU },
+                         new DW.EffectExtent()
+                         {
+                             LeftEdge = 0L,
+                             TopEdge = 0L,
+                             RightEdge = 0L,
+                             BottomEdge = 0L
+                         },
+                         new DW.DocProperties()
+                         {
+                             Id = (UInt32Value)1U,
+                             Name = imageService.ImageName,
+                         },
+                         new DW.NonVisualGraphicFrameDrawingProperties(
+                             new A.GraphicFrameLocks() { NoChangeAspect = true }),
+                         new A.Graphic(
+                             new A.GraphicData(
+                                 new PIC.Picture(
+                                     new PIC.NonVisualPictureProperties(
+                                         new PIC.NonVisualDrawingProperties()
+                                         {
+                                             Id = (UInt32Value)0U,
+                                             Name = imageService.FileName,
+                                         },
+                                         new PIC.NonVisualPictureDrawingProperties()),
+                                     new PIC.BlipFill(
+                                         new A.Blip(
+                                             new A.BlipExtensionList(
+                                                 new A.BlipExtension()
+                                                 {
+                                                     Uri =
+                                                        "{28A0092B-C50C-407E-A947-70E740481C1C}"
+                                                 })
+                                         )
+                                         {
+                                             Embed = imagePartId,
+                                             CompressionState =
+                                             A.BlipCompressionValues.Print
+                                         },
+                                         new A.Stretch(
+                                             new A.FillRectangle())),
+                                     new PIC.ShapeProperties(
+                                         new A.Transform2D(
+                                             new A.Offset() { X = 0L, Y = 0L },
+                                             new A.Extents()
+                                             {
+                                                 Cx = imageService.WidthInEMU,
+                                                 Cy = imageService.HeightInEMU
+                                             }),
+                                         new A.PresetGeometry(
+                                             new A.AdjustValueList()
+                                         )
+                                         { Preset = A.ShapeTypeValues.Rectangle }))
+                             )
+                             { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" })
+                     )
+                     {
+                         DistanceFromTop = (UInt32Value)0U,
+                         DistanceFromBottom = (UInt32Value)0U,
+                         DistanceFromLeft = (UInt32Value)0U,
+                         DistanceFromRight = (UInt32Value)0U,
+                         //EditId = "50D07946", //remark line, cause word 2007 cannot open !!
+                     });
+            return new Run(element);
         }
 
-
-        //=== no change ===
-        /*
         /// <summary>
         /// fill template string and return row string
         /// </summary>
@@ -173,7 +297,6 @@ namespace Base.Services
             }
             return result;
         }
-        */
 
         /// <summary>
         /// fill template string and return rows string
@@ -182,7 +305,6 @@ namespace Base.Services
         /// <param name="rowTpl"></param>
         /// <param name="rows"></param>
         /// <returns></returns>
-        /*
         public static string TplFillRows(string rowTpl, IEnumerable<dynamic> rows)
         {
             if (!rows.Any()) return "";
@@ -216,7 +338,6 @@ namespace Base.Services
             }
             return result;
         }
-        */
 
         /// <summary>
         /// if multiple area has fixed rows, can treat as single row

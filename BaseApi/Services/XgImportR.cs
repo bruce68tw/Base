@@ -24,7 +24,7 @@ namespace BaseApi.Services
 select *
 from dbo.XpImportLog
 where Type='{_importType}'
-order by Id desc
+order by Created desc
 ",
                 Items = [
                     new() { Fid = "FileName", Op = ItemOpEstr.Like },

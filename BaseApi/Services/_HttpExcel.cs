@@ -1,5 +1,6 @@
 ﻿using Base.Models;
 using Base.Services;
+using DocumentFormat.OpenXml.Packaging;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using System.IO;
@@ -10,7 +11,7 @@ namespace BaseApi.Services
     public static class _HttpExcel
     {
         /// <summary>
-        /// import by file
+        /// import by uploaded file
         /// </summary>
         /// <param name="file"></param>
         /// <param name="importType"></param>
@@ -72,8 +73,17 @@ namespace BaseApi.Services
         /// <param name="srcRowNo"></param>
         public static async Task ExportByRowsA(JArray rows, string fileName, string tplPath, int srcRowNo)
         {
+            // 讀取檔案 bytes
+            var tplBytes = File.ReadAllBytes(tplPath);
+
+            // 將 bytes 寫入 MemoryStream
             var ms = new MemoryStream();
-            var docx = _Excel.FileToMsDocx(tplPath, ms);
+            ms.Write(tplBytes, 0, tplBytes.Length);
+            ms.Position = 0;  // 一定要重置位置
+
+            // 讀取 Excel 物件
+            var docx = SpreadsheetDocument.Open(ms, true);
+
             _Excel.DocxByRows(rows, docx, srcRowNo);
             docx.Dispose(); //must dispose, or get empty excel !!
             //ms.Position = 0;

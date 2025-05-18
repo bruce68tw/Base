@@ -16,7 +16,7 @@ using WP = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 
 namespace Base.Services
 {
-    public class WordSetSvc2
+    public class WordSetSvc
     {
         //word carrier
         public const string Carrier = "<w:br/>";
@@ -34,7 +34,7 @@ namespace Base.Services
         //private int _tplStartPos, _tplEndPos;
 
         //constructor
-        public WordSetSvc2(WordprocessingDocument docx)
+        public WordSetSvc(WordprocessingDocument docx)
         {
             _docx = docx;
         }

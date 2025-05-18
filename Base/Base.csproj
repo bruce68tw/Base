@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\_Office.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Enums\EnumCacheDb.cs_old" />
     <None Remove="Enums\EnumCacheStatus.cs_old" />
     <None Remove="Enums\zz_EnumOrderDir.cs_old" />
@@ -40,6 +44,7 @@
     <None Remove="Models\Select2PropModel.cs_old" />
     <None Remove="Models\SqlArgModel.cs_old" />
     <None Remove="Models\UserProfile0Model.cs_old" />
+    <None Remove="Models\WordImageRunDto.c_old" />
     <None Remove="Models\WordRowsDto.cs_old" />
     <None Remove="Services\ACrudEdit.cs_old" />
     <None Remove="Services\BaseResService.cs_old" />
@@ -48,6 +53,7 @@
     <None Remove="Services\Date2.cs_old" />
     <None Remove="Services\Db0Service.cs_old" />
     <None Remove="Services\ExcelImportSvc.cs_old" />
+    <None Remove="Services\ExcelImportSvc.cs_op" />
     <None Remove="Services\Extension.cs_old" />
     <None Remove="Services\Hashids.cs_old" />
     <None Remove="Services\IBaseResService.cs_old" />
@@ -55,6 +61,7 @@
     <None Remove="Services\UserDataService.cs_old" />
     <None Remove="Services\UserProfile0Service.cs_old" />
     <None Remove="Services\WordSetSvc.cs_old" />
+    <None Remove="Services\WordSetSvc.cs_op" />
     <None Remove="Services\zz_Cache0Service.cs_old" />
     <None Remove="Services\zz_CacheDb.cs_old" />
     <None Remove="Services\_Cache.cs_old" />
@@ -63,6 +70,7 @@
     <None Remove="Services\_Config.cs_old" />
     <None Remove="Services\_Error.cs_old" />
     <None Remove="Services\_Excel.cs_old" />
+    <None Remove="Services\_Excel.cs_op" />
     <None Remove="Services\_Linq.cs_old" />
     <None Remove="Services\_Locale.cs_old" />
     <None Remove="Services\_Login.cs_old" />
@@ -70,6 +78,7 @@
     <None Remove="Services\_Multi.cs_old" />
     <None Remove="Services\_Redis.cs_old" />
     <None Remove="Services\_Word.cs_old" />
+    <None Remove="Services\_Word.cs_op" />
   </ItemGroup>
 
   <ItemGroup>
@@ -78,7 +87,6 @@
     <PackageReference Include="HtmlSanitizer" Version="9.0.876" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NPOI" Version="2.7.3" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
     <PackageReference Include="SkiaSharp" Version="2.88.9" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
