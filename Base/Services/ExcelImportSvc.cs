@@ -22,7 +22,7 @@ namespace Base.Services
     public class ExcelImportSvc<T> where T : class, new()
     {
         //constant
-        const string RowSep = "\r\n";  //row seperator for error
+        const string RowSep = "\r\n";  //row seperator for import error
         
         //ok excel row no
         private List<int> _okRowNos = [];
@@ -83,15 +83,13 @@ namespace Base.Services
 
             #region set importDto.ExcelFids, excelFidLen
             int no;
-            //var colMap = new JObject();     //col x-way name(ex:A) -> col index
             var colNameNos = new Dictionary<string, int>();     //excel位置字母,位置對應, ex:(A,0)
             var tplCells = excelRows.ElementAt(importDto.FidRowNo - 1).Elements<Cell>();
             _excelFields = new List<ExcelImportFieldDto>();
-            //var excelFids = new List<string>();
-            //var excelFnos = new List<int>();        //base 0
             if (importDto.ExcelFids == null || importDto.ExcelFids.Count == 0)
             {
                 //如果沒有傳入excel欄位名稱, 則使用第一行excel做為欄位名稱(不可有合併儲存格!!)
+                //set _excelFields
                 no = 0;
                 foreach (var cell in tplCells)
                 {
@@ -109,18 +107,12 @@ namespace Base.Services
                         CellName = CellXname(cell.CellReference!),
                         IsDate = isDate,
                     });
-                    /*
-                    excelFids.Add(CellValue(ssTable, cell));
-                    excelFnos.Add(no);
-                    colNameNos[CellXname(cell.CellReference!)] = no;
-                    */
                     no++;
                 }
             }
             else
             {
                 //有傳入excel欄位名稱(最多到Z)
-                //check
                 var cellLen = tplCells.Count();
                 if (cellLen != importDto.ExcelFids.Count)
                 {
@@ -130,7 +122,7 @@ namespace Base.Services
                     };
                 }
 
-                //set colMap
+                //set _excelFields
                 //no = 0;
                 for (var ci = 0; ci < importDto.ExcelFids.Count; ci++)
                 {
@@ -151,13 +143,6 @@ namespace Base.Services
                         CellName = NoToCellName(ci),
                         IsDate = isDate,
                     });
-                    /*
-                    excelFids.Add(importDto.ExcelFids[ci]);
-                    excelFnos.Add(ci);
-                    var colName = NoToCellName(ci);
-                    colNameNos[colName] = ci;
-                    no++;
-                    */
                 }
             }
 
@@ -172,7 +157,6 @@ namespace Base.Services
             foreach (var prop in model.GetType().GetProperties())
             {
                 //如果對應的excel欄位不存在, 則不記錄此欄位(skip)
-                //var type = prop.GetValue(model, null).GetType();
                 var fid = prop.Name;
                 var field = _excelFields.FirstOrDefault(a => a.Fid == fid);
                 if (field == null) continue;
@@ -182,7 +166,6 @@ namespace Base.Services
                 var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
                 var typeName = underlyingType.Name;
 
-                //var typeName = prop.PropertyType.Name;
                 var ftype = typeName.Contains("DateTime") ? ModelTypeEstr.Datetime :
                     typeName.Contains("Int") ? ModelTypeEstr.Int :
                     ModelTypeEstr.String;
@@ -193,8 +176,8 @@ namespace Base.Services
 
             #region set fileRows by excel file
             var fileRows = new List<T>();   //excel rows with data(not empty row)
-            var excelRowLen = excelRows.LongCount();
-            for (var ri = importDto.FidRowNo; ri < excelRowLen; ri++)
+            var excelRowsLen = excelRows.LongCount();
+            for (var ri = importDto.FidRowNo; ri < excelRowsLen; ri++)
             {
                 var excelRow = excelRows.ElementAt(ri);
                 var fileRow = new T();
@@ -212,19 +195,21 @@ namespace Base.Services
 
                     var isNull = (cell == null || cell.CellValue == null);
                     var value = isNull ? "" : cell!.CellValue!.Text;   //字串時儲存address !!
-                    //先判斷日期儲存格!!
 
                     //有時數值欄位會被判斷為字串, 所有先判斷字串以外型態
                     if (!isNull && cell!.DataType != null && cell.DataType! == CellValues.SharedString)
                         value = ssTable.ChildElements[int.Parse(value)].InnerText;
 
+                    //日期儲存格
+                    if (field.IsDate && _Str.NotEmpty(value))
+                        value = DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat);
+
                     object value2 = 
-                        (ftype == ModelTypeEstr.Datetime) ? DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat) :
+                        (ftype == ModelTypeEstr.Datetime) ? _Date.CsToDate(value)! :
                         (ftype == ModelTypeEstr.Int) ? Convert.ToInt32(string.IsNullOrEmpty(value) ? "0" : value) :
                         value!;
 
                     _Model.SetValue(fileRow, fid, value2);
-                    //no++;
                 }
 
                 fileRows.Add(fileRow);
@@ -234,7 +219,6 @@ namespace Base.Services
 
             #region 2.validate fileRows loop
             no = 0;
-            //var error = "";
             foreach (var fileRow in fileRows)
             {
                 //validate
@@ -307,25 +291,14 @@ namespace Base.Services
                     //add row, fill value & copy row style
                     var row = sheetData2!.Elements<Row>().ElementAt(startRow + ri);  //base 0, row position to write
                     var modelRow = fileRows[_failRows[ri].Sn];
-                    //var newRow = new Row();     //new excel row
-                    //for (var ci = 0; ci < excelFidLen; ci++)
                     int fno;
                     foreach (var field in _excelFields)
                     {
                         fno = field.Fno;
                         var value2 = _Model.GetValue(modelRow, field.Fid);
-
-                        try
-                        {
-                            var cell = row.Elements<Cell>().ElementAt(fno);
-                            cell.CellValue = new CellValue(value2?.ToString() ?? string.Empty);
-                            cell.DataType = CellValues.String; // 設定為字串
-                        }
-                        catch
-                        {
-                            //todo: do nothing
-                            var aa = "";
-                        }
+                        var cell = row.Elements<Cell>().ElementAt(fno);
+                        cell.CellValue = new CellValue(value2?.ToString() ?? string.Empty);
+                        cell.DataType = CellValues.String; // 設定為字串
                     }
 
                     //write cell for error msg
@@ -378,24 +351,6 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
             return ((char)('A' + index)).ToString();
         }
 
-        /*
-        //get excel column english name
-        private static string GetColName(int index)
-        {
-            const string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            string columnName = "";
-
-            while (index >= 0)
-            {
-                columnName = letters[index % 26] + columnName;
-                index = index / 26 - 1;
-            }
-
-            return columnName;
-        }
-        */
-
-
         /// <summary>
         /// get cell x-way name(no number)
         /// </summary>
@@ -406,6 +361,7 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
             return Regex.Replace(colName, @"[\d]", string.Empty);
         }
 
+        /*
         private Cell GetOrCreateCell(Row row, string columnName, uint rowIndex)
         {
             string cellRef = columnName + rowIndex;
@@ -428,6 +384,7 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
 
             return cell;
         }
+        */
 
         /// <summary>
         /// 從template row 複製多筆空白列
@@ -453,7 +410,6 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                 worksheet.InsertAfter(mergeCells, sheetData); // 正確插入位置
             }
 
-            /*
             // 取得範本列的合併儲存格
             var tplMerges = mergeCells.Elements<MergeCell>()
                 .Where(mc =>
@@ -466,7 +422,6 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                     var endRow = new string(parts[1].Where(char.IsDigit).ToArray());
                     return startRow == baseRowIndex.ToString() && endRow == baseRowIndex.ToString();
                 }).ToList();
-            */
 
             // 插入點：在範本列後
             //int insertIndex = sheetData.Elements<Row>().ToList().FindIndex(r => r.RowIndex! == baseRowIndex) + 1;
@@ -477,13 +432,10 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
             {
                 var newRowIndex = baseRowIndex + (uint)ri;
                 var newRow = new Row() { RowIndex = newRowIndex };  //base 1
-                //foreach (var col in colNames)
-                //for (int ci = 0; ci < tplRow.ChildElements.Count; ci++)
                 foreach (var field in _excelFields)
                 {
                     var tplCell = tplRow.Elements<Cell>().FirstOrDefault(c =>
                         c.CellReference!.Value!.StartsWith(field.CellName));
-
                     var newCell = new Cell()
                     {
                         CellReference = field.CellName + newRowIndex,
@@ -500,21 +452,18 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                 sheetData.InsertAt(newRow, (int)newRowIndex - 1);
                 //insertIndex++;
 
-                /*
                 // 複製合併格（更新為新列號）
                 foreach (var mc in tplMerges)
                 {
                     var parts = mc.Reference!.Value!.Split(':');
-
                     var startCol = new string(parts[0].Where(char.IsLetter).ToArray());
                     var endCol = new string(parts[1].Where(char.IsLetter).ToArray());
-
                     var newRef = $"{startCol}{newRowIndex}:{endCol}{newRowIndex}";
                     mergeCells.Append(new MergeCell() { Reference = new StringValue(newRef) });
                 }
-                */
             }
 
+            /*
             // OpenXml工具出現valid error: the attribute 'verticalDpi' has invalid value '0'
             // 但以下解法無效 !!
             // Ensure page setup and DPI values are correctly set
@@ -531,6 +480,7 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
 
             // Optionally, set other PageSetup values to ensure compatibility
             pageSetup.PaperSize = (UInt32Value)9; // Set to A4 Paper Size (common default)
+            */
         }
 
         private string CellValue(SharedStringTable ssTable, Cell cell)
@@ -541,7 +491,6 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                 ? ssTable.ChildElements[Int32.Parse(value)].InnerText
                 : value;
         }
-
 
         /// <summary>
         /// add row error

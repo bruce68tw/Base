@@ -304,8 +304,13 @@ namespace Base.Services
             var oldRelId = blip.Embed?.Value;
             if (string.IsNullOrEmpty(oldRelId)) return;
 
-            var oldImagePart = (ImagePart)mainPart.GetPartById(oldRelId);
-            mainPart.DeletePart(oldImagePart);
+            //var oldImagePart = (ImagePart)mainPart.GetPartById(oldRelId);
+            //mainPart.DeletePart(oldImagePart);
+            if (mainPart.Parts.Any(p => p.RelationshipId == oldRelId))
+            {
+                var oldImagePart = (ImagePart)mainPart.GetPartById(oldRelId);
+                mainPart.DeletePart(oldImagePart);
+            }
 
             // 新增圖片 Part (這裡以 Png 為例，請依圖片格式調整)
             var newImagePart = mainPart.AddImagePart(ImagePartType.Png);
