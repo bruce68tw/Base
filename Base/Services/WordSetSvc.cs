@@ -60,7 +60,7 @@ namespace Base.Services
         /// <param name="childs"></param>
         /// <param name="images"></param>
         /// <returns></returns>
-        public MemoryStream? GetResultMs(dynamic row,
+        public MemoryStream? GetResultMs(dynamic? row,
             List<dynamic>? childs = null, List<WordImageDto>? images = null)
         {
             //fill childs first(只存在table), 減少row的欄位
@@ -69,7 +69,8 @@ namespace Base.Services
                     FillRows(i, childs[i]);
 
             //fill row, 包含段落和table
-            FillRow(row);
+            if (row != null)
+                FillRow(row);
 
             //add images
             if (_List.NotEmpty(images))

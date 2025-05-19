@@ -37,7 +37,7 @@ namespace Base.Services
         /// <param name="childs"></param>
         /// <param name="images"></param>
         /// <returns></returns>
-        public static async Task<MemoryStream?> TplToMsA(string tplPath, dynamic row,
+        public static async Task<MemoryStream?> TplToMsA(string tplPath, dynamic? row,
             List<dynamic>? childs = null, List<WordImageDto>? images = null)
         {
             // 1. 檢查模板檔案
