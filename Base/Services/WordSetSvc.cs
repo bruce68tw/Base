@@ -15,10 +15,6 @@ namespace Base.Services
 {
     public class WordSetSvc
     {
-        //word carrier
-        //public const string Carrier = "<w:br/>";
-        //public const string PageBreak = "<w:p><w:pPr><w:sectPr><w:type w:val=\"nextPage\" /></w:sectPr></w:pPr></w:p>";
-
         //checked char type(yes/no)
         public const int Checkbox = 1;  //checkbox
         public const int Radio = 2;     //radio
@@ -28,15 +24,13 @@ namespace Base.Services
         private WordprocessingDocument _docx = null!;
         private MemoryStream _ms = null!;
 
-        //template start/end position
-        //private int _tplStartPos, _tplEndPos;
-
         //constructor
         public WordSetSvc(string tplPath)
         {
             // 1. 檢查模板檔案
             if (!File.Exists(tplPath))
             {
+                _Log.Error($"WordSetSvc() constructor failed, no template file ({tplPath})");
                 return;
                 //await _Log.ErrorRootA($"_Word.cs TplToMsA() no template file ({tplPath})");
                 //return null;
@@ -66,11 +60,11 @@ namespace Base.Services
             //fill childs first(只存在table), 減少row的欄位
             if (childs != null)
                 for (var i = 0; i < childs.Count; i++)
-                    FillRows(i, childs[i]);
+                    FillTable(i, childs[i]);
 
             //fill row, 包含段落和table
             if (row != null)
-                FillRow(row);
+                FillMain(row);
 
             //add images
             if (_List.NotEmpty(images))
@@ -82,52 +76,6 @@ namespace Base.Services
             _docx.Dispose();
             _ms.Position = 0;  // 重置位置
             return _ms;
-        }
-
-        private void FillRow(dynamic row)
-        {
-            if (row == null)
-                return;
-            else if (_Object.IsJObject(row))
-                FillJson(row);
-            else
-                FillModel(row);
-        }
-
-        private void FillModel<T>(T row)
-        {
-            var props = row!.GetType().GetProperties();
-            var body = _docx.MainDocumentPart?.Document.Body!;
-            foreach (var para in body.Elements<Paragraph>())
-                foreach (var run in para.Elements<Run>())
-                    foreach (var prop in props)
-                    {
-                        var value = prop.GetValue(row, null);
-                        var textElm = run.GetFirstChild<Text>();
-                        if (textElm != null)
-                        {
-                            var newText = textElm.Text.Replace($"[{prop.Name}]", (value == null) ? "" : value.ToString());
-                            textElm.Text = newText;
-                        }
-                    }
-        }
-
-        private void FillJson(JObject row)
-        {
-            var body = _docx.MainDocumentPart?.Document.Body!;
-            foreach (var para in body.Elements<Paragraph>())
-                foreach (var run in para.Elements<Run>())
-                {
-                    var textElm = run.GetFirstChild<Text>();
-                    if (textElm != null)
-                    {
-                        foreach (var item in row)
-                        {
-                            var newText = textElm.Text.Replace($"[{item.Key}]", item.Value!.ToString());
-                            textElm.Text = newText;
-                        }
-                    }
-                }
         }
 
         private void CellSetText(TableCell cell, string value)
@@ -145,20 +93,114 @@ namespace Base.Services
             cell.Append(para);
         }
 
-        //XWPFTable
-        private void FillRows(int index, IEnumerable<dynamic>? rows)
+        private void FillMain(dynamic sourceRow)
         {
-            if (rows == null || !rows.Any()) return;
+            if (sourceRow == null || _docx.MainDocumentPart?.Document.Body == null)
+                return;
+
+            Dictionary<string, string> row;
+            if (_Object.IsJObject(sourceRow))
+            {
+                var obj = sourceRow as JObject;
+                row = obj!.Properties()
+                    .ToDictionary(
+                        prop => $"[{prop.Name}]",   //包含[]方便後面運算
+                        prop => prop.Value!.ToString()
+                    );
+            }
+            else
+            {
+                var obj = (object)sourceRow!;
+                row = obj.GetType().GetProperties()
+                    .ToDictionary(
+                        prop => $"[{prop.Name}]",
+                        prop => prop.GetValue(obj)?.ToString() ?? string.Empty
+                    );
+            }
+            FillMainByRow(row);
+        }
+
+        /*
+        private void FillJson(JObject row)
+        {
+            var body = _docx.MainDocumentPart?.Document.Body!;
+            foreach (var para in body.Elements<Paragraph>())
+                foreach (var run in para.Elements<Run>())
+                {
+                    var textElm = run.GetFirstChild<Text>();
+                    if (textElm != null)
+                    {
+                        foreach (var item in row)
+                        {
+                            var newText = textElm.Text.Replace($"[{item.Key}]", item.Value!.ToString());
+                            textElm.Text = newText;
+                        }
+                    }
+                }
+        }
+        */
+
+        private void FillMainByRow(Dictionary<string, string> row)
+        {
+            // 取得所有文字節點，篩選出含有任何屬性標記的節點
+            var body = _docx.MainDocumentPart?.Document.Body!;
+            var texts = body.Elements<Paragraph>()
+                .Concat(body.Elements<Table>()
+                    .SelectMany(table => table.Descendants<Paragraph>()))
+                .SelectMany(para => para.Elements<Run>())
+                .Select(run => run.GetFirstChild<Text>())
+                .Where(text => text != null && row.Keys.Any(key => text!.Text.Contains(key)))
+                .ToList();
+
+            foreach (var text in texts ?? [])
+            {
+                // 使用字典加速替換
+                foreach (var col in row)
+                {
+                    if (text!.Text.Contains(col.Key))
+                        text.Text = text.Text.Replace(col.Key, col.Value);
+                }
+            }
+        }
+
+        /*
+        private void FillModel<T>(T row)
+        {
+            var props = row!.GetType().GetProperties();
+            var body = _docx.MainDocumentPart?.Document.Body!;
+            foreach (var para in body.Elements<Paragraph>())
+                foreach (var run in para.Elements<Run>())
+                    foreach (var prop in props)
+                    {
+                        var value = prop.GetValue(row, null);
+                        var textElm = run.GetFirstChild<Text>();
+                        if (textElm != null)
+                        {
+                            var newText = textElm.Text.Replace($"[{prop.Name}]", (value == null) ? "" : value.ToString());
+                            textElm.Text = newText;
+                        }
+                    }
+        }
+        */
+
+        /// <summary>
+        /// 將資料填入table(only)
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="sourceRows"></param>
+        private void FillTable(int index, IEnumerable<dynamic>? sourceRows)
+        {
+            if (sourceRows == null || !sourceRows.Any()) return;
 
             // 找到包含指定標記的表格列            
-            var tag = $"[!{index}]";    // 找含有 [x!] 的範本列, base 0
+            var tag = $"[!{index}]";    // 找含有 [!x] 的範本列, base 0
             var tplRow = _docx.MainDocumentPart?.Document.Body?.Elements<Table>()
                 .SelectMany(t => t.Elements<TableRow>())
                 .FirstOrDefault(r => r.Elements<TableCell>()
                     .Any(c => c.InnerText.Contains(tag)));
             if (tplRow == null) return;
 
-            // 清除標記
+            // 清除tplRow的標記
             var cell = tplRow.Elements<TableCell>()
                 .First(c => c.InnerText.Contains(tag));
             foreach (var paragraph in cell.Elements<Paragraph>())
@@ -171,12 +213,81 @@ namespace Base.Services
             if (table == null) return;
 
             // 是否為 JSON
-            if (_Object.IsJObject(rows.First()))
-                FillJsons(table, tplRow, JArray.FromObject(rows));
+            List<Dictionary<string, string>> rows = [];
+            if (_Object.IsJObject(sourceRows.First()))
+            {
+                foreach (var sourceRow in sourceRows)
+                {
+                    var obj = sourceRow as JObject;
+                    rows.Add(obj!.Properties()
+                        .ToDictionary(
+                            prop => $"[{prop.Name}]",   //包含[]方便後面運算
+                            prop => prop.Value!.ToString()
+                        ));
+                }
+            }
             else
-                FillModels(table, tplRow, rows);
+            {
+                foreach (var sourceRow in sourceRows)
+                {
+                    var obj = (object)sourceRow!;
+                    rows.Add(obj.GetType().GetProperties()
+                        .ToDictionary(
+                            prop => $"[{prop.Name}]",   //包含[]方便後面運算
+                            prop => prop.GetValue(obj)?.ToString() ?? string.Empty
+                        ));
+                }
+            }
+
+            FillTableByRows(table, tplRow, rows);
         }
 
+        private void FillTableByRows(Table table, TableRow tplRow, List<Dictionary<string, string>> rows)
+        {
+            // 取得tplRow的欄位資訊
+            var idNums = new List<IdNumDto>();
+            //var row0 = (JObject)rows[0];
+            var cellIdxs = tplRow.Elements<TableCell>()
+                .Select((cell, idx) => new { cell, idx })
+                .ToList();
+            foreach (var col in rows[0])
+            {
+                var findData = cellIdxs
+                    .FirstOrDefault(ci => ci.cell.InnerText.Contains(col.Key));
+                if (findData != null)
+                {
+                    idNums.Add(new IdNumDto
+                    {
+                        Id = col.Key,
+                        Num = findData.idx,
+                    });
+                }
+            }
+
+            // 新增資料列
+            foreach (var row in rows)
+            {
+                // 複製範本列
+                var newRow = (TableRow)tplRow.CloneNode(true);
+
+                // 動態替換欄位，例如 [Name]、[Age]
+                foreach (var item in idNums)
+                {
+                    var value = row[item.Id]?.ToString() ?? "";
+                    var cell = newRow.Elements<TableCell>().ElementAtOrDefault(item.Num);
+                    if (cell != null)
+                        CellSetText(cell, value);
+                }
+
+                // 將新列加入表格
+                table.AppendChild(newRow);
+            }
+
+            // 新增完成後刪除範本列
+            tplRow.Remove();
+        }
+
+        /*
         private void FillJsons(Table table, TableRow tplRow, JArray rows)
         {
             // 取得欄位資訊
@@ -268,6 +379,7 @@ namespace Base.Services
             // 新增完成後刪除範本列
             tplRow.Remove();
         }
+        */
 
         /// <summary>
         /// word內使用anchor類型圖案
@@ -313,7 +425,7 @@ namespace Base.Services
                 mainPart.DeletePart(oldImagePart);
             }
 
-            // 新增圖片 Part (這裡以 Png 為例，請依圖片格式調整)
+            // 新增圖片 Part
             var newImagePart = mainPart.AddImagePart(ImagePartType.Png);
             using (var stream = new MemoryStream(newPicBytes))
             {
@@ -328,136 +440,6 @@ namespace Base.Services
             extent.Cy = height;
         }
 
-        /// <summary>
-        /// word docx add images
-        /// </summary>
-        /// <param name="srcTpl">(ref) source template string</param>
-        /// <param name="imageDtos"></param>
-        /// <returns>new template string</returns>
-        /*
-        public string AddImages(string srcTpl, List<WordImageDto> imageDtos)
-        {
-            if (imageDtos == null || imageDtos.Count == 0)
-                return "";
-
-            MainDocumentPart mainPart = _docx.MainDocumentPart!;    //not null
-            foreach (var imageInfo in imageDtos)
-            {
-                //get image file info
-                var runDto = GetImageRunDto(imageInfo.FilePath);
-                if (runDto == null) continue;
-
-                ImagePart imagePart = mainPart!.AddImagePart(ImagePartType.Jpeg);
-                var imageId = mainPart.GetIdOfPart(imagePart);
-                imagePart.FeedData(runDto!.DataStream!);
-                var newRun = GetImageRun(imageId, runDto);
-
-                //find drawing object from srcTpl
-                var drawTpl = GetDrawTpl(srcTpl, imageInfo.Code);
-                if (drawTpl == null) continue;
-
-                //find graphicData object(map to D.Graphic) from drawing object
-                var graphTpl = GetGraphDataTpl(drawTpl.TplStr);
-                if (graphTpl == null) continue;
-
-                //replace graphic section
-                //newRun.Descendants<D.Graphic>().First().InnerXml cause .docx open failed !!
-                var newGraph = GetGraphDataTpl(newRun.InnerXml);
-                //int newStart = _tplStartPos, newEnd = _tplEndPos;
-
-                //update srcTpl string
-                srcTpl = srcTpl[..(drawTpl.StartPos + graphTpl.StartPos)] +
-                    //newRun.Descendants<D.Graphic>().First().InnerXml +    //.docx open failed !!
-                    newGraph.TplStr +
-                    srcTpl[(drawTpl.StartPos + graphTpl.EndPos + 1)..];
-            }
-
-            //return new tpl string
-            return srcTpl;
-        }
-
-        /// <summary>
-        /// image file to Run for docx
-        /// https://msdn.microsoft.com/zh-tw/library/office/bb497430.aspx
-        /// </summary>
-        /// <param name="imagePartId"></param>
-        /// <param name="imageRun"></param>
-        /// <returns></returns>
-        private D.Run GetImageRun(string imagePartId, WordImageRunDto imageRun)
-        {
-            // Define the reference of the image.
-            var element =
-                 new Drawing(
-                     new DW.Inline(
-                         //Size of image, unit = EMU(English Metric Unit)
-                         //1 cm = 360000 EMUs
-                         new DW.Extent() { Cx = imageRun.WidthEmu, Cy = imageRun.HeightEmu },
-                         new DW.EffectExtent()
-                         {
-                             LeftEdge = 0L,
-                             TopEdge = 0L,
-                             RightEdge = 0L,
-                             BottomEdge = 0L
-                         },
-                         new DW.DocProperties()
-                         {
-                             Id = (UInt32Value)1U,
-                             Name = imageRun.ImageCode,
-                         },
-                         new DW.NonVisualGraphicFrameDrawingProperties(
-                             new D.GraphicFrameLocks() { NoChangeAspect = true }),
-                         new D.Graphic(
-                             new D.GraphicData(
-                                 new DP.Picture(
-                                     new DP.NonVisualPictureProperties(
-                                         new DP.NonVisualDrawingProperties()
-                                         {
-                                             Id = (UInt32Value)0U,
-                                             Name = imageRun.FileName,
-                                         },
-                                         new DP.NonVisualPictureDrawingProperties()),
-                                     new DP.BlipFill(
-                                         new D.Blip(
-                                             new D.BlipExtensionList(
-                                                 new D.BlipExtension()
-                                                 {
-                                                     Uri =
-                                                        "{28A0092B-C50C-407E-A947-70E740481C1C}"
-                                                 })
-                                         )
-                                         {
-                                             Embed = imagePartId,
-                                             CompressionState =
-                                             D.BlipCompressionValues.Print
-                                         },
-                                         new D.Stretch(
-                                             new D.FillRectangle())),
-                                     new DP.ShapeProperties(
-                                         new D.Transform2D(
-                                             new D.Offset() { X = 0L, Y = 0L },
-                                             new D.Extents()
-                                             {
-                                                 Cx = imageRun.WidthEmu,
-                                                 Cy = imageRun.HeightEmu
-                                             }),
-                                         new D.PresetGeometry(
-                                             new D.AdjustValueList()
-                                         )
-                                         { Preset = D.ShapeTypeValues.Rectangle }))
-                             )
-                             { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" })
-                     )
-                     {
-                         DistanceFromTop = (UInt32Value)0U,
-                         DistanceFromBottom = (UInt32Value)0U,
-                         DistanceFromLeft = (UInt32Value)0U,
-                         DistanceFromRight = (UInt32Value)0U,
-                         //EditId = "50D07946", //remark, coz word 2007 open failed !!
-                     });
-            return new D.Run(element);
-        }
-        */
-
 
         //=== no change ===
         /// <summary>
@@ -468,131 +450,6 @@ namespace Base.Services
         public string GetPageBreak()
         {
             return PageBreak;
-        }
-
-        /// <summary>
-        /// read docx MainDocumentPart to string
-        /// </summary>
-        /// <returns></returns>
-        public string GetMainPartStr()
-        {
-            using var sr = new StreamReader(_docx.MainDocumentPart!.GetStream());
-            return sr.ReadToEnd();
-        }
-
-        /// <summary>
-        /// write string into docx mainpart
-        /// </summary>
-        public void SetMainPartStr(string str)
-        {
-            //string to docx stream, must use FileMode.Create, or target file can not open !!
-            using var sw = new StreamWriter(_docx.MainDocumentPart!.GetStream(FileMode.Create));
-            sw.Write(str);
-        }
-
-        /// <summary>
-        /// return docx body template string
-        /// </summary>
-        /// <param name="srcText"></param>
-        /// <param name="startPos"></param>
-        /// <param name="endPos"></param>
-        /// <returns></returns>
-        public WordSetTplDto GetBodyTpl(string srcText)
-        {
-            return GetRangeTpl(srcText, false, "<w:body>", "</w:body>")!;
-        }
-
-        /// <summary>
-        /// return tr(row) template string
-        /// </summary>
-        /// <param name="srcText"></param>
-        /// <param name="startPos"></param>
-        /// <param name="endPos"></param>
-        /// <param name="childIdx"></param>
-        /// <returns></returns>
-        public WordSetTplDto GetRowTpl(string srcText, int childIdx = -1)
-        {
-            var findMid = (childIdx < 0) ? "[!]" : $"[!{childIdx}]";
-            var result = GetRangeTpl(srcText, true, "<w:tr ", "</w:tr>", findMid);
-            result!.TplStr = result.TplStr.Replace(findMid, "");
-            return result;
-        }
-
-        /// <summary>
-        /// get drawing template string for one photo
-        /// </summary>
-        /// <param name="srcText"></param>
-        /// <param name="imageCode"></param>
-        /// <returns></returns>
-        public WordSetTplDto GetDrawTpl(string srcText, string imageCode)
-        {
-            return GetRangeTpl(srcText, true, "<w:drawing>", "</w:drawing>", $"descr=\"{imageCode}\"")!;
-        }
-
-        private WordSetTplDto GetGraphDataTpl(string srcText)
-        {
-            return GetRangeTpl(srcText, true, "<a:graphicData", "</a:graphicData>")!;
-        }
-
-        /// <summary>
-        /// get range string for word multiple rows
-        /// </summary>
-        /// <param name="srcText">source text</param>
-        /// <param name="hasTag">result start/end pos include tag or not</param>
-        /// <param name="findStart">find start string</param>
-        /// <param name="findEnd">equal to startStr if empty</param>
-        /// <param name="findMid">find start string</param>
-        /// <returns></returns>
-        private WordSetTplDto? GetRangeTpl(string srcText, bool hasTag, string findStart, 
-            string findEnd, string findMid = "")
-        {
-            //int midStartPos = -1, midEndPos = -1;
-            //var result2 = new WordSetTplDto();
-            //var tplStr = "";
-            int startPos, endPos;
-            if (findMid == "")
-            {
-                startPos = srcText.IndexOf(findStart);
-                endPos = srcText.IndexOf(findEnd);
-            }
-            else
-            {
-                var midPos = srcText.IndexOf(findMid);
-                if (midPos < 0)
-                    goto lab_error;
-
-                //var midEndPos = (midEndStr == "") ? midPos : srcText.IndexOf(findMid, midPos);
-                //if (midEndPos < 0)
-                //    return "";
-
-                startPos = srcText.LastIndexOf(findStart, midPos);
-                endPos = srcText.IndexOf(findEnd, midPos);
-            }
-
-            if (startPos < 0 || endPos < 0)
-                goto lab_error;
-
-            //case of ok
-            var startLen = findStart.Length;
-            var endLen = findEnd.Length;
-            endPos = endPos + endLen - 1;   //adjust
-            var tplStr = srcText[startPos..(endPos + 1)];
-            if (!hasTag)
-            {
-                tplStr = tplStr[startLen..^endLen];
-                startPos += startLen;
-                endPos -= endLen;
-            }
-            return new WordSetTplDto()
-            {
-                TplStr = tplStr,
-                StartPos = startPos,
-                EndPos = endPos,
-            }; 
-
-        lab_error:
-            _Log.Error($"WordSetSvc.cs GetRangeTpl() get empty result.(findStart='{findStart}', findMid='{findMid}')");
-            return null;
         }
         */
 
@@ -630,47 +487,9 @@ namespace Base.Services
                 return status ? "V" : "";
         }
 
-        /*
-        private WordImageRunDto? GetImageRunDto(string filePath)
-        {
-            if (!File.Exists(filePath)) return null;
-
-            //pixels / 300(dpi) * 2.54(inch to cm) * 36000(cm to emu)
-            const double PixelToEmu = 304.8;    
-
-            var ms = new MemoryStream(File.ReadAllBytes(filePath));
-            // 使用 ImageSharp 讀取圖片尺寸
-            using var img = Image.Load<Rgba32>(ms);
-            var result = new WordImageRunDto()
-            {
-                DataStream = ms,
-                FileName = Path.GetFileName(filePath),
-                //WidthEmu = Convert.ToInt64(img.Width * PixelToEmu),
-                //HeightEmu = Convert.ToInt64(img.Height * PixelToEmu),
-                ImageCode = $"IMG{Guid.NewGuid()}",
-            };
-
-            //important !!, or cause docx show image failed: not have enough memory.
-            ms.Position = 0;    
-            return result;
-        }
-        */
 
         #region remark code
         /*
-        /// <summary>
-        /// template string fill json row
-        /// </summary>
-        /// <param name="str"></param>
-        /// <param name="row"></param>
-        /// <returns></returns>
-        public string StrFillRow(string str, JObject row)
-        {
-            foreach (var item in row)
-                str = str.Replace("[" + item.Key + "]", item.Value.ToString());
-            return str;
-        }
-
         /// <summary>
         /// write into docx stream, consider multiple rows(copy from _WebWord.cs Output())
         /// </summary>

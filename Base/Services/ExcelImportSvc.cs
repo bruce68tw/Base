@@ -103,7 +103,7 @@ namespace Base.Services
                     _excelFields.Add(new ExcelImportFieldDto()
                     {
                         Fid = fid,
-                        Fno = no,
+                        //Fno = no,
                         CellName = CellXname(cell.CellReference!),
                         IsDate = isDate,
                     });
@@ -139,7 +139,7 @@ namespace Base.Services
                     _excelFields.Add(new ExcelImportFieldDto()
                     {
                         Fid = fid,
-                        Fno = ci,
+                        //Fno = ci,
                         CellName = NoToCellName(ci),
                         IsDate = isDate,
                     });
@@ -290,13 +290,16 @@ namespace Base.Services
                 {
                     //add row, fill value & copy row style
                     var row = sheetData2!.Elements<Row>().ElementAt(startRow + ri);  //base 0, row position to write
+                    var cells = row.Elements<Cell>()!;
                     var modelRow = fileRows[_failRows[ri].Sn];
-                    int fno;
+                    //int fno;
                     foreach (var field in _excelFields)
                     {
-                        fno = field.Fno;
                         var value2 = _Model.GetValue(modelRow, field.Fid);
-                        var cell = row.Elements<Cell>().ElementAt(fno);
+                        //因為有合併格, 必須用字母來找cell
+                        //var cell = row.Elements<Cell>().ElementAt(fno);
+                        var cell = cells.FirstOrDefault(c =>
+                                c.CellReference!.Value!.StartsWith(field.CellName, StringComparison.OrdinalIgnoreCase))!;
                         cell.CellValue = new CellValue(value2?.ToString() ?? string.Empty);
                         cell.DataType = CellValues.String; // 設定為字串
                     }
@@ -395,7 +398,6 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
         private void CopyTplRows(SheetData sheetData, int fromRow, int newRows)
         {
             var worksheet = (Worksheet)sheetData.Parent!;
-            var colNames = new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };
             var baseRowIndex = (uint)fromRow + 1; // OpenXML 是從 1 開始的 RowIndex
 
             // 取得範本列, RowIndex is base 1 !!
@@ -423,11 +425,7 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                     return startRow == baseRowIndex.ToString() && endRow == baseRowIndex.ToString();
                 }).ToList();
 
-            // 插入點：在範本列後
-            //int insertIndex = sheetData.Elements<Row>().ToList().FindIndex(r => r.RowIndex! == baseRowIndex) + 1;
-            //int insertIndex = (int)baseRowIndex;
-
-            // 建立新列, 加在後面
+            // 建立新列, 加在範本列後面
             for (int ri = 1; ri <= newRows; ri++)
             {
                 var newRowIndex = baseRowIndex + (uint)ri;
@@ -450,7 +448,6 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                 }
 
                 sheetData.InsertAt(newRow, (int)newRowIndex - 1);
-                //insertIndex++;
 
                 // 複製合併格（更新為新列號）
                 foreach (var mc in tplMerges)
@@ -462,25 +459,6 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                     mergeCells.Append(new MergeCell() { Reference = new StringValue(newRef) });
                 }
             }
-
-            /*
-            // OpenXml工具出現valid error: the attribute 'verticalDpi' has invalid value '0'
-            // 但以下解法無效 !!
-            // Ensure page setup and DPI values are correctly set
-            var pageSetup = worksheet.Elements<PageSetup>().FirstOrDefault();
-            if (pageSetup == null)
-            {
-                pageSetup = new PageSetup();
-                worksheet.Append(pageSetup);
-            }
-
-            // Set default DPI values
-            pageSetup.VerticalDpi = new UInt32Value((uint)96); // Default DPI
-            pageSetup.HorizontalDpi = new UInt32Value((uint)96); // Default DPI
-
-            // Optionally, set other PageSetup values to ensure compatibility
-            pageSetup.PaperSize = (UInt32Value)9; // Set to A4 Paper Size (common default)
-            */
         }
 
         private string CellValue(SharedStringTable ssTable, Cell cell)
