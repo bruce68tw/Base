@@ -409,6 +409,11 @@ namespace Base.Services
             };
         }
 
+        public static DateTime YmdToDate(string ymd)
+        {
+            return DateTime.ParseExact(ymd, "yyyyMMdd", CultureInfo.InvariantCulture);
+        }
+
         /// <summary>
         /// ym 轉換為民國年月
         /// </summary>
