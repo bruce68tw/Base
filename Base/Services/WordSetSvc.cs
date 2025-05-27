@@ -78,19 +78,28 @@ namespace Base.Services
             return _ms;
         }
 
+        /// <summary>
+        /// 設定cell文字, 同時保留style !!
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <param name="value"></param>
         private void CellSetText(TableCell cell, string value)
         {
-            // 清空單元格中的所有段落
-            cell.RemoveAllChildren<Paragraph>();
+            var para = cell.Elements<Paragraph>().FirstOrDefault() ?? new Paragraph();
+            var paraProps = para.GetFirstChild<ParagraphProperties>();
+            var runProps = para.Elements<Run>().FirstOrDefault()?.GetFirstChild<RunProperties>();
 
-            // 新增一個段落並設置文字
-            var para = new Paragraph();
+            para.RemoveAllChildren();
+
+            if (paraProps != null) para.AppendChild(paraProps.CloneNode(true));
+
             var run = new Run();
-            var text = new Text(value);
+            if (runProps != null) run.AppendChild(runProps.CloneNode(true));
+            run.AppendChild(new Text(value));
 
-            run.Append(text);
-            para.Append(run);
-            cell.Append(para);
+            para.AppendChild(run);
+
+            if (!cell.Elements<Paragraph>().Any()) cell.Append(para);
         }
 
         private void FillMain(dynamic sourceRow)
@@ -196,8 +205,7 @@ namespace Base.Services
             var tag = $"[!{index}]";    // 找含有 [!x] 的範本列, base 0
             var tplRow = _docx.MainDocumentPart?.Document.Body?.Elements<Table>()
                 .SelectMany(t => t.Elements<TableRow>())
-                .FirstOrDefault(r => r.Elements<TableCell>()
-                    .Any(c => c.InnerText.Contains(tag)));
+                .FirstOrDefault(r => r.Elements<TableCell>().Any(c => c.InnerText.Contains(tag)));
             if (tplRow == null) return;
 
             // 清除tplRow的標記

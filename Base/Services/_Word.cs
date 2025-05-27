@@ -72,29 +72,25 @@ namespace Base.Services
             // Copy the original file to the new path
             File.Copy(oldWordPath, newWordPath, true);
 
-            using (WordprocessingDocument wordDoc = WordprocessingDocument.Open(newWordPath, true))
+            using var wordDoc = WordprocessingDocument.Open(newWordPath, true);
+            var mainPart = wordDoc.MainDocumentPart;
+            var images = mainPart!.Document!.Body!.Descendants<Drawing>()
+                .Where(d => d.Inline!.DocProperties!.Description == "Photo");
+
+            //var aa = mainPart.Document.Body.Descendants<Drawing>().Select(d => d.Inline.DocProperties).ToList();
+
+            foreach (var drawing in images)
             {
-                var mainPart = wordDoc.MainDocumentPart;
-                var images = mainPart.Document.Body.Descendants<Drawing>()
-                    .Where(d => d.Inline.DocProperties.Description == "Photo");
-
-                var aa = mainPart.Document.Body.Descendants<Drawing>().Select(d => d.Inline.DocProperties).ToList();
-
-                foreach (var drawing in images)
+                var blip = drawing.Inline!.Graphic!.GraphicData!.Descendants<DocumentFormat.OpenXml.Drawing.Blip>().FirstOrDefault();
+                if (blip != null)
                 {
-                    var blip = drawing.Inline.Graphic.GraphicData.Descendants<DocumentFormat.OpenXml.Drawing.Blip>().FirstOrDefault();
-                    if (blip != null)
-                    {
-                        var imagePart = (ImagePart)mainPart.GetPartById(blip.Embed);
+                    var imagePart = (ImagePart)mainPart.GetPartById(blip.Embed!);
 
-                        using (var stream = new FileStream(newImagePath, FileMode.Open, FileAccess.Read))
-                        {
-                            imagePart.FeedData(stream);
-                        }
-                    }
+                    using var stream = new FileStream(newImagePath, FileMode.Open, FileAccess.Read);
+                    imagePart.FeedData(stream);
                 }
-                wordDoc.MainDocumentPart.Document.Save();
             }
+            wordDoc!.MainDocumentPart!.Document.Save();
         }
 
         /// <summary>
