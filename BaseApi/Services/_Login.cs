@@ -46,6 +46,7 @@ namespace BaseApi.Services
             #endregion
 
             #region 2.check DB password & get user info
+            //讀取額外欄位 if need
             var hasExtCol = !string.IsNullOrEmpty(extCol);
             var hasExtCol2 = !string.IsNullOrEmpty(extCol2);
             if (hasExtCol)
