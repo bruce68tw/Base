@@ -59,11 +59,10 @@ namespace Base.Services
         //indicate error
         public const string PreError = "E:";
         public const string PreBrError = "B:";  //_BR code error
-        //public const string PreSystemError = "S:";
-        //public const string SysErrCode = "_SE";    //decode at front side
 
-        //default horizontal columns: view cols for layout(row div, label=2, input=3)(horizontal) 
-        public static List<int> DefHoriCols = [2, 3];
+		//default horizontal columns: view cols for layout(row div, label=2, input=3)(horizontal) 
+		public const string DefHoriCols = "2,3";
+		public static List<int> DefHoriColList = _Str.ToIntList(DefHoriCols);
 
         //directory tail seperator
         public static char DirSep = Path.DirectorySeparatorChar;
@@ -167,8 +166,8 @@ namespace Base.Services
         public static string Init(bool isDev, IServiceProvider? diBox = null, 
             DbTypeEnum dbType = DbTypeEnum.MSSql, AuthTypeEnum authType = AuthTypeEnum.None)
         {
-            //set instance variables
-            IsDev = isDev;
+            #region set instance variables
+			IsDev = isDev;
             RunModeName = isDev ? "Development" : "Production";
             DiBox = diBox;
             DbType = dbType;
@@ -184,9 +183,10 @@ namespace Base.Services
                 Config.Smtp = _Str.DecodeByFile(Config.Smtp);
                 Config.Redis = _Str.DecodeByFile(Config.Redis);
             }
+			#endregion
 
-            #region set smtp
-            var smtp = Config.Smtp;
+			#region set smtp
+			var smtp = Config.Smtp;
             if (!string.IsNullOrEmpty(smtp))
             {
                 try

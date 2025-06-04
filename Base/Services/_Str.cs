@@ -308,8 +308,8 @@ namespace Base.Services
         public static List<int> ToIntList(string? str, char sep = ',')
         {
             return IsEmpty(str)
-                ? new() : str!.Split(sep).Select(Int32.Parse).ToList();
-        }
+                ? [] : str!.Split(sep).Select(Int32.Parse).ToList();
+		}
 
         //get hash key(base64, 25 char) for cache key
         public static string GetHashKey(string data)

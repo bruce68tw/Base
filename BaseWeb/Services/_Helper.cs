@@ -326,7 +326,7 @@ namespace BaseWeb.Services
         private static List<int> GetCols(string? cols)
         {
             var values = _Str.ToIntList(cols);
-            return (values.Count == 0) ? _Fun.DefHoriCols : values;
+            return (values.Count == 0) ? _Fun.DefHoriColList : values;
         }
 
         /*
