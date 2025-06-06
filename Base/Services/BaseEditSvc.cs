@@ -1,7 +1,5 @@
 ﻿using Base.Models;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using System;
 using System.Threading.Tasks;
 
 namespace Base.Services
@@ -41,17 +39,17 @@ namespace Base.Services
             return new CrudGetSvc(Ctrl, GetDto());
         }
 
-        public async Task<JObject?> GetUpdJsonA(string key)
+        public virtual async Task<JObject?> GetUpdJsonA(string key)
         {
             return await GetService().GetUpdJsonA(key);
         }
 
-        public async Task<JObject?> GetViewJsonA(string key)
+        public virtual async Task<JObject?> GetViewJsonA(string key)
         {
             return await GetService().GetViewJsonA(key);
         }
 
-        public async Task<ResultDto> CreateA(JObject json)
+        public virtual async Task<ResultDto> CreateA(JObject json)
         {
             return await EditService().CreateA(json);
         }
@@ -62,7 +60,7 @@ namespace Base.Services
             return await EditService().UpdateA(key, json);
         }
 
-        public async Task<ResultDto> DeleteA(string key)
+        public virtual async Task<ResultDto> DeleteA(string key)
         {
             return await EditService().DeleteA(key);
         }

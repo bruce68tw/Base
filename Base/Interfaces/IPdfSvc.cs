@@ -7,6 +7,6 @@
         /// </summary>
         /// <param name="wordBytes"></param>
         /// <returns></returns>
-        byte[] WordToPdf(byte[] wordBytes);
+        byte[] WordToPdf(byte[] wordBytes, string keyFilePath = "");
     }
 }

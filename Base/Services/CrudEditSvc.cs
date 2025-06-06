@@ -798,7 +798,7 @@ namespace Base.Services
             List<string>? deletes = (inputJson[Deletes] == null)
                 ? null : _Str.ToList(inputJson[Deletes]!.ToString());
             if (upDeletes != null)
-                deletes = _List.Concat(deletes!, await GetKeysByUpKeysA(editDto, upDeletes!, db));
+                deletes = _List.Concat(deletes!, (await GetKeysByUpKeysA(editDto, upDeletes!, db))!);
 
             if (deletes != null)
             {
@@ -907,7 +907,7 @@ namespace Base.Services
             var error = "";
             var inputRows = (inputJson[_Fun.FidRows] == null)
                 ? null : inputJson[_Fun.FidRows] as JArray;
-            var setKeyJson = false;  //flag
+            //var setKeyJson = false;  //flag
             JObject myKeyJson = [];  //new pkey for childs fkey
             if (inputRows != null)
             {
@@ -1018,7 +1018,7 @@ namespace Base.Services
 
                     //set newKeyJson for child, pkeyNewUpNo is base 1 
                     myKeyJson["f" + pkeyNewNo] = pkey;
-                    setKeyJson = true;
+                    //setKeyJson = true;
                 }//for rows
             }//if has rows
             #endregion

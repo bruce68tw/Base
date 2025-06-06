@@ -67,12 +67,12 @@ namespace BaseApi.Services
             };
         }
 
-        public async Task<ResultDto> CreateA(JObject json)
+        public override async Task<ResultDto> CreateA(JObject json)
         {
             return await EditService().CreateA(json);
         }
 
-        public async Task<ResultDto> UpdateA(string key, JObject json)
+        public override async Task<ResultDto> UpdateA(string key, JObject json)
         {
             return await EditService().UpdateA(key, json);
         }
