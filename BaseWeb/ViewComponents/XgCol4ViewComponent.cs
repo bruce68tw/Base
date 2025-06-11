@@ -8,7 +8,7 @@ namespace BaseWeb.ViewComponents
     //add row button
     public class XgCol4ViewComponent : ViewComponent
     {
-        public HtmlString Invoke(string cols)
+        public HtmlString Invoke(string cols = "")
         {
 			//here!!
 			var colList = _Str.ToIntList(cols);

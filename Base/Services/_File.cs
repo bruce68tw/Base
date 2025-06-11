@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,27 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     public class _File
-    {		
+    {
+        /// <summary>
+        /// 讀取檔案清單
+        /// </summary>
+        /// <param name="dir"></param>
+        /// <param name="exts">副檔名清單, 逼號分隔</param>
+        public static List<string>? GetFiles(string dir, string ext)
+        {
+            dir = _Str.RemoveRightSlash(dir);
+            if (!Directory.Exists(dir))
+            {
+                _Log.Error($"No Directory: {dir}");
+                return null;
+            }
+
+            // 取得檔案清單（不含子目錄）
+            return Directory.GetFiles(dir)
+                .Where(file => file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
         /// <summary>
         /// make folder
         /// </summary>

@@ -105,7 +105,10 @@ namespace Base.Services
             var quote = addQuote ? "'" : "";
             var data = "";
             foreach (var row in rows)
-                data += quote + row[fid] + quote + sep;
+            {
+                if (_Var.NotEmpty(row[fid]))
+                    data += quote + row[fid] + quote + sep;
+            }
             return (data == "")
                 ? "" : data[..^sep.Length];
         }
