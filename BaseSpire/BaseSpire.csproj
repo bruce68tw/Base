@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Spire.Doc" Version="13.5.11" />
+    <PackageReference Include="Spire.PDF" Version="11.6.0" />
   </ItemGroup>
 
   <ItemGroup>

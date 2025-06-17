@@ -10,10 +10,10 @@ namespace Base.Services
     public class _File
     {
         /// <summary>
-        /// 讀取檔案清單
+        /// 讀取檔案清單, 傳回字串不含路徑
         /// </summary>
         /// <param name="dir"></param>
-        /// <param name="exts">副檔名清單, 逼號分隔</param>
+        /// <param name="ext">副檔名</param>
         public static List<string>? GetFiles(string dir, string ext)
         {
             dir = _Str.RemoveRightSlash(dir);
@@ -25,8 +25,29 @@ namespace Base.Services
 
             // 取得檔案清單（不含子目錄）
             return Directory.GetFiles(dir)
-                .Where(file => file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                .Where(a => a.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                .Select(a => Path.GetFileName(a))
                 .ToList();
+        }
+
+        /// <summary>
+        /// 讀取檔案數量
+        /// </summary>
+        /// <param name="dir"></param>
+        /// <param name="ext">副檔名</param>
+        public static int GetFileCount(string dir, string ext)
+        {
+            dir = _Str.RemoveRightSlash(dir);
+            if (!Directory.Exists(dir))
+            {
+                _Log.Error($"No Directory: {dir}");
+                return 0;
+            }
+
+            // 取得檔案清單（不含子目錄）
+            return Directory.GetFiles(dir)
+                .Where(file => file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                .Count();
         }
 
         /// <summary>

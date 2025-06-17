@@ -445,11 +445,23 @@ namespace Base.Services
         }
 
         /// <summary>
+        /// 將民國日期轉為Datetime
+        /// </summary>
+        /// <param name="ymd"></param>
+        /// <returns></returns>
+        public static DateTime TwYmdToDate(string ymd)
+        {
+            var twYear = int.Parse(ymd[..3]) + 1911;
+            return YmdToDate(twYear + ymd[3..]);
+        }
+
+        /// <summary>
+        /// TwDate7ToDateStr -> TwYmdToDateStr
         /// 民國日期(yyymmdd) to 日期字串
         /// </summary>
         /// <param name="ds"></param>
         /// <returns></returns>
-        public static string TwDate7ToDateStr(string ds)
+        public static string TwYmdToDateStr(string ds)
         {
             var len = ds.Length;
             return len switch

@@ -49,14 +49,16 @@ namespace BaseApi.Services
             //讀取額外欄位 if need
             var hasExtCol = !string.IsNullOrEmpty(extCol);
             var hasExtCol2 = !string.IsNullOrEmpty(extCol2);
+            var extColSql = "";
+            var extCol2Sql = "";
             if (hasExtCol)
-                extCol = $", ExtCol={extCol}";
+                extColSql = $", ExtCol={extCol}";
             if (hasExtCol2)
-                extCol2 = $", ExtCol2={extCol2}";
+                extCol2Sql = $", ExtCol2={extCol2}";
 
             var sql = $@"
 select u.Id as UserId, u.Name as UserName, u.Pwd,
-    u.DeptId, d.Name as DeptName{extCol}{extCol2}
+    u.DeptId, d.Name as DeptName{extColSql}{extCol2Sql}
 from dbo.XpUser u
 join dbo.XpDept d on u.DeptId=d.Id
 where u.Account=@Account
@@ -119,9 +121,9 @@ where u.Account=@Account
             };
             //加上 ExtCol if need
             if (hasExtCol)
-                userInfo.ExtCol = row["ExtCol"]!.ToString();
+                userInfo.ExtCol = extCol;
             if (hasExtCol2)
-                userInfo.ExtCol2 = row["ExtCol2"]!.ToString();
+                userInfo.ExtCol2 = extCol2;
             #endregion
 
             //write cache server for base user info, key值加上IP

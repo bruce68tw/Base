@@ -26,7 +26,7 @@ namespace BaseWeb.ViewComponents
 
             //html
             var css = _Helper.GetCssClass("form-control xi-box", dto.BoxClass, dto.Width);
-            var html = $"<textarea{attr} data-type='textarea' class='{css}'></textarea>";
+            var html = $"<textarea{attr} data-type='textarea' class='{css}'>{dto.Value}</textarea>";
             if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
             return new HtmlString(html);
