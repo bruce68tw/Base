@@ -22,7 +22,7 @@ namespace BaseApi.Services
         /// <param name="extCol">要寫入session的一個額外欄位, 必須加上正確的 table 別名</param>
         /// <returns></returns>
         public static async Task<bool> LoginByVoA(LoginVo vo, bool encodePwd = true, 
-            string extCol = "", string extCol2 = "")
+            string extCol = "", string extCol2 = "", string extCol3 = "")
         {
             //reset UI msg first
             vo.AccountMsg = "";
@@ -49,16 +49,20 @@ namespace BaseApi.Services
             //讀取額外欄位 if need
             var hasExtCol = !string.IsNullOrEmpty(extCol);
             var hasExtCol2 = !string.IsNullOrEmpty(extCol2);
+            var hasExtCol3 = !string.IsNullOrEmpty(extCol3);
             var extColSql = "";
             var extCol2Sql = "";
+            var extCol3Sql = "";
             if (hasExtCol)
                 extColSql = $", ExtCol={extCol}";
             if (hasExtCol2)
                 extCol2Sql = $", ExtCol2={extCol2}";
+            if (hasExtCol3)
+                extCol3Sql = $", ExtCol2={extCol3}";
 
             var sql = $@"
 select u.Id as UserId, u.Name as UserName, u.Pwd,
-    u.DeptId, d.Name as DeptName{extColSql}{extCol2Sql}
+    u.DeptId, d.Name as DeptName{extColSql}{extCol2Sql}{extCol3Sql}
 from dbo.XpUser u
 join dbo.XpDept d on u.DeptId=d.Id
 where u.Account=@Account
@@ -124,6 +128,8 @@ where u.Account=@Account
                 userInfo.ExtCol = extCol;
             if (hasExtCol2)
                 userInfo.ExtCol2 = extCol2;
+            if (hasExtCol3)
+                userInfo.ExtCol3 = extCol3;
             #endregion
 
             //write cache server for base user info, key值加上IP

@@ -29,6 +29,7 @@
         /// </summary>
         public string ExtCol = "";
         public string ExtCol2 = "";
+        public string ExtCol3 = "";
 
         //diffence hours to GMT for Db saving
         //public double HourDiff = 0;
