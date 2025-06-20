@@ -59,8 +59,8 @@ namespace BaseWeb.ViewComponents
                 <p class='xd-msg'></p>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn btn-secondary xg-btn-size xd-cancel' onclick='_tool.onAnsNo()'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn btn-primary xg-btn-size xd-yes' onclick='_tool.onAnsYes()'>{baseR.BtnYes}</button>
+                <button type='button' class='btn btn-secondary xd-cancel' onclick='_tool.onAnsNo()'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn btn-primary xd-yes' onclick='_tool.onAnsYes()'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
@@ -79,8 +79,8 @@ namespace BaseWeb.ViewComponents
                 </textarea>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn btn-secondary xg-btn-size xd-cancel' data-bs-dismiss='modal'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn btn-primary xg-btn-size xd-yes' onclick='_tool.onAreaYes()'>{baseR.BtnYes}</button>
+                <button type='button' class='btn btn-secondary xd-cancel' data-bs-dismiss='modal'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn btn-primary xd-yes' onclick='_tool.onAreaYes()'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
@@ -95,7 +95,7 @@ namespace BaseWeb.ViewComponents
             </div>
             <div class='modal-footer justify-content-between'>
 				<label>image name</label>
-                <button type='button' class='btn btn-primary xg-btn-size xd-close' data-bs-dismiss='modal'>{baseR.BtnClose}</button>
+                <button type='button' class='btn btn-primary xd-close' data-bs-dismiss='modal'>{baseR.BtnClose}</button>
             </div>
         </div>
     </div>
