@@ -495,7 +495,7 @@ namespace Base.Services
             if (where != "") where = " and " + where;
             //var key2 = (kvalue.GetType() == typeof(string)) ? "'" + kvalue + "'" : kvalue.ToString();
             var sql = $"update {table} set {statusId}={status2} where {kid}=@{kid}{where};";
-            return (await ExecSqlA(sql, new(){ kid, kvalue }) > 0);
+            return (await ExecSqlA(sql, [kid, kvalue]) > 0);
         }
 
         #region transation (3 functions)

@@ -67,7 +67,7 @@ namespace BaseWeb.ViewComponents
 </div>
 
 <!-- textarea(many lines) editor -->
-<div id='xgArea' class='modal fade xg-modal' data-backdrop='static' data-keyboard='false'>
+<div class='modal fade xg-modal xg-area' data-backdrop='static' data-keyboard='false'>
     <div class='modal-dialog' role='document'>
         <div class='modal-content'>
             <div class='modal-header'>
@@ -87,15 +87,15 @@ namespace BaseWeb.ViewComponents
 </div>
 
 <!-- show image -->
-<div id='xgImage' class='modal fade'>
-    <div class='modal-dialog' role='document'>
+<div class='modal fade xg-image'>
+    <div class='modal-dialog modal-dialog-centered'>
         <div class='modal-content'>
-            <div class='modal-body' style='margin:auto;'>
-				<img/>
+            <div class='modal-body'>
+                <img/>
             </div>
             <div class='modal-footer justify-content-between'>
-				<label>image name</label>
-                <button type='button' class='btn btn-primary xd-close' data-bs-dismiss='modal'>{baseR.BtnClose}</button>
+                <label>image name</label>
+                <button class='btn btn-primary xd-close' data-bs-dismiss='modal'>{baseR.BtnClose}</button>
             </div>
         </div>
     </div>
