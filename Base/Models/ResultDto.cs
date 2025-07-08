@@ -20,8 +20,9 @@ namespace Base.Models
 
         /// <summary>
         /// error msg if any (necessary field for resultXXX dto)
+        /// 避開資料表欄位, 前面加底線
         /// </summary>
-        public string ErrorMsg = "";
+        public string _ErrorMsg = "";
 
         /// <summary>
         /// validation error list

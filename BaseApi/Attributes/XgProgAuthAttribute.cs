@@ -83,7 +83,7 @@ namespace BaseApi.Attributes
                 //4.return error model
                 context.Result = new JsonResult(new
                 {
-                    Value = new { ErrorMsg = error }
+                    Value = new { _ErrorMsg = error }
                 });
             }
             else

@@ -25,7 +25,7 @@ namespace BaseApi.Services
             if (file == null || file.Length == 0)
                 return new ResultImportDto()
                 {
-                    ErrorMsg = "Upload file is empty.",
+                    _ErrorMsg = "Upload file is empty.",
                 };
 
             return await new ExcelImportSvc<T>().ImportByStreamA(file.OpenReadStream(), importDto, dirUpload, file.FileName, uiDtFormat, writeLog);

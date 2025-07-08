@@ -118,7 +118,7 @@ namespace Base.Services
                 {
                     return new ResultImportDto()
                     {
-                        ErrorMsg = "importDto.ExcelFids length should be " + cellLen,
+                        _ErrorMsg = "importDto.ExcelFids length should be " + cellLen,
                     };
                 }
 

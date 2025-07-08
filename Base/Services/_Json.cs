@@ -46,7 +46,7 @@ namespace Base.Services
 
         public static JObject GetError(string error = "")
         {
-            return new JObject { ["ErrorMsg"] = _Str.EmptyToValue(error, _Fun.SystemError) };
+            return new JObject { [_Fun.FidErrorMsg] = _Str.EmptyToValue(error, _Fun.SystemError) };
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Base.Services
         /// <returns></returns>
         public static JObject GetBrError(string fid)
         {
-            return new JObject { ["ErrorMsg"] = _Fun.PreBrError + fid };
+            return new JObject { [_Fun.FidErrorMsg] = _Fun.PreBrError + fid };
         }
 
         /*

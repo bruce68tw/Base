@@ -64,7 +64,7 @@ namespace BaseApi.Services
 select u.Id as UserId, u.Name as UserName, u.Pwd,
     u.DeptId, d.Name as DeptName{extColSql}{extCol2Sql}{extCol3Sql}
 from dbo.XpUser u
-join dbo.XpDept d on u.DeptId=d.Id
+left join dbo.XpDept d on u.DeptId=d.Id
 where u.Account=@Account
 ";
             var status = false;

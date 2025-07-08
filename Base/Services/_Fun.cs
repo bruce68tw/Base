@@ -18,6 +18,7 @@ namespace Base.Services
         //crud update/view for AuthType=Row only in xxxEdit.cs
         public const string FidUser = "_userId";
         public const string FidDept = "_deptId";
+        public const string FidErrorMsg = "_ErrorMsg";  //與 ResultDto.cs 一致, 用於錯誤訊息傳回前端
 
         //auth client key, for cookie、JWT
         public const string FidClientKey = "_jwt";

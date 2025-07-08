@@ -174,7 +174,7 @@ namespace Base.Services
         /// <returns></returns>
         public static ResultDto GetError(string error = "")
         {
-            return new ResultDto() { ErrorMsg = _Str.EmptyToValue(error, _Fun.SystemError) };
+            return new ResultDto() { _ErrorMsg = _Str.EmptyToValue(error, _Fun.SystemError) };
         }
 
         public static ResultDto GetValidError(List<ErrorRowDto> errors)
@@ -189,7 +189,7 @@ namespace Base.Services
         /// <returns></returns>
         public static ResultDto GetBrError(string fid)
         {
-            return new ResultDto() { ErrorMsg = _Fun.PreBrError + fid };
+            return new ResultDto() { _ErrorMsg = _Fun.PreBrError + fid };
         }
 
     } //class

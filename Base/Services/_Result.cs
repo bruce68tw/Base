@@ -14,7 +14,7 @@ namespace Base.Services
         /// <returns></returns>
         public static bool HasError(ResultDto result)
         {
-            return _Str.NotEmpty(result.ErrorMsg) 
+            return _Str.NotEmpty(result._ErrorMsg) 
                 ? true 
                 : (result.ErrorRows != null && result.ErrorRows.Count > 0);
         }

@@ -29,7 +29,7 @@ namespace Base.Models
         /// <summary>
         /// error msg if any (necessary field for resultXXX dto)
         /// </summary>
-        public string ErrorMsg = "";
+        public string _ErrorMsg = "";
 
     }
 }

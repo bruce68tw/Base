@@ -40,13 +40,13 @@ namespace Base.Services
 
         public static PageOut<T> GetError<T>(PageOut<T> page, string error = "") where T : class
         {
-            page.ErrorMsg = _Str.EmptyToValue(error, _Fun.SystemError);
+            page._ErrorMsg = _Str.EmptyToValue(error, _Fun.SystemError);
             return page;
         }
 
         public static PageOut<T> GetBrError<T>(PageOut<T> page, string fid) where T : class
         {
-            page.ErrorMsg = _Fun.PreBrError + fid;
+            page._ErrorMsg = _Fun.PreBrError + fid;
             return page;
         }
 

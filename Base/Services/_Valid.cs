@@ -82,7 +82,7 @@ namespace Base.Services
 
         public static bool ResultStatus(ResultDto result)
         {
-            return _Str.IsEmpty(result.ErrorMsg);
+            return _Str.IsEmpty(result._ErrorMsg);
         }
 
         #region remark code
@@ -110,7 +110,7 @@ namespace Base.Services
                 else if (!IsText(prop.GetValue(model, null)))
                 {
                     var result = new JObject();
-                    result[_Fun.?ErrorMsg] = "資料輸入錯誤。";
+                    result[_Fun.FidErrorMsg] = "資料輸入錯誤。";
                     return result;
                 }
             }

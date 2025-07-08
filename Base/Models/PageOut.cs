@@ -32,6 +32,6 @@ namespace Base.Models
         /// error msg if any (necessary field for resultXXX dto)
         /// refer ResultDto.cs
         /// </summary>
-        public string ErrorMsg { get; set; } = "";
+        public string _ErrorMsg { get; set; } = "";
     }
 }
