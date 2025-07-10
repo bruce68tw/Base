@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
-    /// base class of CrudEditS, CrudGetS
+    /// base class of CrudEditSvc, CrudGetSvc
     /// </summary>
     public class CrudEditGetSvc
     {
@@ -28,7 +28,7 @@ namespace Base.Services
         protected string _dbStr = "";
 
         //sql args pair(fid,value), 日期欄位為空時寫入null, 否則會變1900/1/1 !!
-        protected List<object?> _sqlArgs = new();
+        protected List<object?> _sqlArgs = [];
 
         //constructor
         public CrudEditGetSvc(string ctrl, EditDto editDto, string dbStr = "")
