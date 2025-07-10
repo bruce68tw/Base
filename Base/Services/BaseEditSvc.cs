@@ -29,40 +29,42 @@ namespace Base.Services
         //derived class implement.
         abstract public EditDto GetDto();
 
-        public CrudEditSvc EditService()
+        //EditService -> EditSvc
+        public CrudEditSvc EditSvc()
         {
             return new CrudEditSvc(Ctrl, GetDto());
         }
 
-        public CrudGetSvc GetService()
+        //GetService -> GetSvc
+        public CrudGetSvc GetSvc()
         {
             return new CrudGetSvc(Ctrl, GetDto());
         }
 
         public virtual async Task<JObject?> GetUpdJsonA(string key)
         {
-            return await GetService().GetUpdJsonA(key);
+            return await GetSvc().GetUpdJsonA(key);
         }
 
         public virtual async Task<JObject?> GetViewJsonA(string key)
         {
-            return await GetService().GetViewJsonA(key);
+            return await GetSvc().GetViewJsonA(key);
         }
 
         public virtual async Task<ResultDto> CreateA(JObject json)
         {
-            return await EditService().CreateA(json);
+            return await EditSvc().CreateA(json);
         }
 
         //can override
         public virtual async Task<ResultDto> UpdateA(string key, JObject json)
         {
-            return await EditService().UpdateA(key, json);
+            return await EditSvc().UpdateA(key, json);
         }
 
         public virtual async Task<ResultDto> DeleteA(string key)
         {
-            return await EditService().DeleteA(key);
+            return await EditSvc().DeleteA(key);
         }
 
     }//class

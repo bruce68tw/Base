@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 
 /// <summary>
+/// 利用 EditDto 來讀取資料庫資料
 /// 1.remove cache function
 /// 2.add read/write multiple table fun
 /// </summary>

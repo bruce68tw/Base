@@ -69,12 +69,12 @@ namespace BaseApi.Services
 
         public override async Task<ResultDto> CreateA(JObject json)
         {
-            return await EditService().CreateA(json);
+            return await EditSvc().CreateA(json);
         }
 
         public override async Task<ResultDto> UpdateA(string key, JObject json)
         {
-            return await EditService().UpdateA(key, json);
+            return await EditSvc().UpdateA(key, json);
         }
 
         /// <summary>
