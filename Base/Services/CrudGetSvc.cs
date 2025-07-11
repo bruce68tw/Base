@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 
 /// <summary>
-/// 利用 EditDto 來讀取資料庫資料
+/// 繼承 CrudEditGetSvc, 利用 EditDto 來讀取資料庫資料, 簡化子代內容
 /// 1.remove cache function
 /// 2.add read/write multiple table fun
 /// </summary>

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
+    /// 利用 EditDto 來讀取資料庫資料
     /// base class of CrudEditSvc, CrudGetSvc
     /// </summary>
     public class CrudEditGetSvc
