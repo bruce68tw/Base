@@ -11,7 +11,7 @@ namespace BaseWeb.ViewComponents
         {
             var baseR = _Locale.GetBaseRes();
             var html = $@"
-<div class='xg-{align}'>
+<div class='xg-btns-box xg-{align}'>
     <button id='btnSave' type='button' class='btn btn-primary' onclick='{fnOnSave}'>{baseR.BtnSave}<i class='ico-save'></i></button>
     <button id='btnToRead' type='button' class='btn btn-secondary' onclick='{fnOnBack}'>{baseR.BtnToRead}<i class='ico-back'></i></button>
 </div>

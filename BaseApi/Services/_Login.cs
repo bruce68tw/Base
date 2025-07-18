@@ -54,11 +54,11 @@ namespace BaseApi.Services
             var extCol2Sql = "";
             var extCol3Sql = "";
             if (hasExtCol)
-                extColSql = $", ExtCol={extCol}";
+                extColSql = $", ExtCol={AddQuote(extCol)}";
             if (hasExtCol2)
-                extCol2Sql = $", ExtCol2={extCol2}";
+                extCol2Sql = $", ExtCol2={AddQuote(extCol2)}";
             if (hasExtCol3)
-                extCol3Sql = $", ExtCol2={extCol3}";
+                extCol3Sql = $", ExtCol2={AddQuote(extCol3)}";
 
             var sql = $@"
 select u.Id as UserId, u.Name as UserName, u.Pwd,
@@ -146,6 +146,14 @@ where u.Account=@Account
         lab_error:
             //return View(vo);
             return false;
+        }
+
+        //字串加上單引號 if need
+        private static string AddQuote(string value)
+        {
+            if (!value.Contains("'"))
+                value = $"'{value}'";
+            return value;
         }
 
         /// <summary>

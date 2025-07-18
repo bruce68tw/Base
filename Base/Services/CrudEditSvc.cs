@@ -48,13 +48,13 @@ namespace Base.Services
         //ex: t02 = { fxx = key1, fxx = key2}, xx is row index(base 1 !!)
         private JObject _newKeyJson = [];
 
-        /// <summary>
-        /// constructor
-        /// </summary>
-        /// <param name="ctrl"></param>
-        /// <param name="editDto"></param>
-        /// <param name="dbStr"></param>
-        public CrudEditSvc(string ctrl, EditDto editDto, string dbStr = "")
+		/// <summary>
+		/// constructor
+		/// </summary>
+		/// <param name="ctrl"></param>
+		/// <param name="editDto"></param>
+		/// <param name="dbStr"></param>
+		public CrudEditSvc(string ctrl, EditDto editDto, string dbStr = "")
             : base(ctrl, editDto, dbStr)
         {
             _ctrl = ctrl;
@@ -629,9 +629,9 @@ namespace Base.Services
         private bool IsTrans(EditDto editDto)
         {
             var childLen = GetEditChildLen(editDto);
-            return (_editDto.Transaction != null)
-                ? _editDto.Transaction.Value
-                : (childLen > 0);
+            return _editDto.AutoTrans
+                ? (childLen > 0)
+                : false;
         }
 
         /// <summary>
@@ -757,15 +757,16 @@ namespace Base.Services
 
             //case of ok
             if (trans) await db.CommitA();
-            await db.DisposeAsync();
+            await CheckCloseDbA(db);
+
             return new ResultDto() { Value = _saveRows.ToString() };
 
         lab_error:
             if (db != null)
             {
                 if (trans) await db.RollbackA();
-                await db.DisposeAsync();
-            }
+				await CheckCloseDbA(db);
+			}
 
             if (log) 
                 await _Log.ErrorRootA("CrudEditSvc.cs SaveJsonA() failed: " + error);
@@ -775,16 +776,22 @@ namespace Base.Services
                 : _Model.GetValidError(validErrors!);
         }
 
-        /// <summary>
-        /// validate and save(recursive)
-        /// </summary>
-        /// <param name="levelStr">level concat string, ex:0,00,012</param>
-        /// <param name="upDeletes">null for level0</param>
-        /// <param name="inputJson">JObject for level0, JArray for level1/2</param>
-        /// <param name="editDto"></param>
-        /// <param name="db"></param>
-        /// <returns></returns>
-        private async Task<bool> SaveJsonLoopA(string levelStr, List<string>? upDeletes, 
+		private async Task CheckCloseDbA(Db db)
+        {
+			if (!_dbByOut)
+				await db.DisposeAsync();
+		}
+
+		/// <summary>
+		/// validate and save(recursive)
+		/// </summary>
+		/// <param name="levelStr">level concat string, ex:0,00,012</param>
+		/// <param name="upDeletes">null for level0</param>
+		/// <param name="inputJson">JObject for level0, JArray for level1/2</param>
+		/// <param name="editDto"></param>
+		/// <param name="db"></param>
+		/// <returns></returns>
+		private async Task<bool> SaveJsonLoopA(string levelStr, List<string>? upDeletes, 
             JObject inputJson, EditDto editDto, Db db)
         {
             //var hasInput = (inputJson != null);
@@ -1134,14 +1141,16 @@ namespace Base.Services
                 goto lab_error;
 
             if (trans) await db.CommitA();
-            await db.DisposeAsync();
-            return new ResultDto();
+			await CheckCloseDbA(db);
+
+			return new ResultDto();
 
         lab_error:
             if (trans) await db.RollbackA();
-            await db.DisposeAsync();
-            //TODO
-            return _Model.GetError();
+			await CheckCloseDbA(db);
+
+			//TODO
+			return _Model.GetError();
         }
 
         /// <summary>

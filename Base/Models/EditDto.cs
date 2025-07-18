@@ -13,9 +13,9 @@ namespace Base.Models
     {
         /// <summary>
         /// (1st)transaction or not, for master table only
-        /// null: 由系統自動控制
+        /// true: 由系統自行動控制
         /// </summary>
-        public bool? Transaction = null;
+        public bool AutoTrans = true;
 
         /// <summary>
         /// (1st)has foreign or not, 如果為true, 則由DB自行刪除關聯資料
@@ -39,9 +39,10 @@ namespace Base.Models
         public string Table = "";
 
         /// <summary>
-        /// sql string, if not empty, will read db
-        /// master/child-1 readSql must use "=", ex: Id=@Id
-        /// child-2 readSql must use "in", ex: Id in ({0}), or Id in ({{0}})(has @ sign)
+        /// sql string, if not empty, will read db<br/>
+        /// master/child-1 readSql must use "=", ex: Id=@Id<br/>
+        /// child-2 readSql must use "in", ex: Id in ({0}), or Id in ({{0}})(has @ sign)<br/>
+        /// 如果只填ReadSql, 需要同時填PkeyFid
         /// </summary>
         public string ReadSql = "";
 

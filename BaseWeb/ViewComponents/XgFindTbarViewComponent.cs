@@ -27,7 +27,13 @@ namespace BaseWeb.ViewComponents
                 html += string.Format("<button type='button' class='btn btn-success' onclick='_me.crudR.onFind2()'>{0}<i class='ico-find2'></i></button>", baseR.BtnFind2);
 
             if (dto.IsHori)
-                html = "<span class='col-md-3 xg-find-tbar'>" + html + "</span>";
+                //html = "<span class='col-md-3 xg-find-tbar'>" + html + "</span>";
+                html = $@"
+<div class='col-md-3'>
+    <div class='xg-find-tbar'>
+        {html}
+    </div>
+</div>";
             else
             {
                 //vertical

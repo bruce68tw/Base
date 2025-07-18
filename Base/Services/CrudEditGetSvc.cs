@@ -28,8 +28,12 @@ namespace Base.Services
         //db str in config file
         protected string _dbStr = "";
 
-        //sql args pair(fid,value), 日期欄位為空時寫入null, 否則會變1900/1/1 !!
-        protected List<object?> _sqlArgs = [];
+		//只開啟一個db
+		protected Db _db = null!;
+		protected bool _dbByOut = false;
+
+		//sql args pair(fid,value), 日期欄位為空時寫入null, 否則會變1900/1/1 !!
+		protected List<object?> _sqlArgs = [];
 
         //constructor
         public CrudEditGetSvc(string ctrl, EditDto editDto, string dbStr = "")
@@ -39,9 +43,19 @@ namespace Base.Services
             _dbStr = dbStr;
         }
 
-        protected Db GetDb()
+		/// <summary>
+		/// 傳回Db, 外面可呼叫
+		/// </summary>
+		/// <param name="outside">外部開啟</param>
+		/// <returns></returns>
+		public Db GetDb(bool outside = false)
         {
-            return new Db(_dbStr);
+            if (_db == null)
+            {
+                _dbByOut = outside;
+				_db = new Db(_dbStr);
+			}
+			return _db;
         }
 
         protected async Task<JObject?> GetJsonByFunA(CrudEnum fun, string key)
@@ -122,7 +136,7 @@ namespace Base.Services
             */
             var row = _Str.IsEmpty(edit.ReadSql)
                 ? await db!.GetRowA(GetSql(edit, key), _sqlArgs!)
-                : await db!.GetRowA(edit.ReadSql, new() { "Id", key });
+                : await db!.GetRowA(edit.ReadSql, ["Id", key]);
             await _Db.CheckCloseDbA(db, newDb);
             return row;
         }
@@ -215,7 +229,7 @@ namespace Base.Services
                 var sql = emptyReadSql
                     ? GetSqlByWhere(edit, edit.FkeyFid + "=@Id")
                     : edit.ReadSql;
-                rows = await db.GetRowsA(sql, new() { "Id", keys[0] });
+                rows = await db.GetRowsA(sql, ["Id", keys[0]]);
             }
             else
             {
