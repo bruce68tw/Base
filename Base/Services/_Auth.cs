@@ -99,29 +99,31 @@ namespace Base.Services
         /// <summary>
         /// get program auth list
         /// </summary>
+        /// <param name="roleAll">所有人都具備的角色</param>
         /// <param name="userId">user Id</param>
         /// <returns>has ','(if not empty) at start/end for easy coding</returns>
-        public static async Task<string> GetAuthStrsA(string userId, Db? db = null)
+        public static async Task<string> GetAuthStrsA(string userId, string roleAll = "", Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
             var result = "";
             string sql;
+            List<object> args = ["RoleId", roleAll];
             //List<IdStrDto> rows;
             var authType = _Fun.IsNeedLogin() ? _Fun.AuthType : AuthTypeEnum.None;
             switch (authType)
             {
                 case AuthTypeEnum.Ctrl:
                     //return format: code,...
-                    sql = @"
+                    sql = $@"
 select distinct 
     p.Code
 from XpRoleProg rp
-join XpUserRole ur on rp.RoleId=ur.RoleId
+left join XpUserRole ur on rp.RoleId=ur.RoleId
 join XpProg p on rp.ProgId=p.Id
-where ur.UserId=@UserId
+where (ur.UserId='{userId}' or (@RoleId != '' and rp.RoleId=@RoleId))
 ";
                     //rows = await _Db.GetModelsA<IdStrDto>(sql, new(){ "UserId", userId });
-                    var list = await db!.GetStrsA(sql, new(){ "UserId", userId });
+                    var list = await db!.GetStrsA(sql, args);
                     result = (list == null || list.Count == 0)
                         ? "" : ("," + _List.ToStr(list!) + ",");
                     break;
@@ -146,17 +148,17 @@ where ur.UserId=@UserId
 select p.Code as Id, {authStr} as Str
 from (
     select rp.ProgId,
-        FunCreate=max(FunCreate),
-        FunRead=max(FunRead),
-        FunUpdate=max(FunUpdate),
-        FunDelete=max(FunDelete),
-        FunPrint=max(FunPrint),
-        FunExport=max(FunExport),
-        FunView=max(FunView),
-        FunOther=max(FunOther)
+        FunCreate=max(rp.FunCreate),
+        FunRead=max(rp.FunRead),
+        FunUpdate=max(rp.FunUpdate),
+        FunDelete=max(rp.FunDelete),
+        FunPrint=max(rp.FunPrint),
+        FunExport=max(rp.FunExport),
+        FunView=max(rp.FunView),
+        FunOther=max(rp.FunOther)
     from XpRoleProg rp
-    join XpUserRole ur on rp.RoleId=ur.RoleId
-    where ur.UserId='{userId}'
+    left join XpUserRole ur on rp.RoleId=ur.RoleId
+    where (ur.UserId='{userId}' or (@RoleId != '' and rp.RoleId=@RoleId))
     group by rp.ProgId
 ) a 
 join XpProg p on a.ProgId=p.Id
@@ -171,7 +173,7 @@ join XpProg p on rp.ProgId=p.Id
 where ur.UserId=@UserId
 group by p.Code
 ";*/
-                    var rows = await _Db.GetModelsA<IdStrDto>(sql);
+                    var rows = await _Db.GetModelsA<IdStrDto>(sql, args);
                     result = (rows == null || rows.Count == 0)
                         ? ""
                         : "," + _List.ToStr(rows.Select(a => a.Id + ":" + a.Str).ToList()) + ",";
@@ -268,8 +270,11 @@ order by Sort
         /// <param name="fid"></param>
         /// <param name="authRow"></param>
         /// <returns></returns>
-        public static void FilterMenu(List<MenuDto> menus)
+        public static void FilterMenu(List<MenuDto>? menus)
         {
+            if (menus == null)
+                return;
+
             //移除第2層(無權限功能)
             var progs = GetAuthProgs();
             foreach (var menu in menus)
