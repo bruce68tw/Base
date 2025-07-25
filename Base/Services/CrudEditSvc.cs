@@ -436,7 +436,7 @@ namespace Base.Services
             if (items == null || items.Length == 0) return;
 
             //_FidNo
-            editDto._FidNo = new JObject();
+            editDto._FidNo = [];
             var fidNo = editDto._FidNo;
             for (var i = 0; i < items.Length; i++)
                 fidNo[items[i].Fid] = i;
