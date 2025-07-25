@@ -18,7 +18,10 @@ namespace Base.Services
 
         //db str in config file
         private readonly string _dbStr = "";
-        private readonly Db _db = null!;
+
+        //只開啟一個db
+        protected Db _db = null!;
+        protected bool _dbByOut = false;
 
         //jQuery dataTables input arg
         //private DtDto _dtDto;
@@ -26,7 +29,10 @@ namespace Base.Services
         //sql args, (id, value), 只在 GetWhere() 設定
         private List<object> _sqlArgs = [];
 
-		//constructor
+        //方便2次加工
+        private SqlDto _sqlDto = null!;
+
+        //constructor
         public CrudReadSvc(string dbStr = "")
         {
 			_dbStr = dbStr;
@@ -38,9 +44,14 @@ namespace Base.Services
 			_db = db;
         }
 
-		private Db GetDb()
+		public Db GetDb(bool outside = false)
         {
-            return _db ?? new Db(_dbStr);
+            if (_db == null)
+            {
+                _dbByOut = outside;
+                _db = new Db(_dbStr);
+            }
+            return _db;
         }
 
         /// <summary>
@@ -140,6 +151,9 @@ namespace Base.Services
             }
             #endregion
 
+            //set instance variables
+            _sqlDto = sqlDto;
+
             #region 5.get page rows 
             sql = _Sql.DtoToSql(sqlDto, dtDto.start, dtDto.length);
             rows = await db.GetRowsA(sql, _sqlArgs);
@@ -147,7 +161,8 @@ namespace Base.Services
 
         lab_exit:
             //close db
-            await db.DisposeAsync();
+            //await db.DisposeAsync();
+            await CheckCloseDbA(db);
 
             //return result
             return JObject.FromObject(new
@@ -156,6 +171,17 @@ namespace Base.Services
                 data = rows,
                 recordsFiltered = rowCount,
             });
+        }
+
+        public SqlDto GetSqlDto()
+        {
+            return _sqlDto;
+        }
+
+        private async Task CheckCloseDbA(Db db)
+        {
+            if (!_dbByOut)
+                await db.DisposeAsync();
         }
 
         /*

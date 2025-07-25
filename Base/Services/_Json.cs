@@ -229,6 +229,16 @@ namespace Base.Services
             return !IsEmpty(json);
         }
 
+        public static bool IsFidEmpty(JObject? json, string fid)
+        {
+            return (IsEmpty(json) || json![fid] == null || json![fid]!.ToString() == "");
+        }
+
+        public static bool NotFidEmpty(JObject? json, string fid)
+        {
+            return !IsFidEmpty(json, fid);
+        }
+
         /// <summary>
         /// json是否為空白, 並且不考慮特殊欄位(底線開頭欄位)
         /// </summary>
