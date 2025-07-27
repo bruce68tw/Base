@@ -76,7 +76,7 @@ namespace Base.Services
         /// <summary>
         /// session timeout(unit: minutes)
         /// </summary>
-        public static int TimeOut = 880;
+        public static int TimeOut = 600;
 
         //max login fail count
         public static int MaxLoginFail = 3;
@@ -106,13 +106,18 @@ namespace Base.Services
         public static string RunModeName = "";
 
         //null! 表示在使用前設定
-        public static IServiceProvider? DiBox = null!;
+        public static IServiceProvider DiBox = null!;
 
         //database type
-        public static DbTypeEnum DbType;
+        public static DbTypeEnum DbType = DbTypeEnum.MSSql;
 
         //program auth type
-        public static AuthTypeEnum AuthType;
+        public static AuthTypeEnum AuthType = AuthTypeEnum.None;
+
+        /// <summary>
+        /// 是否使用多國語
+        /// </summary>
+        public static bool MultiLang = false;
         #endregion
 
         #region dir varibles
@@ -161,11 +166,12 @@ namespace Base.Services
         /// </summary>
         /// <param name="isDev">is devironment or not</param>
         /// <param name="diBox"></param>
-        /// <param name="dbType"></param>
-        /// <param name="authType"></param>
+        /// <param name="dbType">資料庫種類</param>
+        /// <param name="authType">權限種類</param>
+        /// <param name="multiLang">是否使用多國語</param>
         /// <returns>error msg if any</returns>
-        public static string Init(bool isDev, IServiceProvider? diBox = null, 
-            DbTypeEnum dbType = DbTypeEnum.MSSql, AuthTypeEnum authType = AuthTypeEnum.None)
+        public static string Init(bool isDev, IServiceProvider? diBox, DbTypeEnum dbType, 
+            AuthTypeEnum authType, bool multiLang)
         {
             #region set instance variables
 			IsDev = isDev;
@@ -174,6 +180,7 @@ namespace Base.Services
             DbType = dbType;
             //AuthType = (Config.LoginType == LoginTypeEstr.None) ? AuthTypeEnum.None : authType; //無登入必為無權限 !!
             AuthType = authType;
+            MultiLang = multiLang;
 
             Config!.HtmlImageUrl = _Str.AddSlash(Config.HtmlImageUrl);
 

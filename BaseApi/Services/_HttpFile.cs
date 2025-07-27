@@ -347,7 +347,7 @@ namespace BaseApi.Services
             //check existed
             if (!hasFile) return null;    //let caller exception
 
-            var contentType = _Http.GetContentTypeByExt(ext);
+            var contentType = _Http.ExtToContentType(ext);
             return new FileContentResult(await File.ReadAllBytesAsync(path), contentType)
             {
                 FileDownloadName = _Str.IsEmpty(downFileName)

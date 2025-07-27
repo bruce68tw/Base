@@ -2,14 +2,10 @@
 using Base.Models;
 using Base.Services;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace BaseApi.Services
+namespace BaseFlow.Services
 {
-    public class _XgFlow
+    public class _Flow
     {
         //match to XpCode.Type="AndOr" && Flow.js
         private const string OrSep = "{O}";
@@ -35,50 +31,13 @@ where u.Id='{0}'
         {
             var newDb = _Db.CheckOpenDb(ref db);
             //await using var db = new Db();
-            viewBag.NodeTypes = await NodeTypesA(locale, db);
-            viewBag.SignerTypes = await SignerTypesA(locale, db);
-            viewBag.AndOrs = await AndOrsA(locale, db);
-            viewBag.LineOps = await LineOpsA(locale, db);
-            viewBag.LineFromTypes = await LineFromTypesA(locale, db);
+            viewBag.NodeTypes = await _FlowCode.NodeTypesA(locale, db);
+            viewBag.SignerTypes = await _FlowCode.SignerTypesA(locale, db);
+            viewBag.AndOrs = await _FlowCode.AndOrsA(locale, db);
+            viewBag.LineOps = await _FlowCode.LineOpsA(locale, db);
+            viewBag.LineFromTypes = await _FlowCode.LineFromTypesA(locale, db);
             await _Db.CheckCloseDbA(db!, newDb);
         }
-        #region for flow
-
-        #region get from XpCode table
-        public static async Task<List<IdStrDto>?> LineFromTypesA(string locale0, Db? db = null)
-        {
-            return await _Db.TypeToCodesA("LineFromType", db, locale0);
-        }
-        #endregion
-
-        public static async Task<List<IdStrDto>?> NodeTypesA(string locale = "", Db? db = null)
-        {
-            return await _Db.TypeToCodesA("NodeType", db, locale);
-        }
-        public static async Task<List<IdStrDto>?> SignerTypesA(string locale = "", Db? db = null)
-        {
-            return await _Db.TypeToCodesA("SignerType", db, locale);
-        }
-        public static async Task<List<IdStrDto>?> AndOrsA(string locale = "", Db? db = null)
-        {
-            return await _Db.TypeToCodesA("AndOr", db, locale);
-        }
-        public static async Task<List<IdStrDto>?> LineOpsA(string locale, Db? db = null)
-        {
-            return await _Db.TypeToCodesA("LineOp", db, locale);
-        }
-
-        /*
-        public static List<IdStrDto> GetSignTypes()
-        {
-            return new List<IdStrDto>()
-            {
-                new IdStrDto(){ Id = "Y", Str = "同意" },
-                new IdStrDto(){ Id = "N", Str = "不同意" },
-            };
-        }
-        */
-        #endregion
 
         /// <summary>
         /// create workflow signing rows

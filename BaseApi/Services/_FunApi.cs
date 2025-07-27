@@ -63,7 +63,7 @@ namespace BaseApi.Services
                 resp.Headers.Append("Content-Disposition", "attachment; filename=\"" + HttpUtility.UrlPathEncode(fileName) + "\"");
 
             var ext = _File.GetFileExt(fileName);
-            resp.ContentType = _Http.GetContentTypeByExt(ext);
+            resp.ContentType = _Http.ExtToContentType(ext);
             /*
             //resp.ContentType = "application/vnd.ms-word.document";
             if (ext == "doc" || ext == "docx")

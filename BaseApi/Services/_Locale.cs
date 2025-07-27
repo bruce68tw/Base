@@ -1,14 +1,13 @@
 ﻿using Base.Models;
 using Base.Services;
-using BaseApi.Services;
-using Microsoft.AspNetCore.Localization;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BaseWeb.Services
+//BaseWeb -> BaseApi
+namespace BaseApi.Services
 {
     //for web system only
     public static class _Locale
@@ -16,7 +15,25 @@ namespace BaseWeb.Services
         //public static string CookieName = CookieRequestCultureProvider.DefaultCookieName;     //cookie field id for locale
 
         //loaded localization list, <locale, BaseResDto>
-        private static Dictionary<string, BaseResDto> _brList = new();
+        private static Dictionary<string, BaseResDto> _brList = [];
+
+        /*
+        public static string ConfigLocale()
+        {
+            return _Fun.Config.Locale;
+        }
+        */
+
+        /// <summary>
+        /// get user locale
+        /// </summary>
+        /// <param name="defaultLoc">如果非多國語則傳回Config.Locale(for 大部分情形)</param>
+        /// <returns></returns>
+        public static string GetLocale(bool configLoc = true)
+        {
+            return _Fun.MultiLang ? _Fun.GetBaseUser().Locale : 
+                configLoc ? _Fun.Config.Locale : "";
+        }
 
         /// <summary>
         /// change culture
@@ -61,6 +78,7 @@ namespace BaseWeb.Services
         /// get locale code
         /// </summary>
         /// <returns></returns>
+        /*
         public static string GetLocaleByUser(bool dash = true)
         {
             var user = _Fun.GetBaseUser();
@@ -68,6 +86,7 @@ namespace BaseWeb.Services
             if (!dash) locale = locale.Replace("-", "");
             return locale;
         }
+        */
 
         /// <summary>
         /// get locale by cookie
@@ -86,10 +105,9 @@ namespace BaseWeb.Services
         /// </summary>
         /// <param name="locale">default to user locale</param>
         /// <returns></returns>
-        public static BaseResDto GetBaseRes(string locale = "")
+        public static BaseResDto GetBaseRes()
         {
-            if (locale == "") locale = GetLocaleByUser();
-
+            var locale = GetLocale(true);
             var dict = _brList.FirstOrDefault(a => a.Key == locale);
             return dict.Equals(default(Dictionary<string, BaseResDto>)) 
                 ? new() : dict.Value;

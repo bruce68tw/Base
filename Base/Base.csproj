@@ -52,6 +52,8 @@
     <None Remove="Services\CrudEdit.cs_bak" />
     <None Remove="Services\Date2.cs_old" />
     <None Remove="Services\Db0Service.cs_old" />
+    <None Remove="Services\ExcelImportSvc.cs.bak" />
+    <None Remove="Services\ExcelImportSvc.cs_npoi" />
     <None Remove="Services\ExcelImportSvc.cs_old" />
     <None Remove="Services\ExcelImportSvc.cs_op" />
     <None Remove="Services\Extension.cs_old" />
@@ -60,6 +62,7 @@
     <None Remove="Services\LogError.cs_old" />
     <None Remove="Services\UserDataService.cs_old" />
     <None Remove="Services\UserProfile0Service.cs_old" />
+    <None Remove="Services\WordSetSvc.cs_npoi" />
     <None Remove="Services\WordSetSvc.cs_old" />
     <None Remove="Services\WordSetSvc.cs_op" />
     <None Remove="Services\zz_Cache0Service.cs_old" />
@@ -69,6 +72,8 @@
     <None Remove="Services\_Cast.cs_old" />
     <None Remove="Services\_Config.cs_old" />
     <None Remove="Services\_Error.cs_old" />
+    <None Remove="Services\_Excel.cs.bak" />
+    <None Remove="Services\_Excel.cs_npoi" />
     <None Remove="Services\_Excel.cs_old" />
     <None Remove="Services\_Excel.cs_op" />
     <None Remove="Services\_Linq.cs_old" />
@@ -77,6 +82,7 @@
     <None Remove="Services\_Msg.cs_old" />
     <None Remove="Services\_Multi.cs_old" />
     <None Remove="Services\_Redis.cs_old" />
+    <None Remove="Services\_Word.cs_npoi" />
     <None Remove="Services\_Word.cs_old" />
     <None Remove="Services\_Word.cs_op" />
   </ItemGroup>

@@ -12,6 +12,7 @@
     <None Remove="Services\_HttpWord.cs_new" />
     <None Remove="Services\_HttpWord.cs_old" />
     <None Remove="Services\_HttpWord.cs_op" />
+    <None Remove="Services\_XgFlow.cs_old" />
   </ItemGroup>
 
   <ItemGroup>

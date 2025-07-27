@@ -1,0 +1,251 @@
+﻿@{
+    var br = _Locale.GetBaseRes();
+    var cols = "4,6";
+}
+
+<style>
+    .xu-prog {
+        height: 100%;
+        width: 98%;
+        padding: 0 !important;
+        /*padding: 2px;*/
+    }
+
+        .xu-prog.xu-hide {
+            border: none !important;
+            margin: 0;
+            padding: 0;
+        }
+
+    #divRead {
+        margin: 15px !important;
+    }
+
+    #divEdit {
+        width: 100%;
+        height: 100%;
+        /*margin: 10px 30px;*/
+        /*border-radius: 3px;*/
+    }
+
+    #eform {
+        position: absolute;
+        top: 45px;
+        left: 12px;
+        z-index: 1;
+    }
+
+    .xu-text {
+        width: 150px;
+        margin: 5px;
+    }
+
+    .xu-fun {
+        border: solid 1px #c3c3c3;
+    }
+
+    .xu-col2 {
+        width: 49%;
+    }
+
+    .xu-col3 {
+        width: 32%;
+    }
+</style>
+
+<script src="~/js/svg-3.2.min.js"></script>
+<script src="~/js/svg.draggable-3.0.3.min.js"></script>
+<script src="~/js/view/XpFlow.js"></script>
+<script type="text/javascript">
+    $(function () {
+        _me.init();
+    });
+</script>
+
+<div class="row">
+    <div class="col-md-6">
+        @await Component.InvokeAsync("XgProgPath", new { names = new string[] { "MenuXpFlow" } })
+    </div>
+    <div class="col-md-6" id="divEditTbar" style="padding-top: 6px; display:none">
+        <vc:xg-save-back align="right me-3" />
+    </div>
+</div>
+
+<div class="xg-prog">
+    <!-- read form -->
+    <div id="divRead">
+        <form id='formRead' class='xg-form'>
+            <div class="row">
+                <vc:xi-text dto='new() { Title = "流程名稱", Fid = "Name", MaxLen = 30, InRow = true }' />
+                <vc:xg-find-tbar/>
+            </div>
+        </form>
+
+        <div class='xg-btns-box'>
+            @await Component.InvokeAsync("XgCreate")
+        </div>
+        <table id="tableRead" class="table xg-table" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>FlowCode</th>
+                    <th>FlowName</th>
+                    <th>Status</th>
+                    <th>功能</th>
+                    <th>Crud</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- edit form -->
+    <div id="divEdit" class="xg-hide">
+        <!-- eform 在 flowForm 下面, 使用 z-index無效, 改用 width -->
+        <form id='eform' class='xg-form' style="width:100px;">
+            <vc:xi-hide dto='new() { Fid = "Id" }' />
+            <vc:xi-text dto='new() { Fid = "Code" , MaxLen = 20, Required = true, BoxClass = "xu-text" , InputTip = "流程代碼", Width = "150%", InputAttr = "title=流程代碼" }' />
+            <vc:xi-text dto='new() { Fid = "Name", MaxLen = 30, Required = true, BoxClass = "xu-text", InputTip = "流程名稱", Width = "150%", InputAttr = "title=流程名稱" }' />
+
+            <!-- add outer div for validate msg layout -->
+            <div>
+                <div class="btn-group-vertical" role="group" style="margin-left: 5px;" aria-label="button group vertical">
+                    <button type="button" class="btn xf-start" onclick="_me.flowForm.onAddNode(_flow.TypeStart)" Title="TipStartNode">StartNode</button>
+                    <button type="button" class="btn xf-node" onclick="_me.flowForm.onAddNode(_flow.TypeNode)" Title="TipNode">Node</button>
+                    <button type="button" class="btn xf-end" onclick="_me.flowForm.onAddNode(_flow.TypeEnd)" Title="TipEndNode">EndNode</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- flowNodes editMany -->
+        <form id='eformNodes' class='xg-hide'>
+        </form>
+
+        <!-- flowLines editMany -->
+        <form id='eformLines' class='xg-hide'>
+        </form>
+    </div>
+
+    <div id="divFlowTest" class="xg-hide">
+        <partial name="FlowTest" />
+    </div>
+</div>
+
+<!-- context menu for node & line, xf means flow -->
+<ul class='xf-menu'>
+    <li onclick="_me.flowForm.onMenuEdit(this)" class="xd-edit">Edit</li>
+    <li onclick="_me.flowForm.onMenuDelete(this)" class="xd-delete">Delete</li>
+    <li onclick="_me.flowForm.onMenuView(this)" class="xd-view">View</li>
+</ul>
+
+<!-- ??flow lines container, for keep saving rows, hide -->
+<div id="divLinesBox" style="display:none"></div>
+
+<!-- flow node template, 透過EditMany傳送後端update DB, _isnew(lower case !!), _key are need !! 
+    template內必須加上型別, 使用vc語法時, 無法使用model !!
+-->
+<script id="tplNode" type="text/template">
+    <div class="xd-tr">
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "Id" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "FlowId" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "Name" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "NodeType" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "PosX" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "PosY" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "SignerType" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "SignerValue" })
+    </div>
+</script>
+
+<!-- flow line template -->
+<script id="tplLine" type="text/template">
+    <div class="xd-tr">
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "Id" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "FlowId" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "CondStr" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "FromNodeId" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "ToNodeId" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "FromType" })
+        @await Component.InvokeAsync("XiHide", new XiHideDto() { Fid = "Sort" })
+    </div>
+</script>
+
+<!-- line condition template -->
+<script id="tplLineCond" type="text/template">
+    <tr>
+        <td width="104px">@await Component.InvokeAsync("XiSelect", new XiSelectDto { Fid = "AndOr", Value = "{{AndOr}}", Rows = ViewBag.AndOrs, InRow = true })</td>
+        <td>@await Component.InvokeAsync("XiText", new XiTextDto { Fid = "Fid", Value = "{{Fid}}", MaxLen = 30, InRow = true })</td>
+        <td>@await Component.InvokeAsync("XiSelect", new XiSelectDto { Fid = "Op", Value = "{{Op}}", Rows = ViewBag.LineOps, InRow = true })</td>
+        <td>@await Component.InvokeAsync("XiText", new XiTextDto { Fid = "Value", Value = "{{Value}}", MaxLen = 30, InRow = true })</td>
+        <td width='100px' class='text-center'>@await Component.InvokeAsync("XgDeleteUpDown", new { fnDeleteRow = "_me.flowForm.onDeleteLineCond(this)" })</td>
+    </tr>
+</script>
+
+<!-- node property modal -->
+<div id="modalNodeProp" class="modal fade xg-modal" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">NodeProp</div>
+                <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal xg-form" style="padding:5px 20px;">
+                    <vc:xi-hide dto='new() { Fid="NodeType" }' />
+                    @*await Component.InvokeAsync("XiSelect", new XiSelectDto { Title = "Node Type :", Fid = "NodeType", rows = ViewBag.NodeTypes, cols = cols })*@
+                    @*await Component.InvokeAsync("XiSelect", new XiSelectDto { Title = "SignTime :", Fid = "LimitType", rows = ViewBag.NodeLimitTypes, cols = cols })*@
+                    <vc:xi-text dto='new() { Title="NodeName", Fid="Name" , MaxLen=20, Required=true, Cols=cols }' />
+                    <vc:xi-select dto='new() { Title = "簽核者種類", Fid = "SignerType", Rows = ViewBag.SignerTypes, Required = true, LabelTip = "星號表示簽核者內容為必填。",  Cols = cols }' />
+                    <vc:xi-text dto='new() { Title = "簽核者內容值", Fid = "SignerValue", MaxLen = 30, Cols = cols }' />
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@br.BtnCancel</button>
+                <button type="button" class="btn btn-primary" onclick="_me.flowForm.onModalNodeOk()">@br.BtnYes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- line property modal -->
+<div id="modalLineProp" class="modal fade xg-modal" role="dialog">
+    <div class="modal-dialog" style="max-width:620px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">流程線屬性設定</div>
+                <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal xg-form" style="padding:0 10px;">
+                    <vc:xi-read dto='new() { Title = "起始節點 :", Fid = "FromNodeName", Cols = cols }' />
+                    <vc:xi-read dto='new() { Title = "結束節點 :", Fid = "ToNodeName", Cols = cols }' />
+                    <vc:xi-int dto='new() { Title = "執行順序" + " :", Fid = "Sort", Required = true, Cols = "4,2" }' />
+                    <vc:xi-select dto='new() { Title = "起點位置" + " :", Fid = "FromType", Rows = ViewBag.LineFromTypes, Cols = "4,4" }' />
+                    @*Html.XiNum("Sort", "", "Run Order :", true, cols, new PropNumModel() { IsDigit = true, MaxValue = 10, Width = "80px" })*@
+                    @*Html.XiRadios("LineType", "0", "Run Type :", ViewBag.LineTypes, 9)*@
+                    <div class="row">
+                        <div class="col-md-12" style="margin:5px 0 2px -10px;">
+                            RunCond
+                            <button type="button" class="btn btn-sm btn-primary" onclick="_me.flowForm.onAddLineCond()">BtnAddRow</button>
+                        </div>
+                        <table class="table xg-table" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th width="104px" class="text-center"></th>
+                                    <th>FieldName</th>
+                                    <th width="103px">Op</th>
+                                    <th width="85px">FieldValue</th>
+                                    <th width="85px"></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@br.BtnCancel</button>
+                <button type="button" class="btn btn-primary" onclick="_me.flowForm.onModalLineOk()">@br.BtnYes</button>
+            </div>
+        </div>
+    </div>
+</div>

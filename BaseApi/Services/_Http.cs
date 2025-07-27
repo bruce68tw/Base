@@ -1,5 +1,6 @@
 ﻿using Base.Models;
 using Base.Services;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using SkiaSharp;
 using System;
@@ -7,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,9 +52,15 @@ namespace BaseApi.Services
                 : ip.Replace(".", "");
         }
 
-        public static string GetContentTypeByExt(string ext)
+        /// <summary>
+        /// GetContentTypeByExt -> ExtToContentType
+        /// </summary>
+        /// <param name="ext"></param>
+        /// <returns></returns>
+        public static string ExtToContentType(string ext)
         {
             //var ext = _File.GetFileExt(path);
+            ext = ext.ToLower();
             return (ext == "doc" || ext == "docx") ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" :
                 (ext == "xls" || ext == "xlsx") ? "application/ms-excel" :
                 (ext == "pdf") ? "application/pdf" :
@@ -131,7 +139,7 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// get url result
+        /// call url and get result
         /// </summary>
         /// <param name="url"></param>
         /// <param name="args"></param>
@@ -184,7 +192,29 @@ namespace BaseApi.Services
 
             var tokenDto = new JwtSecurityTokenHandler().ReadJwtToken(token);
             var userId = tokenDto.Claims.First(c => c.Type == ClaimTypes.Name).Value;  //is also session key
-            var br = _Cache.GetModel<BaseUserDto>(UserKeyIp(userId), _Fun.FidBaseUser)!;
+            return GetBaseUser(userId);
+            //var br = _Cache.GetModel<BaseUserDto>(UserKeyIp(userId), _Fun.FidBaseUser)!;
+            //return br;
+        }
+
+        /// <summary>
+        /// 讀取 BaseUser 資訊, 因為用到 HttpContext, 所以寫在 _Http
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        private static BaseUserDto GetBaseUser(string userId)
+        {
+            //get from HttpContext Items if any
+            var fid = _Fun.FidBaseUser;
+            var items = GetHttp().Items;
+            if (items.ContainsKey(fid))
+                return (items[fid] as BaseUserDto)!;
+
+            //get from cache
+            var br = _Cache.GetModel<BaseUserDto>(UserKeyIp(userId), fid)!;
+
+            //set items
+            items[fid] = br;
             return br;
         }
 
@@ -216,12 +246,13 @@ namespace BaseApi.Services
         {
             var clientKey = GetCookie(_Fun.FidClientKey);
             return (clientKey == "")
-                ? new()
-                : _Cache.GetModel<BaseUserDto>(UserKeyIp(clientKey), _Fun.FidBaseUser)!;
+            ? new()
+                : GetBaseUser(clientKey);
+                //: _Cache.GetModel<BaseUserDto>(UserKeyIp(clientKey), _Fun.FidBaseUser)!;
         }
 
         /// <summary>
-        /// user key + IP for session
+        /// user key + IP for session(and cache)
         /// </summary>
         /// <param name="clientKey"></param>
         /// <returns></returns>
