@@ -119,7 +119,7 @@ namespace Base.Services
             return result;
         }
 
-        public static async Task<List<int>?> GetIntsA(string sql, List<object>? args = null, Db? db = null)
+        public static async Task<List<int?>?> GetIntsA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
             var result = await db!.GetIntsA(sql, args);

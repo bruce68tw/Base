@@ -283,19 +283,19 @@ namespace Base.Services
         public async Task<int?> GetIntA(string sql, List<object>? sqlArgs = null)
         {
             var list = await GetIntsA(sql, sqlArgs);
-            return list?[0];
+            return (list == null) ? null : list?[0];
         }
 
         //也可傳回bit(0/1)
-        public async Task<List<int>?> GetIntsA(string sql, List<object>? sqlArgs = null)
+        public async Task<List<int?>?> GetIntsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
             if (reader == null) return null;
 
             //使用Convert.ToInt32可以轉換bit
-            var list = new List<int>();
+            var list = new List<int?>();
             while (reader.Read())
-                list.Add(Convert.ToInt32(reader[0]));
+                list.Add(reader.IsDBNull(0) ? null : Convert.ToInt32(reader[0]));
 
             reader.Close();
             return (list.Count == 0) ? null : list;
