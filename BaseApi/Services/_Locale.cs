@@ -25,7 +25,7 @@ namespace BaseApi.Services
         */
 
         /// <summary>
-        /// get user locale
+        /// get user locale, 如果非多國語則不必讀取BaseUser
         /// </summary>
         /// <param name="defaultLoc">如果非多國語則傳回Config.Locale(for 大部分情形)</param>
         /// <returns></returns>

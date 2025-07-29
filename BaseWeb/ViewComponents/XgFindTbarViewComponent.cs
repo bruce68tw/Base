@@ -1,4 +1,6 @@
-﻿using BaseApi.Services;
+﻿using AngleSharp.Dom;
+using Base.Services;
+using BaseApi.Services;
 using BaseWeb.Models;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +20,13 @@ namespace BaseWeb.ViewComponents
         {
             dto ??= new XgFindTbarDto();
 
-            //set toolbar buttons
+            /*
+            var fnOnFind = _Str.IsEmpty(dto.FnWhenFind)
+                ? "_me.crudR.onFind()"
+                : dto.FnWhenFind;
+            */
+
+            //set toolbar buttons, 使用string.format, 無法使用 $"" !!
             var baseR = _Locale.GetBaseRes();
             var html = string.Format("<button type='button' class='btn btn-primary xd-read' onclick='_me.crudR.onFind()'>{0}<i class='ico-find'></i></button>", baseR.BtnFind);
             if (dto.HasReset)
