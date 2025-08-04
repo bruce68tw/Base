@@ -80,7 +80,7 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// cookie有效期限預設7天, 所以不必特別限定
+        /// set cookie 考慮資安, Program.cs 也會設定
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
@@ -88,10 +88,10 @@ namespace BaseApi.Services
         {
             GetHttp().Response.Cookies.Append(key, value, new CookieOptions
             {
-                Expires = DateTime.UtcNow.AddMinutes(_Fun.TimeOut),
-                HttpOnly = true,                      // 避免 JavaScript 存取此 Cookie
-                //Secure = true,                        // 僅透過 HTTPS 傳輸（建議）
-                //SameSite = SameSiteMode.Strict        // 嚴格限制跨站請求攜帶 Cookie
+                Expires = DateTime.UtcNow.AddMinutes(_Fun.TimeOut), //與server session一致
+                HttpOnly = true,                      //避免 JavaScript 存取此 Cookie
+                Secure = true,                        //僅透過 HTTPS 傳輸（建議）
+                SameSite = SameSiteMode.Strict        //嚴格限制跨站請求攜帶 Cookie
             });
         }
 
@@ -325,7 +325,7 @@ namespace BaseApi.Services
             }
 
             // Save the image to a memory stream
-            using MemoryStream ms = new MemoryStream();
+            using var ms = new MemoryStream();
             image.Encode(SKEncodedImageFormat.Png, 100).SaveTo(ms);
 
             return ms;

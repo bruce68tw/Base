@@ -96,6 +96,9 @@ namespace Base.Services
         public static string JwtKey = "YourJwtKey";
 
         public static string SystemError = "System Error, Please Contact Administrator.";
+
+        //for 資安 script, style 使用 inline
+        public static string Nonce = "";
         #endregion
 
         #region input parameters
@@ -183,6 +186,7 @@ namespace Base.Services
             MultiLang = multiLang;
 
             Config!.HtmlImageUrl = _Str.AddSlash(Config.HtmlImageUrl);
+            //Nonce = _Str.NewId();
 
             //解密敏感組態資料 if need
             if (Config.Encode)
