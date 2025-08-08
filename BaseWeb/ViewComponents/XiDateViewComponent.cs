@@ -45,7 +45,7 @@ namespace BaseWeb.Helpers
 
             /*
             html = @"
-<div class='input-group date datepicker' data-date-format='{5}' style='padding:0px; border-radius:3px;'>
+<div class='input-group date datepicker' data-date-format='{5}'>
     <input type='text' id='{0}' name='{0}' value='{1}' class='form-control' placeholder=""{2}"">
     <div class='input-group-addon'>
         <i class='fa fa-calendar' aria-hidden='true'></i>

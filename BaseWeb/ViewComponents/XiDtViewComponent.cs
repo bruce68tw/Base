@@ -21,7 +21,6 @@ namespace BaseWeb.Helpers
                 min = dt.Minute.ToString();
             }
 
-            var attr = "style='width:70px; display:inline-block;'";
             var html = string.Format(@"
 <div data-fid='{0}' data-type='dt' class='xi-box {1}' {2}>
     {3}
@@ -31,8 +30,8 @@ namespace BaseWeb.Helpers
 </div>",
 dto.Fid, dto.BoxClass, dto.InputAttr,
 _Helper.GetDateHtml("", date, "", dto.Required, dto.Edit, dto.InputTip),
-_Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, dto.Edit, false, inputAttr: attr),
-_Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit, false, inputAttr: attr)
+_Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, dto.Edit, false, boxClass: "xi-dt-hour"),
+_Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit, false, boxClass: "xi-dt-min")
 );
 
             if (_Str.NotEmpty(dto.Title))

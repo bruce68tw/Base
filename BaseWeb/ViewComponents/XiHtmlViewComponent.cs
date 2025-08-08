@@ -14,7 +14,7 @@ namespace BaseWeb.ViewComponents
         public HtmlString Invoke(XiHtmlDto dto)
         {
             var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" value='{dto.Value}' style='width:{dto.Width}'" +
+                $" value='{dto.Value}'" +
                 _Helper.GetPlaceHolder(dto.InputTip) +
                 //_Helper.GetRequired(dto.Required) +
                 _Helper.GetMaxLength(dto.MaxLen);

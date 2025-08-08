@@ -17,26 +17,26 @@ namespace BaseWeb.ViewComponents
             var baseR = _Locale.GetBaseRes();
 /*
 <!-- wait -->
-<div class='xg-wait'>
+<div class='x-wait'>
     <i class='fa fa-spinner fa-spin fa-3x fa-fw'></i>
 </div> 
 */
             var html = $@"
 <!-- alert -->
-<div class='alert alert-success alert-dismissable xg-alert' style='display:none;'>
+<div class='alert alert-success alert-dismissable x-alert d-none'>
     <span class='xd-msg'></span>
     <button type='button' class='btn btn-link' onclick='_tool.onAlertClose();'>
         <i class='ico-delete'></i>
     </button>
 </div>
 
-<!-- msg/ans class 都有 xg-msg for style, 使用id建立jQuery object -->
+<!-- msg/ans class 都有 x-msg for style, 使用id建立jQuery object -->
 <!-- msg -->
-<div id='xgMsg' class='modal fade xg-msg'>
+<div id='xgMsg' class='modal fade x-msg'>
     <div class='modal-dialog' role='document'>
         <div class='modal-content'>
             <div class='modal-header'>
-                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close' style='padding:10px 10px;'></button>
+                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
             </div>
             <div class='modal-body'>
                 <p class='xd-msg'></p>
@@ -49,11 +49,11 @@ namespace BaseWeb.ViewComponents
 </div>
 
 <!-- ans -->
-<div id='xgAns' class='modal fade xg-msg'>
+<div id='xgAns' class='modal fade x-msg'>
     <div class='modal-dialog' role='document'>
         <div class='modal-content'>
             <div class='modal-header'>
-                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close' style='padding:10px 10px;'></button>
+                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
             </div>
             <div class='modal-body'>
                 <p class='xd-msg'></p>
@@ -67,15 +67,15 @@ namespace BaseWeb.ViewComponents
 </div>
 
 <!-- textarea(many lines) editor -->
-<div class='modal fade xg-modal xg-area' data-backdrop='static' data-keyboard='false'>
+<div class='modal fade x-modal x-area' data-backdrop='static' data-keyboard='false'>
     <div class='modal-dialog' role='document'>
         <div class='modal-content'>
             <div class='modal-header'>
                 <h4 class='modal-title'></h4>
-                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close' style='padding:10px 10px;'></button>
+                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
             </div>
             <div class='modal-body'>
-                <textarea value='' style='width:100%' rows='8' maxlength='1000' class='form-control' aria-invalid='false'>
+                <textarea value='' rows='8' maxlength='1000' class='form-control' aria-invalid='false'>
                 </textarea>
             </div>
             <div class='modal-footer'>
@@ -87,7 +87,7 @@ namespace BaseWeb.ViewComponents
 </div>
 
 <!-- show image -->
-<div class='modal fade xg-image'>
+<div class='modal fade x-image'>
     <div class='modal-dialog modal-dialog-centered'>
         <div class='modal-content'>
             <div class='modal-body'>

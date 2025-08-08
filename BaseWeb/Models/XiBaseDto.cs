@@ -43,8 +43,9 @@
         public string Cols { get; set; } = "";
 
         /// <summary>
+        /// 停用 inline style for CSRF !!
         /// form-control預設100%, 如果不是則系統會設定為inline-block
         /// </summary>
-        public string Width { get; set; } = "100%";
+        public int Width { get; set; } = 0;
     }
 }

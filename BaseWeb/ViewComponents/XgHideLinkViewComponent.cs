@@ -8,7 +8,7 @@ namespace BaseWeb.ViewComponents
     {
         public HtmlString Invoke()
         {
-            var html = "<a id='hideLink' data-pjax style='display:none'></a>";
+            var html = "<a id='hideLink' data-pjax class='d-none'></a>";
             return new HtmlString(html);
         }
     }//class

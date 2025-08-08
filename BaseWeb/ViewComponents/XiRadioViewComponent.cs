@@ -22,7 +22,7 @@ namespace BaseWeb.ViewComponents
             //box & ext class
             //var boxClass = "xi-box"; 
             if (dto.IsHori)
-                dto.BoxClass += " xg-inline";
+                dto.BoxClass += " x-inline";
             //if (extClass != "")
             //    extClass = " " + extClass;
 

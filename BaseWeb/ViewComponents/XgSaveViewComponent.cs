@@ -10,7 +10,7 @@ namespace BaseWeb.ViewComponents
         {
             var baseR = _Locale.GetBaseRes();
             var html = $@"
-<div class='xg-{align}'>
+<div class='x-{align}'>
     <button id='btnSave' type='button' class='btn btn-success' onclick='{fnOnSave}'>{baseR.BtnSave}<i class='ico-save'></i></button>
 </div>
 ";

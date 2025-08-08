@@ -36,8 +36,8 @@ namespace BaseWeb.ViewComponents
             //data-max/exts for checking so put in input file, others for input hide !!
             //button open/delete will be handled by status, but link(view) is on.
             var html = $@"
-<div class='form-control xi-box {dto.BoxClass}' style='margin-bottom:0'>
-    <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' onchange='_ifile.onChangeFile(this)' style='display:none'>
+<div class='form-control xi-box xi-box-file {dto.BoxClass}'>
+    <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' onchange='_ifile.onChangeFile(this)' class='d-none'>
     <input{attr} data-type='file' type='hidden' class='xd-valid'>
 
     <button type='button' class='btn btn-link' onclick='_ifile.onOpenFile(this)' {dataEdit}>

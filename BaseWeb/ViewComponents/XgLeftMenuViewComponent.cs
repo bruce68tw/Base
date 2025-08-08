@@ -9,7 +9,7 @@ namespace BaseWeb.ViewComponents
     public class XgLeftMenuViewComponent : ViewComponent
     {
         /// <summary>
-        /// left side menu(max to 2 levels), outside class name is xg-leftmenu
+        /// left side menu(max to 2 levels), outside class name is x-leftmenu
         /// </summary>
         /// <param name="htmlHelper"></param>
         /// <param name="rows">menu rows</param>
@@ -52,11 +52,11 @@ namespace BaseWeb.ViewComponents
 
                     html += string.Format(@"
 <li>
-    <a class='collapsed xg-toggle'>
+    <a class='collapsed x-toggle'>
         <i class='{0}'></i>{1}
-        <b class='xg-arrow'></b>
+        <b class='x-arrow'></b>
     </a>
-    <ul class='collapse xg-leftmenu-subbox' role='menu'>
+    <ul class='collapse x-leftmenu-subbox' role='menu'>
         {2}
     </ul>
 </li>
@@ -65,7 +65,7 @@ namespace BaseWeb.ViewComponents
                 }//if
             }//for
 
-            html = "<ul class='xg-leftmenu'>" + html + "</ul>";
+            html = "<ul class='x-leftmenu'>" + html + "</ul>";
             return new HtmlString(html);
         }
 

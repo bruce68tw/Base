@@ -19,8 +19,7 @@ namespace BaseWeb.ViewComponents
 
             //add class xi-unsave for not save Db !!
             var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.InputAttr) +
-                $" data-type='link' onclick='{dto.FnOnViewFile}'" +
-                " style='height:32px; display:table-cell; vertical-align:middle;'";
+                $" data-type='link' onclick='{dto.FnOnViewFile}'";
 
             var css = _Helper.GetCssClass("xi-unsave", dto.BoxClass, dto.Width);
             var html = $"<a href='#' {attr} class='{css}'>{dto.Value}</a>";

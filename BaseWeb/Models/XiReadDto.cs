@@ -28,5 +28,7 @@
         /// edit field style, default false
         /// </summary>
         public bool EditStyle { get; set; }
+
+        public int Width { get; set; } = 0;
     }
 }

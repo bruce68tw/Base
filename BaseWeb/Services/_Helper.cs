@@ -9,7 +9,7 @@ namespace BaseWeb.Services
 
     public static class _Helper
     {
-        //public const string XgRequired = "xg-required";     //for label
+        //public const string XgRequired = "x-required";     //for label
         public const string XdRequired = "required";     //for input ??
 
         /*
@@ -30,7 +30,7 @@ namespace BaseWeb.Services
         /// <returns></returns>
         public static string GetRequiredSpan(bool required)
         {
-            return required ? "<span class='xg-required'>*</span>" : "";
+            return required ? "<span class='x-required'>*</span>" : "";
         }
 
         /// <summary>
@@ -104,13 +104,19 @@ namespace BaseWeb.Services
                 : " pattern='" + pattern + "'";
         }
 
-        //return ext class
-        public static string GetCssClass(string nowClass, string extClass, string width)
+        /// <summary>
+        /// return ext class for 輸入欄位
+        /// </summary>
+        /// <param name="nowClass"></param>
+        /// <param name="extClass"></param>
+        /// <param name="width">如果有值則會使用 x-inline 並且使用固定寬度 x-wxxx</param>
+        /// <returns></returns>
+        public static string GetCssClass(string nowClass, string extClass, int width)
         {
             if (extClass != "")
                 nowClass += " " + extClass;
-            if (width != "" && width != "100%")
-                nowClass += " xg-inline";
+            if (width > 0)
+                nowClass += $" x-inline x-w{width}";
             return nowClass;
         }
 
@@ -157,11 +163,11 @@ namespace BaseWeb.Services
             value = _Date.GetDateStr(value);
             //var dataEdit = GetDataEdit(edit);
 
-            //xidate 無條件加上 xg-inline, 同時 .date會設定width=180px
+            //xidate 無條件加上 x-inline, 同時 .date會設定width=180px
             //使用 .date 執行 _idate 初始化, 因為包含多個元素, 所以必須將box對應datepicker !!
             //input-group & input-group-addon are need for datepicker !!
             return $@"
-<div class='input-group date xg-inline {boxClass}' data-provide='datepicker' {inputAttr}>
+<div class='input-group date x-inline {boxClass}' data-provide='datepicker' {inputAttr}>
     <input{attr} value='{value}' type='text' class='form-control'>
     <div class='input-group-addon'></div>
     <span>
@@ -228,7 +234,7 @@ namespace BaseWeb.Services
 
             //set data-width='100%' for RWD !!
             //use class for multi columns !!
-            //xg-select-col for dropdown inner width=100%, xg-select-colX for RWD width
+            //x-select-col for dropdown inner width=100%, x-select-colX for RWD width
             return $@"
 <select{attr} class='form-select {boxClass}'>
     {optList}
@@ -245,7 +251,7 @@ namespace BaseWeb.Services
         {
             //attr
             var attr = _Helper.GetInputAttr(fid, editable, required) +
-                $" value='{value}' rows='{rowsCount}' style='width:100%'" +
+                $" value='{value}' rows='{rowsCount}'" +
                 GetPlaceHolder(inputTip) +
                 GetRequired(required) +
                 GetMaxLength(maxLen);
@@ -291,15 +297,15 @@ namespace BaseWeb.Services
             //加上 required
             var reqSpan = GetRequiredSpan(required);
 
-            var labelClass = labelHideRwd ? _Fun.HideRwd : "";
+            var labelClass = labelHideRwd ? _Fun.ClsHideRwd : "";
             string result;
             if (colList.Count > 1)
             {
                 //horizontal
-                labelClass += " xg-label";
+                labelClass += " x-label";
                 result = string.Format(@"
 <div class='col-md-{0} {5}'{2}>{3}</div>
-<div class='col-md-{1} xg-input'>
+<div class='col-md-{1} x-input'>
     {4}
 </div>
 ", colList[0], colList[1], labelTip2, (reqSpan + title + iconTip), html, labelClass);
@@ -307,11 +313,11 @@ namespace BaseWeb.Services
             else
             {
                 //vertical
-                labelClass += " xg-vlabel";
+                labelClass += " x-vlabel";
                 result = string.Format(@"
-<div class='col-md-{0} zz_xg-row'>
+<div class='col-md-{0} zz_x-row'>
     <div class='{4}'{1}>{2}</div>
-    <div class='xg-input'>
+    <div class='x-input'>
         {3}
     </div>
 </div>
@@ -329,61 +335,6 @@ namespace BaseWeb.Services
             var values = _Str.ToIntList(cols);
             return (values.Count == 0) ? _Fun.DefHoriColList : values;
         }
-
-        /*
-        /// <summary>
-        /// ??
-        /// 傳回下拉式欄位屬性字串 (bootstrap-select)
-        /// </summary>
-        /// <param name="prop">select 屬性 model</param>
-        /// <param name="title">select title, 如果空白, 則會使用 prop.PlaceHolder</param>
-        /// <returns>屬性字串 for select tag</returns>
-        //public static string GetSelectProp(SelectPropModel prop, string title = "")
-        public static string GetSelectProp(Select2PropModel prop)
-        {
-            //initial result
-            //寬度必須為 data-width='100%' 才會有 RWD效果 !!
-            //20161201 增加 disableslimscroll class, 手機 scrolling 才會正常 !!
-            //20161215 Bruce : disableslimscroll 移到 _fun.js 處理
-            var result = "data-style='" + (prop!=null?prop.ButtonClass:"") + " xg-select-btn' data-width='100%'";
-            var className = "selectpicker";     //bootstrap-select default class
-
-            //change title if need, 必須使用空白字元字碼, 直接使用空白字元無作用 !!
-            //var title = (prop == null || prop.PlaceHolder == "") ? "&nbsp;" : prop.PlaceHolder;
-            //20161205 Bruce : 必須將單引號轉換成為 &#39; 才能在前端正確顯示 !!
-            var title = (prop == null || String.IsNullOrEmpty(prop.PlaceHolder)) ? "&nbsp;" : prop.PlaceHolder.Replace("'", "&#39;");
-
-            result += " title='" + title + "'";
-
-            if (prop != null)
-            {
-
-                //顯示筆數, for 考慮下拉式欄位空間
-                if (prop.Size > 0)
-                    result += " data-size='" + prop.Size + "'";
-
-                //change className
-                //xg-select-col 用來設定dropdown內框width=100%, xg-select-colX 用來設定RWD寬度
-                if (prop.Columns > 1)
-                    className += " xg-select-col xg-select-col" + prop.Columns;
-                if (prop.ClassName != "")
-                    className += " " + prop.ClassName;
-
-                //add onchange
-                if (_Str.NotEmpty(prop.OnChange))
-                    result += " onchange='" + prop.OnChange + "(this)'";
-
-                //data-separator 用來傳遞自訂參數
-                result += " data-separator='" + prop.Separator + "'";
-
-                //dragupauto
-                if (!prop.DropUpAuto)
-                    result += " data-dropup-auto='false'";
-            }
-            result += " class='" + className + "'";
-            return result;
-        }
-        */
 
     }//class
 }

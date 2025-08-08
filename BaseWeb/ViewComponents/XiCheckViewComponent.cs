@@ -33,7 +33,7 @@ namespace BaseWeb.ViewComponents
 
             //ext class
             if (string.IsNullOrEmpty(dto.Label))
-                dto.BoxClass += " xg-no-label";
+                dto.BoxClass += " x-no-label";
 
             //get html (span for checkbox checked sign)
             //value attr will disappear, use data-value instead !!

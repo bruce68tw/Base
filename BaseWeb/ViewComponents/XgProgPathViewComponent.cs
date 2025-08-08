@@ -16,7 +16,7 @@ namespace BaseWeb.ViewComponents
             for (var i=1; i< names.Length; i++)
                 list += " / " + names[i];
 
-            var html = "<div class='xg-prog-path'>{0}</div>";
+            var html = "<div class='x-prog-path'>{0}</div>";
             return new HtmlString(string.Format(html, list));
         }
 

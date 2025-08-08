@@ -27,7 +27,7 @@ namespace BaseWeb.ViewComponents
             //base attr: fid,name,readonly,ext attr
             var type = dto.IsPwd ? "password" : "text";
             var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" type='{type}' value='{dto.Value}' style='width:{dto.Width}'" +     //default 100%
+                $" type='{type}' value='{dto.Value}'" +
                 _Helper.GetPlaceHolder(dto.InputTip) +
                 _Helper.GetMaxLength(dto.MaxLen) +
                 _Helper.GetPattern(dto.Pattern);

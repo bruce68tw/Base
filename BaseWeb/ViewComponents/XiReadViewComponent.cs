@@ -14,9 +14,11 @@ namespace BaseWeb.ViewComponents
             if (_Str.NotEmpty(dto.Format))
                 attr += $" data-format='{dto.Format}'";
 
-            //xiRead 無條件加上 xg-inline
+            //xiRead 無條件加上 x-inline
             //xi-read2 表示 edit style
-            var css = "form-control xg-inline" + (dto.EditStyle ? " xi-read2" : " xi-read");
+            var css = "form-control x-inline" + (dto.EditStyle ? " xi-read2" : " xi-read");
+            if (dto.Width > 0)
+                css += $" x-w{dto.Width}";
             if (dto.BoxClass != "")
                 css += " " + dto.BoxClass;
             //add class xi-unsave for not save DB, _form.js toJson() will filter out it !!

@@ -68,8 +68,8 @@ namespace Base.Services
         //directory tail seperator
         public static char DirSep = Path.DirectorySeparatorChar;
 
-        //class name for hide element in RWD phone
-        public static string HideRwd = "xg-hide-rwd";
+        //class name for hide element in RWD phone, HideRwd -> ClsHideRwd
+        public static string ClsHideRwd = "x-hide-rwd";
         #endregion
 
         #region variables PG can modify
