@@ -25,7 +25,7 @@ namespace Base.Models
         /// <summary>
         /// 是否可以新增key值
         /// </summary>
-        public bool CanAddKey = false;
+        //public bool CanAddKey = false;
 
         /// <summary>
         /// auto Id length, empty for default.<br/>

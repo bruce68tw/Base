@@ -829,7 +829,7 @@ namespace Base.Services
             if (inputRows != null)
             {
                 //使用JToken再轉型JObject則不會出現null error的情形 !!
-                var kid = editDto.CanAddKey ? "" : editDto.PkeyFid;  //autoId=0 則Id可傳入
+                var kid = (editDto.AutoIdLen == 0) ? "" : editDto.PkeyFid;  //AutoIdLen=0 則Id可傳入
                 foreach (JToken token in inputRows)
                 {
                     //inputRow0 could be null, save to var first, or will error
@@ -838,7 +838,7 @@ namespace Base.Services
                     var inputRow = token as JObject;
                     if (_Json.IsEmpty(inputRow)) continue;
 
-                    //insert/update this
+                    //insert/update this, 如果允許前端傳入新key, 則不必檢查Id
                     if (!HasInputField(inputRow, kid)) continue;
 
                     //注意: 移除if括號時無法執行else區段!!
@@ -919,7 +919,7 @@ namespace Base.Services
             if (inputRows != null)
             {
                 var kid = editDto.PkeyFid;
-                var canAddKey = editDto.CanAddKey;
+                var canAddKey = (editDto.AutoIdLen == 0);
                 var inputKid = canAddKey ? "" : kid;
                 foreach (JToken token in inputRows)
                 {
@@ -960,6 +960,7 @@ namespace Base.Services
                     string pkey;
                     if (canAddKey)
                     {
+                        //直接從前端傳入
                         pkey = (string)inputRow![kid]!;
                     }
                     else
