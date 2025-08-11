@@ -53,7 +53,8 @@ namespace BaseWeb.Services
                 //script, style使用nonce 讓前端使用 inline !!
                 context.Response.Headers["Content-Security-Policy"] =
                     "default-src 'self'; img-src 'self'; object-src 'none'; frame-ancestors 'self'; " +
-                    $"script-src 'self' 'nonce-{newId}'; style-src 'self' 'nonce-{newId}'; ";
+                    $"script-src 'self' 'unsafe-inline'; style-src 'self' 'nonce-{newId}'; ";
+                    //$"script-src 'self' 'nonce-{newId}'; style-src 'self' 'nonce-{newId}'; ";
 
                 context.Response.Headers["Referrer-Policy"] = "no-referrer";
                 context.Response.Headers["X-Content-Type-Options"] = "nosniff";

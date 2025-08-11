@@ -36,8 +36,13 @@ namespace BaseWeb.ViewComponents
 
             if (dto.IsHori)
                 //html = "<span class='col-md-3 x-find-tbar'>" + html + "</span>";
-                html = $@"
-<div class='col-md-3'>
+                html = dto.SpanMode
+                    ? $@"
+<div class='x-find-tbar2'>
+    {html}
+</div>"
+                    : $@"
+<div class='col-md-3 d-flex ps-0 pb-1'>
     <div class='x-find-tbar'>
         {html}
     </div>

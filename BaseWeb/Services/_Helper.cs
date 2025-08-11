@@ -171,8 +171,8 @@ namespace BaseWeb.Services
     <input{attr} value='{value}' type='text' class='form-control'>
     <div class='input-group-addon'></div>
     <span>
-        <i class='ico-delete' onclick='_idate.onReset(this)'></i>
-        <i class='ico-date' onclick='_idate.onToggle(this)'></i>
+        <i class='ico-delete' data-onclick='_idate.onReset'></i>
+        <i class='ico-date' data-onclick='_idate.onToggle'></i>
     </span>
 </div>";
         }
