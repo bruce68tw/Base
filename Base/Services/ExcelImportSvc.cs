@@ -202,7 +202,7 @@ namespace Base.Services
 
                     //日期儲存格
                     if (field.IsDate && _Str.NotEmpty(value))
-                        value = DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat);
+                        value = _Excel.DateIntToStr(value, uiDtFormat);
 
                     object value2 = 
                         (ftype == ModelTypeEstr.Datetime) ? _Date.CsToDate(value)! :

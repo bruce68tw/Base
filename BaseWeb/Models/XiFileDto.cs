@@ -19,7 +19,9 @@
 
         //*(all),I(image),E(excel),W(word)
         public string FileType { get; set; } = "I"; //image
-        public string FnOnViewFile { get; set; } = "";
+
+        //取消, 固定呼叫_me.onViewFile, 同時傳入table, fid
+        //public string FnOnViewFile { get; set; } = "";
         //public string FnOnOpenFile { get; set; }
         //public string FnOnDeleteFile { get; set; }
     }

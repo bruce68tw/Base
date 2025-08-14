@@ -29,7 +29,7 @@ namespace BaseWeb.ViewComponents
             if (dto.IsCheck)
                 attr += " checked";
             if (_Str.NotEmpty(dto.FnOnClick))
-                attr += $" onclick='{dto.FnOnClick}'";
+                attr += $" data-onclick='{dto.FnOnClick}'";
 
             //ext class
             if (string.IsNullOrEmpty(dto.Label))

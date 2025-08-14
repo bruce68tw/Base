@@ -12,7 +12,7 @@ namespace BaseWeb.ViewComponents
         {
             var btnOpen = _Locale.GetBaseRes().BtnOpen;
             var req = required ? "true" : "false";
-            var html = $"<a onclick='_me.crudE.onOpenModal(this, \"{title}\", \"{fid}\", {req}, {maxLen})' class='btn btn-outline-secondary btn-sm'>{btnOpen}</a>";
+            var html = $"<a data-onclick='_me.crudE.onOpenModal' data-args='{title},{fid},{req},{maxLen}' class='btn btn-outline-secondary btn-sm'>{btnOpen}</a>";
             return new HtmlString(html);
         }        
 

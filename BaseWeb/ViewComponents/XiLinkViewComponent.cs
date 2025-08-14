@@ -13,13 +13,15 @@ namespace BaseWeb.ViewComponents
     {
         public HtmlString Invoke(XiLinkDto dto)
         {
+            /*
             if (_Str.IsEmpty(dto.FnOnViewFile))
                 dto.FnOnViewFile = $"_me.onViewFile(\"{dto.Table}\", \"{dto.Fid}\", this)";
             dto.FnOnViewFile = _Helper.GetLinkFn(dto.FnOnViewFile);
+            */
 
             //add class xi-unsave for not save Db !!
             var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.InputAttr) +
-                $" data-type='link' onclick='{dto.FnOnViewFile}'";
+                $" data-type='link' data-onclick='_me.onViewFile' data-args='{dto.Table},{dto.Fid}'";
 
             var css = _Helper.GetCssClass("xi-unsave", dto.BoxClass, dto.Width);
             var html = $"<a href='#' {attr} class='{css}'>{dto.Value}</a>";

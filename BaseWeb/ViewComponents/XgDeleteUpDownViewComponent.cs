@@ -12,16 +12,16 @@ namespace BaseWeb.ViewComponents
         public HtmlString Invoke(string mName, string fnDeleteRow = "")
         {
             if (_Str.IsEmpty(fnDeleteRow))
-                fnDeleteRow = $"{mName}.onDeleteRow(this)";
+                fnDeleteRow = $"{mName}.onDeleteRow";
 
             var html = $@"
-<button type='button' class='btn btn-link' onclick='{fnDeleteRow}'>
+<button type='button' class='btn btn-link' data-onclick='{fnDeleteRow}'>
     <i class='ico-delete'></i>
 </button>
-<button type='button' class='btn btn-link' onclick='_table.rowMoveUp(this)'>
+<button type='button' class='btn btn-link' data-onclick='_table.rowMoveUp'>
     <i class='ico-up'></i>
 </button>
-<button type='button' class='btn btn-link' onclick='_table.rowMoveDown(this)'>
+<button type='button' class='btn btn-link' data-onclick='_table.rowMoveDown'>
     <i class='ico-down'></i>
 </button>";
             return new HtmlString(html);

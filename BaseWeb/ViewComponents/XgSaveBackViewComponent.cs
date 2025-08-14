@@ -6,13 +6,13 @@ namespace BaseWeb.ViewComponents
 {
     public class XgSaveBackViewComponent : ViewComponent
     {
-        public HtmlString Invoke(string align = "center", string fnOnSave = "_me.crudE.onSaveA()", string fnOnBack = "_me.crudR.onToRead()" )
+        public HtmlString Invoke(string align = "center", string fnOnSave = "_me.crudE.onSaveA", string fnOnBack = "_me.crudR.onToRead" )
         {
             var baseR = _Locale.GetBaseRes();
             var html = $@"
 <div class='x-btns-box x-{align}'>
-    <button id='btnSave' type='button' class='btn btn-primary' onclick='{fnOnSave}'>{baseR.BtnSave}<i class='ico-save'></i></button>
-    <button id='btnToRead' type='button' class='btn btn-secondary' onclick='{fnOnBack}'>{baseR.BtnToRead}<i class='ico-back'></i></button>
+    <button id='btnSave' type='button' class='btn btn-primary' data-onclick='{fnOnSave}'>{baseR.BtnSave}<i class='ico-save'></i></button>
+    <button id='btnToRead' type='button' class='btn btn-secondary' data-onclick='{fnOnBack}'>{baseR.BtnToRead}<i class='ico-back'></i></button>
 </div>
 ";
             return new HtmlString(html);

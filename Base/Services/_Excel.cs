@@ -13,6 +13,16 @@ namespace Base.Services
     public class _Excel
     {
         /// <summary>
+        /// excel 日期int 轉成"日期"字串
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string DateIntToStr(string value, string uiDtFormat)
+        {
+            return DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat);
+        }
+
+        /// <summary>
         /// convert excel Stream to Openxml Workbook(Docx)
         /// </summary>
         /// <param name="stream"></param>
@@ -99,7 +109,7 @@ namespace Base.Services
                             ? "null"
                             : ""
                         : (dateLen > j && isDates![j])
-                            ? DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat)
+                            ? DateIntToStr(value, uiDtFormat)
                             : value;
 
                     if (cols[j + 1] != "" && cols[j + 1] != "null")

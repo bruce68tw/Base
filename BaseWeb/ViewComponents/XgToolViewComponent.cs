@@ -25,7 +25,7 @@ namespace BaseWeb.ViewComponents
 <!-- alert -->
 <div class='alert alert-success alert-dismissable x-alert d-none'>
     <span class='xd-msg'></span>
-    <button type='button' class='btn btn-link' onclick='_tool.onAlertClose();'>
+    <button type='button' class='btn btn-link' data-onclick='_tool.onAlertClose;'>
         <i class='ico-delete'></i>
     </button>
 </div>
@@ -42,7 +42,7 @@ namespace BaseWeb.ViewComponents
                 <p class='xd-msg'></p>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn btn-primary xd-close' onclick='_tool.onMsgClose()'>{baseR.BtnClose}</button>
+                <button type='button' class='btn btn-primary xd-close' data-onclick='_tool.onMsgClose'>{baseR.BtnClose}</button>
             </div>
         </div>
     </div>
@@ -59,8 +59,8 @@ namespace BaseWeb.ViewComponents
                 <p class='xd-msg'></p>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn btn-secondary xd-cancel' onclick='_tool.onAnsNo()'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn btn-primary xd-yes' onclick='_tool.onAnsYes()'>{baseR.BtnYes}</button>
+                <button type='button' class='btn btn-secondary xd-cancel' data-onclick='_tool.onAnsNo'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn btn-primary xd-yes' data-onclick='_tool.onAnsYes'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
@@ -80,7 +80,7 @@ namespace BaseWeb.ViewComponents
             </div>
             <div class='modal-footer'>
                 <button type='button' class='btn btn-secondary xd-cancel' data-bs-dismiss='modal'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn btn-primary xd-yes' onclick='_tool.onAreaYes()'>{baseR.BtnYes}</button>
+                <button type='button' class='btn btn-primary xd-yes' data-onclick='_tool.onAreaYes'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>

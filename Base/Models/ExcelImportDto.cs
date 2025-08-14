@@ -33,6 +33,8 @@ namespace Base.Models
 
         /// <summary>
         /// empty means excel row0 is fid, order should same to imported file
+        /// c# 讀取 excel 日期欄位會變成數字(從1900/1/1開始計算), 如果<T>的欄位type為string, 但excel欄位為日期, 
+        /// 則該欄位應寫為D:xxx, 表示系統會轉成日期字串再儲存
         /// </summary>
         public List<string> ExcelFids = [];
 

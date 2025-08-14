@@ -17,9 +17,11 @@ namespace BaseWeb.ViewComponents
         /// <returns></returns>
         public HtmlString Invoke(XiFileDto dto)
         {
+            /*
             if (_Str.IsEmpty(dto.FnOnViewFile))
                 dto.FnOnViewFile = $"_me.onViewFile(\"{dto.Table}\", \"{dto.Fid}\", this)";
             dto.FnOnViewFile = _Helper.GetLinkFn(dto.FnOnViewFile);
+            */
 
             //attr, add data-table for onViewFile()
             var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr);
@@ -40,13 +42,13 @@ namespace BaseWeb.ViewComponents
     <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' onchange='_ifile.onChangeFile(this)' class='d-none'>
     <input{attr} data-type='file' type='hidden' class='xd-valid'>
 
-    <button type='button' class='btn btn-link' onclick='_ifile.onOpenFile(this)' {dataEdit}>
+    <button type='button' class='btn btn-link' data-onclick='_ifile.onOpenFile' {dataEdit}>
         <i class='ico-open'></i>
     </button>
-    <button type='button' class='btn btn-link' onclick='_ifile.onDeleteFile(this)' {dataEdit}>
+    <button type='button' class='btn btn-link' data-onclick='_ifile.onDeleteFile' {dataEdit}>
         <i class='ico-delete'></i>
     </button>
-    <button type='button' class='btn btn-link' onclick='{dto.FnOnViewFile}'>{dto.Value}</button>
+    <button type='button' class='btn btn-link' data-onclick='_me.onViewFile' data-args='{dto.Table},{dto.Fid}'>{dto.Value}</button>
 </div>";
 
             //add label if need

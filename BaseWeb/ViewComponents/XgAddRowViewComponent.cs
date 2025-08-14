@@ -10,7 +10,7 @@ namespace BaseWeb.ViewComponents
         public HtmlString Invoke(string fnOnClick)
         {
             var html = string.Format(@"
-<button type='button' onclick='{0}' class='btn btn-success'>{1}
+<button type='button' data-onclick='{0}' class='btn btn-success'>{1}
     <i class='ico-plus'></i>
 </button>
 ", fnOnClick, _Locale.GetBaseRes().BtnAddRow);
