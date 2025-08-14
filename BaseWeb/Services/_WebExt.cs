@@ -8,7 +8,7 @@ using System;
 
 namespace BaseWeb.Services
 {
-    public static class WebExt
+    public static class _WebExt
     {
         public static WebApplicationBuilder SetBuilder(this WebApplicationBuilder builder, string origin)
         {
@@ -53,6 +53,7 @@ namespace BaseWeb.Services
 
             app.UseStaticFiles(new StaticFileOptions
             {
+                /*
                 OnPrepareResponse = ctx =>
                 {
                     var headers = ctx.Context.Response.Headers;
@@ -63,8 +64,10 @@ namespace BaseWeb.Services
                     headers.Remove("X-Powered-By");
                     headers.Remove("Server");   //無作用!!
                 }
+                */
             });
 
+            /*
             app.Use(async (ctx, next) =>
             {
                 //script, style使用nonce 讓前端使用 inline !!
@@ -92,6 +95,7 @@ namespace BaseWeb.Services
                 headers.Remove("Server");
                 await next();
             });
+            */
             //
             app.UseCookiePolicy(); // 要啟用 cookie policy 才會生效
             return app;

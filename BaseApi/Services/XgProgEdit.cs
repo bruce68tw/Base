@@ -3,9 +3,9 @@ using Base.Services;
 
 namespace BaseApi.Services
 {
-    public class XgProgE : BaseEditSvc
+    public class XgProgEdit : BaseEditSvc
     {
-        public XgProgE(string ctrl) : base(ctrl) { }
+        public XgProgEdit(string ctrl) : base(ctrl) { }
 
         override public EditDto GetDto()
         {

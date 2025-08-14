@@ -1,4 +1,3 @@
-﻿using Base.Enums;
 using Base.Models;
 using Base.Services;
 using Newtonsoft.Json.Linq;
@@ -6,18 +5,15 @@ using System.Threading.Tasks;
 
 namespace BaseApi.Services
 {
-    public class XgProgR
+    public class XgFlowRead
     {
         private readonly ReadDto dto = new()
         {
             ReadSql = @"
-select * from dbo.XpProg
-order by Sort
+select *
+from dbo.XpFlow
+order by Id
 ",
-            Items = [
-                new() { Fid = "Code", Op = ItemOpEstr.Like },
-                new() { Fid = "Name", Op = ItemOpEstr.Like },
-            ],
         };
 
         public async Task<JObject?> GetPageA(string ctrl, DtDto dt)

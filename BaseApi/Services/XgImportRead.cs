@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace BaseApi.Services
 {
-    public class XgImportR
+    public class XgImportRead
     {
         private readonly string _importType;
 
         //constructor
-        public XgImportR(string importType)
+        public XgImportRead(string importType)
         {
             _importType = importType;
         }

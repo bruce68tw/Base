@@ -3,9 +3,9 @@ using Base.Services;
 
 namespace BaseApi.Services
 {
-    public class XgEasyRptE : BaseEditSvc
+    public class XgEasyRptEdit : BaseEditSvc
     {
-        public XgEasyRptE(string ctrl) : base(ctrl) { }
+        public XgEasyRptEdit(string ctrl) : base(ctrl) { }
 
         override public EditDto GetDto()
         {

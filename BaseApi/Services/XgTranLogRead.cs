@@ -1,21 +1,25 @@
-﻿using Base.Models;
+﻿using Base.Enums;
+using Base.Models;
 using Base.Services;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 
 namespace BaseApi.Services
 {
-    public class XgEasyRptR
+    public class XgTranLogRead
     {
         private readonly ReadDto dto = new()
         {
             ReadSql = @"
-select * from dbo.XpEasyRpt
-order by Id
+select *
+from dbo.XpTranLog
+order by Sn desc
 ",
-            Items = [
-                new() { Fid = "Name" },
-            ],
+            Items = new QitemDto[] {
+                new() { Fid = "TableName", Op = ItemOpEstr.Like },
+                new() { Fid = "ColName", Op = ItemOpEstr.Like },
+                new() { Fid = "RowId" },
+            },
         };
 
         public async Task<JObject?> GetPageA(string ctrl, DtDto dt)

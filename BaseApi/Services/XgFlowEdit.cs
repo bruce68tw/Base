@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace BaseApi.Services
 {
-    public class XgFlowE : BaseEditSvc
+    public class XgFlowEdit : BaseEditSvc
     {
-        public XgFlowE(string ctrl) : base(ctrl) { }
+        public XgFlowEdit(string ctrl) : base(ctrl) { }
 
         override public EditDto GetDto()
         {
