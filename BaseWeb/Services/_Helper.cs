@@ -120,15 +120,23 @@ namespace BaseWeb.Services
             return nowClass;
         }
 
-        /*
-        //set prop.FnOnChange
-        public static string GetFnOnChange(string fnName, PropBaseDto prop, string arg)
+        /// <summary>
+        /// get event attribute string for onclick, onchange, etc.
+        /// </summary>
+        /// <param name="fnName">html event ex: onclick, onchange</param>
+        /// <param name="fnValue"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public static string GetEventAttr(string fnName, string fnValue, string args = "")
         {
-            return (prop.FnOnChange == "")
-                ? ""
-                : " " + fnName + "='" + (prop.FnOnChange.IndexOf("(") > 0 ? prop.FnOnChange : prop.FnOnChange + "(" + arg + ")") + "'";
+            if (string.IsNullOrEmpty(fnValue))
+                return "";
+
+            var attr = $"data-{fnName}='{fnValue}'";
+            if (!string.IsNullOrEmpty(args))
+                attr += $" data-args='{args}'";
+            return attr;
         }
-        */
         #endregion
 
         #region get html string
@@ -202,7 +210,7 @@ namespace BaseWeb.Services
             string type, List<IdStrDto> rows,
             bool required = false, string edit = "", bool addEmptyRow = true, 
             string inputTip = "", string inputAttr = "", string boxClass = "",
-            string fnOnChange = "")
+            string fnOnChange = "", string eventArgs = "")
         {
             var hasType = _Str.NotEmpty(type);
             string attr = hasType
@@ -210,7 +218,7 @@ namespace BaseWeb.Services
                 : GetInputAttr("", edit, required, inputAttr);
             attr += GetPlaceHolder(inputTip);
             if (_Str.NotEmpty(fnOnChange))
-                attr += $" onchange='{fnOnChange}'";
+                attr += " " + GetEventAttr("onchange", fnOnChange, eventArgs);
 
             //ext class
             //var extClass = required ? XdRequired : "";
@@ -308,7 +316,7 @@ namespace BaseWeb.Services
 <div class='col-md-{1} x-input'>
     {4}
 </div>
-", colList[0], colList[1], labelTip2, (reqSpan + title + iconTip), html, labelClass);
+", colList[0], colList[1], labelTip2, (reqSpan + title + iconTip), html, labelClass.Replace(" ", ""));
             }
             else
             {
@@ -321,7 +329,7 @@ namespace BaseWeb.Services
         {3}
     </div>
 </div>
-", colList[0], labelTip2, (reqSpan + title + iconTip), html, labelClass);
+", colList[0], labelTip2, (reqSpan + title + iconTip), html, labelClass.Replace(" ", ""));
             }
 
             //if not in row, add row container

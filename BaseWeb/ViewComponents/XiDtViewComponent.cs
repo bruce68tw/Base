@@ -30,8 +30,8 @@ namespace BaseWeb.Helpers
 </div>",
 dto.Fid, dto.BoxClass, dto.InputAttr,
 _Helper.GetDateHtml("", date, "", dto.Required, dto.Edit, dto.InputTip),
-_Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, dto.Edit, false, boxClass: "xi-dt-hour"),
-_Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit, false, boxClass: "xi-dt-min")
+_Helper.GetSelectHtml("", hour, "", _Date.GetHourList(), false, dto.Edit, false, boxClass: "xi-dt-hour", fnOnChange: dto.FnOnChange, eventArgs: dto.EventArgs),
+_Helper.GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit, false, boxClass: "xi-dt-min", fnOnChange: dto.FnOnChange, eventArgs: dto.EventArgs)
 );
 
             if (_Str.NotEmpty(dto.Title))

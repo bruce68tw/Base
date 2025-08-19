@@ -45,5 +45,6 @@
         //tip delete row
         public string TipDeleteRow { get; set; } = "";
 
+        public string Working { get; set; } = "";
     }
 }

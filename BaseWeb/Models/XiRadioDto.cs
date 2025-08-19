@@ -14,6 +14,8 @@ namespace BaseWeb.Models
 
         public List<IdStrDto> Rows { get; set; } = null!;
         public bool IsHori { get; set; } = true;
-        public string FnOnChange { get; set; } = "";
+
+        //FnOnChange -> FnOnClick(實際使用 onclick 事件)
+        public string FnOnClick { get; set; } = "";
     }
 }

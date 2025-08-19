@@ -1,4 +1,5 @@
 ﻿using BaseApi.Services;
+using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,12 +10,13 @@ namespace BaseWeb.ViewComponents
     {
         public HtmlString Invoke(string fnOnClick)
         {
-            var html = string.Format(@"
-<button type='button' data-onclick='{0}' class='btn btn-success'>{1}
+            //todo:
+            var attr = _Helper.GetEventAttr("onclick", fnOnClick);
+            var html = $@"
+<button type='button' {attr} class='btn btn-success'>{_Locale.GetBaseRes().BtnAddRow}
     <i class='ico-plus'></i>
 </button>
-", fnOnClick, _Locale.GetBaseRes().BtnAddRow);
-
+";
             return new HtmlString(html);
         }
     }//class

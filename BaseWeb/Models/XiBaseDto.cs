@@ -47,5 +47,8 @@
         /// form-control預設100%, 如果不是則系統會設定為inline-block
         /// </summary>
         public int Width { get; set; } = 0;
+
+        //onclick, onchange event 傳入參數, 多個參數時用逗號分隔
+        public string EventArgs { get; set; } = "";
     }
 }

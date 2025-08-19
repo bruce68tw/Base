@@ -100,6 +100,11 @@ namespace BaseWeb.ViewComponents
         </div>
     </div>
 </div>
+
+<!-- 取代 jQuery block UI -->
+<div class='x-work d-none'>
+    <div class='x-work-msg'>{baseR.Working}</div>
+</div>
 ";
             return new HtmlString(html);
         }

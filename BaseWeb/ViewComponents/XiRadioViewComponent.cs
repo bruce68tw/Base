@@ -47,7 +47,7 @@ namespace BaseWeb.ViewComponents
                 //get attr, value attr will disappear, use data-value instead !!
                 var attr = _Helper.GetInputAttr(dto.Fid, dto.Edit, false, dto.InputAttr) +
                     $" name='{dto.Fid}' data-value='{row.Id}' data-type='radio'" +
-                    (_Str.IsEmpty(dto.FnOnChange) ? "" : $" data-onclick='{dto.FnOnChange}'") +
+                    (_Str.IsEmpty(dto.FnOnClick) ? "" : $" data-onclick='{dto.FnOnClick}'") +
                     (row.Id == dto.Value ? " checked" : "");
                 list += string.Format(tplItem, attr, row.Str);
             }

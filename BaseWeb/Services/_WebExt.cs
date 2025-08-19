@@ -14,10 +14,12 @@ namespace BaseWeb.Services
         {
             //set builder, 無作用!!
             //web.config 必須設定 <requestFiltering removeServerHeader="true" /> !!
+            /*
             builder.WebHost.ConfigureKestrel(opts =>
             {
                 opts.AddServerHeader = false;
             });
+            */
 
             //set services
             var services = builder.Services;
@@ -53,7 +55,7 @@ namespace BaseWeb.Services
 
             app.UseStaticFiles(new StaticFileOptions
             {
-                /*
+                //temp remark
                 OnPrepareResponse = ctx =>
                 {
                     var headers = ctx.Context.Response.Headers;
@@ -62,15 +64,16 @@ namespace BaseWeb.Services
                     headers["X-Frame-Options"] = "DENY";
                     headers["X-XSS-Protection"] = "1; mode=block";     //舊但仍有用
                     headers.Remove("X-Powered-By");
-                    headers.Remove("Server");   //無作用!!
+                    //headers.Remove("Server");   //無作用!!
                 }
-                */
+                //
             });
 
-            /*
+            //temp remark
             app.Use(async (ctx, next) =>
             {
                 //script, style使用nonce 讓前端使用 inline !!
+                //"img-src 'self' data:" bootstrap select 才能顯示右方箭頭 !!
                 var headers = ctx.Response.Headers;
                 headers["Content-Security-Policy"] =
                     "default-src 'self';" +
@@ -78,7 +81,7 @@ namespace BaseWeb.Services
                     "font-src 'self';" +
                     "form-action 'self';" +
                     "frame-ancestors 'self';" +
-                    "img-src 'self';" +
+                    "img-src 'self' data:;" +
                     "media-src 'self';" +
                     "manifest-src 'self';" +
                     "object-src 'none';" +
@@ -92,11 +95,11 @@ namespace BaseWeb.Services
                 headers["X-Frame-Options"] = "DENY";
                 headers["X-XSS-Protection"] = "1; mode=block";     //舊但仍有用
                 headers.Remove("X-Powered-By");
-                headers.Remove("Server");
+                //headers.Remove("Server");
                 await next();
             });
-            */
             //
+
             app.UseCookiePolicy(); // 要啟用 cookie policy 才會生效
             return app;
         }

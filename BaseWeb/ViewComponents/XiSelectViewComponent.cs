@@ -13,7 +13,7 @@ namespace BaseWeb.ViewComponents
         {
             var html = _Helper.GetSelectHtml(dto.Fid, dto.Value, "select", dto.Rows!,
                 dto.Required, dto.Edit, dto.AddEmptyRow,
-                dto.InputTip, dto.InputAttr, dto.BoxClass, dto.FnOnChange);
+                dto.InputTip, dto.InputAttr, dto.BoxClass, dto.FnOnChange, dto.EventArgs);
 
             if (_Str.NotEmpty(dto.Title))
                 html = _Helper.InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
