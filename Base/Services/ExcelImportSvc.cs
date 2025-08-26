@@ -241,8 +241,14 @@ namespace Base.Services
                     okRows.Add(fileRows[okRowNo]);
 
                 //call FnSaveImportRows
+                List<string>? saveResults = null;
+                if (importDto.FnSaveImportRows != null)
+                    saveResults = importDto.FnSaveImportRows(okRows);
+                else if (importDto.FnSaveImportRowsA != null)
+                    saveResults = await importDto.FnSaveImportRowsA(okRows);
+
                 no = 0;
-                var saveResults = importDto.FnSaveImportRows!(okRows);
+                //var saveResults = importDto.FnSaveImportRows!(okRows);
                 if (saveResults != null)
                 {
                     foreach (var result in saveResults)

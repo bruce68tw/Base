@@ -60,4 +60,10 @@ namespace Base.Services
     /// <returns>list error string, '' for success</returns>
     public delegate List<string> FnSaveImportRows<T>(List<T> okRows) where T : class, new();
 
+    /// <summary>
+    /// save import rows
+    /// </summary>
+    /// <param name="okRows"></param>
+    /// <returns>list error string, '' for success</returns>
+    public delegate Task<List<string>> FnSaveImportRowsA<T>(List<T> okRows) where T : class, new();
 }

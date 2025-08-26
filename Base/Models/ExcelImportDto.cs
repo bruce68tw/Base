@@ -16,6 +16,8 @@ namespace Base.Models
         /// </summary>
         public FnSaveImportRows<T>? FnSaveImportRows;
 
+        public FnSaveImportRowsA<T>? FnSaveImportRowsA;
+
         /// <summary>
         /// map to ImportLog.Type
         /// </summary>
