@@ -316,7 +316,7 @@ namespace BaseWeb.Services
 <div class='col-md-{1} x-input'>
     {4}
 </div>
-", colList[0], colList[1], labelTip2, (reqSpan + title + iconTip), html, labelClass.Replace(" ", ""));
+", colList[0], colList[1], labelTip2, (reqSpan + title + iconTip), html, _Str.KeepOneSpace(labelClass));
             }
             else
             {
@@ -329,7 +329,7 @@ namespace BaseWeb.Services
         {3}
     </div>
 </div>
-", colList[0], labelTip2, (reqSpan + title + iconTip), html, labelClass.Replace(" ", ""));
+", colList[0], labelTip2, (reqSpan + title + iconTip), html, _Str.KeepOneSpace(labelClass));
             }
 
             //if not in row, add row container

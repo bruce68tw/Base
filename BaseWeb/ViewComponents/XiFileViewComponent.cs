@@ -39,7 +39,7 @@ namespace BaseWeb.ViewComponents
             //button open/delete will be handled by status, but link(view) is on.
             var html = $@"
 <div class='form-control xi-box xi-box-file {dto.BoxClass}'>
-    <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' onchange='_ifile.onChangeFile(this)' class='d-none'>
+    <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' data-onchange='_ifile.onChangeFile' class='d-none'>
     <input{attr} data-type='file' type='hidden' class='xd-valid'>
 
     <button type='button' class='btn btn-link' data-onclick='_ifile.onOpenFile' {dataEdit}>
@@ -48,7 +48,7 @@ namespace BaseWeb.ViewComponents
     <button type='button' class='btn btn-link' data-onclick='_ifile.onDeleteFile' {dataEdit}>
         <i class='ico-delete'></i>
     </button>
-    <button type='button' class='btn btn-link' data-onclick='_me.onViewFile' data-args='{dto.Table},{dto.Fid}'>{dto.Value}</button>
+    <a href='#' class='btn btn-link' data-onclick='_me.onViewFile' data-args='{dto.Table},{dto.Fid}'>{dto.Value}</a>
 </div>";
 
             //add label if need

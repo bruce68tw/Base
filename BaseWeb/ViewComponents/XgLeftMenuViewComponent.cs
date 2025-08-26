@@ -65,6 +65,10 @@ namespace BaseWeb.ViewComponents
                 }//if
             }//for
 
+            //加上尾端 for 填空白
+            html += "<li class='x-leftmenu-fill'></li>";
+
+            //外面加上 ul
             html = "<ul class='x-leftmenu'>" + html + "</ul>";
             return new HtmlString(html);
         }

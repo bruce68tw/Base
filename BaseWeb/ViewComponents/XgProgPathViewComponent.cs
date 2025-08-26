@@ -8,16 +8,12 @@ namespace BaseWeb.ViewComponents
         /// <summary>
         /// program path
         /// </summary>
-        /// <param name="names">prog path list</param>
+        /// <param name="path">prog path list</param>
         /// <returns></returns>
-        public HtmlString Invoke(string[] names)
+        public HtmlString Invoke(string path = "")
         {
-            var list = names[0];
-            for (var i=1; i< names.Length; i++)
-                list += " / " + names[i];
-
-            var html = "<div class='x-prog-path'>{0}</div>";
-            return new HtmlString(string.Format(html, list));
+            var html = $"<div class='x-prog-path'>{path}</div>";
+            return new HtmlString(html);
         }
 
     } //class

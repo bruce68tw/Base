@@ -25,7 +25,7 @@ namespace BaseWeb.ViewComponents
 <!-- alert -->
 <div class='alert alert-success alert-dismissable x-alert d-none'>
     <span class='xd-msg'></span>
-    <button type='button' class='btn btn-link' data-onclick='_tool.onAlertClose;'>
+    <button type='button' class='btn btn-link' data-onclick='_tool.onAlertClose'>
         <i class='ico-delete'></i>
     </button>
 </div>

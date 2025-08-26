@@ -16,7 +16,7 @@ namespace BaseWeb.ViewComponents
 
             //xiRead 無條件加上 x-inline
             //xi-read2 表示 edit style
-            var css = "form-control x-inline" + (dto.EditStyle ? " xi-read2" : " xi-read");
+            var css = "x-inline" + (dto.EditStyle ? " xi-read2" : " xi-read");
             if (dto.Width > 0)
                 css += $" x-w{dto.Width}";
             if (dto.BoxClass != "")

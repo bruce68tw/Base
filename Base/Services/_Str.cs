@@ -30,6 +30,16 @@ namespace Base.Services
         private static string _fileKey = null!;
 
         /// <summary>
+        /// 保留字串中間一個空白
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string KeepOneSpace(string value)
+        {
+            return value.Trim().Replace("  ", " ");
+        }
+
+        /// <summary>
         /// get random string, no upper alpha O,I
         /// </summary>
         /// <param name="len"></param>
