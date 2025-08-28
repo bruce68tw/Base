@@ -1,6 +1,6 @@
 ﻿namespace BaseWeb.Models
 {
-    public class XiReadDto
+    public class XiReadDto : XiBaseDto
     {
         /*
         public XiReadDto()
@@ -11,14 +11,14 @@
         }
         */
 
-        public string Title { get; set; } = "";
-        public string Fid { get; set; } = "";
-        public string Value { get; set; } = "";
-        public bool InRow { get; set; } = false;
-        public string LabelTip  { get; set; } = "";
-        public string InputAttr  { get; set; } = "";
-        public string BoxClass  { get; set; } = "";
-        public string Cols { get; set; } = "";
+        //public string Title { get; set; } = "";
+        //public string Fid { get; set; } = "";
+        //public string Value { get; set; } = "";
+        //public bool InRow { get; set; } = false;
+        //public string LabelTip  { get; set; } = "";
+        //public string InputAttr  { get; set; } = "";
+        //public string BoxClass  { get; set; } = "";
+        //public string Cols { get; set; } = "";
         public string Format { get; set; } = "";
 
         /// <summary>
@@ -31,6 +31,6 @@
         /// </summary>
         public bool EditStyle { get; set; } = false;
 
-        public int Width { get; set; } = 0;
+        //public int Width { get; set; } = 0;
     }
 }
