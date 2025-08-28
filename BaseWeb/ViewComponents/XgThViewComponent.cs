@@ -19,7 +19,7 @@ namespace BaseWeb.ViewComponents
         /// <returns></returns>
         public HtmlString Invoke(XgThDto dto)
         {
-            var title = _Helper.GetRequiredSpan(dto.Required) + dto.Title;
+            var title = _Input.GetRequiredSpan(dto.Required) + dto.Title;
             var html = (dto.Tip == "")
                 ? "<th{0}>" + title + "</th>"
                 : "<th{0} title='" + dto.Tip + "'>" + title + "<i class='ico-info'></i></th>";

@@ -11,7 +11,7 @@ namespace BaseWeb.ViewComponents
         public HtmlString Invoke(string fnOnClick)
         {
             //todo:
-            var attr = _Helper.GetEventAttr("onclick", fnOnClick);
+            var attr = _Input.GetEventAttr("onclick", fnOnClick);
             var html = $@"
 <button type='button' {attr} class='btn btn-success'>{_Locale.GetBaseRes().BtnAddRow}
     <i class='ico-plus'></i>

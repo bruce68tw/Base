@@ -1,5 +1,4 @@
-﻿using Base.Services;
-using BaseWeb.Models;
+﻿using BaseWeb.Models;
 using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
@@ -13,23 +12,7 @@ namespace BaseWeb.ViewComponents
     {
         public HtmlString Invoke(XiLinkDto dto)
         {
-            /*
-            if (_Str.IsEmpty(dto.FnOnViewFile))
-                dto.FnOnViewFile = $"_me.onViewFile(\"{dto.Table}\", \"{dto.Fid}\", this)";
-            dto.FnOnViewFile = _Helper.GetLinkFn(dto.FnOnViewFile);
-            */
-
-            //add class xi-unsave for not save Db !!
-            var attr = _Helper.GetInputAttr(dto.Fid, "", false, dto.InputAttr) +
-                $" data-type='link' data-onclick='_me.onViewFile' data-args='{dto.Table},{dto.Fid}'";
-
-            var css = _Helper.GetCssClass("xi-unsave", dto.BoxClass, dto.Width);
-            var html = $"<a href='#' {attr} class='{css}'>{dto.Value}</a>";
-
-            //add title if need
-            if (_Str.NotEmpty(dto.Title))
-                html = _Helper.InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols);
-            return new HtmlString(html);
+            return new HtmlString(_Input.XiLink(dto));
         }
         
     } //class
