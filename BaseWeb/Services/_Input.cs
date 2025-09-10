@@ -690,6 +690,19 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
             return html;
         }
+        public static string XgGroup(string label)
+        {
+            var text = _Str.Repeat(10, "· • ●");
+            return $@"
+<div class='x-group'>
+    <span class='x-group-label'>{label}
+        <i class='ico open'></i>
+    </span>
+    <div class='x-group-line'>{text}
+    </div>
+</div>
+";
+        }
         #endregion
     }//class
 }

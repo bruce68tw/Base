@@ -29,6 +29,20 @@ namespace Base.Services
         //AES key inside KeyCmd file, 使用變數儲存, 避免一直開啟
         private static string _fileKey = null!;
 
+
+        /// <summary>
+        /// 重複字串
+        /// </summary>
+        /// <param name="times"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string Repeat(int times, string input)
+        {
+            return (times <= 0 || string.IsNullOrEmpty(input))
+                ? string.Empty
+                : string.Concat(Enumerable.Repeat(input, times));
+        }
+
         /// <summary>
         /// 保留字串中間一個空白
         /// </summary>
