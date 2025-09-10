@@ -6,9 +6,9 @@ namespace BaseWeb.ViewComponents
 {
     public class XgGroupViewComponent : ViewComponent
     {
-        public HtmlString Invoke(string label)
+        public HtmlString Invoke(string label, bool icon)
         {
-            return new HtmlString(_Input.XgGroup(label));
+            return new HtmlString(_Input.XgGroup(label, icon));
         }
 
     } //class

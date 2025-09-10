@@ -690,15 +690,19 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
             return html;
         }
-        public static string XgGroup(string label)
+        public static string XgGroup(string label, bool icon)
         {
-            var text = _Str.Repeat(10, "· • ●");
+            //var text = _Str.Repeat(10, "· • ●");
+            var line = _Str.Repeat(10, "· • · • ");
+            var iconHtml = icon 
+                ? "<i class='ico open'></i>" 
+                : "";
             return $@"
 <div class='x-group'>
     <span class='x-group-label'>{label}
-        <i class='ico open'></i>
+        {iconHtml}
     </span>
-    <div class='x-group-line'>{text}
+    <div class='x-group-line'>{line}
     </div>
 </div>
 ";
