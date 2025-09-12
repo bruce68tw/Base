@@ -251,32 +251,6 @@ namespace BaseWeb.Services
 </select>";            
         }
 
-        /*
-        public static string GetTextareaHtml(string title, string fid, 
-            string type, string value = "",
-            int maxLen = 0, int rowsCount = 3,
-            bool required = false, bool editable = true, bool inRow = false,
-            string labelTip = "", string inputTip = "",            
-            string extAttr = "", string extClass = "", string cols = "")
-        {
-            //attr
-            var attr = GetInputAttr(fid, editable, required) +
-                $" value='{value}' rows='{rowsCount}'" +
-                GetPlaceHolder(inputTip) +
-                GetRequired(required) +
-                GetMaxLength(maxLen);
-            if (_Str.NotEmpty(extAttr))
-                attr += " " + extAttr;
-
-            //html
-            var html = $"<textarea{attr} data-type='{type}' class='form-control xi-box {extClass}'></textarea>";
-            if (_Str.NotEmpty(title))
-                html = InputAddLayout(html, title, required, labelTip, inRow, cols);
-
-            //html = String.Format(html, attr, _Html.Decode(value), extClass, fid + _WebFun.Error, _WebFun.ErrorLabelClass);
-            return html;
-        }
-        */
         #endregion
 
         /// <summary>
@@ -372,7 +346,7 @@ namespace BaseWeb.Services
             var css = GetCssClass("xi-check", dto.BoxClass, dto.Width);
             var html = $@"
 <label class='{css}'>
-    <input{attr} type='checkbox' data-type='check' data-value='{dto.Value}'>{dto.Label}
+    <input{attr} type='checkbox' data-type='{InputTypeEstr.Check}' data-value='{dto.Value}'>{dto.Label}
     <span class='xi-cspan'></span>
 </label>";
 
@@ -383,7 +357,7 @@ namespace BaseWeb.Services
         }
         public static string XiDate(XiDateDto dto)
         {
-            var html = GetDateHtml(dto.Fid, dto.Value, "date", dto.Required,
+            var html = GetDateHtml(dto.Fid, dto.Value, InputTypeEstr.Date, dto.Required,
                 dto.Edit, dto.InputTip, dto.InputAttr, dto.BoxClass);
             if (_Str.NotEmpty(dto.Title))
                 html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
@@ -426,7 +400,7 @@ namespace BaseWeb.Services
         {
             //attr, both digits/number should be type=number for validate(digits not work !!)
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" type='number' data-type='dec' value='{dto.Value}'" +
+                $" type='number' data-type='{InputTypeEstr.Decimal}' value='{dto.Value}'" +
                 //GetRequired(dto.Required) +
                 GetPlaceHolder(dto.InputTip);
             //attr += " digits='true'";   //for digital only, decimal remark !!
@@ -457,8 +431,8 @@ namespace BaseWeb.Services
                 min = dt.Minute.ToString();
             }
 
-            var html = string.Format(@"
-<div data-fid='{0}' data-type='dt' class='xi-box {1}' {2}>
+            var html = string.Format($@"
+<div data-fid='{0}' data-type='{InputTypeEstr.DateTime}' class='xi-box {1}' {2}>
     {3}
     {4}
     <span>:</span>
@@ -499,7 +473,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             var html = $@"
 <div class='form-control xi-box xi-box-file {dto.BoxClass}'>
     <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' data-onchange='_ifile.onChangeFile' class='d-none'>
-    <input{attr} data-type='file' type='hidden' class='xd-valid'>
+    <input{attr} data-type='{InputTypeEstr.File}' type='hidden' class='xd-valid'>
 
     <button type='button' class='btn btn-link' data-onclick='_ifile.onOpenFile' {dataEdit}>
         <i class='ico-open'></i>
@@ -521,7 +495,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //if (_Str.NotEmpty(dto.BoxClass))
             //    attr += $" class='{dto.BoxClass}'";
 
-            var html = $"<input{attr} data-type='text' type='hidden' value='{dto.Value}'>";
+            var html = $"<input{attr} data-type='{InputTypeEstr.Text}' type='hidden' value='{dto.Value}'>";
             return html;
         }
         public static string XiHtml(XiHtmlDto dto)
@@ -536,7 +510,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             var css = GetCssClass("form-control xd-valid", dto.BoxClass, dto.Width);
             var html = $@"
 <div class='xi-box'>
-    <textarea{attr} data-type='html' class='{css}'></textarea>
+    <textarea{attr} data-type='{InputTypeEstr.Html}' class='{css}'></textarea>
 </div>";
             if (_Str.NotEmpty(dto.Title))
                 html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
@@ -546,7 +520,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         {
             //attr, both digits/number should be type=number for validate(digits not work !!)
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" type='number' data-type='int' value='{dto.Value}'" +
+                $" type='number' data-type='{InputTypeEstr.Integer}' value='{dto.Value}'" +
             //GetRequired(dto.Required) +
             GetPlaceHolder(dto.InputTip);
             attr += " digits='true'";   //for digital only, decimal remark !!
@@ -569,7 +543,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         {
             //add class xi-unsave for not save Db !!
             var attr = GetInputAttr(dto.Fid, "", false, dto.InputAttr) +
-                $" data-type='link' data-onclick='_me.onViewFile' data-args='{dto.Table},{dto.Fid}'";
+                $" data-type='{InputTypeEstr.Link}' data-onclick='_me.onViewFile' data-args='{dto.Table},{dto.Fid}'";
 
             var css = GetCssClass("xi-unsave", dto.BoxClass, dto.Width);
             var html = $"<a href='#' {attr} class='{css}'>{dto.Value}</a>";
@@ -608,7 +582,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
 
                 //get attr, value attr will disappear, use data-value instead !!
                 var attr = GetInputAttr(dto.Fid, dto.Edit, false, dto.InputAttr) +
-                    $" name='{dto.Fid}' data-value='{row.Id}' data-type='radio'" +
+                    $" name='{dto.Fid}' data-value='{row.Id}' data-type='{InputTypeEstr.Radio}'" +
                     (_Str.IsEmpty(dto.FnOnClick) ? "" : $" data-onclick='{dto.FnOnClick}'") +
                     (row.Id == dto.Value ? " checked" : "");
                 list += string.Format(tplItem, attr, row.Str);
@@ -639,7 +613,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //add class xi-unsave for not save DB, _form.js toJson() will filter out it !!
             if (!dto.SaveDb)
                 css += " xi-unsave";
-            var html = $"<label{attr} data-type='read' class='form-control {css}'>{dto.Value}</label>";
+            var html = $"<label{attr} data-type='{InputTypeEstr.ReadOnly}' class='form-control {css}'>{dto.Value}</label>";
 
             if (_Str.NotEmpty(dto.Title))
                 html = InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols);
@@ -647,7 +621,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         }
         public static string XiSelect(XiSelectDto dto)
         {
-            var html = GetSelectHtml(dto.Fid, dto.Value, "select", dto.Rows!,
+            var html = GetSelectHtml(dto.Fid, dto.Value, InputTypeEstr.Select, dto.Rows!,
                 dto.Required, dto.Edit, dto.AddEmptyRow,
                 dto.InputTip, dto.InputAttr, dto.BoxClass, dto.FnOnChange, dto.EventArgs);
 
@@ -667,7 +641,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
 
             //get input html, xi-box for 控制 validate error 位置
             var css = GetCssClass("form-control xi-box", dto.BoxClass, dto.Width);
-            var html = $"<input{attr} data-type='text' class='{css}'>";
+            var html = $"<input{attr} data-type='{InputTypeEstr.Text}' class='{css}'>";
 
             //add title,required,tip,cols for single form
             //consider this field could in datatable(no title) !!
@@ -685,7 +659,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
 
             //html
             var css = GetCssClass("form-control xi-box", dto.BoxClass, dto.Width);
-            var html = $"<textarea{attr} data-type='textarea' class='{css}'>{dto.Value}</textarea>";
+            var html = $"<textarea{attr} data-type='{InputTypeEstr.Textarea}' class='{css}'>{dto.Value}</textarea>";
             if (_Str.NotEmpty(dto.Title))
                 html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
             return html;
