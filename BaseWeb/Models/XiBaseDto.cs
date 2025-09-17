@@ -34,11 +34,13 @@
         public string LabelTip  { get; set; } = "";
         public string InputTip  { get; set; } = "";
         public string InputAttr  { get; set; } = "";
+        //欄位右方提示文字(.x-input-note)
+        public string InputNote { get; set; } = "";
 
         /// <summary>
         /// 單一欄位在加在本身tag, 複合欄位會加在外層div
         /// </summary>
-        public string BoxClass  { get; set; } = "";
+        public string ClsBox  { get; set; } = "";
 
         public string Cols { get; set; } = "";
 

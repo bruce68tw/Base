@@ -4,6 +4,7 @@ using Base.Services;
 using BaseApi.Services;
 using BaseWeb.Models;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BaseWeb.Services
 {
@@ -109,17 +110,17 @@ namespace BaseWeb.Services
         /// <summary>
         /// return ext class for 輸入欄位
         /// </summary>
-        /// <param name="nowClass"></param>
-        /// <param name="extClass"></param>
+        /// <param name="clsNow"></param>
+        /// <param name="clsExt"></param>
         /// <param name="width">如果有值則會使用 x-inline 並且使用固定寬度 x-wxxx</param>
         /// <returns></returns>
-        public static string GetCssClass(string nowClass, string extClass, int width)
+        public static string GetCssClass(string clsNow, string clsExt, int width)
         {
-            if (extClass != "")
-                nowClass += " " + extClass;
+            if (clsExt != "")
+                clsNow += " " + clsExt;
             if (width > 0)
-                nowClass += $" x-inline x-w{width}";
-            return nowClass;
+                clsNow += $" x-inline x-w{width}";
+            return clsNow;
         }
 
         /// <summary>
@@ -152,7 +153,7 @@ namespace BaseWeb.Services
         /// <returns></returns>
         public static string GetDateHtml(string fid, string value, string type, 
             bool required = false, string edit = "", string inputTip = "",             
-            string inputAttr = "", string boxClass = "")
+            string inputAttr = "", string clsBox = "")
         {
             //input field attribute
             string attr;
@@ -165,7 +166,7 @@ namespace BaseWeb.Services
             {
                 //only fid
                 attr = GetInputAttr(fid, edit, required) + $" data-type='{type}'";
-                boxClass += " xi-box";
+                clsBox += " xi-box";
             }
             attr += GetPlaceHolder(inputTip);
 
@@ -177,7 +178,7 @@ namespace BaseWeb.Services
             //使用 .date 執行 _idate 初始化, 因為包含多個元素, 所以必須將box對應datepicker !!
             //input-group & input-group-addon are need for datepicker !!
             return $@"
-<div class='input-group date x-inline {boxClass}' data-provide='datepicker' {inputAttr}>
+<div class='input-group date x-inline {clsBox}' data-provide='datepicker' {inputAttr}>
     <input{attr} value='{value}' type='text' class='form-control'>
     <div class='input-group-addon'></div>
     <span>
@@ -205,13 +206,13 @@ namespace BaseWeb.Services
         /// <param name="addEmptyRow"></param>
         /// <param name="inputTip"></param>
         /// <param name="inputAttr"></param>
-        /// <param name="boxClass"></param>
+        /// <param name="clsBox"></param>
         /// <param name="fnOnChange"></param>
         /// <returns></returns>
         public static string GetSelectHtml(string fid, string value, 
             string type, List<IdStrDto> rows,
             bool required = false, string edit = "", bool addEmptyRow = true, 
-            string inputTip = "", string inputAttr = "", string boxClass = "",
+            string inputTip = "", string inputAttr = "", string clsBox = "",
             string fnOnChange = "", string eventArgs = "")
         {
             var hasType = _Str.NotEmpty(type);
@@ -223,9 +224,8 @@ namespace BaseWeb.Services
                 attr += " " + GetEventAttr("onchange", fnOnChange, eventArgs);
 
             //ext class
-            //var extClass = required ? XdRequired : "";
             if (hasType)
-                boxClass += " xi-box";
+                clsBox += " xi-box";
 
             //option item
             var optList = "";
@@ -246,7 +246,7 @@ namespace BaseWeb.Services
             //use class for multi columns !!
             //x-select-col for dropdown inner width=100%, x-select-colX for RWD width
             return $@"
-<select{attr} class='form-select {boxClass}'>
+<select{attr} class='form-select {clsBox}'>
     {optList}
 </select>";            
         }
@@ -264,40 +264,51 @@ namespace BaseWeb.Services
         /// <param name="cols">ary0(是否含 row div), ary1,2(for 水平), ary1(for 垂直)</param>
         /// <param name="labelHideRwd">RWD(phone) hide label</param>
         /// <returns></returns>
-        public static string InputAddLayout(string html, string title, bool required, 
-            string labelTip, bool inRow, string cols, bool labelHideRwd = false)
+        //private static string InputAddLayout(string html, string title, bool required, 
+        //    string labelTip, bool inRow, string cols, bool labelHideRwd = false)
+        private static string InputAddLayout(string html, bool required, XiBaseDto dto, bool labelHideRwd = false)
         {
             //加上 label tip(title)
             //cols = cols ?? _Fun.DefHCols;
-            var colList = GetCols(cols);
+            var colList = GetCols(dto.Cols);
             var labelTip2 = "";
             var iconTip = "";
-            if (_Str.NotEmpty(labelTip))
+            if (_Str.NotEmpty(dto.LabelTip))
             {
-                labelTip2 = " title='" + labelTip + "'";
+                labelTip2 = " title='" + dto.LabelTip + "'";
                 iconTip = GetIconTip();
             }
 
-            //加上 required
+            //加上 required, label內容順序固定為 req、title、tip(前端按照此順序處理!!)
             var reqSpan = GetRequiredSpan(required);
-
-            var labelClass = labelHideRwd ? _Fun.ClsHideRwd : "";
+            var clsLabel = labelHideRwd ? _Fun.ClsHideRwd : "";
             string result;
             if (colList.Count > 1)
             {
                 //horizontal
-                labelClass += " x-label";
+                //加上 input tail for 水平label,input only
+                var inputTail = "";
+                if (!string.IsNullOrEmpty(dto.InputNote))
+                {
+                    var colSum = colList.Sum(a => a);
+                    var col2 = (colSum < 6 ? 6 : 12) - colSum;
+                    inputTail = $"<div class='col-md-{col2} x-input-note'>{dto.InputNote}</div>";
+                }
+
+                //get html
+                clsLabel += " x-label";
                 result = string.Format(@"
 <div class='col-md-{0} {5}'{2}>{3}</div>
 <div class='col-md-{1} x-input'>
     {4}
 </div>
-", colList[0], colList[1], labelTip2, (reqSpan + title + iconTip), html, _Str.KeepOneSpace(labelClass));
+{6}
+", colList[0], colList[1], labelTip2, (reqSpan + dto.Title + iconTip), html, _Str.KeepOneSpace(clsLabel), inputTail);
             }
             else
             {
                 //vertical
-                labelClass += " x-vlabel";
+                clsLabel += " x-vlabel";
                 result = string.Format(@"
 <div class='col-md-{0} zz_x-row'>
     <div class='{4}'{1}>{2}</div>
@@ -305,11 +316,11 @@ namespace BaseWeb.Services
         {3}
     </div>
 </div>
-", colList[0], labelTip2, (reqSpan + title + iconTip), html, _Str.KeepOneSpace(labelClass));
+", colList[0], labelTip2, (reqSpan + dto.Title + iconTip), html, _Str.KeepOneSpace(clsLabel));
             }
 
             //if not in row, add row container
-            if (!inRow)
+            if (!dto.InRow)
                 result = "<div class='row'>" + result + "</div>";
             return result;
         }
@@ -339,11 +350,11 @@ namespace BaseWeb.Services
 
             //ext class
             if (string.IsNullOrEmpty(dto.Label))
-                dto.BoxClass += " x-no-label";
+                dto.ClsBox += " x-no-label";
 
             //get html (span for checkbox checked sign)
             //value attr will disappear, use data-value instead !!
-            var css = GetCssClass("xi-check", dto.BoxClass, dto.Width);
+            var css = GetCssClass("xi-check", dto.ClsBox, dto.Width);
             var html = $@"
 <label class='{css}'>
     <input{attr} type='checkbox' data-type='{InputTypeEstr.Check}' data-value='{dto.Value}'>{dto.Label}
@@ -352,15 +363,15 @@ namespace BaseWeb.Services
 
             //add title
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols, true);
+                html = InputAddLayout(html, false, dto, true);
             return html;
         }
         public static string XiDate(XiDateDto dto)
         {
             var html = GetDateHtml(dto.Fid, dto.Value, InputTypeEstr.Date, dto.Required,
-                dto.Edit, dto.InputTip, dto.InputAttr, dto.BoxClass);
+                dto.Edit, dto.InputTip, dto.InputAttr, dto.ClsBox);
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
+                html = InputAddLayout(html, dto.Required, dto);
             return html;
 
             /* 
@@ -411,12 +422,12 @@ namespace BaseWeb.Services
                 attr += " max='" + dto.Max + "'";
 
             //html
-            var css = GetCssClass("form-control xi-box", dto.BoxClass, dto.Width);
+            var css = GetCssClass("form-control xi-box", dto.ClsBox, dto.Width);
             var html = $"<input{attr} class='{css}'>";
 
             //add title
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
+                html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
         public static string XiDt(XiDtDto dto)
@@ -438,14 +449,17 @@ namespace BaseWeb.Services
     <span>:</span>
     {5}
 </div>",
-dto.Fid, dto.BoxClass, dto.InputAttr,
+dto.Fid, dto.ClsBox, dto.InputAttr,
 GetDateHtml("", date, "", dto.Required, dto.Edit, dto.InputTip),
-GetSelectHtml("", hour, "", _Date.GetHourList(), false, dto.Edit, false, boxClass: "xi-dt-hour", fnOnChange: dto.FnOnChange, eventArgs: dto.EventArgs),
-GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit, false, boxClass: "xi-dt-min", fnOnChange: dto.FnOnChange, eventArgs: dto.EventArgs)
+GetSelectHtml("", hour, "", _Date.GetHourList(), false, dto.Edit, false, clsBox: "xi-dt-hour", fnOnChange: dto.FnOnChange, eventArgs: dto.EventArgs),
+GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit, false, clsBox: "xi-dt-min", fnOnChange: dto.FnOnChange, eventArgs: dto.EventArgs)
 );
 
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols ?? "2,5");
+            {
+                dto.Cols ??= "2,5";
+                html = InputAddLayout(html, dto.Required, dto);
+            }
             return html;
         }
         public static string XiFile(XiFileDto dto)
@@ -471,7 +485,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //data-max/exts for checking so put in input file, others for input hide !!
             //button open/delete will be handled by status, but link(view) is on.
             var html = $@"
-<div class='form-control xi-box xi-box-file {dto.BoxClass}'>
+<div class='form-control xi-box xi-box-file {dto.ClsBox}'>
     <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' data-onchange='_ifile.onChangeFile' class='d-none'>
     <input{attr} data-type='{InputTypeEstr.File}' type='hidden' class='xd-valid'>
 
@@ -486,7 +500,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
 
             //add label if need
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
+                html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
         public static string XiHide(XiHideDto dto)
@@ -507,13 +521,13 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 GetMaxLength(dto.MaxLen);
 
             //summernote will add div below textarea, so add div outside for validate msg
-            var css = GetCssClass("form-control xd-valid", dto.BoxClass, dto.Width);
+            var css = GetCssClass("form-control xd-valid", dto.ClsBox, dto.Width);
             var html = $@"
 <div class='xi-box'>
     <textarea{attr} data-type='{InputTypeEstr.Html}' class='{css}'></textarea>
 </div>";
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
+                html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
         public static string XiInt(XiIntDto dto)
@@ -531,12 +545,12 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 attr += " max='" + dto.Max + "'";
 
             //html
-            var css = GetCssClass("form-control xi-box", dto.BoxClass, dto.Width);
+            var css = GetCssClass("form-control xi-box", dto.ClsBox, dto.Width);
             var html = $"<input{attr} class='{css}'>";
 
             //add title
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
+                html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
         public static string XiLink(XiLinkDto dto)
@@ -545,12 +559,12 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             var attr = GetInputAttr(dto.Fid, "", false, dto.InputAttr) +
                 $" data-type='{InputTypeEstr.Link}' data-onclick='_me.onViewFile' data-args='{dto.Table},{dto.Fid}'";
 
-            var css = GetCssClass("xi-unsave", dto.BoxClass, dto.Width);
+            var css = GetCssClass("xi-unsave", dto.ClsBox, dto.Width);
             var html = $"<a href='#' {attr} class='{css}'>{dto.Value}</a>";
 
             //add title if need
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols);
+                html = InputAddLayout(html, false, dto);
             return html;
         }
         public static string XiRadio(XiRadioDto dto)
@@ -558,7 +572,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //box & ext class
             //var boxClass = "xi-box"; 
             if (dto.IsHori)
-                dto.BoxClass += " x-inline";
+                dto.ClsBox += " x-inline";
             //if (extClass != "")
             //    extClass = " " + extClass;
 
@@ -589,12 +603,12 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             }
 
             //get html
-            var html = $"<div class='xi-box {dto.BoxClass}'>{list}</div>";
+            var html = $"<div class='xi-box {dto.ClsBox}'>{list}</div>";
 
             //add title outside
             //consider this field could in datatable(no title) !!
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols, true);
+                html = InputAddLayout(html, false, dto, true);
             return html;
         }
         public static string XiRead(XiReadDto dto)
@@ -608,25 +622,25 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             var css = "x-inline" + (dto.EditStyle ? " xi-read2" : " xi-read");
             if (dto.Width > 0)
                 css += $" x-w{dto.Width}";
-            if (dto.BoxClass != "")
-                css += " " + dto.BoxClass;
+            if (dto.ClsBox != "")
+                css += " " + dto.ClsBox;
             //add class xi-unsave for not save DB, _form.js toJson() will filter out it !!
             if (!dto.SaveDb)
                 css += " xi-unsave";
             var html = $"<label{attr} data-type='{InputTypeEstr.ReadOnly}' class='form-control {css}'>{dto.Value}</label>";
 
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, false, dto.LabelTip, dto.InRow, dto.Cols);
+                html = InputAddLayout(html, false, dto);
             return html;
         }
         public static string XiSelect(XiSelectDto dto)
         {
             var html = GetSelectHtml(dto.Fid, dto.Value, InputTypeEstr.Select, dto.Rows!,
                 dto.Required, dto.Edit, dto.AddEmptyRow,
-                dto.InputTip, dto.InputAttr, dto.BoxClass, dto.FnOnChange, dto.EventArgs);
+                dto.InputTip, dto.InputAttr, dto.ClsBox, dto.FnOnChange, dto.EventArgs);
 
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
+                html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
         public static string XiText(XiTextDto dto)
@@ -640,13 +654,13 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 GetPattern(dto.Pattern);
 
             //get input html, xi-box for 控制 validate error 位置
-            var css = GetCssClass("form-control xi-box", dto.BoxClass, dto.Width);
+            var css = GetCssClass("form-control xi-box", dto.ClsBox, dto.Width);
             var html = $"<input{attr} data-type='{InputTypeEstr.Text}' class='{css}'>";
 
             //add title,required,tip,cols for single form
             //consider this field could in datatable(no title) !!
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
+                html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
         public static string XiTextarea(XiTextareaDto dto)
@@ -658,10 +672,10 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 GetMaxLength(dto.MaxLen);
 
             //html
-            var css = GetCssClass("form-control xi-box", dto.BoxClass, dto.Width);
+            var css = GetCssClass("form-control xi-box", dto.ClsBox, dto.Width);
             var html = $"<textarea{attr} data-type='{InputTypeEstr.Textarea}' class='{css}'>{dto.Value}</textarea>";
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, dto.Title, dto.Required, dto.LabelTip, dto.InRow, dto.Cols);
+                html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
         public static string XgGroup(string label, bool icon)
