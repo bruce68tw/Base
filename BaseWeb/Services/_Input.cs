@@ -283,15 +283,16 @@ namespace BaseWeb.Services
             var reqSpan = GetRequiredSpan(required);
             var clsLabel = labelHideRwd ? _Fun.ClsHideRwd : "";
             string result;
-            if (colList.Count > 1)
+            var colLen = colList.Count;
+            if (colLen > 1)
             {
                 //horizontal
                 //加上 input tail for 水平label,input only
                 var inputTail = "";
                 if (!string.IsNullOrEmpty(dto.InputNote))
                 {
-                    var colSum = colList.Sum(a => a);
-                    var col2 = (colSum < 6 ? 6 : 12) - colSum;
+                    //如果沒有指定col數, 則取12的餘值
+                    var col2 = (colLen > 2) ? colList[2] : 12 - colList.Sum(a => a);
                     inputTail = $"<div class='col-md-{col2} x-input-note'>{dto.InputNote}</div>";
                 }
 
@@ -678,7 +679,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
-        public static string XgGroup(string label, bool icon)
+        public static string XgGroup(string title, bool icon)
         {
             //var text = _Str.Repeat(10, "· • ●");
             var line = _Str.Repeat(10, "· • · • ");
@@ -687,7 +688,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 : "";
             return $@"
 <div class='x-group'>
-    <span class='x-group-label'>{label}
+    <span class='x-group-title'>{title}
         {iconHtml}
     </span>
     <div class='x-group-line'>{line}
