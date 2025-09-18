@@ -25,7 +25,7 @@ namespace BaseWeb.ViewComponents
                 : "<th{0} title='" + dto.Tip + "'>" + title + "<i class='ico-info'></i></th>";
 
             //class
-            var cls = dto.ExtClass;
+            var cls = dto.ClsExt;
             if (dto.MinWidth > 0)
                 cls += $" g-iw{dto.MinWidth}";
             if (dto.HideRwd)

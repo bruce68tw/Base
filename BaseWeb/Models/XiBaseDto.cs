@@ -2,21 +2,10 @@
 {
     public class XiBaseDto
     {
-        /*
-        public XiBaseDto()
-        {
-            //Edit = "";
-            Value = "";
-            InRow = false;
-            //LabelTip = "";
-            //InputTip = "";
-            //ExtAttr = "";
-            //ExtClass = "";
-            Width = "100%";
-        }
-        */
-
         public string Title { get; set; } = "";
+
+        //LabelTip -> TitleTip
+        public string TitleTip { get; set; } = "";
         public string Fid { get; set; } = "";
         public string Value { get; set; } = "";
 
@@ -31,7 +20,6 @@
         public bool InRow  { get; set; }
 
         public bool Required  { get; set; }
-        public string LabelTip  { get; set; } = "";
         public string InputTip  { get; set; } = "";
         public string InputAttr  { get; set; } = "";
         //欄位右方提示文字(.x-input-note)

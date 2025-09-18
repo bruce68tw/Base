@@ -273,9 +273,9 @@ namespace BaseWeb.Services
             var colList = GetCols(dto.Cols);
             var labelTip2 = "";
             var iconTip = "";
-            if (_Str.NotEmpty(dto.LabelTip))
+            if (_Str.NotEmpty(dto.TitleTip))
             {
-                labelTip2 = " title='" + dto.LabelTip + "'";
+                labelTip2 = " title='" + dto.TitleTip + "'";
                 iconTip = GetIconTip();
             }
 
