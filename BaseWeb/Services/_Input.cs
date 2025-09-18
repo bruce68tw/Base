@@ -507,8 +507,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         public static string XiHide(XiHideDto dto)
         {
             var attr = GetInputAttr(dto.Fid, "", false, dto.InputAttr);
-            //if (_Str.NotEmpty(dto.BoxClass))
-            //    attr += $" class='{dto.BoxClass}'";
+            //if (_Str.NotEmpty(dto.ClsBox))
+            //    attr += $" class='{dto.ClsBox}'";
 
             var html = $"<input{attr} data-type='{InputTypeEstr.Text}' type='hidden' value='{dto.Value}'>";
             return html;
