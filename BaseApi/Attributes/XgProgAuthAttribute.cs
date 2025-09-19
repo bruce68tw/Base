@@ -1,8 +1,11 @@
 ﻿using Base.Enums;
 using Base.Services;
+using BaseApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
 
 namespace BaseApi.Attributes
@@ -57,7 +60,7 @@ namespace BaseApi.Attributes
             //return error
             if (returnType == "ActionResult")
             {
-                #region 3.return view: Login/NoProgAuth
+                #region 3.return view: Login or Error
                 if (!isLogin)
                 {
                     //redirect to Home/Login action
@@ -73,7 +76,14 @@ namespace BaseApi.Attributes
                     //return view of no access right.
                     context.Result = new ViewResult
                     {
-                        ViewName = "~/Views/Shared/NoProgAuth.cshtml",
+                        ViewName = "~/Views/Shared/Error.cshtml",
+                        //Model為唯讀, 必須用ViewData傳值 !!
+                        ViewData = new ViewDataDictionary(
+                            new EmptyModelMetadataProvider(),
+                            context.ModelState)
+                            {
+                                Model = _Locale.GetBaseRes().NoAuth
+                            }
                     };
                 }
                 #endregion

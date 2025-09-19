@@ -58,6 +58,7 @@ namespace Base.Services
 
         //錯誤處理方式:(1)for User Msg (2)聯絡管理者 (3)無訊息,傳回空值 ex讀取資料 (4)
         //indicate error
+        public const string Error = "E";        //在程式判斷, 避免hard code
         public const string PreError = "E:";
         public const string PreBrError = "B:";  //_BR code error
 

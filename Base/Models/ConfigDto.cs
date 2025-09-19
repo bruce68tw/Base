@@ -127,5 +127,25 @@ namespace Base.Models
         /// </summary>
         public string FbRedirect { get; set; } = "";
 
+        /// <summary>
+        /// otp email 有效時間(分)
+        /// </summary>
+        public int OtpEmailMin { get; set; } = 3;
+
+        /// <summary>
+        /// otp email link 有效時間(分)
+        /// </summary>
+        public int OtpEmailLinkMin { get; set; } = 5;
+
+        /// <summary>
+        /// otp sms 有效時間(分)
+        /// </summary>
+        public int OtpSmsMin { get; set; } = 3;
+
+        /// <summary>
+        /// otp Authenticator 有效時間(分)
+        /// </summary>
+        public int OtpAuthMin { get; set; } = 1;
+
     }
 }

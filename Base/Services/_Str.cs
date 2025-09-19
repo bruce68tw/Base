@@ -1,4 +1,5 @@
-﻿using Base.Models;
+﻿using Base.Enums;
+using Base.Models;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -57,15 +58,17 @@ namespace Base.Services
         /// get random string, no upper alpha O,I
         /// </summary>
         /// <param name="len"></param>
-        /// <param name="type">1(num),2(upper alpha),3(all alpha),4(num & alpha)</param>
+        /// <param name="type">int -> RandomTypeEnum</param>
         /// <returns></returns>
-        public static string RandomStr(int len, int type)
+        public static string RandomStr(int len, RandomTypeEnum type)
         {
-            var chars =
-                (type == 1) ? "0123456789" :
-                (type == 2) ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" :
-                (type == 3) ? "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789" : 
-                "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var chars = type switch
+            {
+                RandomTypeEnum.Num => "0123456789",
+                RandomTypeEnum.UpEng => "ABCDEFGHJKLMNPQRSTUVWXYZ",
+                RandomTypeEnum.UpEngNum => "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789",
+                _ => "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+            };
 
             var random = new Random();
             return new string(Enumerable.Repeat(chars, len)

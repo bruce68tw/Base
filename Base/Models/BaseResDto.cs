@@ -6,9 +6,6 @@
     /// </summary>
     public class BaseResDto
     {
-        //public string Locale { get; set; }
-
-        //for view component
         public string BtnCreate { get; set; } = "";
         public string BtnAddRow { get; set; } = "";
         public string BtnFind { get; set; } = "";
@@ -22,29 +19,13 @@
         public string BtnCancel { get; set; } = "";
         public string BtnClose { get; set; } = "";
 
-        //select input
-        public string PlsSelect { get; set; } = "";
-
-        //no access right for program
-        //public string NoAuthProg { get; set; } = "";
-
-        //no auth for row
-        //public string NoAuthRow { get; set; }
-
-        //not login
-        //public string NotLogin { get; set; } = "";
-
-        //validation
-        //public string Required { get; set; } = "";
-        //public string StrLen { get; set; } = "";
-
         public string TipUpdate { get; set; } = "";
         public string TipDelete { get; set; } = "";
         public string TipView { get; set; } = "";
-
-        //tip delete row
         public string TipDeleteRow { get; set; } = "";
 
+        public string PlsSelect { get; set; } = "";
+        public string NoAuth { get; set; } = "";
         public string Working { get; set; } = "";
     }
 }

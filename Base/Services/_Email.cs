@@ -53,7 +53,7 @@ namespace Base.Services
         /// <param name="sync">sync send or not, false(web ap), console(true)</param>
         public static async Task SendByDtoA(EmailDto email, SmtpDto? smtp = null)
         {
-            await SendByDtosA(new List<EmailDto>() { email }, smtp);
+            await SendByDtosA([email], smtp);
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Base.Services
                 var email = emails[0];
                 email.ToUsers = StrToUsers(_Fun.Config.TesterEmail);
                 email.CcUsers = null;
-                emails = new List<EmailDto>() { email };
+                emails = [email];
             }
 
             //send
