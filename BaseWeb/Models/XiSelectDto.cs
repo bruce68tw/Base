@@ -13,7 +13,9 @@ namespace BaseWeb.Models
         */
 
         public List<IdStrDto>? Rows { get; set; }
-        public bool AddEmptyRow { get; set; } = true;
+
+        //AddEmptyRow -> AddEmpty
+        public bool AddEmpty { get; set; } = true;
         public string FnOnChange { get; set; } = "";
     }
 }

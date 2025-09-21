@@ -288,12 +288,11 @@ namespace BaseWeb.Services
             {
                 //horizontal
                 //加上 input tail for 水平label,input only
-                var inputTail = "";
+                var inputNote = "";
                 if (!string.IsNullOrEmpty(dto.InputNote))
                 {
-                    //如果沒有指定col數, 則取12的餘值
-                    var col2 = (colLen > 2) ? colList[2] : 12 - colList.Sum(a => a);
-                    inputTail = $"<div class='col-md-{col2} x-input-note'>{dto.InputNote}</div>";
+                    //col表示使用剩餘空間
+                    inputNote = $"<div class='col x-input-note'>{dto.InputNote}</div>";
                 }
 
                 //get html
@@ -304,7 +303,7 @@ namespace BaseWeb.Services
     {4}
 </div>
 {6}
-", colList[0], colList[1], labelTip2, (reqSpan + dto.Title + iconTip), html, _Str.KeepOneSpace(clsLabel), inputTail);
+", colList[0], colList[1], labelTip2, (reqSpan + dto.Title + iconTip), html, _Str.KeepOneSpace(clsLabel), inputNote);
             }
             else
             {
@@ -637,7 +636,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         public static string XiSelect(XiSelectDto dto)
         {
             var html = GetSelectHtml(dto.Fid, dto.Value, InputTypeEstr.Select, dto.Rows!,
-                dto.Required, dto.Edit, dto.AddEmptyRow,
+                dto.Required, dto.Edit, dto.AddEmpty,
                 dto.InputTip, dto.InputAttr, dto.ClsBox, dto.FnOnChange, dto.EventArgs);
 
             if (_Str.NotEmpty(dto.Title))
