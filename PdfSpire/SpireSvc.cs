@@ -1,14 +1,13 @@
 ﻿using Base.Interfaces;
 using Base.Models;
 using Base.Services;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Spire.Doc;
 using Spire.Doc.License;
 using Spire.Pdf;
 using Spire.Pdf.Graphics;
 using System.Drawing;
 
-namespace BaseSpire
+namespace PdfSpire
 {
     public class SpireSvc : IPdfSvc
     {

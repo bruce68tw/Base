@@ -7,29 +7,6 @@ namespace Base.Models
     /// </summary>
     public class ConfigDto
     {
-        /*
-        //constructor
-        //must use { get; set; } for binding at Startup.cs !!
-        public ConfigDto()
-        {
-            SystemName = "MIS System";
-            Locale = "zh-TW";
-            ServerId = "";
-            SlowSql = 1000;
-            //LogDebug = false;
-            //LogSql = false;
-            //RootEmail = "";
-            //TesterEmail = "";
-            UploadFileMax = 5;
-            //CacheSecond = 3600;
-            //SSL = false;
-            //Smtp = "";
-            //HtmlImageUrl = "";
-            //Redis = "";
-            HtmlImageUrl = "";
-        }
-        */
-
         //是否加密組態檔重要欄位, ex: Db,Smtp,Redis
         public bool Encode { get; set; } = false;
 
@@ -43,6 +20,9 @@ namespace Base.Models
 
         //system name
         public string SystemName { get; set; } = "MIS System";
+
+        //可做為 Issuer
+        public string SystemEngName { get; set; } = "MIS System";
 
         //default locale code
         public string Locale { get; set; } = "zh-TW";
@@ -143,9 +123,26 @@ namespace Base.Models
         public int OtpSmsMin { get; set; } = 3;
 
         /// <summary>
-        /// otp Authenticator 有效時間(分)
+        /// otp Authenticator 有效時間(秒)
         /// </summary>
-        public int OtpAuthMin { get; set; } = 1;
+        public int OtpAuthSec { get; set; } = 60;
 
+        /// <summary>
+        /// otp Authenticator secret key, base32
+        /// </summary>
+        public string OtpAuthKey { get; set; } = "";
+
+        /// <summary>
+        /// 簡訊帳號
+        /// </summary>
+        public string SmsAccount { get; set; } = "";
+        /// <summary>
+        /// 簡訊密碼
+        /// </summary>
+        public string SmsPwd { get; set; } = "";
+        /// <summary>
+        /// 簡訊來源門號, 由廠商提供
+        /// </summary>
+        public string SmsFromPhone { get; set; } = "";
     }
 }

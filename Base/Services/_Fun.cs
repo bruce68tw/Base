@@ -195,11 +195,14 @@ namespace Base.Services
                 Config.Db = _Str.DecodeByFile(Config.Db).Replace("\\\\","\\");    //config的\到字串會變\\
                 Config.Smtp = _Str.DecodeByFile(Config.Smtp);
                 Config.Redis = _Str.DecodeByFile(Config.Redis);
+                Config.OtpAuthKey = _Str.DecodeByFile(Config.OtpAuthKey);
+                Config.SmsAccount = _Str.DecodeByFile(Config.SmsAccount);
+                Config.SmsPwd = _Str.DecodeByFile(Config.SmsPwd);
             }
-			#endregion
+            #endregion
 
-			#region set smtp
-			var smtp = Config.Smtp;
+            #region set smtp
+            var smtp = Config.Smtp;
             if (!string.IsNullOrEmpty(smtp))
             {
                 try

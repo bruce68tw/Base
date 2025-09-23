@@ -8,7 +8,6 @@
         public const string Email = "E";
         public const string EmailLink = "EL";
         public const string Sms = "S";
-        public const string AuthMs = "AM";      //Authenticator Microsoft
-        public const string AuthGoogle = "AG";  //Authenticator google
+        public const string Auth = "A";      //Microsoft & Google Authenticator 
     }
 }
