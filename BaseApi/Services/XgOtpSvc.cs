@@ -1,4 +1,5 @@
 ﻿using Base.Enums;
+using Base.Interfaces;
 using Base.Models;
 using Base.Services;
 using Newtonsoft.Json.Linq;
@@ -54,25 +55,23 @@ namespace BaseApi.Services
             return await SaveOtpLogA(server, email, OtpTypeEstr.Email, otpCode, _Fun.Config.OtpEmailMin);
         }
 
-        public async Task<bool> SendSmsA(string server, string phone)
+        public async Task<bool> SendSmsA(ISmsSvc smsSvc, string server, string phone)
         {
-            return true;
-            /*
             //client主機是否被授權使用本服務
-            if (!await HasServerA(server)) return false;
+            var row = await GetServerRowA(server);
+            if (row == null) return false;
 
             //寄送簡訊
-            var dto = new EmailDto()
-            {
-                Subject = $"一次性密碼(OTP)發送通知",
-                ToUsers = [email],
-                Body = _Str.ReplaceJson(html, json),
-            };
-            await _Email.SendByDtoA(dto);
+            var otpCode = GenCode();
+            var min = _Fun.Config.OtpSmsMin;
+            var msg = string.Format(_Fun.Config.OtpSmsTpl, otpCode, row["SystemName"]!.ToString(), min);
+            var status = await smsSvc.SendA(phone, msg);
 
             //Db記錄驗証碼
-            return await SaveOtpLogA(server, phone, OtpTypeEstr.Sms, otpCode, _Fun.Config.OtpSmsMin);
-            */
+            if (status)
+                return await SaveOtpLogA(server, phone, OtpTypeEstr.Sms, otpCode, min);
+            else
+                return false;
         }
 
         /// <summary>
@@ -109,6 +108,15 @@ namespace BaseApi.Services
             if (!status)
                 _Log.Error($"XpServer.Server={server} 不存在。");
             return status;
+        }
+
+        private async Task<JObject> GetServerRowA(string server)
+        {
+            var row = await _Db.GetRowA($"select * from dbo.XpServer where Server='{server}'");
+            var status = (row != null);
+            if (!status)
+                _Log.Error($"XpServer.Server={server} 不存在。");
+            return row;
         }
 
         /// <summary>

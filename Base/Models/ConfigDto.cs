@@ -1,4 +1,5 @@
 ﻿using Base.Enums;
+using System.Collections.Generic;
 
 namespace Base.Models
 {
@@ -131,6 +132,10 @@ namespace Base.Models
         /// otp Authenticator secret key, base32
         /// </summary>
         public string OtpAuthKey { get; set; } = "";
+        /// <summary>
+        /// OTP 簡訊範本
+        /// </summary>
+        public string OtpSmsTpl { get; set; } = "";
 
         /// <summary>
         /// 簡訊帳號
@@ -144,5 +149,13 @@ namespace Base.Models
         /// 簡訊來源門號, 由廠商提供
         /// </summary>
         public string SmsFromPhone { get; set; } = "";
+        /// <summary>
+        /// 簡訊來源門號, 由廠商提供
+        /// </summary>
+
+        /// <summary>
+        /// 允許使用服務的來源主機IP清單, DNS容易被偽造, 以IP為主
+        /// </summary>
+        public List<string> ClientIps { get; set; } = [];
     }
 }

@@ -15,6 +15,16 @@ namespace Base.Services
     public static class _Auth
     {
         /// <summary>
+        /// 檢查來源IP是否在組態檔允許的清單內
+        /// </summary>
+        /// <param name="clientIp"></param>
+        /// <returns></returns>
+        public static bool CheckClientIp(string clientIp)
+        {
+            return (_Fun.Config.ClientIps.IndexOf(clientIp) >= 0);
+        }
+
+        /// <summary>
         /// 檢查個人資料權限是否符合目前登入者
         /// </summary>
         /// <param name="ctrl"></param>
