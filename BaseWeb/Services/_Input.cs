@@ -363,7 +363,7 @@ namespace BaseWeb.Services
 
             //add title
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, false, dto, true);
+                html = InputAddLayout(html, dto.Required, dto, true);
             return html;
         }
         public static string XiDate(XiDateDto dto)
@@ -569,6 +569,14 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         }
         public static string XiRadio(XiRadioDto dto)
         {
+            if (dto.Rows == null || dto.Rows.Count == 0)
+            {
+                dto.Rows = [
+                    new IdStrDto(){ Id = "1", Str = "Radio1" },
+                    new IdStrDto(){ Id = "2", Str = "Radio2" },
+                ];
+            }
+
             //box & ext class
             //var boxClass = "xi-box"; 
             if (dto.IsHori)
@@ -608,7 +616,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //add title outside
             //consider this field could in datatable(no title) !!
             if (_Str.NotEmpty(dto.Title))
-                html = InputAddLayout(html, false, dto, true);
+                html = InputAddLayout(html, dto.Required, dto, true);
             return html;
         }
         public static string XiRead(XiReadDto dto)
