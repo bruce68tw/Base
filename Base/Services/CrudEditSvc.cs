@@ -408,7 +408,7 @@ namespace Base.Services
             sql = $"Update {editDto.Table} Set {sql[0..^1] + setCol4} Where {GetWhereAndArg(editDto, rowKey)}";
             if (await db.ExecSqlA(sql, _sqlArgs!) == 0)
             {
-                await _Log.ErrorRootA($"CrudEdit.cs UpateRowA() failed, update 0 row.({sql})");
+                await _Log.ErrorRootA($"CrudEditSvc.cs UpateRowA() failed, update 0 row.({sql})");
                 return false;
             }
 
