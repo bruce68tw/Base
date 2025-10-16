@@ -32,9 +32,10 @@ namespace Base.Services
         //session timeout(or not login), map to _BR.js
         public const string FidTimeOut = "TimeOut";
 
-        //system session name
-        public const string FidRows = "_rows";         //rows fid for CrudEdit
-        public const string FidChilds = "_childs";     //childs fid for CrudEdit
+        //for CrudEditSvc, 多個檔案使用
+        public const string FidRows = "_rows";          //rows fid for CrudEdit
+        public const string FidChilds = "_childs";      //childs fid for CrudEdit
+        public const string FidDeletes = "_deletes";    //delete key string list
 
         public const string FidBaseUser = "_BaseUser";         //base user info
         //public const string ProgAuthStrs = "_ProgAuthStrs"; //program autu string list

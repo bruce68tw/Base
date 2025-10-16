@@ -22,8 +22,9 @@ namespace Base.Services
         //constant
         //front end input json fields:
         //private const string Rows = "_rows";        //multiple rows
-        private const string Deletes = "_deletes";  //delete key string list
+        //private const string Deletes = "_deletes";  //delete key string list
         //private const string Childs = "_childs";    //child json list
+
         private const string FkeyFid = "_fkeyfid";  //foreign key fid, 欄位內容如果是數字表示必須參考上一層key值
         private const string IsNew = "_IsNew";      //是否new row, 後端產生用於判斷, 前端不傳入
 
@@ -31,18 +32,9 @@ namespace Base.Services
         //private readonly EditDto _editDto;
         //private readonly string _ctrl;       //controll name
         private int _saveRows = 0;  //changed(new/edit) rows count
-
-        //db str in config file
-        //private readonly string _dbStr;
-
-        //sql args pair(fid,value)
-        //private List<object> _sqlArgs = new();
-
         private string _key = "";   //for new/update
-        private bool _isNewMaster = false;   //主檔是否新增
-
-        //now time
-        private DateTime _now;
+        private bool _isNewMain = false;   //主檔是否新增        
+        private DateTime _now;      //now time
 
         //new key json, format: t + levelStr = json, 
         //ex: t02 = { fxx = key1, fxx = key2}, xx is row index(base 1 !!)
@@ -86,7 +78,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="json">input row</param>
         /// <returns>JArray</returns>
-        private JArray? JsonToRows(JObject json)
+        private JArray? GetJsonRows(JObject json)
         {
             if (json[_Fun.FidRows] == null) return null;
             var rows = json[_Fun.FidRows] as JArray;
@@ -469,7 +461,7 @@ namespace Base.Services
 
             //validate this rows
             string error;
-            JArray? rows = JsonToRows(json);
+            JArray? rows = GetJsonRows(json);
             if (rows != null)
             {
                 //prepare edit validate variables
@@ -650,7 +642,8 @@ namespace Base.Services
         /// <returns>ResultDto</returns>
         public async Task<ResultDto> CreateA(JObject json)
         {
-            _isNewMaster = true;
+            _isNewMain = true;
+            RowSetNew((JObject)_Json.GetRows0(json)![0]!);
             return await SaveJsonA(json);
         }
 
@@ -669,7 +662,7 @@ namespace Base.Services
 
             //set instance variables
             _key = key;
-            _isNewMaster = false;
+            _isNewMain = false;
 
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin())
@@ -687,6 +680,12 @@ namespace Base.Services
             */
 
             return await SaveJsonA(json);
+        }
+
+        private async Task CheckCloseDbA(Db db)
+        {
+            if (!_dbByOut)
+                await db.DisposeAsync();
         }
 
         /// <summary>
@@ -724,20 +723,16 @@ namespace Base.Services
             //validateion
             if (_editDto.FnValidate != null)
             {
-                validErrors = _editDto.FnValidate(_isNewMaster, inputJson);
+                validErrors = _editDto.FnValidate(_isNewMain, inputJson);
                 if (_List.NotEmpty(validErrors))
                     goto lab_error;
             }
-
-            //如果 _isNewMaster 先設定 rows IsNew flag
-            //if (_isNewMaster)
-                //RowSetIsNew(inputJson);
 
             //set new key if need
             //addFunName = false;
             error = (_editDto.FnSetNewKeyJsonA == null)
                 ? await SetNewKeyJsonA(inputJson, _editDto)
-                : await _editDto.FnSetNewKeyJsonA(_isNewMaster, this, inputJson, _editDto);
+                : await _editDto.FnSetNewKeyJsonA(_isNewMain, this, inputJson, _editDto);
             if (_Str.NotEmpty(error)) goto lab_error;
 
             //transaction if need
@@ -757,7 +752,7 @@ namespace Base.Services
             {
                 try
                 {
-                    error = await _editDto.FnAfterSaveA(_isNewMaster, this, db, _newKeyJson);
+                    error = await _editDto.FnAfterSaveA(_isNewMain, this, db, _newKeyJson);
                     if (_Str.NotEmpty(error)) goto lab_error;
                 }
                 catch (Exception ex)
@@ -788,12 +783,6 @@ namespace Base.Services
                 : _Model.GetValidError(validErrors!);
         }
 
-		private async Task CheckCloseDbA(Db db)
-        {
-			if (!_dbByOut)
-				await db.DisposeAsync();
-		}
-
 		/// <summary>
 		/// validate and save(recursive)
 		/// </summary>
@@ -814,8 +803,8 @@ namespace Base.Services
             var isLevel0 = (levelLen == 1);
 
             #region delete first & get deleted list for child(if need)
-            List<string>? deletes = (inputJson[Deletes] == null)
-                ? null : _Str.ToList(inputJson[Deletes]!.ToString());
+            List<string>? deletes = (inputJson[_Fun.FidDeletes] == null)
+                ? null : _Str.ToList(inputJson[_Fun.FidDeletes]!.ToString());
             if (upDeletes != null)
                 deletes = _List.Concat(deletes!, (await GetKeysByUpKeysA(editDto, upDeletes!, db))!);
 
@@ -888,6 +877,12 @@ namespace Base.Services
             return _newKeyJson;
         }
 
+        //set row IsNew flag to true
+        private void RowSetNew(JObject row)
+        {
+            row[IsNew] = "1"; //string
+        }
+
         /// <summary>
         /// set new key & _newKeyJson variables
         /// </summary>
@@ -897,11 +892,6 @@ namespace Base.Services
         public async Task<string> SetNewKeyJsonA(JObject inputJson, EditDto editDto)
         {
             return await SetNewKeyJsonLoopA("0", null, inputJson, editDto);
-        }
-
-        private void RowSetIsNew(JObject row)
-        {
-            row[IsNew] = "1"; //string
         }
 
         /// <summary>
@@ -938,11 +928,13 @@ namespace Base.Services
                     var inputRow = token as JObject;
                     if (_Json.IsEmpty(inputRow) || !HasInputField(inputRow, inputKid)) continue;
 
+                    /*
                     //先調整
                     if (isLevel0)
                     {
-                        if (_isNewMaster) RowSetIsNew(inputRow!);
+                        if (_isNewMaster) RowSetNew(inputRow!);
                     }
+                    */
 
                     //只處理new row
                     if (!IsNewRow(inputRow!, kid)) continue;
@@ -970,7 +962,7 @@ namespace Base.Services
                     */
 
                     //寫入主鍵&外部鍵欄位 for new row
-                    RowSetIsNew(inputRow!);    //set new key flag, string
+                    RowSetNew(inputRow!);    //set new key flag, string
                     var pkeyNewNo = isLevel0 ? 1 : GetNewRowUpNo(inputRow!, kid);    //在寫入pkey前讀取
 
                     //get/set PKey value
@@ -990,13 +982,9 @@ namespace Base.Services
 
                     #region set foreign key value for not level0
                     if (isLevel0)
-                    {
                         _key = pkey;    //improtant !!
-                    }
                     else if (isLevel1)
-                    {
                         inputRow![editDto.FkeyFid] = _key;
-                    }
                     else
                     {
                         var fkeyUpRowNo = GetNewRowUpNo(inputRow!, FkeyFid);   //from 系統欄位(_fkeyfid)                                                                               
@@ -1154,7 +1142,7 @@ namespace Base.Services
             //set current time(_now)
             SetNow();
 
-            var json = new JObject() { [Deletes] = _List.ToStr(keys) };
+            var json = new JObject() { [_Fun.FidDeletes] = _List.ToStr(keys) };
             if (!await SaveJsonLoopA("0", null, json, _editDto, db))
                 goto lab_error;
 
