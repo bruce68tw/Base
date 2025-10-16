@@ -25,7 +25,7 @@ namespace Base.Services
         private const string Deletes = "_deletes";  //delete key string list
         //private const string Childs = "_childs";    //child json list
         private const string FkeyFid = "_fkeyfid";  //foreign key fid, 欄位內容如果是數字表示必須參考上一層key值
-        private const string IsNew = "_IsNew";      //crud field for is new row or not, 前後端一致
+        private const string IsNew = "_IsNew";      //是否new row, 後端產生用於判斷, 前端不傳入
 
         //master edit
         //private readonly EditDto _editDto;
@@ -150,10 +150,15 @@ namespace Base.Services
         /// <returns>-1(error/not found), 0(正常key值), n(new key)</returns>
         private int GetNewRowUpNo(JObject row, string kid)
         {
+            if (_Object.IsEmpty(row[kid])) return -1;
+            if (!Int32.TryParse(row[kid]!.ToString(), out int num)) return 0;
+            return num > 0 ? 0 : num * (-1);
+            /*
             return _Object.IsEmpty(row[kid]) ? -1 :
-                !IsNewRow(row) ? 0 :
+                !IsNewRow(row, kid) ? 0 :
                 Int32.TryParse(row[kid]!.ToString(), out int num) ? num : 
                 0;
+            */
         }
 
         /*
@@ -171,12 +176,15 @@ namespace Base.Services
 
         /// <summary>
         /// check is new row or not by IsNew field
+        /// 主key小於0表示新增(前端傳入)、_IsNew欄位="1"(後端加上)
         /// </summary>
         /// <param name="row"></param>
         /// <returns></returns>
-        private bool IsNewRow(JObject row)
+        private bool IsNewRow(JObject row, string kid)
         {
-            return (row[IsNew] != null && row[IsNew]!.ToString() == "1");
+            return (row[IsNew] != null && row[IsNew]!.ToString() == "1") ? true :
+                !Int32.TryParse(row[kid]!.ToString(), out int num) ? false :
+                (num < 0);
         }
 
         /// <summary>
@@ -505,7 +513,7 @@ namespace Base.Services
             if (_Json.IsEmptyNoSpec(row)) return "";
 
             #region check required & fid existed
-            if (IsNewRow(row))
+            if (IsNewRow(row, editDto.PkeyFid))
             {
                 //check required
                 if (editDto._FidRequires != null)
@@ -643,7 +651,7 @@ namespace Base.Services
         public async Task<ResultDto> CreateA(JObject json)
         {
             _isNewMaster = true;
-            return await SaveJsonA(true, json);
+            return await SaveJsonA(json);
         }
 
         /// <summary>
@@ -678,7 +686,7 @@ namespace Base.Services
                 rows[0][_editDto.PkeyFid] = key;
             */
 
-            return await SaveJsonA(false, json);
+            return await SaveJsonA(json);
         }
 
         /// <summary>
@@ -689,7 +697,7 @@ namespace Base.Services
         /// <param name="fnSetNewKeyA">custom function for set newKeyJson</param>
         /// <param name="fnAfterSaveA"></param>
         /// <returns></returns>
-        private async Task<ResultDto> SaveJsonA(bool isNew, JObject inputJson)
+        private async Task<ResultDto> SaveJsonA(JObject inputJson)
         {
             //check input & set fidNos same time
             var log = false;
@@ -716,16 +724,20 @@ namespace Base.Services
             //validateion
             if (_editDto.FnValidate != null)
             {
-                validErrors = _editDto.FnValidate(isNew, inputJson);
+                validErrors = _editDto.FnValidate(_isNewMaster, inputJson);
                 if (_List.NotEmpty(validErrors))
                     goto lab_error;
             }
+
+            //如果 _isNewMaster 先設定 rows IsNew flag
+            //if (_isNewMaster)
+                //RowSetIsNew(inputJson);
 
             //set new key if need
             //addFunName = false;
             error = (_editDto.FnSetNewKeyJsonA == null)
                 ? await SetNewKeyJsonA(inputJson, _editDto)
-                : await _editDto.FnSetNewKeyJsonA(isNew, this, inputJson, _editDto);
+                : await _editDto.FnSetNewKeyJsonA(_isNewMaster, this, inputJson, _editDto);
             if (_Str.NotEmpty(error)) goto lab_error;
 
             //transaction if need
@@ -745,7 +757,7 @@ namespace Base.Services
             {
                 try
                 {
-                    error = await _editDto.FnAfterSaveA(isNew, this, db, _newKeyJson);
+                    error = await _editDto.FnAfterSaveA(_isNewMaster, this, db, _newKeyJson);
                     if (_Str.NotEmpty(error)) goto lab_error;
                 }
                 catch (Exception ex)
@@ -842,19 +854,13 @@ namespace Base.Services
                     if (!HasInputField(inputRow, kid)) continue;
 
                     //注意: 移除if括號時無法執行else區段!!
-                    if (IsNewRow(inputRow!))
+                    if (IsNewRow(inputRow!, kid))
                     {
-                        if (!await InsertRowA(editDto, inputRow!, db))
-                        {
-                            return false;
-                        }
+                        if (!await InsertRowA(editDto, inputRow!, db)) return false;
                     }
                     else
                     {
-                        if (!await UpdateRowA(isLevel0, editDto, inputRow!, db))
-                        {
-                            return false;
-                        }
+                        if (!await UpdateRowA(isLevel0, editDto, inputRow!, db)) return false;
                     }
                 }//for rows
             }//if
@@ -893,6 +899,11 @@ namespace Base.Services
             return await SetNewKeyJsonLoopA("0", null, inputJson, editDto);
         }
 
+        private void RowSetIsNew(JObject row)
+        {
+            row[IsNew] = "1"; //string
+        }
+
         /// <summary>
         /// (recursive)set new pkey & fkey (寫入inputJson), called by SetNewKeyJson()
         /// 前端會將所有空白pkey填入數字(上層資料序號, base 1)
@@ -919,7 +930,7 @@ namespace Base.Services
             if (inputRows != null)
             {
                 var kid = editDto.PkeyFid;
-                var canAddKey = (editDto.AutoIdLen == 0);
+                var canAddKey = (editDto.AutoIdLen == 0);   //表示可以自行傳入key
                 var inputKid = canAddKey ? "" : kid;
                 foreach (JToken token in inputRows)
                 {
@@ -927,8 +938,14 @@ namespace Base.Services
                     var inputRow = token as JObject;
                     if (_Json.IsEmpty(inputRow) || !HasInputField(inputRow, inputKid)) continue;
 
-                    //master層、本層都不是new row, 則不必處理
-                    if (!_isNewMaster && !IsNewRow(inputRow!)) continue;
+                    //先調整
+                    if (isLevel0)
+                    {
+                        if (_isNewMaster) RowSetIsNew(inputRow!);
+                    }
+
+                    //只處理new row
+                    if (!IsNewRow(inputRow!, kid)) continue;
 
                     /*
                     //insert/update this
@@ -953,7 +970,7 @@ namespace Base.Services
                     */
 
                     //寫入主鍵&外部鍵欄位 for new row
-                    inputRow![IsNew] = "1";  //set new key flag, string
+                    RowSetIsNew(inputRow!);    //set new key flag, string
                     var pkeyNewNo = isLevel0 ? 1 : GetNewRowUpNo(inputRow!, kid);    //在寫入pkey前讀取
 
                     //get/set PKey value
