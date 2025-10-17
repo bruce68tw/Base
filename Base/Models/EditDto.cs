@@ -108,6 +108,17 @@ namespace Base.Models
         public FnValidate? FnValidate = null;
 
         /// <summary>
+        /// crud edit WhenSave before transaction
+        /// 參考 DbAdm UiEdit.cs
+        /// </summary>
+        /// <param name="bool">isNew fun or not</param>
+        /// <param name="CrudEditSvc"></param>
+        /// <param name="JObject">inputJson</param>
+        /// <param name="JObject">keyJson</param>
+        /// <returns>error msg if any</returns>
+        public FnWhenSaveA? FnWhenSaveA = null;
+
+        /// <summary>
         /// crud edit AfterSave, inside transaction
         /// 參考 HrAdm LeaveEdit.cs CreateA()、BaoAdm BaoEdit.cs
         /// </summary>

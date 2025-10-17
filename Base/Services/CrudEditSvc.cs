@@ -26,7 +26,7 @@ namespace Base.Services
         //private const string Childs = "_childs";    //child json list
 
         private const string FkeyFid = "_fkeyfid";  //foreign key fid, 欄位內容如果是數字表示必須參考上一層key值
-        private const string IsNew = "_IsNew";      //是否new row, 後端產生用於判斷, 前端不傳入
+        private const string IsNew = "_IsNew";      //是否new row, 後端產生用於判斷, 前端不再傳入
 
         //master edit
         //private readonly EditDto _editDto;
@@ -638,12 +638,11 @@ namespace Base.Services
         /// save new rows, use transaction
         /// </summary>
         /// <param name="json"></param>
-        /// <param name="fnAfterSaveA"></param>
         /// <returns>ResultDto</returns>
         public async Task<ResultDto> CreateA(JObject json)
         {
             _isNewMain = true;
-            RowSetNew((JObject)_Json.GetRows0(json)![0]!);
+            RowSetNew(_Json.GetRows0(json)!);
             return await SaveJsonA(json);
         }
 
@@ -652,7 +651,6 @@ namespace Base.Services
         /// </summary>
         /// <param name="key">key of master table</param>
         /// <param name="json"></param>
-        /// <param name="fnAfterSaveA"></param>
         /// <returns>ResultDto</returns>
         public async Task<ResultDto> UpdateA(string key, JObject json)
         {
@@ -693,8 +691,6 @@ namespace Base.Services
         /// called by Create(), Update()
         /// </summary>
         /// <param name="inputJson">input json</param>
-        /// <param name="fnSetNewKeyA">custom function for set newKeyJson</param>
-        /// <param name="fnAfterSaveA"></param>
         /// <returns></returns>
         private async Task<ResultDto> SaveJsonA(JObject inputJson)
         {
@@ -734,6 +730,21 @@ namespace Base.Services
                 ? await SetNewKeyJsonA(inputJson, _editDto)
                 : await _editDto.FnSetNewKeyJsonA(_isNewMain, this, inputJson, _editDto);
             if (_Str.NotEmpty(error)) goto lab_error;
+
+            //call FnWhenSaveA if need
+            if (_editDto.FnWhenSaveA != null)
+            {
+                try
+                {
+                    error = await _editDto.FnWhenSaveA(_isNewMain, this, _newKeyJson, inputJson);
+                    if (_Str.NotEmpty(error)) goto lab_error;
+                }
+                catch (Exception ex)
+                {
+                    error = "Your FnWhenSaveA error: " + ex.Message;
+                    goto lab_error;
+                }
+            }
 
             //transaction if need
             db = GetDb();

@@ -18,6 +18,17 @@ namespace Base.Services
     public delegate List<ErrorRowDto>? FnValidate(bool isNew, JObject inputJson);
 
     /// <summary>
+    /// crud edit WhenSave before transaction
+    /// 參考 DbAdm UiEdit.cs
+    /// </summary>
+    /// <param name="isNew">isNew fun or not</param>
+    /// <param name="crudEditSvc">CrudEdit service</param>
+    /// <param name="inputJson">input json</param>
+    /// <param name="keyJson"></param>
+    /// <returns>error msg if any</returns>
+    public delegate Task<string> FnWhenSaveA(bool isNew, CrudEditSvc crudEditSvc, JObject inputJson, JObject keyJson);
+
+    /// <summary>
     /// crud edit AfterSave, inside transaction
     /// 參考 HrAdm LeaveEdit.cs CreateA()、BaoAdm BaoEdit.cs
     /// </summary>
