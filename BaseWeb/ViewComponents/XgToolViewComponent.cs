@@ -48,7 +48,7 @@ namespace BaseWeb.ViewComponents
     </div>
 </div>
 
-<!-- ans, js不易使用同步ans, 所以這裡使用非同步!!, data-bs-keyboard='false' blur不會關閉 -->
+<!-- ans, 使用 callback function, data-bs-keyboard='false' blur不會關閉 -->
 <div id='xgAns' class='modal fade x-msg' data-bs-keyboard='false'>
     <div class='modal-dialog' role='document'>
         <div class='modal-content'>
@@ -61,6 +61,25 @@ namespace BaseWeb.ViewComponents
             <div class='modal-footer'>
                 <button type='button' class='btn btn-secondary xd-cancel' data-onclick='_tool.onAnsNo'>{baseR.BtnCancel}</button>
                 <button type='button' class='btn btn-primary xd-yes' data-onclick='_tool.onAnsYes'>{baseR.BtnYes}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ans, 使用非同步(js不易使用同步ans) -->
+<div id='xgAnsA' class='modal fade x-msg' data-bs-keyboard='false'>
+    <div class='modal-dialog' role='document'>
+        <div class='modal-content'>
+            <div class='modal-header'>
+                <!-- close button 改用事件 -->
+                <button type='button' class='btn-close' aria-label='Close' data-onclick='_tool.onAnsA' data-args='0'></button>
+            </div>
+            <div class='modal-body'>
+                <p class='xd-msg'></p>
+            </div>
+            <div class='modal-footer'>
+                <button type='button' class='btn btn-secondary xd-cancel' data-onclick='_tool.onAnsA' data-args='0'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn btn-primary xd-yes' data-onclick='_tool.onAnsA' data-args='1'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
