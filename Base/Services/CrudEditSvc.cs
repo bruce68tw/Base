@@ -736,7 +736,7 @@ namespace Base.Services
             {
                 try
                 {
-                    error = await _editDto.FnWhenSaveA(_isNewMain, this, _newKeyJson, inputJson);
+                    error = await _editDto.FnWhenSaveA(_isNewMain, this, inputJson, _newKeyJson);
                     if (_Str.NotEmpty(error)) goto lab_error;
                 }
                 catch (Exception ex)

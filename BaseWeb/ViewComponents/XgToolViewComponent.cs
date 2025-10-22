@@ -48,8 +48,8 @@ namespace BaseWeb.ViewComponents
     </div>
 </div>
 
-<!-- ans -->
-<div id='xgAns' class='modal fade x-msg'>
+<!-- ans, js不易使用同步ans, 所以這裡使用非同步!!, data-bs-keyboard='false' blur不會關閉 -->
+<div id='xgAns' class='modal fade x-msg' data-bs-keyboard='false'>
     <div class='modal-dialog' role='document'>
         <div class='modal-content'>
             <div class='modal-header'>
