@@ -635,7 +635,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //add class xi-unsave for not save DB, _form.js toJson() will filter out it !!
             if (!dto.SaveDb)
                 css += " xi-unsave";
-            var html = $"<label{attr} data-type='{InputTypeEstr.ReadOnly}' class='form-control {css}'>{dto.Value}</label>";
+            var html = $"<label{attr} data-type='{InputTypeEstr.Read}' class='form-control {css}'>{dto.Value}</label>";
 
             if (_Str.NotEmpty(dto.Title))
                 html = InputAddLayout(html, false, dto);

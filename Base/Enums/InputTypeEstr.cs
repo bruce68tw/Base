@@ -18,7 +18,7 @@
         public const string Modal = "modal";
         public const string Password = "pwd";
         public const string Radio = "radio";
-        public const string ReadOnly = "read";
+        public const string Read = "read";
         public const string Select = "select";
         public const string Sort = "sort";
         public const string Text = "text";
