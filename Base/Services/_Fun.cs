@@ -46,7 +46,8 @@ namespace Base.Services
         public const string CsDateFmt = "yyyy/MM/dd";
 
         //carrier
-        public const string TextCarrier = "\r\n";     //for string
+        //public const string TextCarrier = "\r\n";     //for string
+        public static string TextCarrier = Environment.NewLine;     //for 跨平台
         public const string HtmlCarrier = "<br>";     //for html
 
         //default pagin rows

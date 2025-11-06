@@ -201,6 +201,27 @@ namespace Base.Services
         /// <param name="model"></param>
         public static void CopyToModel(JObject from, object model)
         {
+            var type = model.GetType();
+            foreach (var item in from)
+            {
+                var prop = type.GetProperty(item.Key);
+                if (prop == null || !prop.CanWrite) continue;
+
+                var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+                try
+                {
+                    var value = item.Value?.ToObject(targetType);
+                    prop.SetValue(model, value);
+                }
+                catch
+                {
+                    // 忽略不相容的屬性類型
+                    //todo: log error
+                }
+            }
+
+            /*
             //var models = model.GetType().GetProperties();
             foreach (var item in from)
             {
@@ -208,6 +229,8 @@ namespace Base.Services
                 if (modelProp != null)
                     modelProp.SetValue(model, item.Value!.ToString(), null);
             }
+            */
+
             /* 舊的寫法
             foreach (var prop in from.GetType().GetProperties())
             {
