@@ -20,8 +20,12 @@
         public bool InRow  { get; set; }
 
         public bool Required  { get; set; }
+
+        //placeholder
         public string InputTip  { get; set; } = "";
+
         public string InputAttr  { get; set; } = "";
+
         //欄位右方提示文字(.x-input-note)
         public string InputNote { get; set; } = "";
 
