@@ -31,11 +31,20 @@ namespace Base.Services
         public static async Task<List<IdStrDto>?> TypeToListA(string type, Db? db = null)
         {
             var sql = $@"
-select 
-    Value as Id, Name as Str
+select Value as Id, Name as Str
 from dbo.XpCode
 where Type='{type}'
 order by Sort";
+            return await SqlToListA(sql, db);
+        }
+
+        public static async Task<List<IdStrDto>?> TableToListA(string table, Db? db = null)
+        {
+            var sql = $@"
+select Id, Name as Str
+from dbo.[{table}]
+order by Id)
+";
             return await SqlToListA(sql, db);
         }
 

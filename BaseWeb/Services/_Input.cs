@@ -3,6 +3,7 @@ using Base.Models;
 using Base.Services;
 using BaseApi.Services;
 using BaseWeb.Models;
+using DocumentFormat.OpenXml.Spreadsheet;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -512,6 +513,12 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             var html = $"<input{attr} data-type='{InputTypeEstr.Text}' type='hidden' value='{dto.Value}'>";
             return html;
         }
+        public static string XiHideId()
+        {
+            var attr = GetInputAttr("Id");
+            var html = $"<input{attr} data-type='{InputTypeEstr.Text}' type='hidden'>";
+            return html;
+        }
         public static string XiHtml(XiHtmlDto dto)
         {
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
@@ -619,6 +626,22 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, dto.Required, dto, true);
             return html;
         }
+
+        //單個radio button
+        public static string XiRadio0(string fid, string value, string label)
+        {
+            var attr = GetInputAttr(fid) +
+                $" name='{fid}' data-value='{value}' data-type='{InputTypeEstr.Radio}'";
+
+            //one radio (span for radio sign)
+            return $@"
+<label class='xi-check'>
+	<input type='radio' {attr}>{label}
+	<span class='xi-rspan'></span>
+</label>
+";
+        }
+
         public static string XiRead(XiReadDto dto)
         {
             var attr = GetInputAttr(dto.Fid, "", false, dto.InputAttr);

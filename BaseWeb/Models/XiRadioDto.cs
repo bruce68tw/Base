@@ -13,6 +13,10 @@ namespace BaseWeb.Models
         */
 
         public List<IdStrDto> Rows { get; set; } = null!;
+
+        /**
+         * 預設為水平排列         
+         */
         public bool IsHori { get; set; } = true;
 
         //FnOnChange -> FnOnClick(實際使用 onclick 事件)

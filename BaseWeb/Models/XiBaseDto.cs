@@ -30,7 +30,7 @@
         public string InputNote { get; set; } = "";
 
         /// <summary>
-        /// 單一欄位在加在本身tag, 複合欄位會加在外層div
+        /// css class, 如果單一欄位在加在本身tag, 複合欄位會加在外層div
         /// </summary>
         public string ClsBox  { get; set; } = "";
 

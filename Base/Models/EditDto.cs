@@ -53,7 +53,7 @@ namespace Base.Models
         public string PkeyFid = "";
 
         /// <summary>
-        /// (2nd)foreign key field id
+        /// (2nd)foreign key field id, 空白表示1對1 !!
         /// 這個欄位不可設為 required !!
         /// </summary>
         public string FkeyFid = "";
