@@ -254,8 +254,6 @@ namespace Base.Services
                 if (eitemDto.Read || !eitemDto.Create) continue;
 
                 //get value and check EmptyToNulls
-                //var value = (inputRow[fid]!.ToString() == "" && edit.EmptyToNulls.Contains(fid))
-                //    ? null : inputRow[fid]!.ToString();
                 var value = GetInputValue(editDto, eitemDto, inputRow, fid);
 
                 //add keys & values
@@ -806,10 +804,6 @@ namespace Base.Services
 		private async Task<bool> SaveJsonLoopA(string levelStr, List<string>? upDeletes, 
             JObject inputJson, EditDto editDto, Db db)
         {
-            //var hasInput = (inputJson != null);
-            //if (inputJson == null)
-            //    return true;
-
             var levelLen = levelStr.Length;
             var isLevel0 = (levelLen == 1);
 
@@ -832,21 +826,15 @@ namespace Base.Services
             }
             #endregion
 
-            //if (!hasInput) return true;
-
             #region insert/update this rows
             var inputRows = (inputJson[_Fun.FidRows] == null)
                 ? null : inputJson[_Fun.FidRows] as JArray;
-            //JObject upNewKey2 = new(); //new pkey for childs fkey
             if (inputRows != null)
             {
-                //使用JToken再轉型JObject則不會出現null error的情形 !!
                 var kid = (editDto.AutoIdLen == 0) ? "" : editDto.PkeyFid;  //AutoIdLen=0 則Id可傳入
                 foreach (JToken token in inputRows)
                 {
-                    //inputRow0 could be null, save to var first, or will error
-                    //if (token == null) continue;
-
+                    //使用JToken再轉型JObject則不會出現null error的情形 !!
                     var inputRow = token as JObject;
                     if (_Json.IsEmpty(inputRow)) continue;
 
@@ -977,7 +965,7 @@ namespace Base.Services
                     var pkeyNewNo = isLevel0 ? 1 : GetNewRowUpNo(inputRow!, kid);    //在寫入pkey前讀取
 
                     //get/set PKey value
-                    string pkey;
+                    var pkey = "";
                     if (canAddKey)
                     {
                         //直接從前端傳入
@@ -985,9 +973,12 @@ namespace Base.Services
                     }
                     else
                     {
-                        pkey = (editDto.FnGetNewKeyA == null)
-                            ? _Str.NewId(editDto.AutoIdLen)
-                            : await editDto.FnGetNewKeyA();
+                        //主外鍵相同表示1對1, 會透過外鍵來設定主鍵
+                        if (editDto.FnGetNewKeyA != null)
+                            pkey = await editDto.FnGetNewKeyA();
+                        else if (isLevel0 || editDto.PkeyFid != editDto.FkeyFid)
+                            pkey = _Str.NewId(editDto.AutoIdLen);
+
                         inputRow![kid] = pkey;
                     }
 

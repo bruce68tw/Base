@@ -557,7 +557,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get mid part string
+        /// get mid part string, 找第一次發現的 left 及 right 之間字串
         /// </summary>
         /// <param name="source"></param>
         /// <param name="left"></param>
