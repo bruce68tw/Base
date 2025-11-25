@@ -562,8 +562,9 @@ namespace Base.Services
         /// <param name="source"></param>
         /// <param name="left"></param>
         /// <param name="right"></param>
+        /// <param name="hasSign">是否包含搜尋字元</param>
         /// <returns></returns>
-        public static string GetMid(string source, string left, string right)
+        public static string GetMid(string source, string left, string right, bool hasSign = false)
         {
             var pos1 = source.IndexOf(left);
             if (pos1 < 0) return "";
@@ -571,6 +572,7 @@ namespace Base.Services
             source = source[(left.Length + pos1)..];
             pos1 = source.IndexOf(right);
             if (pos1 > 0) source = source[..pos1];
+            if (hasSign) source = left + source + right;
             return source;
         }
 
