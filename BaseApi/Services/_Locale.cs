@@ -29,18 +29,23 @@ namespace BaseApi.Services
         /// </summary>
         /// <param name="defaultLoc">如果非多國語則傳回Config.Locale(for 大部分情形)</param>
         /// <returns></returns>
-        public static string GetLocale(bool configLoc = true)
-        {
-            return _Fun.MultiLang ? _Fun.GetBaseUser().Locale : 
-                configLoc ? _Fun.Config.Locale : "";
-        }
+        //public static string GetLocale(bool configLoc = true)
 
-        /// <summary>
-        /// change culture
-        /// </summary>
-        /// <param name="locale"></param>
-        /// <returns>error msg if any</returns>
-        public static async Task<bool> SetCultureA(string locale)
+		public static string GetLocale()
+		{
+			return _Fun.MultiLang ? _Fun.GetBaseUser().Locale : _Fun.Config.Locale;
+        }
+		public static string GetLocaleNoDash()
+		{
+            return GetLocale().Replace("-", "");
+		}
+
+		/// <summary>
+		/// change culture
+		/// </summary>
+		/// <param name="locale"></param>
+		/// <returns>error msg if any</returns>
+		public static async Task<bool> SetCultureA(string locale)
         {
             //add _brList if need
             //var error = "";
@@ -107,7 +112,7 @@ namespace BaseApi.Services
         /// <returns></returns>
         public static BaseResDto GetBaseRes()
         {
-            var locale = GetLocale(true);
+            var locale = GetLocale();
             var dict = _brList.FirstOrDefault(a => a.Key == locale);
             return dict.Equals(default(Dictionary<string, BaseResDto>)) 
                 ? new() : dict.Value;
