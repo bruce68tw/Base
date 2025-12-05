@@ -175,7 +175,8 @@ namespace Base.Services
         private bool IsNewRow(JObject row, string kid)
         {
             return (row[IsNew] != null && row[IsNew]!.ToString() == "1") ? true :
-                !Int32.TryParse(row[kid]!.ToString(), out int num) ? false :
+				_Var.IsEmpty(row[kid]) ? true :
+				!Int32.TryParse(row[kid]!.ToString(), out int num) ? false :
                 (num < 0);
         }
 

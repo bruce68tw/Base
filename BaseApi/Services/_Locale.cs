@@ -17,24 +17,27 @@ namespace BaseApi.Services
         //loaded localization list, <locale, BaseResDto>
         private static Dictionary<string, BaseResDto> _brList = [];
 
-        /*
+		/*
         public static string ConfigLocale()
         {
             return _Fun.Config.Locale;
         }
         */
 
-        /// <summary>
-        /// get user locale, 如果非多國語則不必讀取BaseUser
-        /// </summary>
-        /// <param name="defaultLoc">如果非多國語則傳回Config.Locale(for 大部分情形)</param>
-        /// <returns></returns>
-        //public static string GetLocale(bool configLoc = true)
-
+		/// <summary>
+		/// 傳回語系代碼包含"-", 例如: zh-TW
+		/// 如果非多國語則不必讀取BaseUser
+		/// </summary>
+		/// <returns></returns>
 		public static string GetLocale()
 		{
 			return _Fun.MultiLang ? _Fun.GetBaseUser().Locale : _Fun.Config.Locale;
         }
+
+		/// <summary>
+		/// 傳回語系代碼不含"-", 例如: zhTW, 用在讀取XpCode table的多國語欄位
+		/// </summary>
+		/// <returns></returns>
 		public static string GetLocaleNoDash()
 		{
             return GetLocale().Replace("-", "");
