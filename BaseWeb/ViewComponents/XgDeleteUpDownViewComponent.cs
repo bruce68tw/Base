@@ -15,13 +15,13 @@ namespace BaseWeb.ViewComponents
                 fnDeleteRow = $"{mName}.onDeleteRow";
 
             var html = $@"
-<button type='button' class='btn btn-link' data-onclick='{fnDeleteRow}'>
+<button type='button' class='btn btn-link' data-edit data-onclick='{fnDeleteRow}'>
     <i class='ico-delete'></i>
 </button>
-<button type='button' class='btn btn-link' data-onclick='_table.rowMoveUp'>
+<button type='button' class='btn btn-link' data-edit data-onclick='_table.rowMoveUp'>
     <i class='ico-up'></i>
 </button>
-<button type='button' class='btn btn-link' data-onclick='_table.rowMoveDown'>
+<button type='button' class='btn btn-link' data-edit data-onclick='_table.rowMoveDown'>
     <i class='ico-down'></i>
 </button>";
             return new HtmlString(html);

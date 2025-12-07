@@ -73,8 +73,7 @@ namespace BaseWeb.Services
         //get data-edit attribute string
         public static string GetDataEdit(string edit)
         {
-            if (_Str.IsEmpty(edit))
-                edit = "*";
+            if (_Str.IsEmpty(edit)) edit = "";
             return $" data-edit='{edit}'";
         }
 

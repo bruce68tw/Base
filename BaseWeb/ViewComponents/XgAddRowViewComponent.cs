@@ -13,7 +13,7 @@ namespace BaseWeb.ViewComponents
             //todo:
             var attr = _Input.GetEventAttr("onclick", fnOnClick);
             var html = $@"
-<button type='button' {attr} class='btn btn-success'>{_Locale.GetBaseRes().BtnAddRow}
+<button type='button' {attr} class='btn btn-success' data-edit>{_Locale.GetBaseRes().BtnAddRow}
     <i class='ico-plus'></i>
 </button>
 ";
