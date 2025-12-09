@@ -832,8 +832,9 @@ namespace Base.Services
                 ? null : inputJson[_Fun.FidRows] as JArray;
             if (inputRows != null)
             {
-                var kid = (editDto.AutoIdLen == 0) ? "" : editDto.PkeyFid;  //AutoIdLen=0 則Id可傳入
-                foreach (JToken token in inputRows)
+                //var kid = (editDto.AutoIdLen == 0) ? "" : editDto.PkeyFid;  //AutoIdLen=0 則Id可傳入
+				var kid = editDto.PkeyFid;  //AutoIdLen=0 則Id可傳入
+				foreach (JToken token in inputRows)
                 {
                     //使用JToken再轉型JObject則不會出現null error的情形 !!
                     var inputRow = token as JObject;
