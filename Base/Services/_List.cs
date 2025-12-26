@@ -7,6 +7,13 @@ namespace Base.Services
 {
     public class _List
     {
+        public static List<IdStrDto> GetMonths()
+        {
+            return Enumerable.Range(1, 12)
+                .Select(i => new IdStrDto { Id = i.ToString(), Str = i + "月" })
+                .ToList();
+        }
+
         /// <summary>
         /// sql string to list for select input
         /// </summary>
