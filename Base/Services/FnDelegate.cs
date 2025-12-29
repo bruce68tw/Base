@@ -9,13 +9,15 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
+    /// FnValidate -> FnValidateA
     /// 檢查輸入欄位, 無誤傳回null
     /// 參考 DbAdm IssueEdit.cs
     /// </summary>
     /// <param name="isNew">isNew fun or not</param>
     /// <param name="inputJson">input json</param>
     /// <returns>validate error list</returns>
-    public delegate List<ErrorRowDto>? FnValidate(bool isNew, JObject inputJson);
+    //public delegate List<ErrorRowDto>? FnValidate(bool isNew, JObject inputJson);
+    public delegate Task<List<ErrorRowDto>?> FnValidateA(bool isNew, JObject inputJson);
 
     /// <summary>
     /// crud edit WhenSave before transaction

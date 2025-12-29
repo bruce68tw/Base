@@ -7,13 +7,19 @@
         {
             Fid = "";
             Msg = "";
-            FormId = "";
+            EditNo = 0;
             RowId = "";
         }
 
         public string Fid { get; set; }
         public string Msg { get; set; }
-        public string FormId { get; set; }
+
+        /// <summary>
+        /// FormId(string) -> EditNo(int)
+        /// EditOne/EditMany, 不是 FormId 要修正
+        /// default _me.edit0
+        /// </summary>
+        public int EditNo { get; set; }
 
         /// <summary>
         /// 用這個欄位來判別錯誤欄位是在那一個資料群組, for update多筆資料時

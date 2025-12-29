@@ -105,11 +105,11 @@ namespace Base.Models
         /// <returns>validate error list if any</returns>
         /// </summary>
         //public Func<bool, JObject, List<ErrorRowDto>?>? FnValidate = null;
-        public FnValidate? FnValidate = null;
+        public FnValidateA? FnValidateA = null;
 
         /// <summary>
         /// crud edit WhenSave before transaction
-        /// 參考 DbAdm UiEdit.cs
+        /// 參考 DbAdm GenCrudUiEdit.cs
         /// </summary>
         /// <param name="bool">isNew fun or not</param>
         /// <param name="CrudEditSvc"></param>

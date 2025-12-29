@@ -716,9 +716,9 @@ namespace Base.Services
             }
 
             //validateion
-            if (_editDto.FnValidate != null)
+            if (_editDto.FnValidateA != null)
             {
-                validErrors = _editDto.FnValidate(_isNewMain, inputJson);
+                validErrors = await _editDto.FnValidateA(_isNewMain, inputJson);
                 if (_List.NotEmpty(validErrors))
                     goto lab_error;
             }

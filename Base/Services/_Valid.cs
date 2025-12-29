@@ -1,6 +1,7 @@
 ﻿using Base.Models;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace Base.Services
 {
@@ -9,6 +10,26 @@ namespace Base.Services
     /// </summary>
     public class _Valid
     {
+        /// <summary>
+        /// 簡化回傳validate error list
+        /// </summary>
+        /// <param name="fid"></param>
+        /// <param name="msg"></param>
+        /// <param name="editNo"></param>
+        /// <returns></returns>
+        public static List<ErrorRowDto> MsgToErrors(string fid, string msg, int editNo = 0)
+        {
+            return
+                [
+                    new ErrorRowDto()
+                    {
+                        Fid = fid,
+                        Msg = msg,
+                        EditNo = editNo,
+                    }
+                ];
+        }
+
         /// <summary>
         /// check email
         /// </summary>
