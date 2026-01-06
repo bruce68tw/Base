@@ -37,6 +37,13 @@ namespace PdfSpire
             return pdfStream.ToArray();
         }
 
+        /// <summary>
+        /// pdf file add images
+        /// </summary>
+        /// <param name="fromPath"></param>
+        /// <param name="toPath"></param>
+        /// <param name="imageDtos"></param>
+        /// <returns></returns>
         public bool AddImages(string fromPath, string toPath, PdfImageDto[] imageDtos)
         {
             // 建立新的 PDF 文件，從現有檔案載入

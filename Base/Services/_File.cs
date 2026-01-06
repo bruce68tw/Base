@@ -1,14 +1,47 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Vml.Office;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.IO.Compression;
 
 namespace Base.Services
 {
     public class _File
     {
+        /// <summary>
+        /// 壓縮多個檔案成zip檔
+        /// </summary>
+        /// <param name="fromPaths"></param>
+        /// <param name="toPath"></param>
+        public static bool ZipFiles(List<string> fromPaths, string toPath)
+        {
+            if (File.Exists(toPath))
+                File.Delete(toPath); // 或改用 Update 模式
+
+            using (var zip = ZipFile.Open(toPath, ZipArchiveMode.Create))
+            {
+                foreach (var file in fromPaths)
+                {
+                    if (!File.Exists(file))
+                    {
+                        //continue; // 或 log 起來
+                        _Log.Error("_File.cs ZipFiles() Error: 檔案不存在: ");
+                        return false;
+                    }
+
+                    var entryName = Path.GetFileName(file);
+                    zip.CreateEntryFromFile(file, entryName, CompressionLevel.Optimal);
+                }
+            }
+
+            //case ok
+            return true;
+        }
+
         /// <summary>
         /// 讀取檔案清單, 傳回字串不含路徑
         /// </summary>
