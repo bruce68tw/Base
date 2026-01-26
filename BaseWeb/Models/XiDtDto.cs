@@ -11,7 +11,8 @@
 
         public int MinuteStep { get; set; } = 10;
 
-        public string FnOnChange { get; set; } = "";
+        //move to XiBaseDto
+        //public string FnOnChange { get; set; } = "";
 
     }
 }

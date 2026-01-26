@@ -19,7 +19,8 @@ namespace BaseWeb.Models
          */
         public bool IsHori { get; set; } = true;
 
+        //FnOnClick -> FnOnChange
         //FnOnChange -> FnOnClick(實際使用 onclick 事件)
-        public string FnOnClick { get; set; } = "";
+        //public string FnOnClick { get; set; } = "";
     }
 }

@@ -44,5 +44,9 @@
 
         //onclick, onchange event 傳入參數, 多個參數時用逗號分隔
         public string EventArgs { get; set; } = "";
+
+        //目前會觸發的輸入欄位:select,text,check,radio,date 
+        public string FnOnChange { get; set; } = "";
+
     }
 }

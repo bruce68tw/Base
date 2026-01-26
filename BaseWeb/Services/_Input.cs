@@ -4,6 +4,7 @@ using Base.Services;
 using BaseApi.Services;
 using BaseWeb.Models;
 using DocumentFormat.OpenXml.Spreadsheet;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -345,8 +346,8 @@ namespace BaseWeb.Services
             var attr = GetInputAttr(dto.Fid, dto.Edit, false, dto.InputAttr);
             if (dto.IsCheck)
                 attr += " checked";
-            if (_Str.NotEmpty(dto.FnOnClick))
-                attr += $" data-onclick='{dto.FnOnClick}'";
+            if (_Str.NotEmpty(dto.FnOnChange))
+                attr += $" data-onclick='{dto.FnOnChange}'";
 
             //ext class
             if (string.IsNullOrEmpty(dto.Label))
@@ -611,7 +612,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 //get attr, value attr will disappear, use data-value instead !!
                 var attr = GetInputAttr(dto.Fid, dto.Edit, false, dto.InputAttr) +
                     $" name='{dto.Fid}' data-value='{row.Id}' data-type='{InputTypeEstr.Radio}'" +
-                    (_Str.IsEmpty(dto.FnOnClick) ? "" : $" data-onclick='{dto.FnOnClick}'") +
+                    (_Str.IsEmpty(dto.FnOnChange) ? "" : $" data-onclick='{dto.FnOnChange}'") +
                     (row.Id == dto.Value ? " checked" : "");
                 list += string.Format(tplItem, attr, row.Str);
             }
@@ -679,6 +680,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             var type = dto.IsPwd ? "password" : "text";
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
                 $" type='{type}' value='{dto.Value}'" +
+                GetEventAttr("onchange", dto.FnOnChange, dto.EventArgs) +
                 GetPlaceHolder(dto.InputTip) +
                 GetMaxLength(dto.MaxLen) +
                 GetPattern(dto.Pattern);

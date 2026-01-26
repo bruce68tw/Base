@@ -10,7 +10,7 @@ namespace BaseWeb.ViewComponents
     {
         public HtmlString Invoke(string fnOnClick)
         {
-            //todo:
+            //todo: ??
             var attr = _Input.GetEventAttr("onclick", fnOnClick);
             var html = $@"
 <button type='button' {attr} class='btn btn-success' data-edit>{_Locale.GetBaseRes().BtnAddRow}

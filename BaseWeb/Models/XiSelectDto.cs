@@ -16,6 +16,8 @@ namespace BaseWeb.Models
 
         //AddEmptyRow -> AddEmpty
         public bool AddEmpty { get; set; } = true;
-        public string FnOnChange { get; set; } = "";
+
+        //move to XiBaseDto
+        //public string FnOnChange { get; set; } = "";
     }
 }
