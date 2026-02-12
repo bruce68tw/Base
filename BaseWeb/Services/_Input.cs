@@ -3,11 +3,11 @@ using Base.Models;
 using Base.Services;
 using BaseApi.Services;
 using BaseWeb.Models;
-using DocumentFormat.OpenXml.Spreadsheet;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
+/**
+ * 自訂元件的回傳 html 字串不能包含另一個自訂元件, 例如: <vc:xxx 
+ */
 namespace BaseWeb.Services
 {
 
@@ -367,6 +367,16 @@ namespace BaseWeb.Services
                 html = InputAddLayout(html, dto.Required, dto, true);
             return html;
         }
+        public static string XiCheckText(string fid, string label, int maxLen, string clsBox)
+        {
+            return $@"
+<div class='x-hbox'>
+    {XiCheck(new() { Fid = fid, Label = label })}
+    {XiText(new() { Fid = fid + "Desc", MaxLen = maxLen, ClsBox = clsBox})}
+</div>
+";
+        }
+
         public static string XiDate(XiDateDto dto)
         {
             var html = GetDateHtml(dto.Fid, dto.Value, InputTypeEstr.Date, dto.Required,
