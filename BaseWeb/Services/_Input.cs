@@ -175,11 +175,11 @@ namespace BaseWeb.Services
             value = _Date.GetDateStr(value);
             //var dataEdit = GetDataEdit(edit);
 
-            //xidate 無條件加上 x-inline, 同時 .date會設定width=180px
+            //.date會設定css width=180px, /*同時 xidate 無條件加上 x-inline*/
             //使用 .date 執行 _idate 初始化, 因為包含多個元素, 所以必須將box對應datepicker !!
             //input-group & input-group-addon are need for datepicker !!
             return $@"
-<div class='input-group date x-inline {clsBox}' data-provide='datepicker' {inputAttr}>
+<div class='input-group date {clsBox}' data-provide='datepicker' {inputAttr}>
     <input{attr} value='{value}' type='text' class='form-control'>
     <div class='input-group-addon'></div>
     <span>

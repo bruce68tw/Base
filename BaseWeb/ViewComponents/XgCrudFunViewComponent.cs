@@ -24,7 +24,7 @@ namespace BaseWeb.ViewComponents
             if (hasUpdate)
                 funs += $"<button type='button' class='btn btn-link' data-onclick='{(fnOnUpdate == "" ? "_me.crudR.onUpdateA" : fnOnUpdate)}' data-args='{key}'><i class='ico-pen' title='{br.TipUpdate}'></i></button>";
             if (hasDelete)
-                funs += $"<button type='button' class='btn btn-link' data-onclick='{(fnOnDelete == "" ? "_me.crudR.onDeleteA" : fnOnDelete)}' data-args='{key},{rowName}'><i class='ico-delete' title='{br.TipDelete}'></i></button>";
+                funs += $"<button type='button' class='btn btn-link' data-onclick='{(fnOnDelete == "" ? "_me.crudR.onDeleteA" : fnOnDelete)}' data-args='{key},{rowName}'><i class='ico-delete x-delete' title='{br.TipDelete}'></i></button>";
             if (hasView)
                 funs += $"<button type='button' class='btn btn-link' data-onclick='{(fnOnView == "" ? "_me.crudR.onViewA" : fnOnView)}' data-args='{key}'><i class='ico-eye' title='{br.TipView}'></i></button>";
             return new HtmlString(funs);

@@ -28,11 +28,11 @@ namespace BaseWeb.ViewComponents
 
             //set toolbar buttons, 使用string.format, 無法使用 $"" !!
             var baseR = _Locale.GetBaseRes();
-            var html = $"<button type='button' class='btn btn-primary xd-read' data-onclick='_me.crudR.onFind'>{baseR.BtnFind}<i class='ico-find'></i></button>";
+            var html = $"<button type='button' class='btn x-btn1 xd-read' data-onclick='_me.crudR.onFind'>{baseR.BtnFind}<i class='ico-find'></i></button>";
             if (dto.HasReset)
-                html += $"<button type='button' class='btn btn-secondary' data-onclick='_me.crudR.onResetFind'>{baseR.BtnReset}<i class='ico-delete'></i></button>";
+                html += $"<button type='button' class='btn x-btn-cancel' data-onclick='_me.crudR.onResetFind'>{baseR.BtnReset}<i class='ico-delete'></i></button>";
             if (dto.HasFind2)
-                html += $"<button type='button' class='btn btn-success' data-onclick='_me.crudR.onFind2'>{baseR.BtnFind2}<i class='ico-find2'></i></button>";
+                html += $"<button type='button' class='btn btn-other' data-onclick='_me.crudR.onFind2'>{baseR.BtnFind2}<i class='ico-find2'></i></button>";
 
             if (dto.IsHori)
                 //html = "<span class='col-md-3 x-find-tbar'>" + html + "</span>";

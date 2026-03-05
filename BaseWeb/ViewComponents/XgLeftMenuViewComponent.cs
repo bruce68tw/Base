@@ -50,13 +50,14 @@ namespace BaseWeb.ViewComponents
 ", item.Url, item.Name);
                     }
 
+                    //x-leftmenu2為第二層menu
                     html += string.Format(@"
 <li>
     <a class='collapsed x-toggle'>
         <i class='{0}'></i>{1}
         <b class='x-arrow'></b>
     </a>
-    <ul class='collapse x-leftmenu-subbox' role='menu'>
+    <ul class='collapse x-leftmenu2' role='menu'>
         {2}
     </ul>
 </li>

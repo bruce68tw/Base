@@ -14,9 +14,10 @@ namespace BaseWeb.ViewComponents
             if (_Str.IsEmpty(fnDeleteRow))
                 fnDeleteRow = $"{mName}.onDeleteRow";
 
+            //加上 xd-delete 顯示紅色
             var html = $@"
 <button type='button' class='btn btn-link' data-edit data-onclick='{fnDeleteRow}'>
-    <i class='ico-delete'></i>
+    <i class='ico-delete x-delete'></i>
 </button>
 <button type='button' class='btn btn-link' data-edit data-onclick='_table.rowMoveUp'>
     <i class='ico-up'></i>

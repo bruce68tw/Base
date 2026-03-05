@@ -11,8 +11,8 @@ namespace BaseWeb.ViewComponents
             var baseR = _Locale.GetBaseRes();
             var html = $@"
 <div class='x-btns-box x-{align}'>
-    <button id='btnSave' type='button' class='btn btn-primary' data-edit data-onclick='{fnOnSave}'>{baseR.BtnSave}<i class='ico-save'></i></button>
-    <button id='btnToRead' type='button' class='btn btn-secondary' data-onclick='{fnOnBack}'>{baseR.BtnToRead}<i class='ico-back'></i></button>
+    <button id='btnToRead' type='button' class='btn x-btn-cancel' data-onclick='{fnOnBack}'>{baseR.BtnToRead}<i class='ico-back'></i></button>
+    <button id='btnSave' type='button' class='btn x-btn1' data-edit data-onclick='{fnOnSave}'>{baseR.BtnSave}<i class='ico-save'></i></button>
 </div>
 ";
             return new HtmlString(html);

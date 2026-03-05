@@ -9,7 +9,7 @@ namespace BaseWeb.ViewComponents
         public HtmlString Invoke(string fnOnClick = "_me.crudR.onExport")
         {
             //var rb = _Locale.RB;
-            var html = $"<button type='button' class='btn btn-primary' data-onclick='{fnOnClick}'>{_Locale.GetBaseRes().BtnExport}<i class='ico-excel'></i></button>";
+            var html = $"<button type='button' class='btn x-btn-other' data-onclick='{fnOnClick}'>{_Locale.GetBaseRes().BtnExport}<i class='ico-excel'></i></button>";
             return new HtmlString(html);
         }
 

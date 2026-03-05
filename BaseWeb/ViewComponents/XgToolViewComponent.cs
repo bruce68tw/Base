@@ -15,12 +15,6 @@ namespace BaseWeb.ViewComponents
         {
             //modal html
             var baseR = _Locale.GetBaseRes();
-/*
-<!-- wait -->
-<div class='x-wait'>
-    <i class='fa fa-spinner fa-spin fa-3x fa-fw'></i>
-</div> 
-*/
             var html = $@"
 <!-- alert -->
 <div class='alert alert-success alert-dismissable x-alert d-none'>
@@ -42,7 +36,7 @@ namespace BaseWeb.ViewComponents
                 <p class='xd-msg'></p>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn btn-primary xd-close' data-onclick='_tool.onMsgClose'>{baseR.BtnClose}</button>
+                <button type='button' class='btn x-btn1 xd-close' data-onclick='_tool.onMsgClose'>{baseR.BtnClose}</button>
             </div>
         </div>
     </div>
@@ -59,8 +53,8 @@ namespace BaseWeb.ViewComponents
                 <p class='xd-msg'></p>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn btn-secondary xd-cancel' data-onclick='_tool.onAnsNo'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn btn-primary xd-yes' data-onclick='_tool.onAnsYes'>{baseR.BtnYes}</button>
+                <button type='button' class='btn x-btn-cancel xd-cancel' data-onclick='_tool.onAnsNo'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_tool.onAnsYes'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
@@ -78,8 +72,8 @@ namespace BaseWeb.ViewComponents
                 <p class='xd-msg'></p>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn btn-secondary xd-cancel' data-onclick='_tool.onAnsA' data-args='0'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn btn-primary xd-yes' data-onclick='_tool.onAnsA' data-args='1'>{baseR.BtnYes}</button>
+                <button type='button' class='btn x-btn-cancel xd-cancel' data-onclick='_tool.onAnsA' data-args='0'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_tool.onAnsA' data-args='1'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
@@ -98,8 +92,8 @@ namespace BaseWeb.ViewComponents
                 </textarea>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn btn-secondary xd-cancel' data-bs-dismiss='modal'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn btn-primary xd-yes' data-onclick='_tool.onAreaYes'>{baseR.BtnYes}</button>
+                <button type='button' class='btn x-btn-cancel xd-cancel' data-bs-dismiss='modal'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_tool.onAreaYes'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
@@ -114,7 +108,7 @@ namespace BaseWeb.ViewComponents
             </div>
             <div class='modal-footer justify-content-between'>
                 <label>image name</label>
-                <button class='btn btn-primary xd-close' data-bs-dismiss='modal'>{baseR.BtnClose}</button>
+                <button class='btn x-btn1 xd-close' data-bs-dismiss='modal'>{baseR.BtnClose}</button>
             </div>
         </div>
     </div>
