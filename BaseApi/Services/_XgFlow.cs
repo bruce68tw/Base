@@ -30,7 +30,7 @@ where u.Id='{0}'
         //get first role member
         public static string SqlRole = "select UserId from dbo.XpUserRole where RoleId='{0}'";
 
-        //for controller Read method
+        //controller Read set viewBag
         public static async Task ReadSetViewBagA(dynamic viewBag, string locale, Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
