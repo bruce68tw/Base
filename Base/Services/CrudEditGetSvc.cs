@@ -226,8 +226,9 @@ namespace Base.Services
             if (editLevel == 1)
             {
                 //第1層child where 使用 xxx=@Id
+                var fKeyFid = (edit.FkeyFid == "") ? edit.PkeyFid : edit.FkeyFid;
                 var sql = emptyReadSql
-                    ? GetSqlByWhere(edit, edit.FkeyFid + "=@Id")
+                    ? GetSqlByWhere(edit, fKeyFid + "=@Id")
                     : edit.ReadSql;
                 rows = await db.GetRowsA(sql, ["Id", keys[0]]);
             }

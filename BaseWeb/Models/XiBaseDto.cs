@@ -7,6 +7,8 @@
         //LabelTip -> TitleTip
         public string TitleTip { get; set; } = "";
         public string Fid { get; set; } = "";
+
+        //一般欄位的初始值, 如果是checkbox/radio則是寫入DB的值
         public string Value { get; set; } = "";
 
         /// <summary>

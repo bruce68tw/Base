@@ -968,6 +968,7 @@ namespace Base.Services
 
                     //get/set PKey value
                     var pkey = "";
+                    var hasFkey = (editDto.FkeyFid != "");
                     if (canAddKey)
                     {
                         //直接從前端傳入
@@ -975,62 +976,36 @@ namespace Base.Services
                     }
                     else
                     {
-                        //主外鍵相同表示1對1, 會透過外鍵來設定主鍵
+                        //外鍵空白表示1對1, 只能透過外鍵來設定主鍵
                         if (editDto.FnGetNewKeyA != null)
                             pkey = await editDto.FnGetNewKeyA();
-                        else if (isLevel0 || editDto.PkeyFid != editDto.FkeyFid)
-                            pkey = _Str.NewId(editDto.AutoIdLen);
+                        else if (isLevel0 || (!isLevel0 && hasFkey))
+                            pkey = _Str.NewId(editDto.AutoIdLen);   //非1對1情形
+                        else if (!hasFkey)
+                            pkey = _key;  //1對1情形, 直接用main key來設定pkey !!
 
                         inputRow![kid] = pkey;
                     }
 
-                    #region set foreign key value for not level0
+                    //set _key, improtant !!
                     if (isLevel0)
-                        _key = pkey;    //improtant !!
-                    else if (isLevel1)
-                        inputRow![editDto.FkeyFid] = _key;
-                    else
+                        _key = pkey;
+
+                    #region set foreign key value for not level0
+                    //如果沒有fkey, 則用pkey當fkey(通常用於1對1), 這時讀取上一層pkey
+                    if (hasFkey)
                     {
-                        var fkeyUpRowNo = GetNewRowUpNo(inputRow!, FkeyFid);   //from 系統欄位(_fkeyfid)                                                                               
-                        inputRow![editDto.FkeyFid] = (fkeyUpRowNo == 0)
-                            ? inputRow![FkeyFid]!.ToString()
-                            : upKeyJson!["f" + fkeyUpRowNo];
-                    }
-
-                    /*
-                    if (!isLevel0)
-                    {                                
-                        var fkeyUpRowNo = GetNewRowUpNo(inputRow!, FkeyFid);   //from 系統欄位(_fkeyfid)
-                        if (fkeyUpRowNo < 0)
-                        {
-                            //如果不是第一層child, 則表示錯誤!!
-                            if (!isLevel1)
-                            {
-                                error = $"not found FkeyFid ({editDto.FkeyFid})";
-                                goto lab_error;
-                            }
-
-                            //case isLevel1, adjust, 由系統設定fkey(參考上一層, //todo: level0為多筆會出錯 !!)
-                            fkeyUpRowNo = 1;    
-                        }
-
-                        //case of fkeyIdx >= 0
-                        if (fkeyUpRowNo == 0)
-                        {
-                            inputRow![editDto.FkeyFid] = inputRow[FkeyFid]!.ToString();  //是否必要??
-                        }
-                        else if (upKeyJson == null)
-                        {
-                            error = $"upKeyJson is null for FkeyFid ({editDto.FkeyFid})";
-                            goto lab_error;
-                        }
+                        var fKeyFid = editDto.FkeyFid;
+                        if (isLevel1)
+                            inputRow![fKeyFid] = _key;
                         else
                         {
-                            //set fkey
-                            inputRow![editDto.FkeyFid] = upKeyJson["f" + fkeyUpRowNo];
+                            var fkeyUpRowNo = GetNewRowUpNo(inputRow!, FkeyFid);   //from 系統欄位(_fkeyfid)                                                                               
+                            inputRow![fKeyFid] = (fkeyUpRowNo == 0)
+                                ? inputRow![FkeyFid]!.ToString()
+                                : upKeyJson!["f" + fkeyUpRowNo];
                         }
                     }
-                    */
                     #endregion
 
                     //set newKeyJson for child, pkeyNewUpNo is base 1 

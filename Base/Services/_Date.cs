@@ -182,6 +182,12 @@ namespace Base.Services
             return DateTime.Today;
         }
 
+        //for 前端date欄位初始值
+        public static string TodayCsStr()
+        {
+            return DateTime.Today.ToString(_Fun.CsDateFmt);
+        }
+
         /// <summary>
         /// now db datetime string
         /// </summary>

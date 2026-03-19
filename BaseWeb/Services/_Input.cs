@@ -38,6 +38,12 @@ namespace BaseWeb.Services
             return required ? "<span class='x-required'>*</span>" : "";
         }
 
+        private static string GetInitAttr(string value)
+        {
+            return string.IsNullOrEmpty(value) 
+                ? "" : $" data-init='{value}'";
+        }
+
         /// <summary>
         /// get label tip with icon
         /// </summary>        
@@ -180,7 +186,7 @@ namespace BaseWeb.Services
             //input-group & input-group-addon are need for datepicker !!
             return $@"
 <div class='input-group date {clsBox}' data-provide='datepicker' {inputAttr}>
-    <input{attr} value='{value}' type='text' class='form-control'>
+    <input{attr} value='{value}' data-init='{value}' type='text' class='form-control'>
     <div class='input-group-addon'></div>
     <span>
         <i class='ico-delete' data-onclick='_idate.onReset'></i>
@@ -218,7 +224,7 @@ namespace BaseWeb.Services
         {
             var hasType = _Str.NotEmpty(type);
             string attr = hasType
-                ? GetInputAttr(fid, edit, required, inputAttr) + $" data-type='{type}'"
+                ? GetInputAttr(fid, edit, required, inputAttr) + $" data-type='{type}' data-init='{value}'"
                 : GetInputAttr("", edit, required, inputAttr);
             attr += GetPlaceHolder(inputTip);
             if (_Str.NotEmpty(fnOnChange))
@@ -345,7 +351,7 @@ namespace BaseWeb.Services
             //get attr
             var attr = GetInputAttr(dto.Fid, dto.Edit, false, dto.InputAttr);
             if (dto.IsCheck)
-                attr += " checked";
+                attr += " checked data-init=1";
             if (_Str.NotEmpty(dto.FnOnChange))
                 attr += $" data-onclick='{dto.FnOnChange}'";
 
@@ -354,7 +360,7 @@ namespace BaseWeb.Services
                 dto.ClsBox += " x-no-label";
 
             //get html (span for checkbox checked sign)
-            //value attr will disappear, use data-value instead !!
+            //value attr will disappear, use data-value instead for 存入DB, 不使用 data-init(意義不同) !!
             var css = GetCssClass("xi-check", dto.ClsBox, dto.Width);
             var html = $@"
 <label class='{css}'>
@@ -422,7 +428,7 @@ namespace BaseWeb.Services
         {
             //attr, both digits/number should be type=number for validate(digits not work !!)
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" type='number' data-type='{InputTypeEstr.Decimal}' value='{dto.Value}'" +
+                $" type='number' data-type='{InputTypeEstr.Decimal}' data-init='{dto.Value}'" +
                 //GetRequired(dto.Required) +
                 GetPlaceHolder(dto.InputTip);
             //attr += " digits='true'";   //for digital only, decimal remark !!
@@ -520,7 +526,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //if (_Str.NotEmpty(dto.ClsBox))
             //    attr += $" class='{dto.ClsBox}'";
 
-            var html = $"<input{attr} data-type='{InputTypeEstr.Text}' type='hidden' value='{dto.Value}'>";
+            var html = $"<input{attr} data-type='{InputTypeEstr.Text}' type='hidden' data-init='{dto.Value}'>";
             return html;
         }
         public static string XiHideId()
@@ -532,7 +538,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         public static string XiHtml(XiHtmlDto dto)
         {
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" value='{dto.Value}'" +
+                $" data-init='{dto.Value}'" +
                 GetPlaceHolder(dto.InputTip) +
                 //GetRequired(dto.Required) +
                 GetMaxLength(dto.MaxLen);
@@ -551,7 +557,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         {
             //attr, both digits/number should be type=number for validate(digits not work !!)
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" type='number' data-type='{InputTypeEstr.Integer}' value='{dto.Value}'" +
+                $" type='number' data-type='{InputTypeEstr.Integer}' data-init='{dto.Value}'" +
             //GetRequired(dto.Required) +
             GetPlaceHolder(dto.InputTip);
             attr += " digits='true'";   //for digital only, decimal remark !!
@@ -627,7 +633,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 list += string.Format(tplItem, attr, row.Str);
             }
 
-            //get html
+            //get html, todo: 加上 data-init
             var html = $"<div class='xi-box {dto.ClsBox}'>{list}</div>";
 
             //add title outside
@@ -668,7 +674,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //add class xi-unsave for not save DB, _form.js toJson() will filter out it !!
             if (!dto.SaveDb)
                 css += " xi-unsave";
-            var html = $"<label{attr} data-type='{InputTypeEstr.Read}' class='form-control {css}'>{dto.Value}</label>";
+            var html = $"<label{attr} data-type='{InputTypeEstr.Read}' data-init='{dto.Value}' class='form-control {css}'>{dto.Value}</label>";
 
             if (_Str.NotEmpty(dto.Title))
                 html = InputAddLayout(html, false, dto);
@@ -689,7 +695,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //base attr: fid,name,readonly,ext attr
             var type = dto.IsPwd ? "password" : "text";
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" type='{type}' value='{dto.Value}'" +
+                $" type='{type}' data-init='{dto.Value}'" +
                 GetEventAttr("onchange", dto.FnOnChange, dto.EventArgs) +
                 GetPlaceHolder(dto.InputTip) +
                 GetMaxLength(dto.MaxLen) +
@@ -709,7 +715,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         {
             //attr
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" value='{dto.Value}' rows='{dto.RowsCount}'" +
+                $" data-init='{dto.Value}' rows='{dto.RowsCount}'" +
                 GetPlaceHolder(dto.InputTip) +
                 GetMaxLength(dto.MaxLen);
 
