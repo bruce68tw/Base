@@ -13,8 +13,8 @@ namespace BaseWeb.ViewComponents
         {
             //var rb = _Locale.RB;
             var html = string.Format(@"
-<button type='button' data-onclick='{0}' class='btn x-btn-red' data-edit>
-    <i class='ico-delete' title='{1}'></i>
+<button type='button' data-onclick='{0}' class='btn' data-edit>
+    <i class='ico-delete x-delete' title='{1}'></i>
 </button>", fnOnClick, _Locale.GetBaseRes().TipDeleteRow);
 
             return new HtmlString(html);

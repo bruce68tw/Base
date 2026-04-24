@@ -14,7 +14,7 @@ namespace Base.Models
         /// <summary>
         /// where compare operator, default ItemOpEstr.Equal
         /// </summary>
-        public string Op = ItemOpEstr.Equal;
+        public string Op = QitemOpEstr.Equal;
 
         //query field data type
         public QitemTypeEnum Type = QitemTypeEnum.None;        

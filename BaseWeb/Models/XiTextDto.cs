@@ -15,6 +15,8 @@ namespace BaseWeb.Models
         public int MaxLen { get; set; } = 0;
         public bool IsPwd { get; set; } = false;
 
+        public string FnOnBlur { get; set; } = "";
+
         /// <summary>
         /// 對應 InputPatternEstr, 如為中文, 則會
         /// </summary>

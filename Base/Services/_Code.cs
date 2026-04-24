@@ -1,9 +1,7 @@
 ﻿using Base.Models;
 using Newtonsoft.Json.Linq;
-using SkiaSharp;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Base.Services
 {
@@ -12,8 +10,9 @@ namespace Base.Services
     /// </summary>
     public class _Code
     {
+        //FilterArray -> FilterJsons
         //filter json array
-        public static JArray? FilterArray(JArray rows, string fid, string value)
+        public static JArray? FilterJsons(JArray rows, string fid, string value)
         {
             //if (rows == null) return null;
 
@@ -24,7 +23,8 @@ namespace Base.Services
                 ? null : finds;
         }
 
-        public static List<IdStrDto>? FilterRows(List<IdStrExtDto>? rows, string value)
+        //FilterRows -> FilterList
+        public static List<IdStrDto>? FilterList(List<IdStrExtDto>? rows, string value)
         {
             return (rows == null || rows.Count == 0)
                 ? null

@@ -10,7 +10,7 @@ namespace Base.Services
     public class _Page
     {
         //private static List<int> PageRowRanges = new() { 10, 25, 50, 100 };
-        private static List<int> PageRowRanges = [10, 20, 50, 100, 150]; //for more friendly !!
+        private static List<int> LengthMenu = [10, 20, 50, 100, 150]; //for more friendly !!
 
         public static PageIn GetPageIn(int pageNo, int pageRows, int filterRows, List<object>? args = null)
         {
@@ -34,8 +34,8 @@ namespace Base.Services
 
         public static int GetPageRows(int pageRows)
         {
-            return PageRowRanges.Contains(pageRows)
-                ? pageRows : PageRowRanges[0];
+            return LengthMenu.Contains(pageRows)
+                ? pageRows : LengthMenu[0];
         }
 
         public static PageOut<T> GetError<T>(PageOut<T> page, string error = "") where T : class

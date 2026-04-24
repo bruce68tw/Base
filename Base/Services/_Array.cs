@@ -6,10 +6,15 @@ namespace Base.Services
     public class _Array
     {
         //string[] to string 
-        public static string ToStr(string[] list, string sep = ",")
+        public static string ToStr(string[] list, bool quote = false, string sep = ",")
         {
-            return (list.Length == 0)
+            //return (list.Length == 0)
+            //    ? "" : string.Join(sep, list);
+            var result = (list == null || list.Length == 0)
                 ? "" : string.Join(sep, list);
+            return (quote)
+                ? "'" + result.Replace(sep, "'" + sep + "'") + "'"
+                : result;
         }
 
         /// <summary>

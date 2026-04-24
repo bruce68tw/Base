@@ -1,7 +1,7 @@
 ﻿namespace BaseWeb.Enums
 {
     /// <summary>
-    /// 自訂輸入欄位元件名稱
+    /// 自訂輸入欄位元件名稱, 避免使用字串造成typo
     /// </summary>
     public class XiEstr
     {

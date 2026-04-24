@@ -535,22 +535,22 @@ namespace Base.Services
                             AddArg(fid2, _Str.GetLeft(date1.ToString()!, " ") + " 23:59:59");
                         }
                     }
-                    else if (item.Op == ItemOpEstr.Equal)
+                    else if (item.Op == QitemOpEstr.Equal)
                     {
                         itemWhere = col + "=@" + item.Fid;
                         AddArg(item.Fid, value);
                     }
-                    else if (item.Op == ItemOpEstr.Like)
+                    else if (item.Op == QitemOpEstr.Like)
                     {
                         itemWhere = col + " like @" + item.Fid;
                         AddArg(item.Fid, value + "%");
                     }
-                    else if (item.Op == ItemOpEstr.NotLike)
+                    else if (item.Op == QitemOpEstr.NotLike)
                     {
                         itemWhere = col + " not like @" + item.Fid;
                         AddArg(item.Fid, value + "%");
                     }
-                    else if (item.Op == ItemOpEstr.In)
+                    else if (item.Op == QitemOpEstr.In)
                     {
                         //"in" has different args type !!
                         //change carrier sign to comma for TextArea field
@@ -568,12 +568,12 @@ namespace Base.Services
                         if (names.Count == 0) continue;
                         itemWhere = col + " in (" + string.Join(",", names) + ")";
                     }
-                    else if (item.Op == ItemOpEstr.Like2)
+                    else if (item.Op == QitemOpEstr.Like2)
                     {
                         AddArg(item.Fid, "%" + value.ToString() + "%");
                         itemWhere = col + " Like @" + item.Fid;
                     }
-                    else if (item.Op == ItemOpEstr.LikeList)
+                    else if (item.Op == QitemOpEstr.LikeList)
                     {
                         var where2 = "";
                         var or = "";
@@ -590,9 +590,9 @@ namespace Base.Services
                         if (where2 == "") continue;
                         itemWhere = "(" + where2 + ")";
                     }
-                    else if (item.Op == ItemOpEstr.LikeCols || item.Op == ItemOpEstr.Like2Cols)
+                    else if (item.Op == QitemOpEstr.LikeCols || item.Op == QitemOpEstr.Like2Cols)
                     {
-                        var pre = (item.Op == ItemOpEstr.Like2Cols) ? "%" : "";
+                        var pre = (item.Op == QitemOpEstr.Like2Cols) ? "%" : "";
                         var where2 = "";
                         var or = "";
                         var cols = col.Replace(" ", "").Split(',');
@@ -608,27 +608,27 @@ namespace Base.Services
                         AddArg(item.Fid, pre + value + "%");
                         itemWhere = "(" + where2 + ")";
                     }
-                    else if (item.Op == ItemOpEstr.Is)
+                    else if (item.Op == QitemOpEstr.Is)
                     {
                         if (value.ToString() != "1") itemWhere = col + " is Null";
                         else if (value.ToString() != "0") itemWhere = col + " is not Null";
                         else itemWhere = col + " is " + value;
                     }
-                    else if (item.Op == ItemOpEstr.IsNull)
+                    else if (item.Op == QitemOpEstr.IsNull)
                     {
                         if (value.ToString() != "1") continue;
                         itemWhere = col + " is Null";
                     }
-                    else if (item.Op == ItemOpEstr.NotNull)
+                    else if (item.Op == QitemOpEstr.NotNull)
                     {
                         if (value.ToString() != "1") continue;
                         itemWhere = col + " is not Null";
                     }
-                    else if (item.Op == ItemOpEstr.UserDefined)
+                    else if (item.Op == QitemOpEstr.UserDefined)
                     {
                         itemWhere = "(" + col + " " + value.ToString() + ")";
                     }
-                    else if (item.Op == ItemOpEstr.InRange)
+                    else if (item.Op == QitemOpEstr.InRange)
                     {
                         var fid2 = item.Fid + "2";
                         var hasNum1 = _Object.NotEmpty(findJson[item.Fid]);

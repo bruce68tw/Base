@@ -9,16 +9,16 @@ namespace Base.Models
     public class DtDto
     {
         //Draw counter, jQuery Datatables need for control async ajax sequence
-        public int draw { get; set; }
+        public int draw { get; set; } = 0;
 
         //start row position, base 0
-        public int start { get; set; }
+        public int start { get; set; } = 0;
 
         //rows count to display
-        public int length { get; set; }
+        public int length { get; set; } = 0;
 
         //-1: re-count filtered rows count(means change jquery condition)
-        public int recordsFiltered { get; set; }
+        public int recordsFiltered { get; set; } = 0;
 
         //query condition json in string type
         public string findJson { get; set; } = "";
@@ -27,12 +27,12 @@ namespace Base.Models
         public string sort { get; set; } = "";
 
         //search word
-        public DtSearchDto? search { get; set; }
+        public DtSearchDto? search { get; set; } = null;
 
         /// <summary>
         /// sorting, get from jQuery DataTables, then get OrderBy, OrderDir
         /// </summary>
-        public List<DtOrderDto>? order { get; set; }
+        public List<DtOrderDto>? order { get; set; } = null;
 
     }
 
@@ -41,13 +41,13 @@ namespace Base.Models
     public class DtOrderDto
     {
         //sorting column index, base 0
-        public int column { get; set; }
+        public int column { get; set; } = 0;
 
         //sorting column name
-        public string fid { get; set; }
+        public string fid { get; set; } = "";
 
         //sorting type: ASC(default), DESC
-        public OrderTypeEnum dir { get; set; }
+        public OrderTypeEnum dir { get; set; } = OrderTypeEnum.Asc;
     }
 
 
@@ -58,6 +58,6 @@ namespace Base.Models
         public string value { get; set; } = "";
 
         //no used now
-        public bool regex { get; set; }
+        public bool regex { get; set; } = false;
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Base.Models;
 using Base.Services;
 using System.Collections.Generic;
-using System.Runtime.Intrinsics.Arm;
 using System.Threading.Tasks;
 
 namespace BaseApi.Services
@@ -39,6 +38,7 @@ namespace BaseApi.Services
             return true;
         }
 
+        //test
         public static bool OutputTplA2()
         {
             var oldWordPath = "C:\\_project\\HrAdm\\_template\\zh-TW\\UserExt.docx";

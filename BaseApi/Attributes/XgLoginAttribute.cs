@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Routing;
 
 namespace BaseApi.Attributes
 {
+    //如果未登入則導向登入頁面
     public class XgLoginAttribute : ActionFilterAttribute
     {
         public override void OnActionExecuting(ActionExecutingContext context)

@@ -1,12 +1,11 @@
-﻿using DocumentFormat.OpenXml.Vml.Office;
+﻿using Base.Enums;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.IO;
-using System.IO.Compression;
 
 namespace Base.Services
 {
@@ -212,7 +211,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                await _Log.ErrorRootA("_File.cs StrToFileAsync() failed: " + ex.Message);
+                await _Log.ErrorRootA("_File.cs StrToFileA() failed: " + ex.Message);
                 return false;
             }
         }
@@ -257,15 +256,17 @@ namespace Base.Services
             return filePath;
         }
 
-        //get file exts by type
-        public static string TypeToExts(string type)
+        //get upload file exts by type
+        public static string TypeToExts(UpFileTypeEnum type, string fileTypeExts)
         {
             return type switch
-            {                
-                "I" => "jpg,jpeg,png,gif",  //image                
-                "E" => "xls,xlsx",  //excel                
-                "W" => "doc,docx",  //word                
-                "*" => "*",         //all
+            {
+                UpFileTypeEnum.Image => "jpg,jpeg,png,gif",
+                UpFileTypeEnum.Custom => fileTypeExts,
+                //"E" => "xls,xlsx",  //excel
+                //"W" => "doc,docx",  //word
+                //"P" => "pdf",       //pdf
+                UpFileTypeEnum.All => "*",
                 _ => "??",
             };
         }

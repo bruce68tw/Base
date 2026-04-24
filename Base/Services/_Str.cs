@@ -138,11 +138,12 @@ namespace Base.Services
         }
 
         /// <summary>
+        /// AddSlash -> AddWebSlash
         /// add right slash for url
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        public static string AddSlash(string url)
+        public static string AddWebSlash(string url)
         {
             if (IsEmpty(url)) return "/";
             if (url.Substring(url.Length - 1, 1) != "/")
@@ -532,7 +533,7 @@ namespace Base.Services
             if (rg.IsMatch(str)) return true;
 
             if (logError)
-                _Log.Error($"_Str.CheckKeyA() failed ({str})");
+                _Log.Error($"_Str.CheckKey() failed ({str})");
             return false;
         }
 
@@ -635,6 +636,32 @@ namespace Base.Services
             return AesEnDecodeByFile(false, data);
         }
 
+        public static string DecodeByKey(string data, string key)
+        {
+            return AesEnDecodeByKey(false, data, key);
+        }
+
+        public static string GetKey()
+        {
+            return _fileKey;
+        }
+
+        public static string ReadFileKey()
+        {
+            //固定讀取 key.txt
+            var path = $"{_Fun.DirRoot}key.txt";
+            var key = _File.ToStr(path);
+            if (string.IsNullOrEmpty(key))
+            {
+                _Log.Error("No File: " + path);
+                return "";
+            }
+
+            //case ok
+            _fileKey = Base64Decode(key);
+            return _fileKey;
+        }
+
         /// <summary>
         /// AES 加/解密重要資料(組態欄位), 加解密後以base64編碼/解碼
         /// 先判斷是否需要加密, 再從目前目錄讀取key.xxx.txt
@@ -644,27 +671,13 @@ namespace Base.Services
         /// <returns>加解密後以base64編碼/解碼</returns>
         private static string AesEnDecodeByFile(bool isEncode, string data)
         {
-            if (!_Fun.Config.Encode) return data;
+            //if (!_Fun.Config.Encode) return data;
             if (_fileKey == null)
-            {
-                //讀取專案目錄下 key.xxx.txt, 檔案不存在會傳回null
-                var fileName = $"key.{_Fun.RunModeName}.txt";
-                var key = _File.ToStr(_Fun.DirRoot + fileName);
-                if (key == null)
-                {
-                    _fileKey = "";
-                    _Log.Error("_Str.cs AesEnDecodeByFile() failed, no file: " + fileName);
-                }
-                else
-                {
-                    //key內容為base64, 必須先解碼
-                    _fileKey = Base64Decode(key);
-                }
-            }
+                ReadFileKey();
 
             return (_fileKey == "") ? "" :
-                isEncode ? Encode(data, _fileKey) :
-                Decode(data, _fileKey);
+                isEncode ? Encode(data, _fileKey!) :
+                Decode(data, _fileKey!);
         }
 
         /// <summary>

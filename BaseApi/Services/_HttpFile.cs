@@ -117,7 +117,7 @@ namespace BaseApi.Services
         {
             //saveDir = _Str.EmptyToValue(saveDir, _Web.DirWeb + "image");
             var fileName = _Str.NewId() + Path.GetExtension(file.FileName);
-            var path = _Str.AddSlash(saveDir) + fileName;
+            var path = _Str.AddDirSep(saveDir) + fileName;
             return (await SaveFileA(file, path))
                 ? fileName : "";
         }
@@ -129,6 +129,17 @@ namespace BaseApi.Services
             //DateTime.Now.ToString("ddmmfff")
             return dir + Path.GetFileNameWithoutExtension(file.FileName) +
                 "_" + fileTail + _Str.NewId() + Path.GetExtension(file.FileName);
+        }
+
+        public static async Task<bool> SaveDraftFileA(JObject inputJson, JObject newKey, IFormFile file, string serverFid, string preFile)
+        {
+            if (file == null) return true;
+            return await SaveDraftFilesA(inputJson, newKey, [file], serverFid, false, preFile);
+        }
+
+        public static async Task<bool> SaveDraftFilesA(JObject inputJson, JObject newKey, List<IFormFile> files, string serverFid, bool isMulti, string preFile)
+        {
+            return await SaveCrudFilesA(inputJson, newKey, _Fun.DirDraft, files, serverFid, isMulti, preFile);
         }
 
         /// <summary>
@@ -143,7 +154,7 @@ namespace BaseApi.Services
         public static async Task<bool> SaveCrudFileA(JObject inputJson, JObject newKey, string saveDir, IFormFile file, string serverFid)
         {
             if (file == null) return true;
-            return await SaveCrudFilesA(inputJson, newKey, saveDir, new List<IFormFile> { file }, serverFid, false);
+            return await SaveCrudFilesA(inputJson, newKey, saveDir, [file], serverFid, false);
         }
 
         /// <summary>
@@ -155,10 +166,11 @@ namespace BaseApi.Services
         /// <param name="files"></param>
         /// <param name="serverFid"></param>
         /// <param name="isMulti">if true, fileJson fid will like 't03_FileNameX', X is row no</param>
+        /// <param name="preFile">檔名前置字元 if any
         /// <returns></returns>
-        public static async Task<bool> SaveCrudFilesA(JObject inputJson, JObject newKey, string saveDir, List<IFormFile> files, string serverFid, bool isMulti = true)
+        public static async Task<bool> SaveCrudFilesA(JObject inputJson, JObject newKey, string saveDir, List<IFormFile> files, string serverFid, bool isMulti = true, string preFile =  "")
         {
-            if (files == null || files.Count == 0) return true;
+            if (_List.IsEmpty(files)) return true;
 
             string error;
             if (inputJson[_FunApi.FileJson] == null)
@@ -215,7 +227,7 @@ namespace BaseApi.Services
                 }
 
                 //save file: 欄位名稱_PKey + .副檔名
-                var filePath = saveDir + fid + "_" + key + Path.GetExtension(files[i].FileName);
+                var filePath = saveDir + preFile + fid + "_" + key + Path.GetExtension(files[i].FileName);
                 await SaveFileA(files[i], filePath);
             }
 
@@ -334,7 +346,8 @@ namespace BaseApi.Services
         /// <param name="path"></param>
         /// <param name="downFileName">download file name</param>
         /// <returns></returns>
-        public static async Task<FileContentResult?> ViewFileA(string path, string downFileName = "")
+        public static async Task<IActionResult> ViewFileA(string path, string downFileName = "")
+        //public static IActionResult ViewFileA(string path, string downFileName = "")
         {
             var hasFile = File.Exists(path);
             var ext = _File.GetFileExt(path);
@@ -345,7 +358,7 @@ namespace BaseApi.Services
             }
 
             //check existed
-            if (!hasFile) return null;    //let caller exception
+            if (!hasFile) return new NotFoundResult();
 
             var contentType = _Http.ExtToContentType(ext);
             return new FileContentResult(await File.ReadAllBytesAsync(path), contentType)

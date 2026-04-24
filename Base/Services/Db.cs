@@ -315,12 +315,12 @@ namespace Base.Services
             return list?[0];
         }
 
-        public async Task<List<string?>?> GetStrsA(string sql, List<object>? sqlArgs = null)
+        public async Task<List<string>?> GetStrsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
             if (reader == null) return null;
 
-            var list = new List<string?>();
+            var list = new List<string>();
             while (reader.Read())
                 list.Add(reader.IsDBNull(0) ? "" : (string)reader[0]);
 
@@ -397,11 +397,11 @@ namespace Base.Services
                 var fid = _colMaps[i].Id;
                 var type = _colMaps[i].Num;
                 row[fid] = reader.IsDBNull(i) ? "" :
-                    (type == DataTypeEnum.Datetime) ? reader.GetDateTime(i).ToString(_Fun.CsDtFmt) :
-                    (type == DataTypeEnum.Date) ? reader.GetDateTime(i).ToString(_Fun.CsDateFmt) :
-                    (type == DataTypeEnum.Bit) ? (reader.GetBoolean(i) ? 1 : 0) :
-                    (type == DataTypeEnum.Int) ? Convert.ToInt32(reader[i]) :
-                    (type == DataTypeEnum.Decimal) ? Convert.ToDecimal(reader[i]) :
+                    (type == DbColTypeEnum.Datetime) ? reader.GetDateTime(i).ToString(_Fun.CsDtFmt) :
+                    (type == DbColTypeEnum.Date) ? reader.GetDateTime(i).ToString(_Fun.CsDateFmt) :
+                    (type == DbColTypeEnum.Bit) ? (reader.GetBoolean(i) ? 1 : 0) :
+                    (type == DbColTypeEnum.Int) ? Convert.ToInt32(reader[i]) :
+                    (type == DbColTypeEnum.Decimal) ? Convert.ToDecimal(reader[i]) :
                     reader[i].ToString();
             }
             return row;
@@ -419,12 +419,12 @@ namespace Base.Services
             {
                 //fid = reader.GetName(i);
                 var name = reader.GetDataTypeName(i).ToLower();
-                int type = name.Contains("smalldatetime") ? DataTypeEnum.Date :
-                    name.Contains("datetime") ? DataTypeEnum.Datetime :
-                    name.Contains("bit") ? DataTypeEnum.Bit :
-                    name.Contains("int") ? DataTypeEnum.Int :
-                    name.Contains("decimal") ? DataTypeEnum.Decimal :
-                    DataTypeEnum.Other;
+                int type = name.Contains("smalldatetime") ? DbColTypeEnum.Date :
+                    name.Contains("datetime") ? DbColTypeEnum.Datetime :
+                    name.Contains("bit") ? DbColTypeEnum.Bit :
+                    name.Contains("int") ? DbColTypeEnum.Int :
+                    name.Contains("decimal") ? DbColTypeEnum.Decimal :
+                    DbColTypeEnum.Other;
 
                 _colMaps.Add(new IdNumDto()
                 {

@@ -19,7 +19,7 @@ namespace BaseApi.Attributes
         private readonly string _ctrl;
 
         /// <summary>
-        /// check auth
+        /// constructor
         /// </summary>
         /// <param name="crudEnum"></param>
         /// <param name="ctrl">get controller name if empty</param>
@@ -43,6 +43,8 @@ namespace BaseApi.Attributes
                 base.OnActionExecuting(context);
                 return;
             }
+
+            //以下為無權限或未登入的處理
 
             #region 2.set variables
             //_Log.Error("No Permission: " + Prog + "->" + filterContext.ActionDescriptor.ActionName);

@@ -27,7 +27,7 @@ where Type='{_importType}'
 order by Created desc
 ",
                 Items = [
-                    new() { Fid = "FileName", Op = ItemOpEstr.Like },
+                    new() { Fid = "FileName", Op = QitemOpEstr.Like },
                 ],
             };
         }

@@ -13,6 +13,7 @@ namespace PdfSpire
     {
         //private string _key = "";
 
+        //在主機才會發生作用(本機不會)!!
         public void SetKey(string keyPath)
         {
             if (string.IsNullOrEmpty(keyPath))

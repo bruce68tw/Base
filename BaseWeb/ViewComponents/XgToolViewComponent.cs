@@ -26,7 +26,7 @@ namespace BaseWeb.ViewComponents
 
 <!-- msg/ans class 都有 x-msg for style, 使用id建立jQuery object -->
 <!-- msg -->
-<div id='xgMsg' class='modal fade x-msg'>
+<div id='xMsg' class='modal fade x-msg'>
     <div class='modal-dialog' role='document'>
         <div class='modal-content'>
             <div class='modal-header'>
@@ -43,7 +43,7 @@ namespace BaseWeb.ViewComponents
 </div>
 
 <!-- ans, 使用 callback function, data-bs-keyboard='false' blur不會關閉 -->
-<div id='xgAns' class='modal fade x-msg' data-bs-keyboard='false'>
+<div id='xAns' class='modal fade x-msg' data-bs-keyboard='false'>
     <div class='modal-dialog' role='document'>
         <div class='modal-content'>
             <div class='modal-header'>
@@ -61,7 +61,7 @@ namespace BaseWeb.ViewComponents
 </div>
 
 <!-- ans, 使用非同步(js不易使用同步ans) -->
-<div id='xgAnsA' class='modal fade x-msg' data-bs-keyboard='false'>
+<div id='xAnsA' class='modal fade x-msg' data-bs-keyboard='false'>
     <div class='modal-dialog' role='document'>
         <div class='modal-content'>
             <div class='modal-header'>

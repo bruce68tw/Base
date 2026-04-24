@@ -1,12 +1,10 @@
-﻿using Base.Enums;
-using Base.Services;
+﻿using Base.Services;
 using BaseApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.Routing;
 
 namespace BaseApi.Attributes
 {

@@ -2,9 +2,10 @@
 namespace Base.Enums
 {
     /// <summary>
+    /// ItemOpEstr -> QitemOpEstr
     /// for query field
     /// </summary>
-    public class ItemOpEstr
+    public class QitemOpEstr
     {
         //=== same as sql op ===
         public const string Equal = "Equal";

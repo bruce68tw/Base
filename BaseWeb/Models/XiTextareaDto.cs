@@ -14,6 +14,7 @@ namespace BaseWeb.Models
 
         public int MaxLen { get; set; } = 0;
         public int RowsCount { get; set; } = 3;
+        public string FnOnBlur { get; set; } = "";
 
         /// <summary>
         /// 對應 InputPatternEstr

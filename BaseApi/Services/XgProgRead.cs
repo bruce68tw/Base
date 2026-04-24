@@ -15,8 +15,8 @@ select * from dbo.XpProg
 order by Sort
 ",
             Items = [
-                new() { Fid = "Code", Op = ItemOpEstr.Like },
-                new() { Fid = "Name", Op = ItemOpEstr.Like },
+                new() { Fid = "Code", Op = QitemOpEstr.Like },
+                new() { Fid = "Name", Op = QitemOpEstr.Like },
             ],
         };
 

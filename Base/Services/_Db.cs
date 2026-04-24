@@ -129,6 +129,13 @@ namespace Base.Services
         #endregion
 
         #region get List<IdStrDto>
+        /// <summary>
+        /// table to xpCode
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="db"></param>
+        /// <param name="order">ex: Name [desc]</param>
+        /// <returns></returns>
         public static async Task<List<IdStrDto>?> TableToCodesA(string table, Db? db = null, string? order = null)
         {
             order ??= "Id";
@@ -188,6 +195,19 @@ from dbo.XpCode
 where Type='{type}'
 order by Sort";
             return await SqlToCodesA(sql, null, db);
+        }
+
+        //get code table rows
+        public static async Task<List<IdStrExtDto>?> TypesToCodesA(string[] types, Db? db = null, string locale = "")
+        {
+            var name = string.IsNullOrEmpty(locale) ? "Name" : "Name_" + locale;
+            var sql = $@"
+select 
+    Value as Id, {name} as Str, Type as Ext
+from dbo.XpCode
+where Type in '{types}'
+order by Type, Sort";
+            return await SqlToCodeExtsA(sql, null, db);
         }
 
         //get codes from sql 

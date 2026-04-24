@@ -10,7 +10,10 @@
         public string BtnAddRow { get; set; } = "";
         public string BtnFind { get; set; } = "";
         public string BtnFind2 { get; set; } = "";
+        public string BtnDraft { get; set; } = "";
         public string BtnSave { get; set; } = "";
+        //儲存&送出
+        public string BtnSaveSend { get; set; } = "";
         public string BtnToRead { get; set; } = "";
         public string BtnExport { get; set; } = "";
         public string BtnOpen { get; set; } = "";

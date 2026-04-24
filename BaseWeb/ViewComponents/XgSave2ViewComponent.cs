@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BaseWeb.ViewComponents
 {
-    public class XgSaveBackViewComponent : ViewComponent
+    //XgSaveBack -> XgSave2
+    public class XgSave2ViewComponent : ViewComponent
     {
         public HtmlString Invoke(string align = "center", string fnOnSave = "_me.crudE.onSaveA", string fnOnBack = "_me.crudR.onToRead" )
         {

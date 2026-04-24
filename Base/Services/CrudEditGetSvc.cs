@@ -58,6 +58,14 @@ namespace Base.Services
 			return _db;
         }
 
+        //get draft file path by key
+        //called CrudGetSvc、CrudEditSvc、others
+        public string GetDraftPath(string key)
+        {
+            key = _Str.EmptyToValue(key, "-1");     //-1表示新增
+            return $"{_Fun.DirDraft}{_ctrl}_{_Fun.UserId()}_{key}.json";
+        }
+
         protected async Task<JObject?> GetJsonByFunA(CrudEnum fun, string key)
         {
             return await GetJsonA(fun, key);
@@ -142,6 +150,7 @@ namespace Base.Services
         }
 
         /// <summary>
+        /// 前端傳入與後端傳回的json格式相同，包含rows、childs欄位
         /// get rows for multi tables (1 to many)
         /// include: collumns、_childs
         /// note: 1.master table must relat to child table
@@ -150,15 +159,14 @@ namespace Base.Services
         /// <returns></returns>
         protected async Task<JObject?> GetJsonA(CrudEnum crudEnum, string key)
         {
-            if (!_Str.CheckKey(key))
-            {
-                //await _Log.ErrorAsync("CrudEdit.cs GetJson() failed, key wrong: " + key);
-                return null;
-            }
+            if (!_Str.CheckKey(key)) return null;
 
+            var result = new JObject();
             var db = GetDb();
-            var result = await GetDbRowA(_editDto, key, db);    //return data
-            if (result == null) goto lab_exit;
+            var row = await GetDbRowA(_editDto, key, db);    //return data
+            if (row == null) goto lab_exit;
+
+            result[_Fun.FidRows] = new JArray(row);
 
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin())
@@ -178,7 +186,7 @@ namespace Base.Services
                 var childs = new JArray();
                 //var keys = new List<string>() { key };
                 for (var i = 0; i < editChilds.Length; i++)
-                    childs.Add((await GetChildDbJsonLoopA(1, editChilds[i], new() { key }, db))!);
+                    childs.Add((await GetChildDbJsonLoopA(1, editChilds[i], [key], db))!);
                 result[_Fun.FidChilds] = childs;
             }
             
@@ -210,7 +218,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get childs rows(json) from db (recursive)
+        /// get child json from db (recursive, 包含rows, childs欄位)
         /// </summary>
         /// <param name="editLevel">base 0(考慮master table), 傳入值會從1開始(表示第1層child)</param>
         /// <param name="edit"></param>
@@ -250,7 +258,7 @@ namespace Base.Services
             if (rows == null) return null;
 
             //prepare return data
-            var data = new JObject() { [_Fun.FidRows] = rows };
+            var result = new JObject() { [_Fun.FidRows] = rows };
 
             //get childs json list(recursive)
             var editChilds = edit.Childs;
@@ -260,9 +268,9 @@ namespace Base.Services
                 var childs = new JArray();
                 for (var i = 0; i < editChilds.Length; i++)
                     childs.Add((await GetChildDbJsonLoopA(editLevel + 1, editChilds[i], keys, db))!);
-                data[_Fun.FidChilds] = childs;
+                result[_Fun.FidChilds] = childs;
             }
-            return data;
+            return result;
         }
 
     }//class

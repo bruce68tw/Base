@@ -11,7 +11,7 @@ namespace BaseApi.Services
 {
     public class _XgFlow
     {
-        //match to XpCode.Type="AndOr" && Flow.js
+        //match to XpCode.Type="xfAndOr" && XpFlow.js??
         private const string OrSep = "{O}";
         private const string AndSep = "{A}";
         private const string ColSep = ",";
@@ -31,42 +31,51 @@ where u.Id='{0}'
         public static string SqlRole = "select UserId from dbo.XpUserRole where RoleId='{0}'";
 
         //controller Read set viewBag
-        public static async Task ReadSetViewBagA(dynamic viewBag, string locale, Db? db = null)
+        public static async Task ReadSetViewBagA(dynamic viewBag, Db? db = null)
         {
-            var newDb = _Db.CheckOpenDb(ref db);
+            var locale = _Fun.MultiLang ? _Locale.GetLocaleNoDash() : "";
+            var name = string.IsNullOrEmpty(locale) ? "Name" : "Name_" + locale;
+            var sql = $@"
+select 
+    Value as Id, {name} as Str, Type as Ext
+from dbo.XpCode
+where Type like 'xf%'
+order by Type, Sort";
+            var rows = await _Db.SqlToCodeExtsA(sql, null, db);
+            if (rows == null) return;
+
             //await using var db = new Db();
-            viewBag.NodeTypes = await NodeTypesA(locale, db);
-            viewBag.SignerTypes = await SignerTypesA(locale, db);
-            viewBag.AndOrs = await AndOrsA(locale, db);
-            viewBag.LineOps = await LineOpsA(locale, db);
-            viewBag.LineFromTypes = await LineFromTypesA(locale, db);
-            await _Db.CheckCloseDbA(db!, newDb);
+            viewBag.NodeTypes = _Code.FilterList(rows, "xfNodeType");
+            viewBag.SignerTypes = _Code.FilterList(rows, "xfSignerType");
+            viewBag.AndOrs = _Code.FilterList(rows, "xfAndOr");
+            viewBag.LineOps = _Code.FilterList(rows, "xLineOp");
+            viewBag.LineFromTypes = _Code.FilterList(rows, "xfLineFromType");
         }
         #region for flow
 
-        #region get from XpCode table
+        /*
         public static async Task<List<IdStrDto>?> LineFromTypesA(string locale0, Db? db = null)
         {
-            return await _Db.TypeToCodesA("LineFromType", db, locale0);
+            return await _Db.TypeToCodesA("xfLineFromType", db, locale0);
         }
-        #endregion
 
         public static async Task<List<IdStrDto>?> NodeTypesA(string locale = "", Db? db = null)
         {
-            return await _Db.TypeToCodesA("NodeType", db, locale);
+            return await _Db.TypeToCodesA("xfNodeType", db, locale);
         }
         public static async Task<List<IdStrDto>?> SignerTypesA(string locale = "", Db? db = null)
         {
-            return await _Db.TypeToCodesA("SignerType", db, locale);
+            return await _Db.TypeToCodesA("xfSignerType", db, locale);
         }
         public static async Task<List<IdStrDto>?> AndOrsA(string locale = "", Db? db = null)
         {
-            return await _Db.TypeToCodesA("AndOr", db, locale);
+            return await _Db.TypeToCodesA("xfAndOr", db, locale);
         }
         public static async Task<List<IdStrDto>?> LineOpsA(string locale, Db? db = null)
         {
-            return await _Db.TypeToCodesA("LineOp", db, locale);
+            return await _Db.TypeToCodesA("xfLineOp", db, locale);
         }
+        */
 
         /*
         public static List<IdStrDto> GetSignTypes()

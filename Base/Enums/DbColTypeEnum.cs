@@ -1,9 +1,10 @@
 ﻿namespace Base.Enums
 {
     /// <summary>
+    /// DataTypeEnum -> DbColTypeEnum
     /// Db data type
     /// </summary>
-    public class DataTypeEnum
+    public class DbColTypeEnum
     {
         public const int Datetime = 1;
         public const int Date = 2;

@@ -16,8 +16,8 @@ from dbo.XpTranLog
 order by Sn desc
 ",
             Items = new QitemDto[] {
-                new() { Fid = "TableName", Op = ItemOpEstr.Like },
-                new() { Fid = "ColName", Op = ItemOpEstr.Like },
+                new() { Fid = "TableName", Op = QitemOpEstr.Like },
+                new() { Fid = "ColName", Op = QitemOpEstr.Like },
                 new() { Fid = "RowId" },
             },
         };

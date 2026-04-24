@@ -110,7 +110,7 @@ namespace BaseApi.Services
             return status;
         }
 
-        private async Task<JObject> GetServerRowA(string server)
+        private async Task<JObject?> GetServerRowA(string server)
         {
             var row = await _Db.GetRowA($"select * from dbo.XpServer where Server='{server}'");
             var status = (row != null);

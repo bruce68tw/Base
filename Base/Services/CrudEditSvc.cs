@@ -640,6 +640,8 @@ namespace Base.Services
         /// <returns>ResultDto</returns>
         public async Task<ResultDto> CreateA(JObject json)
         {
+            //todo: 如果有草稿模式, 刪除草稿 if any
+
             _isNewMain = true;
             RowSetNew(_Json.GetRows0(json)!);
             return await SaveJsonA(json);
@@ -656,6 +658,8 @@ namespace Base.Services
             //return error if empty key
             if (key == "")
                 return _Model.GetError("CrudEdit.cs UpdateA() failed: key is empty.");
+
+            //todo: 如果有草稿模式, 刪除草稿 if any
 
             //set instance variables
             _key = key;
@@ -677,6 +681,13 @@ namespace Base.Services
             */
 
             return await SaveJsonA(json);
+        }
+
+        public async Task<ResultDto> DraftA(string key, JObject json)
+        {
+            var path = GetDraftPath(key);
+            await _File.StrToFileA(json.ToString(), path);
+            return new ResultDto();
         }
 
         private async Task CheckCloseDbA(Db db)

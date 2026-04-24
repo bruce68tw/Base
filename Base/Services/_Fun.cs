@@ -37,7 +37,8 @@ namespace Base.Services
         public const string FidChilds = "_childs";      //childs fid for CrudEdit
         public const string FidDeletes = "_deletes";    //delete key string list
 
-        public const string FidBaseUser = "_BaseUser";         //base user info
+        public const string FidBaseUser = "_BaseUser";  //base user info
+        public const string FidCheck0 = "_check0";      //對應 _icheck.FidCheck0
         //public const string ProgAuthStrs = "_ProgAuthStrs"; //program autu string list
 
         //c# datetime format, when js send to c#, will match to _fun.MmDtFmt
@@ -122,6 +123,7 @@ namespace Base.Services
 
         /// <summary>
         /// 是否使用多國語
+        /// 例如: 如果有多國讀取的XpCode.Name欄位會加上語系
         /// </summary>
         public static bool MultiLang = false;
         #endregion
@@ -136,6 +138,9 @@ namespace Base.Services
         //image folder
         public static string DirImage = DirRoot + "_image" + DirSep;
         public static string NoImagePath = DirImage + "NoImage.jpg";
+
+        //draft folder
+        public static string DirDraft = DirRoot + "_draft" + DirSep;
 
         //temp folder
         public static string DirTemp = DirRoot + "_temp" + DirSep;
@@ -171,7 +176,7 @@ namespace Base.Services
         /// initial db environment for Ap with db function !!
         /// </summary>
         /// <param name="isDev">is devironment or not</param>
-        /// <param name="diBox"></param>
+        /// <param name="diBox">type 必須允許null, 否則compile error !!</param>
         /// <param name="dbType">資料庫種類</param>
         /// <param name="authType">權限種類</param>
         /// <param name="multiLang">是否使用多國語</param>
@@ -182,24 +187,28 @@ namespace Base.Services
             #region set instance variables
 			IsDev = isDev;
             RunModeName = isDev ? "Development" : "Production";
-            DiBox = diBox;
+            DiBox = diBox!;
             DbType = dbType;
             //AuthType = (Config.LoginType == LoginTypeEstr.None) ? AuthTypeEnum.None : authType; //無登入必為無權限 !!
             AuthType = authType;
             MultiLang = multiLang;
 
-            Config!.HtmlImageUrl = _Str.AddSlash(Config.HtmlImageUrl);
+            Config!.HtmlImageUrl = _Str.AddWebSlash(Config.HtmlImageUrl);
             //Nonce = _Str.NewId();
 
             //解密敏感組態資料 if need
             if (Config.Encode)
             {
-                Config.Db = _Str.DecodeByFile(Config.Db).Replace("\\\\","\\");    //config的\到字串會變\\
-                Config.Smtp = _Str.DecodeByFile(Config.Smtp);
-                Config.Redis = _Str.DecodeByFile(Config.Redis);
-                Config.OtpAuthKey = _Str.DecodeByFile(Config.OtpAuthKey);
-                Config.SmsAccount = _Str.DecodeByFile(Config.SmsAccount);
-                Config.SmsPwd = _Str.DecodeByFile(Config.SmsPwd);
+                var key = _Str.ReadFileKey();
+                if (string.IsNullOrEmpty(key))
+                    return "Decode Failed, Please check Administrator.";
+
+                Config.Db = _Str.DecodeByKey(Config.Db, key).Replace("\\\\","\\");    //config的\到字串會變\\
+                Config.Smtp = _Str.DecodeByKey(Config.Smtp, key);
+                Config.Redis = _Str.DecodeByKey(Config.Redis, key);
+                Config.OtpAuthKey = _Str.DecodeByKey(Config.OtpAuthKey, key);
+                Config.SmsAccount = _Str.DecodeByKey(Config.SmsAccount, key);
+                Config.SmsPwd = _Str.DecodeByKey(Config.SmsPwd, key);
             }
             #endregion
 

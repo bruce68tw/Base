@@ -1,4 +1,6 @@
-﻿namespace BaseWeb.Models
+﻿using Base.Enums;
+
+namespace BaseWeb.Models
 {
     public class XiFileDto : XiBaseDto
     {
@@ -17,8 +19,10 @@
 
         public int MaxSize { get; set; } = 10;
 
-        //*(all),I(image),E(excel),W(word)
-        public string FileType { get; set; } = "I"; //image
+        public UpFileTypeEnum FileType { get; set; } = UpFileTypeEnum.Image;
+
+        //FileType=UpFileTypeEnum.Custom時, 必須設定此欄位, 逗號分隔的副檔名, 不帶點, 例如: "jpg,png,gif"
+        public string FileTypeExts { get; set; } = "";
 
         //取消, 固定呼叫_me.onViewFile, 同時傳入table, fid
         //public string FnOnViewFile { get; set; } = "";

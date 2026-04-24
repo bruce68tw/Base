@@ -429,6 +429,8 @@ namespace BaseWeb.Services
             //attr, both digits/number should be type=number for validate(digits not work !!)
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
                 $" type='number' data-type='{InputTypeEstr.Decimal}' data-init='{dto.Value}'" +
+                GetEventAttr("onchange", dto.FnOnChange, dto.EventArgs) +
+                GetEventAttr("onblur", dto.FnOnBlur, dto.EventArgs) +
                 //GetRequired(dto.Required) +
                 GetPlaceHolder(dto.InputTip);
             //attr += " digits='true'";   //for digital only, decimal remark !!
@@ -494,7 +496,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 dto.MaxSize = _Fun.Config.UploadFileMax;
 
             //fileType to file Ext list
-            var exts = _File.TypeToExts(dto.FileType);
+            var exts = _File.TypeToExts(dto.FileType, dto.FileTypeExts);
             var dataEdit = GetDataEdit(dto.Edit);
 
             //if container is label, inside element onclick will trigger when click inside !!
@@ -559,6 +561,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
                 $" type='number' data-type='{InputTypeEstr.Integer}' data-init='{dto.Value}'" +
             //GetRequired(dto.Required) +
+            GetEventAttr("onchange", dto.FnOnChange, dto.EventArgs) +
+            GetEventAttr("onblur", dto.FnOnBlur, dto.EventArgs) +
             GetPlaceHolder(dto.InputTip);
             attr += " digits='true'";   //for digital only, decimal remark !!
 
@@ -697,6 +701,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
                 $" type='{type}' data-init='{dto.Value}'" +
                 GetEventAttr("onchange", dto.FnOnChange, dto.EventArgs) +
+                GetEventAttr("onblur", dto.FnOnBlur, dto.EventArgs) +
                 GetPlaceHolder(dto.InputTip) +
                 GetMaxLength(dto.MaxLen) +
                 GetPattern(dto.Pattern);
@@ -716,6 +721,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //attr
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
                 $" data-init='{dto.Value}' rows='{dto.RowsCount}'" +
+                GetEventAttr("onchange", dto.FnOnChange, dto.EventArgs) +
+                GetEventAttr("onblur", dto.FnOnBlur, dto.EventArgs) +
                 GetPlaceHolder(dto.InputTip) +
                 GetMaxLength(dto.MaxLen);
 
