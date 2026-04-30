@@ -176,6 +176,10 @@ namespace Base.Services
         {
             return DateTime.Now.ToString("yyyyMM");
         }
+        public static string NowYmd()
+        {
+            return DateTime.Now.ToString("yyyyMMdd");
+        }
 
         public static DateTime Today()
         {

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
+using System.Threading.Tasks;
 
 namespace BaseApi.Attributes
 {
@@ -54,9 +55,20 @@ namespace BaseApi.Attributes
                 : _Str.GetBrError(_Fun.FidNotLogin);    //"Please Login First.";
 
             //get return type
+            /*
             var returnType = (context.ActionDescriptor is ControllerActionDescriptor actor)
                 ? actor.MethodInfo.ReturnType.Name
                 : "ActionResult";    //default
+            */
+            var returnType = "ActionResult";    //default
+            var method = (context.ActionDescriptor as ControllerActionDescriptor)?.MethodInfo;
+            if (method != null)
+            {
+                var type = method.ReturnType;
+                returnType = (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>))
+                    ? type.GetGenericArguments()[0].Name
+                    : type.Name;
+            }
             #endregion
 
             //return error
@@ -96,6 +108,14 @@ namespace BaseApi.Attributes
                 context.Result = new JsonResult(new
                 {
                     Value = new { _ErrorMsg = error }
+                });
+            }
+            else if (returnType == "IActionResult")
+            {
+                //回傳檔案!!
+                context.Result = new BadRequestObjectResult(new
+                {
+                    _ErrorMsg = error,
                 });
             }
             else

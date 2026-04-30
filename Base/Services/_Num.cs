@@ -6,6 +6,19 @@ namespace Base.Services
     public class _Num
     {
         /// <summary>
+        /// for crud, 從資料key欄位讀取對應上層的rowNo, parse file key
+        /// called by: CrudEditSvc.cs、_HttpFile.cs
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>-1(error/not found), 0(正常key值), n(new key)</returns>
+        public static int KeyToUpRowNo(string key)
+        {
+            return string.IsNullOrEmpty(key) ? -1 :     //case error
+                !Int32.TryParse(key, out int num) ? 0 : //表示key為非數字，視為正常key值
+                 num > 0 ? 0 : num * (-1);              //>0 表示key為數字, 否則視為new key
+        }
+
+        /// <summary>
         /// get RWD col number
         /// </summary>
         /// <param name="itemCount">columns count, 1-12</param>

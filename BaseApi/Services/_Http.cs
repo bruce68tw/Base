@@ -1,6 +1,5 @@
 ﻿using Base.Models;
 using Base.Services;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using SkiaSharp;
 using System;
@@ -8,7 +7,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,15 +54,46 @@ namespace BaseApi.Services
         /// GetContentTypeByExt -> ExtToContentType
         /// </summary>
         /// <param name="ext"></param>
+        /// <param name="defaultText">true表示副檔名不在清單時, 使用text開啟, false表示此時傳回空白</param>
         /// <returns></returns>
-        public static string ExtToContentType(string ext)
+        public static string ExtToContentType(string ext, bool defaultText)
         {
-            //var ext = _File.GetFileExt(path);
-            ext = ext.ToLower();
-            return (ext == "doc" || ext == "docx") ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" :
-                (ext == "xls" || ext == "xlsx") ? "application/ms-excel" :
-                (ext == "pdf") ? "application/pdf" :
-                "text/plain";
+            ext = ext.ToLower().TrimStart('.');
+            return ext switch
+            {
+                // pdf
+                "pdf" => "application/pdf",
+
+                // word
+                "doc" => "application/msword",
+                "docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+
+                // excel
+                "xls" => "application/vnd.ms-excel",
+                "xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+
+                // ppt
+                "ppt" => "application/vnd.ms-powerpoint",
+                "pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+
+                // image
+                "jpg" or "jpeg" => "image/jpeg",
+                "png" => "image/png",
+                "gif" => "image/gif",
+                "bmp" => "image/bmp",
+                "webp" => "image/webp",
+                "svg" => "image/svg+xml",
+                "tif" or "tiff" => "image/tiff",    //可能不適合直接開啟!!
+
+                // zip
+                "zip" => "application/zip",
+
+                // text
+                "txt" or "log" or "json" or "xml" => "text/plain",
+
+                // fallback
+                _ => defaultText ? "text/plain" : ""
+            };
         }
 
         //get http request

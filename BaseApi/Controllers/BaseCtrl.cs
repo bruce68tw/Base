@@ -1,4 +1,5 @@
 ﻿using Base.Enums;
+using Base.Models;
 using Base.Services;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
@@ -43,5 +44,11 @@ namespace BaseApi.Controllers
             return Content(json, ContentTypeEstr.Json);
         }
 
+        protected IActionResult FileDtoToResult(DownFileDto file)
+        {
+            return (string.IsNullOrEmpty(file.Error))
+                ? File(file.Stream, file.ContentType, file.FileName)
+                : BadRequest(file.Error);
+        }
     }//class
 }

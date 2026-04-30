@@ -81,7 +81,7 @@ namespace BaseWeb.Services
                     "font-src 'self';" +
                     "form-action 'self';" +
                     "frame-ancestors 'self';" +
-                    "img-src 'self' data:;" +
+                    "img-src 'self' data: blob:;" +
                     "media-src 'self';" +
                     "manifest-src 'self';" +
                     "object-src 'none';" +

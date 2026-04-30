@@ -142,9 +142,15 @@ namespace Base.Services
         /// <returns>-1(error/not found), 0(正常key值), n(new key)</returns>
         private int GetNewRowUpNo(JObject row, string kid)
         {
-            if (_Object.IsEmpty(row[kid])) return -1;
+            return _Object.IsEmpty(row[kid])
+                ? -1 : _Num.KeyToUpRowNo(row[kid]!.ToString());
+
+            /*
+            if () return -1;
             if (!Int32.TryParse(row[kid]!.ToString(), out int num)) return 0;
             return num > 0 ? 0 : num * (-1);
+            */
+
             /*
             return _Object.IsEmpty(row[kid]) ? -1 :
                 !IsNewRow(row, kid) ? 0 :

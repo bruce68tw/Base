@@ -205,7 +205,7 @@ namespace BaseApi.Services
 
                 var key = fileJson[col]!.ToString();
                 var keyIdx = (key == "" && !isMulti)
-                    ? 1 : ParseFileKey(key);
+                    ? 1 : _Num.KeyToUpRowNo(key);
 
                 //get key if need, case of new key: set key
                 if (keyIdx > 0)
@@ -226,8 +226,8 @@ namespace BaseApi.Services
                     key = newKey2["f" + keyIdx]!.ToString();
                 }
 
-                //save file: 欄位名稱_PKey + .副檔名
-                var filePath = saveDir + preFile + fid + "_" + key + Path.GetExtension(files[i].FileName);
+                //save file: 欄位名稱_PKey + .副檔名(有rename)
+                var filePath = saveDir + preFile + fid + "_" + key + _File.UpExtRename(Path.GetExtension(files[i].FileName));
                 await SaveFileA(files[i], filePath);
             }
 
@@ -239,6 +239,7 @@ namespace BaseApi.Services
             return false;
         }
 
+        /*
         //parse file key, 如果key為數字而且長度<=3, 則視為new key
         //return > 0 表示new key
         private static int ParseFileKey(string key)
@@ -248,6 +249,7 @@ namespace BaseApi.Services
                 Int32.TryParse(key, out int num) ? num :
                 0;
         }
+        */
 
         /// <summary>
         /// (single row)save upload file, & update db(DB save file related path !!)
@@ -344,28 +346,61 @@ namespace BaseApi.Services
         /// view image file or download file
         /// </summary>
         /// <param name="path"></param>
+        /// <param name="isView">直接開啟檢視, 只限已知副檔名, 其他則強制下載for資安</param>
         /// <param name="downFileName">download file name</param>
         /// <returns></returns>
-        public static async Task<IActionResult> ViewFileA(string path, string downFileName = "")
+        public static FileResult? ViewFile(string path, string downFileName = "")
         //public static IActionResult ViewFileA(string path, string downFileName = "")
         {
-            var hasFile = File.Exists(path);
             var ext = _File.GetFileExt(path);
-            if (_File.IsImageExt(ext))
+            var upPath = _File.PathExtToUp(path, ext);  //上傳檔案會改副檔名for資安
+            var hasFile = File.Exists(upPath);
+            //圖檔直接開啟, 不考慮 isView
+            var contentType = _Http.ExtToContentType(ext, false);
+            var isImage = contentType.Contains("image");
+            if (!hasFile)
             {
-                if (!hasFile) path = _Fun.NoImagePath;
-                return new FileContentResult(await File.ReadAllBytesAsync(path), "image/jpg");
+                if (isImage)
+                {
+                    upPath = _Fun.NoImagePath;
+                    contentType = "image/jpg";
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            /*
+            if (isImage && !hasFile)
+            {
+                return hasFile
+                    ? new FileContentResult(await File.ReadAllBytesAsync(upPath), contentType)
+                    : new FileContentResult(await File.ReadAllBytesAsync(_Fun.NoImagePath), "image/jpg");
             }
 
+            //not image type below
             //check existed
-            if (!hasFile) return new NotFoundResult();
+            //if (!hasFile) return new NotFoundResult();
+            if (!hasFile) return null;
+            */
+            //var stream = File.OpenRead(upPath);
+            //return new FileStreamResult(stream, contentType);
 
-            var contentType = _Http.ExtToContentType(ext);
-            return new FileContentResult(await File.ReadAllBytesAsync(path), contentType)
+            return new PhysicalFileResult(upPath, contentType);
+            /*
+            {
+                FileDownloadName = _Str.IsEmpty(downFileName)
+                    ? _File.GetFileName(path)
+                    : downFileName
+            };
+            */
+            /*            
+            return new FileContentResult(await File.ReadAllBytesAsync(upPath), contentType)
             {
                 FileDownloadName = _Str.IsEmpty(downFileName)
                     ? _File.GetFileName(path) : downFileName
             };
+            */
         }
 
         #region remark code

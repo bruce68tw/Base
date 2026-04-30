@@ -63,16 +63,7 @@ namespace BaseApi.Services
                 resp.Headers.Append("Content-Disposition", "attachment; filename=\"" + HttpUtility.UrlPathEncode(fileName) + "\"");
 
             var ext = _File.GetFileExt(fileName);
-            resp.ContentType = _Http.ExtToContentType(ext);
-            /*
-            //resp.ContentType = "application/vnd.ms-word.document";
-            if (ext == "doc" || ext == "docx")
-                resp.ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-            else if(ext == "xls" || ext == "xlsx")
-                resp.ContentType = "application/ms-excel";
-            else
-                resp.ContentType = "text/plain";
-            */
+            resp.ContentType = _Http.ExtToContentType(ext, true);
 
             //stream.Flush();
             stream.Position = 0;

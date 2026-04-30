@@ -12,33 +12,123 @@ namespace Base.Services
     public class _File
     {
         /// <summary>
+        /// rename path ext to upload style
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="oldExt">如果有值則直接轉換成新的副檔名, 不必重新讀取path的ext</param>
+        /// <returns></returns>
+        public static string PathExtToUp(string path, string oldExt = "")
+        {
+            if (string.IsNullOrEmpty(oldExt))
+                oldExt = GetFileExt(path);
+            return Path.ChangeExtension(path, UpExtRename(oldExt));
+        }
+
+        /// <summary>
+        /// 將上傳檔案副檔名rename for 資安考慮
+        /// </summary>
+        /// <param name="ext">是否前面有'.'皆可</param>
+        /// <returns></returns>
+        public static string UpExtRename(string ext)
+        {
+            var chars = ext.ToCharArray();
+            int start = ext[0] == '.' ? 2 : 1;
+            for (int i = start; i < chars.Length; i++)
+            {
+                int offset = i - start + 1;              
+                chars[i] = (char)('a' + (chars[i] - 'a' + offset) % 26);    //小寫 a-z 循環
+            }
+            return new string(chars);
+        }
+
+        /// <summary>
+        /// 將上傳檔案副檔名restore
+        /// </summary>
+        /// <param name="ext"></param>
+        /// <returns></returns>
+        public static string UpExtRestore(string ext)
+        {
+            var chars = ext.ToCharArray();
+            int start = ext[0] == '.' ? 2 : 1;
+            for (int i = start; i < chars.Length; i++)
+            {
+                int offset = i - start + 1;
+                chars[i] = (char)('a' + (chars[i] - 'a' - offset + 26 * 10) % 26);  // 反向循環
+            }
+            return new string(chars);
+        }
+
+        /// <summary>
         /// 壓縮多個檔案成zip檔
         /// </summary>
         /// <param name="fromPaths"></param>
         /// <param name="toPath"></param>
-        public static bool ZipFiles(List<string> fromPaths, string toPath)
+        /// <param name="entryNames">如果要改變zip裡面的每個檔名則必須填此欄位, 長度與fromPaths相同</param>
+        public static bool ZipFiles(List<string> fromPaths, string toPath, List<string>? entryNames = null)
         {
+            if (entryNames != null && entryNames.Count != fromPaths.Count)
+            {
+                _Log.Error($"_File.cs ZipFiles() Error: 參數 fromPaths 與 entryNames 陣列長度不同。");
+                return false;
+            }
+
             if (File.Exists(toPath))
                 File.Delete(toPath); // 或改用 Update 模式
 
-            using (var zip = ZipFile.Open(toPath, ZipArchiveMode.Create))
+            var hasEntry = (entryNames != null);
+            using var zip = ZipFile.Open(toPath, ZipArchiveMode.Create);
+            for (int i = 0; i < fromPaths.Count; i++)
             {
-                foreach (var file in fromPaths)
+                var file = fromPaths[i];
+                if (!File.Exists(file))
                 {
-                    if (!File.Exists(file))
-                    {
-                        //continue; // 或 log 起來
-                        _Log.Error("_File.cs ZipFiles() Error: 檔案不存在: ");
-                        return false;
-                    }
-
-                    var entryName = Path.GetFileName(file);
-                    zip.CreateEntryFromFile(file, entryName, CompressionLevel.Optimal);
+                    //continue; // 或 log 起來
+                    _Log.Error($"_File.cs ZipFiles() Error: 來源檔案不存在: {file}");
+                    return false;
                 }
+
+                var entryName = hasEntry ? entryNames![i] : Path.GetFileName(file);
+                zip.CreateEntryFromFile(file, entryName, CompressionLevel.Optimal);
             }
 
             //case ok
             return true;
+        }
+
+        public static MemoryStream? ZipToStream(List<string> fromPaths, List<string>? entryNames = null)
+        {
+            if (entryNames != null && entryNames.Count != fromPaths.Count)
+            {
+                _Log.Error($"_File.cs ZipToStream() Error: 參數 fromPaths 與 entryNames 陣列長度不同。");
+                return null;
+            }
+
+            var hasEntry = (entryNames != null);
+            var ms = new MemoryStream();
+            using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+            {
+                for (int i = 0; i < fromPaths.Count; i++)
+                {
+                    var file = fromPaths[i];
+                    if (!File.Exists(file))
+                    {
+                        _Log.Error($"ZipToStream Error: 檔案不存在: {file}");
+                        return null;
+                    }
+
+                    var entryName = hasEntry ? entryNames![i] : Path.GetFileName(file);
+                    var entry = zip.CreateEntry(entryName, CompressionLevel.Optimal);
+
+                    using var entryStream = entry.Open();
+                    using var fileStream = File.OpenRead(file);
+
+                    fileStream.CopyTo(entryStream);
+                }
+            }
+
+            //很重要：reset position
+            ms.Position = 0;
+            return ms;
         }
 
         /// <summary>
@@ -110,7 +200,9 @@ namespace Base.Services
         /// <returns></returns>
         public static string GetFileExt(string path)
         {
-            return Path.GetExtension(path).Replace(".", "").ToLower();
+            //return Path.GetExtension(path).Replace(".", "").ToLower();
+            var ext = Path.GetExtension(path).ToLower();
+            return ext.StartsWith('.') ? ext[1..] : ext;
         }
 
         /// <summary>
@@ -284,6 +376,7 @@ namespace Base.Services
                 : files[0];
         }
 
+        /* 直接用 _Http.ExtToContentType() 判斷是否為圖片檔
         /// <summary>
         /// is image file or not
         /// </summary>
@@ -294,6 +387,7 @@ namespace Base.Services
             //ext = ext.Replace(".", "").ToLower();
             return (",jpg,jpeg,png,gif,tif,tiff,").Contains("," + ext + ",");
         }
+        */
 
         /// <summary>
         /// file path to dir, no right slash
