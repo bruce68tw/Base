@@ -8,15 +8,18 @@ namespace Base.Models
     /// </summary>
     public class ConfigDto
     {
-        //是否加密組態檔重要欄位, ex: Db,Smtp,Redis
+        //是否加密(使用key.txt)組態檔的重要欄位(Db,Smtp,Redis)
         public bool Encode { get; set; } = false;
+
+        //是否加密(使用key.txt)上傳檔案(Encode必須為true才能設定本欄位)
+        public bool EncodeUpload { get; set; } = false;
 
         //refer LoginTypeEstr
         public string LoginType { get; set; } = LoginTypeEstr.None;
 
         public string AdServer { get; set; } = "";
 
-        //db connect string
+        //(加密)db connect string
         public string Db { get; set; } = "";
 
         //system name
@@ -55,7 +58,7 @@ namespace Base.Models
         //SSL or not
         public bool SSL { get; set; }
 
-        //smtp, format: 0(Host),1(Port),2(Ssl),3(Id),4(Pwd),5(FromEmail),6(FromName) 
+        //(加密)smtp, format: 0(Host),1(Port),2(Ssl),3(Id),4(Pwd),5(FromEmail),6(FromName) 
         public string Smtp { get; set; } = "";
 
         //email image path list: Id,Path.., ex: _TopImage, c:/xx/xx.png
@@ -67,7 +70,7 @@ namespace Base.Models
         public string HtmlImageUrl { get; set; } = "";
 
         /// <summary>
-        /// redis server for session, ex: "127.0.0.1:6379,ssl=true,password=xxx,defaultDatabase=x", 
+        /// (加密)redis server for session, ex: "127.0.0.1:6379,ssl=true,password=xxx,defaultDatabase=x", 
         /// empty for memory cache
         /// </summary>
         public string Redis { get; set; } = "";
@@ -132,6 +135,7 @@ namespace Base.Models
         /// otp Authenticator secret key, base32
         /// </summary>
         public string OtpAuthKey { get; set; } = "";
+
         /// <summary>
         /// OTP 簡訊範本
         /// </summary>
@@ -141,10 +145,12 @@ namespace Base.Models
         /// 簡訊帳號
         /// </summary>
         public string SmsAccount { get; set; } = "";
+
         /// <summary>
         /// 簡訊密碼
         /// </summary>
         public string SmsPwd { get; set; } = "";
+
         /// <summary>
         /// 簡訊來源門號, 由廠商提供
         /// </summary>
