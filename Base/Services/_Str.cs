@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -19,7 +20,7 @@ namespace Base.Services
         //base34 encode(remove I/O for readable)
         //private static readonly char[] _base34 = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ".ToCharArray();
         //private static readonly char[] _base36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
-        //private static readonly char[] _base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
+        private static readonly char[] _base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
         //private static readonly ulong _baseLen = (ulong)_base34.Length;
         //private static readonly long _startTicks = new DateTime(2000, 1, 1).Ticks;
         //private static long _startMilliSec = new DateTime(2000, 1, 1).Ticks / 1000;
@@ -30,6 +31,55 @@ namespace Base.Services
         //AES key inside KeyCmd file, 使用變數儲存, 避免一直開啟
         private static string _fileKey = null!;
 
+        /*
+        private static byte[] Base62To16Bytes(string input)
+        {
+            var result = new byte[16];
+            if (string.IsNullOrEmpty(input))
+                return result;
+
+            int buffer = 0; //是一個「暫存 bit 容器」
+            int bits = 0;
+            int outIndex = 0;
+            int inputLen = Math.Min(input.Length, 21); // 最多21字元（126 bits）
+            for (int i = 0; i < inputLen; i++)
+            {
+                char c = input[i];
+                int value = c switch
+                {
+                    >= '0' and <= '9' => c - '0',
+                    >= 'A' and <= 'Z' => c - 'A' + 10,
+                    >= 'a' and <= 'z' => c - 'a' + 36,
+                    _ => -1
+                };
+
+                if (value < 0)
+                    throw new ArgumentException($"Invalid Base62 char: {c}");
+
+                // 6-bit push, 把 Base62 的 6-bit value 串成一條 bit stream（位元流）
+                buffer = (buffer << 6) | value;
+                bits += 6;
+
+                // 8-bit flush
+                if (bits >= 8)
+                {
+                    bits -= 8;
+                    if (outIndex < 16)
+                        result[outIndex++] = (byte)((buffer >> bits) & 0xFF);
+                    else
+                        return result; // truncate
+                }
+            }
+
+            // 尾端 bits（不足 8 bits）
+            if (outIndex < 16 && bits > 0)
+                result[outIndex++] = (byte)((buffer << (8 - bits)) & 0xFF);
+
+            // 剩餘自動補 0（byte array 預設就是 0，不用再處理）
+
+            return result;
+        }
+        */
 
         /// <summary>
         /// 重複字串
@@ -685,7 +735,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="isEncode"></param>
         /// <param name="data"></param>
-        /// <param name="key">如果空值則取用目前目錄下的key.xxx.txt</param>
+        /// <param name="key"></param>
         /// <returns>加解密後以base64編碼/解碼</returns>
         private static string AesEnDecodeByKey(bool isEncode, string data, string key)
         {
@@ -697,6 +747,7 @@ namespace Base.Services
 
         private static void AesInit(System.Security.Cryptography.Aes aes, string key)
         {
+            //key長度必須為16,24,32, 不足者後面補0
             var len = key.Length;
             key = (len >= 32) ? key[..32] :
                 (len >= 24) ? key[..24] :
@@ -720,16 +771,9 @@ namespace Base.Services
         public static string Encode(string data, string key)
         {
             byte[] bytes;
-            //key = GetAesKey(key);
             using (var aes = System.Security.Cryptography.Aes.Create())
             {
                 AesInit(aes, key);
-                /*
-                aes.Key = Encoding.ASCII.GetBytes(key);
-                aes.IV = AesKeyToIv(key);
-                aes.Mode = CipherMode.ECB;
-                aes.Padding = PaddingMode.PKCS7;
-                */
                 var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
                 using var ms = new MemoryStream();
                 using var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write);
@@ -778,12 +822,6 @@ namespace Base.Services
             using (var aes = System.Security.Cryptography.Aes.Create())
             {
                 AesInit(aes, key);
-                /*
-                aes.Key = Encoding.ASCII.GetBytes(key);
-                aes.IV = AesKeyToIv(key);
-                aes.Mode = CipherMode.ECB;
-                aes.Padding = PaddingMode.PKCS7;
-                */
                 var encryptor = aes.CreateDecryptor(aes.Key, aes.IV);
                 using var ms = new MemoryStream(bytes);
                 using var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Read);
