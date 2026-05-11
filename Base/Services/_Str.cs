@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -20,7 +19,7 @@ namespace Base.Services
         //base34 encode(remove I/O for readable)
         //private static readonly char[] _base34 = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ".ToCharArray();
         //private static readonly char[] _base36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
-        private static readonly char[] _base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
+        //private static readonly char[] _base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
         //private static readonly ulong _baseLen = (ulong)_base34.Length;
         //private static readonly long _startTicks = new DateTime(2000, 1, 1).Ticks;
         //private static long _startMilliSec = new DateTime(2000, 1, 1).Ticks / 1000;
@@ -31,7 +30,33 @@ namespace Base.Services
         //AES key inside KeyCmd file, 使用變數儲存, 避免一直開啟
         private static string _fileKey = null!;
 
-        /*
+        /// <summary>
+        /// base64字串補齊, 以=補齊到4的倍數長度, 允許空字串
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        private static string PadBase64(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+
+            // 計算需要補齊的長度
+            var mod = input.Length % 4;
+            if (mod == 0) return input;
+
+            // 補齊規則：
+            // mod 2 (剩 2 個字元) -> 補 ==
+            // mod 3 (剩 3 個字元) -> 補 =
+            // mod 1 (剩 1 個字元) -> 這是無效的 Base64，但通常補 3 個 = (依需求處理)
+            return input.PadRight(input.Length + (4 - mod), '=');
+        }
+
+        /// <summary>
+        /// (暫不使用,程式OK)base62字串轉16 bytes, 21 char(126 bits)可轉16 bytes, 不足自動補0, 超過自動截斷, 允許空字串
+        /// 用途:使用base62字串當作key(最多21字元), 轉成16 bytes當作AES key
+        /// </summary>
+        /// <param name="input">英數字only!!</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         private static byte[] Base62To16Bytes(string input)
         {
             var result = new byte[16];
@@ -56,30 +81,33 @@ namespace Base.Services
                 if (value < 0)
                     throw new ArgumentException($"Invalid Base62 char: {c}");
 
-                // 6-bit push, 把 Base62 的 6-bit value 串成一條 bit stream（位元流）
+                // buffer 左移6bit, 最右邊填入 value
                 buffer = (buffer << 6) | value;
                 bits += 6;
 
-                // 8-bit flush
+                //填入result if need(推出)
                 if (bits >= 8)
                 {
                     bits -= 8;
                     if (outIndex < 16)
+                    {
+                        //設定result(從buffer讀取左邊8byte), 但buffer內容不變
                         result[outIndex++] = (byte)((buffer >> bits) & 0xFF);
+                    }
                     else
+                    {
                         return result; // truncate
+                    }
                 }
             }
 
-            // 尾端 bits（不足 8 bits）
+            //讀取尾端 bits（不足 8 bits）
             if (outIndex < 16 && bits > 0)
                 result[outIndex++] = (byte)((buffer << (8 - bits)) & 0xFF);
 
-            // 剩餘自動補 0（byte array 預設就是 0，不用再處理）
-
+            //剩餘自動補 0（byte array 預設就是 0，不用再處理）
             return result;
         }
-        */
 
         /// <summary>
         /// 重複字串
@@ -696,6 +724,10 @@ namespace Base.Services
             return _fileKey;
         }
 
+        /// <summary>
+        /// 從key.txt讀取AES key, 以base64編碼(去除字尾=), 解密後存到變數, 供加解密使用, 只讀取一次, 沒有則回傳空字串
+        /// </summary>
+        /// <returns></returns>
         public static string ReadFileKey()
         {
             //固定讀取 key.txt
@@ -708,7 +740,7 @@ namespace Base.Services
             }
 
             //case ok
-            _fileKey = Base64Decode(key);
+            _fileKey = Base64Decode(PadBase64(key));
             return _fileKey;
         }
 
@@ -731,7 +763,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// AES 加/解密重要資料(組態欄位), called by KeyCmd
+        /// AES 加/解密(最多256bits)重要資料(組態欄位), called by KeyCmd
         /// </summary>
         /// <param name="isEncode"></param>
         /// <param name="data"></param>
@@ -755,7 +787,7 @@ namespace Base.Services
                 TailZero(16, key, true);
 
             aes.Key = Encoding.ASCII.GetBytes(key);
-            //取 key 第2個字以後, 以增加變化
+            //取 key 第2個字以後(後面補0), 以增加變化
             aes.IV = Encoding.ASCII.GetBytes(TailZero(16, key[2..], true));
             aes.Mode = CipherMode.ECB;
             aes.Padding = PaddingMode.PKCS7;
