@@ -1,6 +1,7 @@
 ﻿using Base.Enums;
 using Base.Models;
 using Base.Services;
+using BaseApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 
@@ -50,5 +51,11 @@ namespace BaseApi.Controllers
                 ? File(file.Stream, file.ContentType, file.FileName)
                 : BadRequest(file.Error);
         }
+
+        protected IActionResult ViewFile(FileResult? file)
+        {
+            return (file == null) ? NotFound() : file;
+        }
+
     }//class
 }
