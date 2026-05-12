@@ -205,7 +205,7 @@ order by Sort";
 select 
     Value as Id, {name} as Str, Type as Ext
 from dbo.XpCode
-where Type in '{types}'
+where Type in ({_Array.ToStr(types, true)})
 order by Type, Sort";
             return await SqlToCodeExtsA(sql, null, db);
         }
