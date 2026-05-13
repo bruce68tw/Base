@@ -287,18 +287,24 @@ namespace Base.Services
                 var fldDate = hasDate ? editDto.Col4[1] : "";
                 if (hasUser && hasDate)
                 {
+                    var now = _Date.ToDbStr(_now);
+                    RowSetFid(inputRow, fldUser!, userId);  //寫入inputRow, 外部程式可使用!!
+                    RowSetFid(inputRow, fldDate!, now);
                     fids += fldUser + "," + fldDate + ",";
-                    values += $"'{userId}','{_Date.ToDbStr(_now)}',";
+                    values += $"'{userId}','{now}',";
                 }
                 else if (hasUser)
                 {
+                    RowSetFid(inputRow, fldUser!, userId);
                     fids += fldUser + ",";
                     values += $"'{userId}',";
                 }
                 else
                 {
+                    var now = _Date.ToDbStr(_now);
+                    RowSetFid(inputRow, fldDate!, now);
                     fids += fldDate + ",";
-                    values += $"'{_Date.ToDbStr(_now)}',";
+                    values += $"'{now}',";
                 }
             }
 
@@ -320,6 +326,14 @@ namespace Base.Services
             if (_Str.NotEmpty(error)) await _Log.ErrorRootA(error);
             return false;
                 
+        }
+
+        private void RowSetFid(JObject row, string fid, object value)
+        {
+            if (_Json.IsFidEmpty(row, fid))
+            {
+                row[fid] = value.ToString();
+            }
         }
 
         //update one row

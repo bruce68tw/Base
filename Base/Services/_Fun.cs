@@ -126,6 +126,9 @@ namespace Base.Services
         /// 例如: 如果有多國讀取的XpCode.Name欄位會加上語系
         /// </summary>
         public static bool MultiLang = false;
+
+        //角色是否區分部門, 如果true則會存取 XpDeptRole table
+        public static bool HasDeptRole = false;
         #endregion
 
         #region dir varibles
@@ -180,9 +183,10 @@ namespace Base.Services
         /// <param name="dbType">資料庫種類</param>
         /// <param name="authType">權限種類</param>
         /// <param name="multiLang">是否使用多國語</param>
+        /// <param name="hasDeptRole">角色是否區分部門, 如果true則會存取 XpDeptRole table</param>
         /// <returns>error msg if any</returns>
         public static string Init(bool isDev, IServiceProvider? diBox, DbTypeEnum dbType, 
-            AuthTypeEnum authType, bool multiLang)
+            AuthTypeEnum authType, bool multiLang = false, bool hasDeptRole = false)
         {
             #region set instance variables
 			IsDev = isDev;
@@ -192,6 +196,7 @@ namespace Base.Services
             //AuthType = (Config.LoginType == LoginTypeEstr.None) ? AuthTypeEnum.None : authType; //無登入必為無權限 !!
             AuthType = authType;
             MultiLang = multiLang;
+            HasDeptRole = hasDeptRole;
 
             Config!.HtmlImageUrl = _Str.AddWebSlash(Config.HtmlImageUrl);
             //Nonce = _Str.NewId();

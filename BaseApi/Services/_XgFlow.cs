@@ -23,12 +23,23 @@ from dbo.XpDept d
 inner join dbo.XpUser u on d.Id=u.DeptId
 where u.Id='{0}'
 ";
+        //get userId by account
+        public static string SqlUser = "select UserId from dbo.XpUser where Account='{0}'";
         //get user name
         public static string SqlUserName = "select Name from dbo.XpUser where Id='{0}'";
         //get dept manager Id
         public static string SqlDeptMgr = "select MgrId from dbo.XpDept where Id='{0}'";
         //get first role member
         public static string SqlRole = "select UserId from dbo.XpUserRole where RoleId='{0}'";
+        //get first role member
+        public static string SqlDeptRole = $@"
+select top 1 u.Id
+from dbo.XpUserRole ur
+join dbo.XpUser u on ur.UserId=u.Id
+where u.DeptId='{_Fun.DeptId()}'
+and ur.RoleId='{0}'
+order by u.Id
+";
 
         //controller Read set viewBag
         public static async Task ReadSetViewBagA(dynamic viewBag, Db? db = null)
@@ -93,13 +104,13 @@ order by Type, Sort";
         /// create workflow signing rows
         /// </summary>
         /// <param name="row">flow data</param>
-        /// <param name="userFid">fid of owner user id of row</param>
+        /// <param name="userFid">fid of owner user id of input row for 簽核者id</param>
         /// <param name="flowCode">Flow.Code</param>
         /// <param name="sourceId">source row Id(key)</param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
         public static async Task<string> CreateSignRowsA(JObject row, string userFid, string flowCode,
-            string sourceId, bool isTest, Db db)
+            string flowType, string sourceId, bool isTest, Db db)
         {
             #region 1.get flow lines by flow code
             var error = string.Empty;
@@ -199,7 +210,7 @@ order by l.FromNodeId, l.Sort
 insert into dbo.{signTable}(
     Id, FlowId, SourceId, 
     NodeName, FlowLevel, TotalLevel,
-    SignerId, SignerName, 
+    SignerId, SignerName, FlowType,
     SignStatus, SignTime) values(
     @Id, @FlowId, @SourceId,
     @NodeName, @FlowLevel, @TotalLevel,
@@ -217,7 +228,8 @@ insert into dbo.{signTable}(
                 #region 7.get signer Id/name by rules
                 var line = flowLines[idx];
                 var signerId = "";
-                var signerIds = new List<string?>();
+                var signerIds = new List<string>();
+                //var isRoleCode = false;
                 var hasRows = false;
                 DateTime? signTime = null;
                 if (level == 0)
@@ -231,11 +243,11 @@ insert into dbo.{signTable}(
                 {
                     switch (line.SignerType)
                     {
-                        /*
-                        case EnumSignerType.User:
-                            signerValue = line.SignerValue;
+                        case SignerTypeEstr.User:
+                            userType = "User";
+                            if (row[userFid] != null)
+                                signerId = await db.GetStrA(string.Format(SqlUser, row[userFid]!.ToString()));
                             break;
-                            */
                         case SignerTypeEstr.Fid:
                             userType = line.SignerValue;
                             if (row[line.SignerValue] != null)
@@ -247,21 +259,27 @@ insert into dbo.{signTable}(
                                 signerId = await db.GetStrA(string.Format(SqlUserMgr, row[userFid]!.ToString()));
                             break;
                         case SignerTypeEstr.DeptMgr:
-                            userType = "Depart Manager";
+                            userType = "Dept Manager";
                             if (line.SignerValue != null)
                                 signerId = await db.GetStrA(string.Format(SqlDeptMgr, line.SignerValue));
                             break;
                         case SignerTypeEstr.Role:
-                            hasRows = true;
+                            hasRows = true; //多筆
                             userType = "Role";
                             if (line.SignerValue != null)
                                 signerIds = await db.GetStrsA(string.Format(SqlRole, line.SignerValue));
+                            break;
+                        case SignerTypeEstr.DeptRole:
+                            userType = "Dept Role";
+                            //isRoleCode = true;
+                            if (line.SignerValue != null)
+                                signerId = await db.GetStrA(string.Format(SqlRole, line.SignerValue));
                             break;
                     }
                 }
 
                 if (!hasRows)
-                    signerIds!.Add(signerId);
+                    signerIds!.Add(signerId!);
 
                 foreach(var userId in signerIds!)
                 {
@@ -286,6 +304,7 @@ insert into dbo.{signTable}(
                         "FlowId", line.FlowId,
                         "SourceId", sourceId,
                         "NodeName", line.FromNodeName,
+                        "FlowType", flowType,
                         "FlowLevel", level,
                         "TotalLevel", totalLevel,
                         "SignerId", userId,

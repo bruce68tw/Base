@@ -330,6 +330,15 @@ namespace Base.Services
         #endregion
 
         #region GetModel(s)      
+        public async Task<IdStrDto?> GetIdStrA(string sql, List<object>? sqlArgs = null)
+        {
+            var rows = await GetModelsA<IdStrDto>(sql, sqlArgs);
+            return (rows == null || rows.Count == 0) ? default : rows[0];
+        }
+        public async Task<List<IdStrDto>?> GetIdStrsA(string sql, List<object>? sqlArgs = null)
+        {
+            return await GetModelsA<IdStrDto>(sql, sqlArgs);
+        }
         public async Task<T?> GetModelA<T>(string sql, List<object>? sqlArgs = null)
         {
             var rows = await GetModelsA<T>(sql, sqlArgs);

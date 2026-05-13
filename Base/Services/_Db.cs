@@ -61,6 +61,14 @@ namespace Base.Services
         #endregion        
 
         #region GetModel(s)
+        public async Task<IdStrDto?> GetIdStrA(string sql, List<object>? sqlArgs = null, Db? db = null)
+        {
+            return await GetModelA<IdStrDto>(sql, sqlArgs, db);
+        }
+        public async Task<List<IdStrDto>?> GetIdStrsA(string sql, List<object>? sqlArgs = null, Db? db = null)
+        {
+            return await GetModelsA<IdStrDto>(sql, sqlArgs, db);
+        }
         public static async Task<T?> GetModelA<T>(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
