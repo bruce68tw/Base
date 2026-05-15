@@ -121,7 +121,7 @@ where u.Account=@Account
                 DeptId = row["DeptId"]!.ToString(),
                 DeptName = row["DeptName"]!.ToString(),
                 Locale = _Fun.Config.Locale,
-                ProgAuthStrs = await _Auth.GetAuthStrsA(userId, roleAll),
+                ProgAuthStrs = await _Auth.GetAuthStrA(userId, roleAll),
                 //IsLogin = true,
             };
             //加上 ExtCol if need

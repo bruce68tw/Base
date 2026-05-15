@@ -1,5 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,29 @@ namespace Base.Services
         }
 
         /// <summary>
+        /// check program access right
+        /// </summary>
+        /// <param name="authStr">program auth string list, has ',' at begin/end</param>
+        /// <param name="prog">program id</param>
+        /// <param name="crudEnum">crud function, see CrudFunEstr, empty for controller, value for action</param>
+        /// <returns>bool</returns>
+        public static bool CheckAuth(string authStr, string prog, CrudEnum crudEnum)
+        {
+            if (_Fun.AuthType == AuthTypeEnum.Ctrl)
+            {
+                //authStr format: ,xxx,xxx,
+                return authStr.Contains("," + prog + ",", StringComparison.CurrentCulture);
+            }
+            else
+            {
+                //authStr format: ,xxx:121,xxx:001,
+                return (crudEnum == CrudEnum.Empty)
+                    ? authStr.Contains("," + prog + ":")
+                    : GetAuthRange(authStr, prog, crudEnum) != AuthRangeEnum.None;
+            }
+        }
+
+        /// <summary>
         /// 檢查個人資料權限是否符合目前登入者
         /// </summary>
         /// <param name="ctrl"></param>
@@ -44,32 +68,9 @@ namespace Base.Services
             if (authRange == AuthRangeEnum.All) return "";
 
             var sql = $"select {userFid} from {table} where Id=@Id";
-            var value = await _Db.GetStrA(sql, new() { "Id", key }, db) ?? "";
+            var value = await _Db.GetStrA(sql, ["Id", key], db) ?? "";
             return (value == user.UserId) 
                 ? "" : _Str.GetBrError(_Fun.FidNoAuthUser);
-        }
-
-        /// <summary>
-        /// check program access right
-        /// </summary>
-        /// <param name="authStrs">program auth string list, has ',' at begin/end</param>
-        /// <param name="prog">program id</param>
-        /// <param name="crudEnum">crud function, see CrudFunEstr, empty for controller, value for action</param>
-        /// <returns>bool</returns>
-        public static bool CheckAuth(string authStrs, string prog, CrudEnum crudEnum)
-        {
-            if (_Fun.AuthType == AuthTypeEnum.Ctrl)
-            {
-                //authStr format: ,xxx,xxx,
-                return authStrs.Contains("," + prog + ",", StringComparison.CurrentCulture);
-            }
-            else
-            {
-                //authStr format: ,xxx:121,xxx:001,
-                return (crudEnum == CrudEnum.Empty)
-                    ? authStrs.Contains("," + prog + ":")
-                    : GetAuthRange(authStrs, prog, crudEnum) != AuthRangeEnum.None;
-            }
         }
 
         /// <summary>
@@ -85,18 +86,18 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get auth range of crud fun
+        /// get auth range of one crud fun
         /// </summary>
         /// <param name="prog"></param>
         /// <param name="crudEnum"></param>
-        /// <param name="authStrs"></param>
+        /// <param name="authStr"></param>
         /// <returns></returns>
-        public static AuthRangeEnum GetAuthRange(string authStrs, string prog, CrudEnum crudEnum)
+        public static AuthRangeEnum GetAuthRange(string authStr, string prog, CrudEnum crudEnum)
         {
             //if (authStrs == null)
             //    authStrs = _Fun.GetBaseUser().ProgAuthStrs;
             //var sep = ",";
-            var funList = _Str.GetMid(authStrs, "," + prog + ":", ",");
+            var funList = _Str.GetMid(authStr, "," + prog + ":", ",");
             var funPos = (int)crudEnum;
             if (funList.Length <= funPos) return AuthRangeEnum.None;
 
@@ -107,12 +108,13 @@ namespace Base.Services
         }
 
         /// <summary>
+        /// GetAuthStrsA -> GetAuthStrA
         /// get program auth list
         /// </summary>
         /// <param name="roleAll">所有人都具備的角色</param>
         /// <param name="userId">user Id</param>
         /// <returns>has ','(if not empty) at start/end for easy coding</returns>
-        public static async Task<string> GetAuthStrsA(string userId, string roleAll = "", Db? db = null)
+        public static async Task<string> GetAuthStrA(string userId, string roleAll = "", Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
             var result = "";
@@ -208,14 +210,14 @@ group by p.Code
 
 
         /// <summary>
-        /// get auth prog id list
+        /// get auth prog id(only) list
         /// </summary>
         /// <returns>return [] if null</returns>
-        public static List<string> GetAuthProgs()
+        private static List<string> GetAuthProgs(BaseUserDto user)
         {
             //get authStrs
             var progs = new List<string>();
-            var user = _Fun.GetBaseUser();
+            //var user = _Fun.GetBaseUser();
             var authStrs = user.ProgAuthStrs;
             if (_Str.IsEmpty(authStrs))
                 return progs;
@@ -242,59 +244,96 @@ group by p.Code
         }
 
         /// <summary>
-        /// get prog menu from session, called by _Layout.cshtml for show menu
+        /// GetMenuA -> GetMenu1A (表示1階)
+        /// get 1階menu from session, called by _Layout.cshtml for show menu
         /// </summary>
+        /// <param name="superMode"></param>
+        /// <param name="fnSetPwd">無密碼時開啟SetPwd</param>
         /// <returns>return [] if null</returns>
-        public static async Task<List<MenuDto>> GetMenuA()
+        public static async Task<List<MenuDto>> GetMenu1A(string fnSetPwd, bool superMode = false)
         {
-            /*
-            //get authStrs
-            var data = new List<MenuDto>();
-            var baseUser = _Fun.GetBaseUser();
-            var authStrs = baseUser.ProgAuthStrs;
-            if (_Str.IsEmpty(authStrs))
-                return data;
-
-            //remove ',' at start/end
-            authStrs = authStrs[1..^1];
-            */
-
-            //get prog string list
-            var progs = GetAuthProgs();
-            if (progs.Count == 0)
-                return [];
-
             //get Program name from XpProg
             var sql = $@"
 select Code, Name, Url, Sort
 from dbo.XpProg
-where Code in ({_List.ToStr(progs!, true)})
 order by Sort
 ";
-            return await _Db.GetModelsA<MenuDto>(sql) ?? [];
+            var menus = await _Db.GetModelsA<MenuDto>(sql);
+            if (!superMode)
+                RemoveEmptyMenu(menus, fnSetPwd, false);
+
+            return menus ?? [];
         }
 
         /// <summary>
-        /// 過濾 menu
+        /// 加上menu群組
+        /// </summary>
+        /// <returns></returns>
+        public static async Task<List<MenuDto>> GetMenu2A(string fnSetPwd, bool superMode = false)
+        {
+            var sql = @"
+select 
+    p.Code, p.Sort,
+	p.Name, p.Url,
+	GroupName=c.Name
+from dbo.XpProg p
+join dbo.XpCode c on c.Type='MenuGroup' and p.MenuGroup=c.Value
+where p.Status=1
+order by c.Sort, p.Sort
+";
+            var allMenus = await _Db.GetModelsA<MenuDto>(sql);
+            if (allMenus == null)
+                return [];
+
+            //分群組(2層)
+            var menus = allMenus!.GroupBy(a => a.GroupName)
+                .Select(a => new MenuDto
+                {
+                    Name = a.Key,
+                    Items = a.Select(b => new MenuDto
+                    {
+                        Code = b.Code,
+                        Name = b.Name,
+                        Url = b.Url,
+                        Sort = b.Sort,
+                    }).ToList()
+                })
+                .ToList();
+
+            if (!superMode)
+                RemoveEmptyMenu(menus, fnSetPwd, true);
+
+            return menus;
+        }
+
+        /// <summary>
+        /// 過濾掉無權限的 menu, 同時移除空白的 items
         /// </summary>
         /// <param name="fid"></param>
         /// <param name="authRow"></param>
         /// <returns></returns>
-        public static void FilterMenu(List<MenuDto>? menus)
+        private static void RemoveEmptyMenu(List<MenuDto>? menus, string fnSetPwd, bool has2Level)
         {
-            if (menus == null)
-                return;
+            if (menus == null) return;
 
-            //移除第2層(無權限功能)
-            var progs = GetAuthProgs();
-            foreach (var menu in menus)
-                menu.Items.RemoveAll(a => !progs.Contains(a.Code));
+            //如果無密碼則只保留setPwd功能
+            var user = _Fun.GetBaseUser();
+            var progs = user.HasPwd ? GetAuthProgs(user) :
+                string.IsNullOrEmpty(fnSetPwd) ? [] :
+                [fnSetPwd];
 
-            //移除第1層功能(Code有值表示沒有Items)
+            //移除第1層無權限功能(Code有值表示沒有Items)
             menus.RemoveAll(a => !string.IsNullOrEmpty(a.Code) && !progs.Contains(a.Code));
 
-            //移除第1層功能空的子功能上層
-            menus.RemoveAll(a => string.IsNullOrEmpty(a.Code) && a.Items.Count == 0);
+            //移除第2層無權限功能
+            if (has2Level)
+            {
+                foreach (var menu in menus)
+                    menu.Items.RemoveAll(a => !progs.Contains(a.Code));
+
+                //移除第1層空白功能Items
+                menus.RemoveAll(a => string.IsNullOrEmpty(a.Code) && a.Items.Count == 0);
+            }
         }
 
     } //class

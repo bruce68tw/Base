@@ -31,15 +31,30 @@ where u.Id='{0}'
         public static string SqlDeptMgr = "select MgrId from dbo.XpDept where Id='{0}'";
         //get first role member
         public static string SqlRole = "select UserId from dbo.XpUserRole where RoleId='{0}'";
-        //get first role member
-        public static string SqlDeptRole = $@"
+        //get first role member, 因為有 '{0}', 使用+號串接
+        public static string SqlDeptRole = @"
 select top 1 u.Id
 from dbo.XpUserRole ur
 join dbo.XpUser u on ur.UserId=u.Id
-where u.DeptId='{_Fun.DeptId()}'
+where u.DeptId='" + _Fun.DeptId() + "'" + @"
 and ur.RoleId='{0}'
 order by u.Id
 ";
+
+        public static async Task<JArray?> GetSignRowsA(string flowType, string sourceId, Db? db = null)
+        {
+            var sql = $@"
+select s.NodeName, s.SignerName, s.SignTime, s.Note,
+    SignStatusName=c.Name
+from dbo.XpFlowSign s
+join dbo.XpFlow f on s.FlowId=f.Id
+join dbo.XpCode c on c.Type='xfSignStatus' and s.SignStatus=c.Value
+where s.FlowType='{flowType}'
+and s.SourceId='{sourceId}'
+order by s.FlowLevel
+";
+            return await _Db.GetRowsA(sql, null, db);
+        }
 
         //controller Read set viewBag
         public static async Task ReadSetViewBagA(dynamic viewBag, Db? db = null)
@@ -59,46 +74,9 @@ order by Type, Sort";
             viewBag.NodeTypes = _Code.FilterList(rows, "xfNodeType");
             viewBag.SignerTypes = _Code.FilterList(rows, "xfSignerType");
             viewBag.AndOrs = _Code.FilterList(rows, "xfAndOr");
-            viewBag.LineOps = _Code.FilterList(rows, "xLineOp");
+            viewBag.LineOps = _Code.FilterList(rows, "xfLineOp");
             viewBag.LineFromTypes = _Code.FilterList(rows, "xfLineFromType");
         }
-        #region for flow
-
-        /*
-        public static async Task<List<IdStrDto>?> LineFromTypesA(string locale0, Db? db = null)
-        {
-            return await _Db.TypeToCodesA("xfLineFromType", db, locale0);
-        }
-
-        public static async Task<List<IdStrDto>?> NodeTypesA(string locale = "", Db? db = null)
-        {
-            return await _Db.TypeToCodesA("xfNodeType", db, locale);
-        }
-        public static async Task<List<IdStrDto>?> SignerTypesA(string locale = "", Db? db = null)
-        {
-            return await _Db.TypeToCodesA("xfSignerType", db, locale);
-        }
-        public static async Task<List<IdStrDto>?> AndOrsA(string locale = "", Db? db = null)
-        {
-            return await _Db.TypeToCodesA("xfAndOr", db, locale);
-        }
-        public static async Task<List<IdStrDto>?> LineOpsA(string locale, Db? db = null)
-        {
-            return await _Db.TypeToCodesA("xfLineOp", db, locale);
-        }
-        */
-
-        /*
-        public static List<IdStrDto> GetSignTypes()
-        {
-            return new List<IdStrDto>()
-            {
-                new IdStrDto(){ Id = "Y", Str = "同意" },
-                new IdStrDto(){ Id = "N", Str = "不同意" },
-            };
-        }
-        */
-        #endregion
 
         /// <summary>
         /// create workflow signing rows
@@ -214,7 +192,7 @@ insert into dbo.{signTable}(
     SignStatus, SignTime) values(
     @Id, @FlowId, @SourceId,
     @NodeName, @FlowLevel, @TotalLevel,
-    @SignerId, @SignerName, 
+    @SignerId, @SignerName, @FlowType,
     @SignStatus, @SignTime)
 ";
             #endregion
@@ -273,7 +251,7 @@ insert into dbo.{signTable}(
                             userType = "Dept Role";
                             //isRoleCode = true;
                             if (line.SignerValue != null)
-                                signerId = await db.GetStrA(string.Format(SqlRole, line.SignerValue));
+                                signerId = await db.GetStrA(string.Format(SqlDeptRole, line.SignerValue));
                             break;
                     }
                 }
@@ -325,7 +303,7 @@ insert into dbo.{signTable}(
         lab_exit:
             return isTest
                 ? error
-                : $"_XpFlow.cs CreateSignRows() failed(Flow.Code={flowCode}): {error}";
+                : $"_XgFlow.cs CreateSignRows() failed(Flow.Code={flowCode}): {error}";
         }
 
         private static string GetSignTable(bool isTest)
