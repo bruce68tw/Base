@@ -87,7 +87,7 @@ order by Type, Sort";
         /// <param name="sourceId">source row Id(key)</param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> CreateSignRowsA(JObject row, string userFid, string flowCode,
+        public static async Task<string> CreateSignRowsA(JObject row, DateTime now, string userFid, string flowCode,
             string flowType, string sourceId, bool isTest, Db db)
         {
             #region 1.get flow lines by flow code
@@ -189,11 +189,11 @@ insert into dbo.{signTable}(
     Id, FlowId, SourceId, 
     NodeName, FlowLevel, TotalLevel,
     SignerId, SignerName, FlowType,
-    SignStatus, SignTime) values(
+    SignStatus, SignTime, GetTime) values(
     @Id, @FlowId, @SourceId,
     @NodeName, @FlowLevel, @TotalLevel,
     @SignerId, @SignerName, @FlowType,
-    @SignStatus, @SignTime)
+    @SignStatus, @SignTime, @GetTime)
 ";
             #endregion
 
@@ -201,6 +201,7 @@ insert into dbo.{signTable}(
             var totalLevel = findIdxs.Count - 1;
             var level = 0;  //current flow level, start 0
             var userType = "";
+            //var now = DateTime.Now;
             foreach (var idx in findIdxs)
             {
                 #region 7.get signer Id/name by rules
@@ -209,11 +210,12 @@ insert into dbo.{signTable}(
                 var signerIds = new List<string>();
                 //var isRoleCode = false;
                 var hasRows = false;
-                DateTime? signTime = null;
+                DateTime? signTime = (level == 0) ? now : null;
+                DateTime? getTime = (level == 1) ? now : null;  //等於上一筆的signTime
                 if (level == 0)
                 {
                     userType = "UserId";
-                    signTime = DateTime.Now;
+                    //signTime = now;
                     if (row[userFid] != null)
                         signerId = row[userFid]!.ToString();
                 } 
@@ -289,6 +291,7 @@ insert into dbo.{signTable}(
                         "SignerName", signerName,
                         "SignStatus", (level == 0) ? "1" : "0",
                         "SignTime", signTime!,
+                        "GetTime", getTime!,
                     ]);
                 }
 

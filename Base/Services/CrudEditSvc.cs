@@ -60,6 +60,15 @@ namespace Base.Services
             _now = DateTime.Now;
         }
 
+        /// <summary>
+        /// 外部需要寫入的時間
+        /// </summary>
+        /// <returns></returns>
+        public DateTime GetNow()
+        {
+            return _now;
+        }
+
         /*
         //get key value of row
         public string GetKey(EditDto edit, JObject row)
