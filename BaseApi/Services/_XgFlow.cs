@@ -1,6 +1,8 @@
 ﻿using Base.Enums;
 using Base.Models;
 using Base.Services;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Vml;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -41,19 +43,21 @@ and ur.RoleId='{0}'
 order by u.Id
 ";
 
-        public static async Task<JArray?> GetSignRowsA(string flowType, string sourceId, Db? db = null)
+        //如果無記錄則傳回[]
+        public static async Task<JArray> GetSignRowsA(string flowType, string sourceId, Db? db = null)
         {
             var sql = $@"
-select s.NodeName, s.SignerName, s.SignTime, s.Note,
+select s.NodeName, s.SignerName, s.GetTime, s.SignTime, s.Note,
     SignStatusName=c.Name
 from dbo.XpFlowSign s
-join dbo.XpFlow f on s.FlowId=f.Id
+join dbo.XpFlowSrc a on s.FlowSrcId=a.Id and s.FlowLevel=a.FlowLevel
+join dbo.XpFlow f on a.FlowId=f.Id
 join dbo.XpCode c on c.Type='xfSignStatus' and s.SignStatus=c.Value
-where s.FlowType='{flowType}'
-and s.SourceId='{sourceId}'
+where a.FlowType='{flowType}'
+and a.SourceId='{sourceId}'
 order by s.FlowLevel
 ";
-            return await _Db.GetRowsA(sql, null, db);
+            return await _Db.GetRowsA(sql, null, db) ?? [];
         }
 
         //controller Read set viewBag
@@ -79,7 +83,7 @@ order by Type, Sort";
         }
 
         /// <summary>
-        /// create workflow signing rows
+        /// create workflow signing rows: XpFlowSrc, XpFlowSign(or test)
         /// </summary>
         /// <param name="row">flow data</param>
         /// <param name="userFid">fid of owner user id of input row for 簽核者id</param>
@@ -128,9 +132,8 @@ order by l.FromNodeId, l.Sort
             var nowNodeName = firstLine.FromNodeName;
             #endregion
 
-            //3.get matched lines
-            var signTable = GetSignTable(isTest);
-            var findIdxs = new List<int>(); //found lines for insert XpFlowSign/XpTestFlowSign
+            //3.get matched lines: set findLineIdxs
+            var findLineIdxs = new List<int>(); //found lines for insert XpFlowSign/XpTestFlowSign
             while (true)
             {
                 #region 4.get lines of current node
@@ -164,7 +167,7 @@ order by l.FromNodeId, l.Sort
 
                 //check endless loop
                 var idx = flowLines!.IndexOf(findLine);
-                if (findIdxs.IndexOf(idx) >= 0)
+                if (findLineIdxs.IndexOf(idx) >= 0)
                 {
                     error = "Find Node Twice(" + nodeLines[idx].FromNodeName + ")";
                     goto lab_exit;
@@ -172,7 +175,7 @@ order by l.FromNodeId, l.Sort
                 #endregion
 
                 //add found line index
-                findIdxs.Add(idx);
+                findLineIdxs.Add(idx);
 
                 //when end node then exit loop
                 if (findLine.ToNodeType == NodeTypeEstr.End)
@@ -183,30 +186,36 @@ order by l.FromNodeId, l.Sort
                 nowNodeName = findLine.ToNodeName;
             }//loop
 
-            #region 6.prepare sql for insert XpFlowSign/XpTestFlowSign
+            //insert XpFlowSrc
+            var userId = _Fun.UserId();
+            var flowId = firstLine.FlowId;
+            var srcTable = FlowSrcTable(isTest);
+            var signTable = FlowSignTable(isTest);
+            var totalLevel = findLineIdxs.Count - 1;
+            var flowSrcId = _Str.NewId();    //FlowSrc.Id
+            //FlowLevel=1, 第0關會直接送出
             sql = $@"
-insert into dbo.{signTable}(
-    Id, FlowId, SourceId, 
-    NodeName, FlowLevel, TotalLevel,
-    SignerId, SignerName, FlowType,
-    SignStatus, SignTime, GetTime) values(
-    @Id, @FlowId, @SourceId,
-    @NodeName, @FlowLevel, @TotalLevel,
-    @SignerId, @SignerName, @FlowType,
-    @SignStatus, @SignTime, @GetTime)
+insert into dbo.{srcTable}(
+    Id, FlowId, FlowType, SourceId, 
+    TotalLevel, FlowLevel, FlowStatus,
+    Creator, Created) values(
+    '{flowSrcId}', '{flowId}', @FlowType, '{sourceId}',
+    {totalLevel}, 1, '{FlowStatusEstr.Work}',
+    '{userId}', @Created)
 ";
-            #endregion
+            await db.ExecSqlA(sql, [
+                "FlowType", flowType,
+                "Created", now,
+            ]);
 
             //insert XpFlowSign/XpTestFlowSign rows
-            var totalLevel = findIdxs.Count - 1;
             var level = 0;  //current flow level, start 0
             var userType = "";
-            //var now = DateTime.Now;
-            foreach (var idx in findIdxs)
+            foreach (var idx in findLineIdxs)
             {
                 #region 7.get signer Id/name by rules
                 var line = flowLines[idx];
-                var signerId = "";
+                var uid = "";
                 var signerIds = new List<string>();
                 //var isRoleCode = false;
                 var hasRows = false;
@@ -217,31 +226,32 @@ insert into dbo.{signTable}(
                     userType = "UserId";
                     //signTime = now;
                     if (row[userFid] != null)
-                        signerId = row[userFid]!.ToString();
+                        uid = row[userFid]!.ToString();
                 } 
                 else
                 {
+                    //每一條流程線可能多位簽核者
                     switch (line.SignerType)
                     {
                         case SignerTypeEstr.User:
                             userType = "User";
                             if (row[userFid] != null)
-                                signerId = await db.GetStrA(string.Format(SqlUser, row[userFid]!.ToString()));
+                                uid = await db.GetStrA(string.Format(SqlUser, row[userFid]!.ToString()));
                             break;
                         case SignerTypeEstr.Fid:
                             userType = line.SignerValue;
                             if (row[line.SignerValue] != null)
-                                signerId = row[line.SignerValue]!.ToString();
+                                uid = row[line.SignerValue]!.ToString();
                             break;
                         case SignerTypeEstr.UserMgr:
                             userType = "User Manager";
                             if (row[userFid] != null)
-                                signerId = await db.GetStrA(string.Format(SqlUserMgr, row[userFid]!.ToString()));
+                                uid = await db.GetStrA(string.Format(SqlUserMgr, row[userFid]!.ToString()));
                             break;
                         case SignerTypeEstr.DeptMgr:
                             userType = "Dept Manager";
                             if (line.SignerValue != null)
-                                signerId = await db.GetStrA(string.Format(SqlDeptMgr, line.SignerValue));
+                                uid = await db.GetStrA(string.Format(SqlDeptMgr, line.SignerValue));
                             break;
                         case SignerTypeEstr.Role:
                             hasRows = true; //多筆
@@ -253,27 +263,39 @@ insert into dbo.{signTable}(
                             userType = "Dept Role";
                             //isRoleCode = true;
                             if (line.SignerValue != null)
-                                signerId = await db.GetStrA(string.Format(SqlDeptRole, line.SignerValue));
+                                uid = await db.GetStrA(string.Format(SqlDeptRole, line.SignerValue));
                             break;
                     }
                 }
 
                 if (!hasRows)
-                    signerIds!.Add(signerId!);
+                    signerIds!.Add(uid!);
 
-                foreach(var userId in signerIds!)
+                //6.prepare sql for insert XpFlowSign/XpTestFlowSign
+                sql = $@"
+insert into dbo.{signTable}(
+    Id, FlowSrcId, FlowLevel,
+    NodeName, SignerId, SignerName, 
+    SignStatus, SignTime, GetTime) values(
+    @Id, '{flowSrcId}', @FlowLevel,
+    @NodeName, @SignerId, @SignerName, 
+    @SignStatus, @SignTime, @GetTime)
+";
+
+                //insert XpFlowSign rows by userId list
+                foreach (var signerId in signerIds!)
                 {
-                    if (string.IsNullOrEmpty(userId))
+                    if (string.IsNullOrEmpty(signerId))
                     {
                         error = $"SignerId is empty. ({userType})";
                         goto lab_exit;
                     }
 
                     //get signer name
-                    var signerName = await db.GetStrA(string.Format(SqlUserName, userId));
+                    var signerName = await db.GetStrA(string.Format(SqlUserName, signerId));
                     if (string.IsNullOrEmpty(signerName))
                     {
-                        error = $"SignerId not existed. ({userType}={userId})";
+                        error = $"SignerId not existed. ({userType}={signerId})";
                         goto lab_exit;
                     }
                     #endregion
@@ -281,15 +303,12 @@ insert into dbo.{signTable}(
                     #region 8.insert XpFlowSign/XpTestFlowSign
                     await db.ExecSqlA(sql, [
                         "Id", _Str.NewId(),
-                        "FlowId", line.FlowId,
-                        "SourceId", sourceId,
                         "NodeName", line.FromNodeName,
                         "FlowType", flowType,
                         "FlowLevel", level,
-                        "TotalLevel", totalLevel,
-                        "SignerId", userId,
+                        "SignerId", signerId,
                         "SignerName", signerName,
-                        "SignStatus", (level == 0) ? "1" : "0",
+                        "SignStatus", (level == 0) ? SignStatusEstr.Work : SignStatusEstr.None,
                         "SignTime", signTime!,
                         "GetTime", getTime!,
                     ]);
@@ -309,7 +328,11 @@ insert into dbo.{signTable}(
                 : $"_XgFlow.cs CreateSignRows() failed(Flow.Code={flowCode}): {error}";
         }
 
-        private static string GetSignTable(bool isTest)
+        private static string FlowSrcTable(bool isTest)
+        {
+            return isTest ? "XpTestFlowSrc" : "XpFlowSrc";
+        }
+        private static string FlowSignTable(bool isTest)
         {
             return isTest ? "XpTestFlowSign" : "XpFlowSign";
         }
@@ -432,10 +455,9 @@ insert into dbo.{signTable}(
         /// <param name="flowSignId">XpFlowSign.Id</param>
         /// <param name="signYes">agree or not</param>
         /// <param name="signNote">sign note</param>
-        /// <param name="sourceTable">source Table for update FlowLevel, FlowStatus columns</param>
         /// <returns>ResultDto for called by controller</returns>
         public static async Task<ResultDto> SignRowA(string flowSignId, bool signYes,
-            string signNote, string sourceTable, bool isTest, FlowBackTypeEnum backType)
+            string signNote, bool isTest)
         {
             #region 1.check XpFlowSign/XpTestFlowSign row existed
             Db? db = null;
@@ -446,8 +468,15 @@ insert into dbo.{signTable}(
             await db.BeginTranA();
 
             //get XpFlowSign/XpTestFlowSign row
-            var signTable = GetSignTable(isTest);
-            var sql = $"select SourceId, FlowLevel, TotalLevel from dbo.{signTable} where Id='{flowSignId}' and SignStatus='0'";
+            var srcTable = FlowSrcTable(isTest);
+            var signTable = FlowSignTable(isTest);
+            var sql = $@"
+select s.FlowSrcId, s.FlowLevel, r.TotalLevel 
+from dbo.{signTable} s
+join dbo.{srcTable} r on s.FlowSrcId=r.Id
+where s.Id='{flowSignId}' 
+and s.SignStatus='{SignStatusEstr.None}'
+";
             var row = await db.GetRowA(sql);
             if (row == null)
             {
@@ -457,7 +486,7 @@ insert into dbo.{signTable}(
             #endregion
 
             #region 2.update XpFlowSign/XpTestFlowSign row
-            var signStatus = signYes ? "Y" : "N";
+            var signStatus = signYes ? SignStatusEstr.Agree : SignStatusEstr.Back;
             sql = $@"
 update dbo.{signTable} set 
     SignStatus=@SignStatus, 
@@ -465,10 +494,10 @@ update dbo.{signTable} set
     SignTime=getDate()
 where Id='{flowSignId}' 
 ";
-            var count = await db.ExecSqlA(sql, new List<object>() { "SignStatus", signStatus, "Note", signNote });
+            var count = await db.ExecSqlA(sql, ["SignStatus", signStatus, "Note", signNote]);
             if (count != 1)
             {
-                error = "_XpFlow.cs SignRowA() failed, should update one row: " + sql;
+                error = "_XpFlow.cs SignRowA() failed, should only update one row: " + sql;
                 goto lab_error;
             }
             #endregion
@@ -477,25 +506,24 @@ where Id='{flowSignId}'
             //flowStatus: Y(agree flow), N(not agree), 0(signing)
             var nowLevel = Convert.ToInt32(row["FlowLevel"]);
 
-            //拒絶時, 如果中止則flowStatus=N, 否則為0(表示繼續流程)
-            var flowStatus = !signYes ? (backType == FlowBackTypeEnum.Close ? "N" : "0") :
-                (nowLevel == Convert.ToInt32(row["TotalLevel"])) ? "Y" : 
-                "0";
+            //退回時, 如果中止則flowStatus=N, 否則為1(表示繼續流程)
+            var flowStatus = !signYes ? (_Fun.FlowBackToFirst ? FlowStatusEstr.Work : FlowStatusEstr.Back) :
+                (nowLevel == Convert.ToInt32(row["TotalLevel"])) ? FlowStatusEstr.Agree :
+                FlowStatusEstr.Work;
 
             //final flowLevel must between 0-totalLevel
-            //繼續流程時(flowStatus=0), 如果拒絶&&回上一關, 則關卡減1
-            var flowLevel = (flowStatus != "0") ? 0 :
+            //繼續流程時, 如果退回則關卡為0
+            var flowLevel = (flowStatus != FlowStatusEstr.Work) ? 0 :
                 signYes ? nowLevel + 1 :
-                (backType == FlowBackTypeEnum.ToFirst) ? 1 :
-                (nowLevel <= 1) ? 1 : nowLevel - 1;
+                _Fun.FlowBackToFirst ? 1 : 0;
 
             //update source table
-            var sourceId = row["SourceId"]!.ToString();
+            var flowSrcId = row["FlowSrcId"]!.ToString();
             sql = $@"
-update {sourceTable} set
+update dbo.{srcTable} set
     FlowLevel={flowLevel},
     FlowStatus='{flowStatus}'
-where Id='{sourceId}'
+where Id='{flowSrcId}'
 ";
             #region case ok error
             count = await db.ExecSqlA(sql);

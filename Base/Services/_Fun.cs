@@ -103,6 +103,9 @@ namespace Base.Services
 
         //for 資安 script, style 使用 inline
         public static string Nonce = "";
+
+        //簽核拒絶時退回第一關, 如果false將會關閉流程
+        public static bool FlowBackToFirst = true;
         #endregion
 
         #region input parameters
