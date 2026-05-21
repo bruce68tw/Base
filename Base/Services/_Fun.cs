@@ -28,6 +28,7 @@ namespace Base.Services
         public const string FidNoAuthDept = "NoAuthDept";  //您只能存取同部門資料，請聯絡管理者。
         public const string FidNoAuthProg = "NoAuthProg";  //您沒有此功能的權限，請聯絡管理者。
         public const string FidNotLogin = "NotLogin";      //您尚未登入系統。
+        public const string FidUniqueError = "UniqueError"; //唯一鍵重複錯誤
 
         //session timeout(or not login), map to _BR.js
         public const string FidTimeOut = "TimeOut";
@@ -153,6 +154,9 @@ namespace Base.Services
         #endregion
 
         #region Db variables
+        //唯一鍵重複的錯誤代碼
+        public static int[] UniqueKeyErrorNo = [];
+
         //datetime format for read/write db
         public static string DbDtFmt = "";
         public static string DbDateFmt = "";
@@ -252,6 +256,7 @@ namespace Base.Services
                 case DbTypeEnum.MSSql:
                     DbDtFmt = "yyyy-MM-dd HH:mm:ss";
                     DbDateFmt = "yyyy-MM-dd";
+                    UniqueKeyErrorNo = [2601,2627];
 
                     //for sql 2012, more easy
                     //note: offset/fetch not sql argument
@@ -265,6 +270,7 @@ offset {2} rows fetch next {3} rows only
                 case DbTypeEnum.MySql:
                     DbDtFmt = "YYYY-MM-DD HH:mm:SS";
                     DbDateFmt = "YYYY-MM-DD";
+                    UniqueKeyErrorNo = [1062]; //todo:test
 
                     ReadPageSql = @"
 select {0} {1}
@@ -277,6 +283,7 @@ limit {2},{3}
                 case DbTypeEnum.Oracle:
                     DbDtFmt = "YYYY/MM/DD HH24:MI:SS";
                     DbDateFmt = "YYYY/MM/DD";
+                    UniqueKeyErrorNo = [1]; //todo:test
 
                     //for Oracle 12c after(same as mssql)
                     ReadPageSql = @"

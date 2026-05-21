@@ -29,10 +29,9 @@ namespace Base.Services
         private const string IsNew = "_IsNew";      //是否new row, 後端產生用於判斷, 前端不再傳入
 
         //master edit
-        //private readonly EditDto _editDto;
-        //private readonly string _ctrl;       //controll name
         private int _saveRows = 0;  //changed(new/edit) rows count
         private string _key = "";   //for new/update
+        private bool _isUniqueKeyError = false;   //是否發生唯一鍵重複錯誤
         private bool _isNewMain = false;   //主檔是否新增        
         private DateTime _now;      //now time
 
@@ -319,8 +318,11 @@ namespace Base.Services
 
             //insert db
             var sql = $"Insert Into {editDto.Table} ({fids[0..^1]}) Values ({values[0..^1]})";
-            if (await db.ExecSqlA(sql, _sqlArgs!) == 0)
+            var result = await db.ExecSqlA(sql, _sqlArgs!);
+            if(result <= 0)
             {
+                if (result == -2)
+                    _isUniqueKeyError = true;
                 //not log error here, Db.cs already log it.
                 //error = "CrudEdit.cs InsertRow() failed, insert no row.(" + sql + ")";
                 goto lab_error;
@@ -828,9 +830,9 @@ namespace Base.Services
             if (log) 
                 await _Log.ErrorRootA("CrudEditSvc.cs SaveJsonA() failed: " + error);
             //here!!
-            return _List.IsEmpty(validErrors)
-                ? _Model.GetError()
-                : _Model.GetValidError(validErrors!);
+            return _List.NotEmpty(validErrors) ? _Model.GetValidError(validErrors!) :
+                _isUniqueKeyError ? _Model.GetBrError(_Fun.FidUniqueError) :
+                _Model.GetError();
         }
 
 		/// <summary>

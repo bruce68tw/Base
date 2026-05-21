@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Base.Services
@@ -469,7 +470,7 @@ namespace Base.Services
         /// update db
         /// </summary>
         /// <param name="sql"></param>
-        /// <returns>affected rows count, -1 means error</returns>
+        /// <returns>affected rows count, -1(一般error), -2(唯一鍵重複)</returns>
         public async Task<int> ExecSqlA(string sql, List<object>? sqlArgs = null)
         {
             if (!await InitCmdA(sql, sqlArgs)) return 0;
@@ -480,10 +481,25 @@ namespace Base.Services
                 //if (count == 0)
                 //    return "Db.cs ExecSql() failed, change no row.(" + sql + ")";
             }
-            catch (Exception ex)
+            catch (DbException ex)
             {
+                //檢查是否唯一鍵重複
+                int result = -1;
+                try
+                {
+                    int errorNo = (ex as dynamic).Number;
+                    if (_Fun.UniqueKeyErrorNo.Contains(errorNo))
+                    {
+                        result = -2;
+                    }
+                }
+                catch
+                {
+                    result = -1;
+                }
+
                 await _Log.ErrorRootA($"Db.ExecSqlA() error: {ex.Message}\nsql: {GetSqlText(sql)}");
-                return 0;
+                return result;
             }
         }
 
