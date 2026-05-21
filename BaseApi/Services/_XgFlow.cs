@@ -1,8 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
 using Base.Services;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Vml;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -50,11 +48,11 @@ order by u.Id
 select s.NodeName, s.SignerName, s.GetTime, s.SignTime, s.Note,
     SignStatusName=c.Name
 from dbo.XpFlowSign s
-join dbo.XpFlowSrc a on s.FlowSrcId=a.Id and s.FlowLevel=a.FlowLevel
-join dbo.XpFlow f on a.FlowId=f.Id
+join dbo.XpFlowSrc r on s.FlowSrcId=r.Id
+join dbo.XpFlow f on r.FlowId=f.Id
 join dbo.XpCode c on c.Type='xfSignStatus' and s.SignStatus=c.Value
-where a.ProgCode='{progCode}'
-and a.SourceId='{sourceId}'
+where r.ProgCode='{progCode}'
+and r.SourceId='{sourceId}'
 order by s.FlowLevel
 ";
             return await _Db.GetRowsA(sql, null, db) ?? [];
@@ -92,7 +90,7 @@ order by Type, Sort";
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
         public static async Task<string> CreateSignRowsA(JObject row, DateTime now, string userFid, string flowCode,
-            string progCode, string sourceId, bool isTest, Db db)
+            string progCode, string sourceId, string startNodeName, bool isTest, Db db)
         {
             #region 1.get flow lines by flow code
             var error = string.Empty;
@@ -303,12 +301,11 @@ insert into dbo.{signTable}(
                     #region 8.insert XpFlowSign/XpTestFlowSign
                     await db.ExecSqlA(sql, [
                         "Id", _Str.NewId(),
-                        "NodeName", line.FromNodeName,
-                        //"FlowType", progCode,
+                        "NodeName", (level == 0) ? startNodeName : line.FromNodeName,
                         "FlowLevel", level,
                         "SignerId", signerId,
                         "SignerName", signerName,
-                        "SignStatus", (level == 0) ? SignStatusEstr.Work : SignStatusEstr.None,
+                        "SignStatus", (level == 0) ? SignStatusEstr.Agree : SignStatusEstr.None,
                         "SignTime", signTime!,
                         "GetTime", getTime!,
                     ]);
