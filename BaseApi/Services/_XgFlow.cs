@@ -44,7 +44,7 @@ order by u.Id
 ";
 
         //如果無記錄則傳回[]
-        public static async Task<JArray> GetSignRowsA(string flowType, string sourceId, Db? db = null)
+        public static async Task<JArray> GetSignRowsA(string progCode, string sourceId, Db? db = null)
         {
             var sql = $@"
 select s.NodeName, s.SignerName, s.GetTime, s.SignTime, s.Note,
@@ -53,7 +53,7 @@ from dbo.XpFlowSign s
 join dbo.XpFlowSrc a on s.FlowSrcId=a.Id and s.FlowLevel=a.FlowLevel
 join dbo.XpFlow f on a.FlowId=f.Id
 join dbo.XpCode c on c.Type='xfSignStatus' and s.SignStatus=c.Value
-where a.FlowType='{flowType}'
+where a.ProgCode='{progCode}'
 and a.SourceId='{sourceId}'
 order by s.FlowLevel
 ";
@@ -92,7 +92,7 @@ order by Type, Sort";
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
         public static async Task<string> CreateSignRowsA(JObject row, DateTime now, string userFid, string flowCode,
-            string flowType, string sourceId, bool isTest, Db db)
+            string progCode, string sourceId, bool isTest, Db db)
         {
             #region 1.get flow lines by flow code
             var error = string.Empty;
@@ -196,15 +196,15 @@ order by l.FromNodeId, l.Sort
             //FlowLevel=1, 第0關會直接送出
             sql = $@"
 insert into dbo.{srcTable}(
-    Id, FlowId, FlowType, SourceId, 
+    Id, FlowId, ProgCode, SourceId, 
     TotalLevel, FlowLevel, FlowStatus,
     Creator, Created) values(
-    '{flowSrcId}', '{flowId}', @FlowType, '{sourceId}',
+    '{flowSrcId}', '{flowId}', @ProgCode, '{sourceId}',
     {totalLevel}, 1, '{FlowStatusEstr.Work}',
     '{userId}', @Created)
 ";
             await db.ExecSqlA(sql, [
-                "FlowType", flowType,
+                "ProgCode", progCode,
                 "Created", now,
             ]);
 
@@ -304,7 +304,7 @@ insert into dbo.{signTable}(
                     await db.ExecSqlA(sql, [
                         "Id", _Str.NewId(),
                         "NodeName", line.FromNodeName,
-                        "FlowType", flowType,
+                        //"FlowType", progCode,
                         "FlowLevel", level,
                         "SignerId", signerId,
                         "SignerName", signerName,
