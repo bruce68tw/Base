@@ -30,6 +30,46 @@ namespace Base.Services
         //AES key inside KeyCmd file, 使用變數儲存, 避免一直開啟
         private static string _fileKey = null!;
 
+
+        /// <summary>
+        /// 日期字串加1
+        /// </summary>
+        /// <param name="dateStr">yyyyMMdd + 序號</param>
+        /// <param name="tailLen2"></param>
+        /// <returns>dateStr空白時, 用今天日期+tailLen來產生</returns>
+        public static string DateAdd1(string? dateStr, int tailLen)
+        {
+            if (string.IsNullOrEmpty(dateStr) || dateStr.Length <= 8)
+                return DateTime.Now.ToString("yyyyMMdd") + ("1").PadLeft(tailLen, '0'); ;
+
+            //日期 & 序號部分
+            var error = "";
+            var datePart = dateStr[..8];
+            var noPart = dateStr[8..];
+            if (!int.TryParse(noPart, out var no))
+            {
+                error = "日期尾數必須是數字。";
+                goto lab_error;
+            }
+
+            //最大值判斷
+            //var tailLen = noPart.Length;
+            var maxNo = int.Parse(new string('9', tailLen));
+            if (no >= maxNo)
+            {
+                error = "日期尾數序號已達最大值。";
+                goto lab_error;
+            }
+
+            //保留原本位數
+            no++;
+            return datePart + no.ToString().PadLeft(tailLen, '0');
+
+        lab_error:
+            _Log.Error(error);
+            return "";
+        }
+
         /// <summary>
         /// base64字串補齊, 以=補齊到4的倍數長度, 允許空字串
         /// </summary>

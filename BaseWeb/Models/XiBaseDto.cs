@@ -28,7 +28,7 @@
 
         public string InputAttr  { get; set; } = "";
 
-        //欄位右方提示文字(.x-input-note)
+        //欄位右方提示文字(.x-input-note), 多行欄位會顯示在label下方!!
         public string InputNote { get; set; } = "";
 
         /// <summary>

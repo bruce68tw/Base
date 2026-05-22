@@ -1,8 +1,6 @@
 ﻿using Base.Services;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Base.Models
 {
@@ -114,7 +112,7 @@ namespace Base.Models
         /// <param name="bool">isNew fun or not</param>
         /// <param name="CrudEditSvc"></param>
         /// <param name="JObject">inputJson</param>
-        /// <param name="JObject">keyJson</param>
+        /// <param name="JObject">newKeyJson</param>
         /// <returns>error msg if any</returns>
         public FnWhenSaveA? FnWhenSaveA = null;
 
@@ -122,7 +120,7 @@ namespace Base.Models
         /// crud edit AfterSave, inside transaction
         /// 參考 HrAdm LeaveEdit.cs CreateA()、BaoAdm BaoEdit.cs
         /// </summary>
-        /// <param name="bool">isNew fun or not</param>
+        /// <param name="bool">true(新增), false(修改)</param>
         /// <param name="CrudEditSvc"></param>
         /// <param name="Db"></param>
         /// <param name="JObject">keyJson</param>

@@ -298,18 +298,17 @@ namespace BaseWeb.Services
                 var inputNote = "";
                 if (!string.IsNullOrEmpty(dto.InputNote))
                 {
-                    //col表示使用剩餘空間
-                    inputNote = $"<div class='col x-input-note'>{dto.InputNote}</div>";
+                    inputNote = $"<span class='x-input-note'>{dto.InputNote}</span>";
                 }
 
                 //get html
                 clsLabel += " x-label";
                 result = string.Format(@"
 <div class='col-md-{0} {5}'{2}>{3}</div>
-<div class='col-md-{1} x-input'>
+<div class='col-md-{1} x-input x-hbox'>
     {4}
+    {6}
 </div>
-{6}
 ", colList[0], colList[1], labelTip2, (reqSpan + dto.Title + iconTip), html, _Str.KeepOneSpace(clsLabel), inputNote);
             }
             else
