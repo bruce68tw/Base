@@ -155,7 +155,7 @@ namespace Base.Services
         /// include: collumns、_childs
         /// note: 1.master table must relat to child table
         /// </summary>
-        /// <param name="key">table primary key value</param>
+        /// <param name="key">傳入key值, 有可能不是main table的pkey !!, 例如簽核共用Edit.cs時</param>
         /// <returns></returns>
         protected async Task<JObject?> GetJsonA(CrudEnum crudEnum, string key)
         {
@@ -166,6 +166,7 @@ namespace Base.Services
             var row = await GetDbRowA(_editDto, key, db);    //return data
             if (row == null) goto lab_exit;
 
+            key = row![_editDto.PkeyFid]!.ToString();   //這個才是真正的key !!
             result[_Fun.FidRows] = new JArray(row);
 
             //check for AuthType=Row if need

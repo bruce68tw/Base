@@ -296,15 +296,34 @@ namespace Base.Services
             return hour.ToString("00") + ":" + min.ToString("00");
         }
 
-        //birth to age
-        public static int BirthToAge(DateTime birth)
+        /// <summary>
+        /// birth to age
+        /// </summary>
+        /// <param name="birth"></param>
+        /// <param name="isYear">true:以年計, false:以月計</param>
+        /// <returns></returns>
+        public static int BirthToAge(DateTime? birth, bool isYear = true)
         {
-            //if (birth == null) return 0;
+            if (birth == null) return 0;
 
+            var birth2 = birth.Value;
             var today = DateTime.Today;
-            var age = today.Year - birth.Year;
-            if (birth > today.AddYears(-age)) age--;
-            return age;
+            if (isYear)
+            {
+                //年齡, 有等號
+                var age = today.Year - birth2.Year;
+                if (birth2.AddYears(age) <= today)
+                    age++;  //虛歲
+                return age;
+            }
+            else
+            {
+                //月齡, 沒有等號
+                var months = (today.Year - birth2.Year) * 12 + today.Month - birth2.Month;
+                if (birth2.Day < today.Day)
+                    months++;
+                return months;
+            }
         }
 
         /// <summary>

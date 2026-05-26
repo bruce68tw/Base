@@ -120,13 +120,13 @@ order by Type, Sort";
         /// create workflow signing rows: XpFlowMap, XpFlowSign(or test)
         /// </summary>
         /// <param name="row">flow data</param>
-        /// <param name="userFid">fid of owner user id of input row for 簽核者id</param>
+        /// <param name="ownerId">資料擁有者</param>
         /// <param name="flowCode">XpFlow.Code</param>
         /// <param name="progCode">XpProg.Code</param>
         /// <param name="sourceId">source row Id(key)</param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> CreateSignA(JObject row, DateTime now, string userFid, string flowCode,
+        public static async Task<string> CreateSignA(JObject row, DateTime now, string ownerId, string flowCode,
             string progCode, string sourceId, string startNodeName, bool isTest, Db db)
         {
             #region 1.get flow lines by flow code
@@ -259,9 +259,7 @@ insert into dbo.{srcTable}(
                 if (level == 0)
                 {
                     userType = "UserId";
-                    //signTime = now;
-                    if (row[userFid] != null)
-                        uid = row[userFid]!.ToString();
+                    uid = ownerId;
                 } 
                 else
                 {
@@ -270,8 +268,7 @@ insert into dbo.{srcTable}(
                     {
                         case SignerTypeEstr.User:
                             userType = "User";
-                            if (row[userFid] != null)
-                                uid = await db.GetStrA(string.Format(SqlUser, row[userFid]!.ToString()));
+                            uid = await db.GetStrA(string.Format(SqlUser, ownerId));
                             break;
                         case SignerTypeEstr.Fid:
                             userType = line.SignerValue;
@@ -280,8 +277,7 @@ insert into dbo.{srcTable}(
                             break;
                         case SignerTypeEstr.UserMgr:
                             userType = "User Manager";
-                            if (row[userFid] != null)
-                                uid = await db.GetStrA(string.Format(SqlUserMgr, row[userFid]!.ToString()));
+                            uid = await db.GetStrA(string.Format(SqlUserMgr, ownerId));
                             break;
                         case SignerTypeEstr.DeptMgr:
                             userType = "Dept Manager";
@@ -359,7 +355,7 @@ insert into dbo.{signTable}(
         lab_exit:
             return isTest
                 ? error
-                : $"_XgFlow.cs CreateSignRows() failed(Flow.Code={flowCode}): {error}";
+                : $"_XgFlow.cs CreateSign() failed(Flow.Code={flowCode}): {error}";
         }
 
         private static string GetMapTable(bool isTest)

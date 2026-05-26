@@ -313,6 +313,13 @@ namespace Base.Services
             return (child == null || child[_Fun.FidRows] == null)
                 ? null : child[_Fun.FidRows] as JArray;
         }
+        public static JObject? GetChildRows0(JObject upJson, int childIdx)
+        {
+            var rows = GetChildRows(upJson, childIdx);
+            return (rows == null)
+                ? null : rows![0] as JObject;
+
+        }
 
         /// <summary>
         /// get child json from upJson
