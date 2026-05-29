@@ -118,7 +118,9 @@ order by Type, Sort";
         /// <summary>
         /// CreateSignRowsA -> CreateSignA
         /// create workflow signing rows: XpFlowMap, XpFlowSign(or test)
+        /// 修改時不會建立XpFlowMap
         /// </summary>
+        /// <param name="isNew">是否新增</param>
         /// <param name="row">flow data</param>
         /// <param name="ownerId">資料擁有者</param>
         /// <param name="flowCode">XpFlow.Code</param>
@@ -126,7 +128,7 @@ order by Type, Sort";
         /// <param name="sourceId">source row Id(key)</param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<string> CreateSignA(JObject row, DateTime now, string ownerId, string flowCode,
+        public static async Task<string> CreateSignA(bool isNew, JObject row, DateTime now, string ownerId, string flowCode,
             string progCode, string sourceId, string startNodeName, bool isTest, Db db)
         {
             #region 1.get flow lines by flow code
@@ -224,13 +226,19 @@ order by l.FromNodeId, l.Sort
             //insert XpFlowMap
             var userId = _Fun.UserId();
             var flowId = firstLine.FlowId;
-            var srcTable = GetMapTable(isTest);
+            var mapTable = GetMapTable(isTest);
             var signTable = GetSignTable(isTest);
-            var totalLevel = findLineIdxs.Count - 1;
-            var flowMapId = _Str.NewId();    //XpFlowMap.Id
+            var findLineCount = findLineIdxs.Count;
+            int totalLevel = 0;
+            //int oldTotalLevel = 0;
+            string flowMapId = "";
             //FlowLevel=1, 第0關會直接送出
-            sql = $@"
-insert into dbo.{srcTable}(
+            if (isNew)
+            {
+                totalLevel = findLineCount - 1;
+                flowMapId = _Str.NewId();
+                sql = $@"
+insert into dbo.{mapTable}(
     Id, FlowId, ProgCode, SourceId, 
     TotalLevel, FlowLevel, FlowStatus,
     Creator, Created) values(
@@ -238,10 +246,33 @@ insert into dbo.{srcTable}(
 {totalLevel}, 1, '{FlowStatusEstr.Work}',
 '{userId}', @Created)
 ";
-            await db.ExecSqlA(sql, [
-                "ProgCode", progCode,
-                "Created", now,
-            ]);
+                await db.ExecSqlA(sql, [
+                    "ProgCode", progCode,
+                    "Created", now,
+                ]);
+            }
+            else
+            {
+                var args = new List<Object>() { "ProgCode", progCode, "SourceId", sourceId };
+                sql = @"
+select Id, TotalLevel
+from dbo.XpFlowMap
+where ProgCode=@ProgCode 
+and SourceId=@SourceId
+";
+                var signRow = (await db.GetRowA(sql, args))!;
+                flowMapId = signRow["Id"]!.ToString();
+                int oldTotalLevel = Convert.ToInt32(signRow["TotalLevel"]);
+                totalLevel = oldTotalLevel + findLineCount;    //不必減1
+                //FlowLevel直接到下一關，所以+2
+                sql = $@"
+update dbo.{mapTable} set
+    TotalLevel={totalLevel}, FlowLevel={oldTotalLevel + 2}, FlowStatus='{FlowStatusEstr.Work}'
+where ProgCode=@ProgCode 
+and SourceId=@SourceId
+";
+                await db.ExecSqlA(sql, args);
+            }
 
             //insert XpFlowSign/XpTestFlowSign rows
             var level = 0;  //current flow level, start 0
@@ -255,7 +286,7 @@ insert into dbo.{srcTable}(
                 //var isRoleCode = false;
                 var hasRows = false;
                 DateTime? signTime = (level == 0) ? now : null;
-                DateTime? getTime = (level == 1) ? now : null;  //等於上一筆的signTime
+                DateTime? getTime = (level <= 1) ? now : null;  //等於上一筆的signTime, level=0也填入有助排序
                 if (level == 0)
                 {
                     userType = "UserId";
@@ -331,11 +362,11 @@ insert into dbo.{signTable}(
                     }
                     #endregion
 
-                    #region 8.insert XpFlowSign/XpTestFlowSign
+                    #region 8.insert XpFlowSign/XpTestFlowSign, 同時傳入其他欄位
                     await db.ExecSqlA(sql, [
                         "Id", _Str.NewId(),
                         "NodeName", (level == 0) ? startNodeName : line.FromNodeName,
-                        "FlowLevel", level,
+                        "FlowLevel", findLineCount + level, //考慮退回重簽
                         "SignerId", signerId,
                         "SignerName", signerName,
                         "SignStatus", (level == 0) ? SignStatusEstr.Agree : SignStatusEstr.None,
@@ -507,8 +538,8 @@ join dbo.{mapTable} r on s.FlowMapId=r.Id
 where s.Id='{flowSignId}' 
 and s.SignStatus='{SignStatusEstr.None}'
 ";
-            var row = await db.GetRowA(sql);
-            if (row == null)
+            var signRow = await db.GetRowA(sql);
+            if (signRow == null)
             {
                 error = $"not found {signTable} row.(Id={flowSignId})";
                 goto lab_error;
@@ -532,14 +563,23 @@ where Id='{flowSignId}'
             }
             #endregion
 
-            #region 3.update source row FlowLevel/FlowStatus
+            //3.update source row FlowLevel/FlowStatus
             //flowStatus: Y(agree flow), N(not agree), 0(signing)
-            var nowLevel = Convert.ToInt32(row["FlowLevel"]);
 
             //退回時, 如果中止則flowStatus=N, 否則為1(表示繼續流程)
-            var flowStatus = !signYes ? (_Fun.FlowBackToFirst ? FlowStatusEstr.Work : FlowStatusEstr.Back) :
-                (nowLevel == Convert.ToInt32(row["TotalLevel"])) ? FlowStatusEstr.Agree :
-                FlowStatusEstr.Work;
+            string flowStatus;
+            int nowLevel;
+            if (signYes)
+            {
+                nowLevel = Convert.ToInt32(signRow["FlowLevel"]);
+                flowStatus = (nowLevel == Convert.ToInt32(signRow["TotalLevel"])) 
+                    ? FlowStatusEstr.Agree : FlowStatusEstr.Work;
+            }
+            else
+            {
+                nowLevel = 0;
+                flowStatus = FlowStatusEstr.Back;
+            }
 
             //final flowLevel must between 0-totalLevel
             //繼續流程時, 如果退回則關卡為0
@@ -548,7 +588,7 @@ where Id='{flowSignId}'
                 _Fun.FlowBackToFirst ? 1 : 0;
 
             //update source table
-            var flowMapId = row["FlowMapId"]!.ToString();
+            var flowMapId = signRow["FlowMapId"]!.ToString();
             sql = $@"
 update dbo.{mapTable} set
     FlowLevel={flowLevel},
@@ -572,7 +612,6 @@ where Id='{flowMapId}'
             {
                 Value = "2",  //update 2 rows
             };
-            #endregion
             #endregion
 
         //case of error

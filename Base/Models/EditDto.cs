@@ -117,7 +117,7 @@ namespace Base.Models
         public FnWhenSaveA? FnWhenSaveA = null;
 
         /// <summary>
-        /// crud edit AfterSave, inside transaction
+        /// crud edit AfterSave, inside transaction, 此時已經儲存全部table, 但未commit
         /// 參考 HrAdm LeaveEdit.cs CreateA()、BaoAdm BaoEdit.cs
         /// </summary>
         /// <param name="bool">true(新增), false(修改)</param>
