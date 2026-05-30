@@ -230,7 +230,7 @@ order by l.FromNodeId, l.Sort
             var signTable = GetSignTable(isTest);
             var findLineCount = findLineIdxs.Count;
             int totalLevel = 0;
-            //int oldTotalLevel = 0;
+            int oldTotalLevel = 0;
             string flowMapId = "";
             //FlowLevel=1, 第0關會直接送出
             if (isNew)
@@ -262,7 +262,7 @@ and SourceId=@SourceId
 ";
                 var signRow = (await db.GetRowA(sql, args))!;
                 flowMapId = signRow["Id"]!.ToString();
-                int oldTotalLevel = Convert.ToInt32(signRow["TotalLevel"]);
+                oldTotalLevel = Convert.ToInt32(signRow["TotalLevel"]);
                 totalLevel = oldTotalLevel + findLineCount;    //不必減1
                 //FlowLevel直接到下一關，所以+2
                 sql = $@"
@@ -366,7 +366,7 @@ insert into dbo.{signTable}(
                     await db.ExecSqlA(sql, [
                         "Id", _Str.NewId(),
                         "NodeName", (level == 0) ? startNodeName : line.FromNodeName,
-                        "FlowLevel", findLineCount + level, //考慮退回重簽
+                        "FlowLevel", oldTotalLevel + level, //考慮退回重簽
                         "SignerId", signerId,
                         "SignerName", signerName,
                         "SignStatus", (level == 0) ? SignStatusEstr.Agree : SignStatusEstr.None,

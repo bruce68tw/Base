@@ -28,8 +28,8 @@ namespace Base.Services
         //db str in config file
         protected string _dbStr = "";
 
-		//只開啟一個db
-		protected Db _db = null!;
+        //只開啟一個db
+        protected Db _db = null!;
 		protected bool _dbByOut = false;
 
 		//sql args pair(fid,value), 日期欄位為空時寫入null, 否則會變1900/1/1 !!
@@ -44,7 +44,8 @@ namespace Base.Services
         }
 
 		/// <summary>
-		/// 傳回Db, 外面可呼叫
+		/// 傳回Db, 外面可呼叫, 建立CRUD Edit/Get 服務時直到存取DB才建立資料庫連線
+        /// 如果要自行控制DB關閉, 可傳入 outside=true
 		/// </summary>
 		/// <param name="outside">外部開啟</param>
 		/// <returns></returns>
@@ -192,7 +193,8 @@ namespace Base.Services
             }
             
         lab_exit:
-            await db.DisposeAsync();
+            if (!_dbByOut)
+                await db.DisposeAsync();
             return result;
         }
 

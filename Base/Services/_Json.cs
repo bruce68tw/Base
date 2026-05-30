@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using DocumentFormat.OpenXml.Office2010.PowerPoint;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -9,6 +11,83 @@ namespace Base.Services
 {
     public class _Json
     {
+
+        //寫入多筆
+        public static void SetRows(JObject json, JArray rows)
+        {
+            json[_Fun.FidRows] = rows;
+        }
+        //寫入一筆
+        public static void SetRows(JObject json, JObject row)
+        {
+            json[_Fun.FidRows] = new JArray(row);
+        }
+
+        /// <summary>
+        /// set child json to upJson
+        /// </summary>
+        /// <param name="upJson"></param>
+        /// <param name="childIdx"></param>
+        /// <param name="childJson"></param>
+        /// <returns>status</returns>
+        public static bool SetChildJson(JObject upJson, int childIdx, JObject childJson)
+        {
+            var error = "";
+            const string fid = _Fun.FidChilds;
+            if (upJson == null || upJson[fid] == null)
+            {
+                error = "upJson or childs is empty.";
+                goto lab_error;
+            }
+
+            var childs = (upJson[fid]! as JArray)!;
+            if (childs.Count < childIdx + 1)
+            {
+                error = $"childs.Count < arg value({childIdx})";
+                goto lab_error;
+            }
+
+            upJson[fid]![childIdx] = childJson;
+            return true;
+
+        lab_error:
+            _Log.Error("_Json.SetChildJson() failed: " + error);
+            return false;
+        }
+
+        /// <summary>
+        /// upJson set child rows
+        /// 參考 _edit.js setChildRows()
+        /// </summary>
+        /// <param name="upJson"></param>
+        /// <param name="childIdx"></param>
+        /// <param name="rows"></param>
+        /// <returns>child object</returns>
+        public static JObject SetChildRows(JObject upJson, int childIdx, JArray rows)
+        {
+            // 假設 _edit.Childs 和 _edit.Rows 是字串變數
+            var fid = _Fun.FidChilds;
+
+            // 1. 如果 upJson 為 null，初始化為新的 JObject
+            if (upJson == null)
+                upJson = new JObject();
+
+            // 2. 如果 upJson[fid] 為 null，初始化為新的 JArray
+            if (upJson[fid] == null)
+                upJson[fid] = new JArray();
+
+            // 3. C# 陣列無法直接跨索引賦值，需要補足中間的空物件
+            var childs = (upJson[fid] as JArray)!;
+            while (childs.Count <= childIdx)
+            {
+                childs.Add(new JObject());
+            }
+
+            // 4. 取得指定索引的 child 物件並賦值
+            var child = (JObject)childs[childIdx];
+            child[_Fun.FidRows] = rows;
+            return child;
+        }
 
         /*
         public static JObject StrToJson(string str)
