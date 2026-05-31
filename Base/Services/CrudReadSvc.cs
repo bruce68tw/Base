@@ -342,17 +342,17 @@ namespace Base.Services
             //TODO for -2
             if (where == "-1" || where == "-2") return null;
 
+            //前面加上 where/and
             if (where != "")
                 sqlDto.Where = (sqlDto.Where == "") ? "Where " + where : sqlDto.Where + " And " + where;
 
             //remove distinct
-            await using var db = GetDb();
             if (sqlDto.Select.Contains("DISTINCT") || sqlDto.Select.Contains("distinct"))
                 sqlDto.Select = sqlDto.Select.Replace("DISTINCT", "").Replace("distinct", "");
 
             //get data
             sql = _Sql.DtoToSql(sqlDto, 0, readRows);
-            return await db.GetRowsA(sql, _sqlArgs);
+            return await GetDb().GetRowsA(sql, _sqlArgs);
         }
 
         /// <summary>
@@ -714,20 +714,20 @@ namespace Base.Services
             if (_Fun.IsAuthRowAndLogin() && _Str.NotEmpty(ctrl))
             {
                 //權限等級為資料, 但是沒有登入userId
-                var baseUser = _Fun.GetBaseUser();
-                if (baseUser.UserId == "") return "-2";
+                var br = _Fun.GetBaseUser();
+                if (br.UserId == "") return "-2";
 
-                var range = _Auth.GetAuthRange(baseUser.ProgAuthStrs, ctrl, crudEnum);
+                var range = _Auth.GetAuthRange(ctrl, crudEnum, br.ProgAuthStrs);
                 if (range == AuthRangeEnum.User)
                 {
                     //by user
-                    where += and + string.Format(readDto.WhereUserFid, baseUser.UserId);
+                    where += and + string.Format(readDto.WhereUserFid, br.UserId);
                     and = " And ";
                 }
                 else if (range == AuthRangeEnum.Dept)
                 {
                     //by depart
-                    where += and + string.Format(readDto.WhereDeptFid, baseUser.DeptId);
+                    where += and + string.Format(readDto.WhereDeptFid, br.DeptId);
                     and = " And ";
                 }
             }

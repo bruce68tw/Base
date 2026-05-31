@@ -38,8 +38,8 @@ namespace Base.Models
 
         /// <summary>
         /// sql string, if not empty, will read db<br/>
-        /// master/child-1 readSql must use "=", ex: Id=@Id<br/>
-        /// child-2 readSql must use "in", ex: Id in ({0}), or Id in ({{0}})(has @ sign)<br/>
+        /// master/child-1 use "=", ex: Id=@Id<br/>
+        /// child-2 use "in", ex: Id in ({0}), or Id in ({{0}})(has @ sign), 若是上層是單筆也可用={0}較簡單<br/>
         /// 如果只填ReadSql, 需要同時填PkeyFid
         /// </summary>
         public string ReadSql = "";

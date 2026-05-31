@@ -107,6 +107,11 @@ namespace Base.Services
 
         //簽核拒絶時退回第一關, 如果false將會關閉流程
         public static bool FlowBackToFirst = true;
+
+        //UseDeptRole=true時, 如果有一筆XpDeptRole 表示全部人權限, 則要設定DeptAll=XpDept.Id表示'全部部門'
+        public static string DeptAll = "";
+        //不管UseDeptRole為何, 如果有一個角色表示全部人權限, 則要設定RoleAll=XpRole.Id表示'全部人'角色
+        public static string RoleAll = "";
         #endregion
 
         #region input parameters
@@ -131,8 +136,8 @@ namespace Base.Services
         /// </summary>
         public static bool MultiLang = false;
 
-        //角色是否區分部門, 如果true則會存取 XpDeptRole table
-        public static bool HasDeptRole = false;
+        //角色是否區分部門(是否使用XpDeptRole), 如果true則XpRoleProg.SourceId=XpDeptRole.Id, false則=XpRole.Id !!
+        public static bool UseDeptRole = false;
         #endregion
 
         #region dir varibles
@@ -190,10 +195,10 @@ namespace Base.Services
         /// <param name="dbType">資料庫種類</param>
         /// <param name="authType">權限種類</param>
         /// <param name="multiLang">是否使用多國語</param>
-        /// <param name="hasDeptRole">角色是否區分部門, 如果true則會存取 XpDeptRole table</param>
+        /// <param name="useDeptRole">角色是否區分部門, 如果true則會存取 XpDeptRole table</param>
         /// <returns>error msg if any</returns>
         public static string Init(bool isDev, IServiceProvider? diBox, DbTypeEnum dbType, 
-            AuthTypeEnum authType, bool multiLang = false, bool hasDeptRole = false)
+            AuthTypeEnum authType, bool multiLang = false, bool useDeptRole = false)
         {
             #region set instance variables
 			IsDev = isDev;
@@ -203,7 +208,7 @@ namespace Base.Services
             //AuthType = (Config.LoginType == LoginTypeEstr.None) ? AuthTypeEnum.None : authType; //無登入必為無權限 !!
             AuthType = authType;
             MultiLang = multiLang;
-            HasDeptRole = hasDeptRole;
+            UseDeptRole = useDeptRole;
 
             Config!.HtmlImageUrl = _Str.AddWebSlash(Config.HtmlImageUrl);
             //Nonce = _Str.NewId();

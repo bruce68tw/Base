@@ -14,6 +14,12 @@ namespace Base.Models
         public string ColList = "";
 
         /// <summary>
+        /// sql use square, as: [from],[where],[group],[order]
+        /// (TODO: add [whereCond] for client condition !!)
+        /// </summary>
+        public bool UseSquare = false;
+
+        /// <summary>
         /// sql string, column select order must same to client side for datatable sorting !!
         /// </summary>
         public string ReadSql = "";
@@ -22,12 +28,6 @@ namespace Base.Models
         /// sql string for export excel, default to ReadSql.
         /// </summary>
         public string ExportSql = "";
-
-        /// <summary>
-        /// sql use square, as: [from],[where],[group],[order]
-        /// (TODO: add [whereCond] for client condition !!)
-        /// </summary>
-        public bool UseSquare = false;
 
         /// <summary>
         /// default table alias name

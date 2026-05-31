@@ -173,7 +173,7 @@ namespace Base.Services
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin())
             {
-                var brError = CheckAuthRow(result, crudEnum);
+                var brError = CheckAuthRow(row, crudEnum);
                 if (_Str.NotEmpty(brError))
                 {
                     result = _Json.GetBrError(brError);
@@ -204,7 +204,7 @@ namespace Base.Services
         /// <returns>BR error code if any</returns>
         protected string CheckAuthRow(JObject row, CrudEnum crudEnum)
         {
-            var range = _Auth.GetAuthRange(_Fun.GetBaseUser().ProgAuthStrs, _ctrl, crudEnum);
+            var range = _Auth.GetAuthRange(_ctrl, crudEnum);
             if (range == AuthRangeEnum.User)
             {
                 if (!_Json.IsFidEqual(row, _Fun.FidUser, _Fun.UserId()))
@@ -232,32 +232,26 @@ namespace Base.Services
         {
             //get this rows
             //var level1 = (editLevel == 1);
-            var emptyReadSql = _Str.IsEmpty(edit.ReadSql);
+            var hasReadSql = _Str.NotEmpty(edit.ReadSql);
             JArray? rows;
             if (editLevel == 1)
             {
                 //第1層child where 使用 xxx=@Id
                 var fKeyFid = (edit.FkeyFid == "") ? edit.PkeyFid : edit.FkeyFid;
-                var sql = emptyReadSql
-                    ? GetSqlByWhere(edit, fKeyFid + "=@Id")
-                    : edit.ReadSql;
+                var sql = hasReadSql
+                    ? edit.ReadSql
+                    : GetSqlByWhere(edit, fKeyFid + "=@Id");
                 rows = await db.GetRowsA(sql, ["Id", keys[0]]);
             }
             else
             {
                 //第2層child where 使用 xxx in ({0})
                 var keyList = _List.ToStr(keys, true);
-                var sql = emptyReadSql
-                    ? GetSqlByWhere(edit, edit.FkeyFid + $" in ({keyList})")
-                    : string.Format(edit.ReadSql, keyList);     //GetSqlByField(edit, keyList);
+                var sql = hasReadSql
+                    ? string.Format(edit.ReadSql, keyList)
+                    : GetSqlByWhere(edit, edit.FkeyFid + $" in ({keyList})");
                 rows = await db.GetRowsA(sql);
             }
-            /*
-            var sql = _Str.IsEmpty(edit.ReadSql)
-                ? GetSqlByWhere(edit, edit.FkeyFid + " in (" + keyList + ")")
-                : string.Format(edit.ReadSql, keyList);     //GetSqlByField(edit, keyList);
-            var rows = await db.GetRowsA(sql);
-            */
             if (rows == null) return null;
 
             //prepare return data

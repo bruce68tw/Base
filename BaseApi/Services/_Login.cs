@@ -22,7 +22,7 @@ namespace BaseApi.Services
         /// <param name="encodePwd">是否加密密碼欄位(only for 密碼驗証</param>
         /// <param name="extCol">要寫入session的一個額外欄位, 必須加上正確的 table 別名</param>
         /// <returns></returns>
-        public static async Task<bool> LoginByVoA(LoginVo vo, string roleAll = "", bool encodePwd = true, 
+        public static async Task<bool> LoginByVoA(LoginVo vo, bool encodePwd = true, 
             string extCol = "", string extCol2 = "", string extCol3 = "")
         {
             //reset UI msg first
@@ -121,7 +121,7 @@ where u.Account=@Account
                 DeptId = row["DeptId"]!.ToString(),
                 DeptName = row["DeptName"]!.ToString(),
                 Locale = _Fun.Config.Locale,
-                ProgAuthStrs = await _Auth.GetAuthStrA(userId, roleAll),
+                ProgAuthStrs = await _Auth.GetAuthStrA(userId),
                 //IsLogin = true,
             };
             //加上 ExtCol if need

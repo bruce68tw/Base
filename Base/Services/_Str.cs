@@ -34,10 +34,10 @@ namespace Base.Services
         /// <summary>
         /// 日期字串加1
         /// </summary>
-        /// <param name="dateStr">yyyyMMdd + 序號</param>
+        /// <param name="dateStr">yyyyMMdd + 序號, 如果不是今天則使用今天</param>
         /// <param name="tailLen2"></param>
         /// <returns>dateStr空白時, 用今天日期+tailLen來產生</returns>
-        public static string DateAdd1(string? dateStr, int tailLen)
+        public static string TodayAdd1(string? dateStr, int tailLen)
         {
             if (string.IsNullOrEmpty(dateStr) || dateStr.Length <= 8)
                 return DateTime.Now.ToString("yyyyMMdd") + ("1").PadLeft(tailLen, '0'); ;
@@ -52,17 +52,26 @@ namespace Base.Services
                 goto lab_error;
             }
 
-            //最大值判斷
-            //var tailLen = noPart.Length;
-            var maxNo = int.Parse(new string('9', tailLen));
-            if (no >= maxNo)
+            //是否今天
+            var today = DateTime.Today.ToString("yyyyMMdd");
+            if (today == datePart)
             {
-                error = "日期尾數序號已達最大值。";
-                goto lab_error;
+                //最大值判斷
+                //var tailLen = noPart.Length;
+                no++;
+                if (no > int.Parse(new string('9', tailLen)))
+                {
+                    error = "日期尾數序號已達最大值。";
+                    goto lab_error;
+                }
+            }
+            else
+            {
+                datePart = today;
+                no = 1;
             }
 
             //保留原本位數
-            no++;
             return datePart + no.ToString().PadLeft(tailLen, '0');
 
         lab_error:

@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.PowerPoint;
-using DocumentFormat.OpenXml.Spreadsheet;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -11,6 +9,14 @@ namespace Base.Services
 {
     public class _Json
     {
+
+        //get page rows
+        public static JArray? PageGetRows(JObject? json)
+        {
+            return (json == null || json["data"] == null)
+                ? null
+                : json["data"] as JArray;
+        }
 
         //寫入多筆
         public static void SetRows(JObject json, JArray rows)

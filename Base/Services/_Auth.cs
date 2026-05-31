@@ -1,6 +1,5 @@
 ﻿using Base.Enums;
 using Base.Models;
-using DocumentFormat.OpenXml.Drawing.Diagrams;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,8 +31,11 @@ namespace Base.Services
         /// <param name="prog">program id</param>
         /// <param name="crudEnum">crud function, see CrudFunEstr, empty for controller, value for action</param>
         /// <returns>bool</returns>
-        public static bool CheckAuth(string authStr, string prog, CrudEnum crudEnum)
+        public static bool CheckAuth(string prog, CrudEnum crudEnum, string authStr = "")
         {
+            if (string.IsNullOrEmpty(authStr))
+                authStr = _Fun.GetBaseUser().ProgAuthStrs;
+
             if (_Fun.AuthType == AuthTypeEnum.Ctrl)
             {
                 //authStr format: ,xxx,xxx,
@@ -44,7 +46,7 @@ namespace Base.Services
                 //authStr format: ,xxx:121,xxx:001,
                 return (crudEnum == CrudEnum.Empty)
                     ? authStr.Contains("," + prog + ":")
-                    : GetAuthRange(authStr, prog, crudEnum) != AuthRangeEnum.None;
+                    : GetAuthRange(prog, crudEnum, authStr) != AuthRangeEnum.None;
             }
         }
 
@@ -62,14 +64,14 @@ namespace Base.Services
         public static async Task<string> CheckAuthUserA(string ctrl, CrudEnum crudEnum, string table, 
             string userFid, string key, Db? db = null)
         {
-            var user = _Fun.GetBaseUser();
-            var authRange = GetAuthRange(user.ProgAuthStrs, ctrl, crudEnum);
+            var br = _Fun.GetBaseUser();
+            var authRange = GetAuthRange(ctrl, crudEnum, br.ProgAuthStrs);
             if (authRange == AuthRangeEnum.None) return _Str.GetBrError(_Fun.FidNoAuthUser);
             if (authRange == AuthRangeEnum.All) return "";
 
             var sql = $"select {userFid} from {table} where Id=@Id";
             var value = await _Db.GetStrA(sql, ["Id", key], db) ?? "";
-            return (value == user.UserId) 
+            return (value == br.UserId) 
                 ? "" : _Str.GetBrError(_Fun.FidNoAuthUser);
         }
 
@@ -82,7 +84,7 @@ namespace Base.Services
         {
             return (_Fun.AuthType != AuthTypeEnum.Action && _Fun.AuthType != AuthTypeEnum.Row)
                 ? true
-                : CheckAuth(_Fun.GetBaseUser().ProgAuthStrs, prog, CrudEnum.Create);
+                : CheckAuth(prog, CrudEnum.Create);
         }
 
         /// <summary>
@@ -92,10 +94,11 @@ namespace Base.Services
         /// <param name="crudEnum"></param>
         /// <param name="authStr"></param>
         /// <returns></returns>
-        public static AuthRangeEnum GetAuthRange(string authStr, string prog, CrudEnum crudEnum)
+        public static AuthRangeEnum GetAuthRange(string prog, CrudEnum crudEnum, string authStr = "")
         {
-            //if (authStrs == null)
-            //    authStrs = _Fun.GetBaseUser().ProgAuthStrs;
+            if (string.IsNullOrEmpty(authStr))
+                authStr = _Fun.GetBaseUser().ProgAuthStrs;
+
             //var sep = ",";
             var funList = _Str.GetMid(authStr, "," + prog + ":", ",");
             var funPos = (int)crudEnum;
@@ -114,25 +117,37 @@ namespace Base.Services
         /// <param name="roleAll">所有人都具備的角色</param>
         /// <param name="userId">user Id</param>
         /// <returns>has ','(if not empty) at start/end for easy coding</returns>
-        public static async Task<string> GetAuthStrA(string userId, string roleAll = "", Db? db = null)
+        public static async Task<string> GetAuthStrA(string userId, Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
             var result = "";
-            string sql;
-            List<object> args = ["RoleId", roleAll];
-            //List<IdStrDto> rows;
+            string sql, sqlTableWhere;
+            List<object> args = ["RoleId", _Fun.RoleAll, "DeptId", _Fun.DeptAll];   //"所有人" 角色
             var authType = _Fun.IsNeedLogin() ? _Fun.AuthType : AuthTypeEnum.None;
             switch (authType)
             {
                 case AuthTypeEnum.Ctrl:
+                    sqlTableWhere = _Fun.UseDeptRole
+                        ? $@"
+from dbo.XpRoleProg rp
+join dbo.XpProg p on rp.ProgId=p.Id
+join dbo.XpDeptRole dr on rp.SourceId=dr.Id
+join dbo.XpUserRole ur on dr.RoleId=ur.RoleId or (@RoleId != '' and dr.RoleId=@RoleId)
+join dbo.XpUser u on ur.UserId=u.Id and (dr.DeptId=u.DeptId or (@DeptId != '' and dr.DeptId=@DeptId))
+where ur.UserId='{userId}'
+"
+                        : $@"
+from dbo.XpRoleProg rp
+join dbo.XpProg p on rp.ProgId=p.Id
+join dbo.XpUserRole ur on rp.SourceId=ur.RoleId or (@RoleId != '' and rp.SourceId=@RoleId)
+where ur.UserId='{userId}'
+";
+
                     //return format: code,...
                     sql = $@"
 select distinct 
     p.Code
-from XpRoleProg rp
-left join XpUserRole ur on rp.RoleId=ur.RoleId
-join XpProg p on rp.ProgId=p.Id
-where (ur.UserId='{userId}' or (@RoleId != '' and rp.RoleId=@RoleId))
+{sqlTableWhere}
 ";
                     //rows = await _Db.GetModelsA<IdStrDto>(sql, new(){ "UserId", userId });
                     var list = await db!.GetStrsA(sql, args);
@@ -156,6 +171,20 @@ where (ur.UserId='{userId}' or (@RoleId != '' and rp.RoleId=@RoleId))
                         GetFunSql("FunOther", true)
                     );
 
+                    sqlTableWhere = _Fun.UseDeptRole
+                        ? $@"
+from dbo.XpRoleProg rp
+join dbo.XpDeptRole dr on rp.SourceId=dr.Id
+join dbo.XpUserRole ur on dr.RoleId=ur.RoleId or (@RoleId != '' and dr.RoleId=@RoleId)
+join dbo.XpUser u on ur.UserId=u.Id and (dr.DeptId=u.DeptId or (@DeptId != '' and dr.DeptId=@DeptId))
+where ur.UserId='{userId}'
+"
+                        : $@"
+from dbo.XpRoleProg rp
+join dbo.XpUserRole ur on rp.SourceId=ur.RoleId or (@RoleId != '' and rp.SourceId=@RoleId)
+where ur.UserId='{userId}' 
+";
+
                     sql = $@"
 select p.Code as Id, {authStr} as Str
 from (
@@ -168,23 +197,11 @@ from (
         FunExport=max(rp.FunExport),
         FunView=max(rp.FunView),
         FunOther=max(rp.FunOther)
-    from XpRoleProg rp
-    left join XpUserRole ur on rp.RoleId=ur.RoleId
-    where (ur.UserId='{userId}' or (@RoleId != '' and rp.RoleId=@RoleId))
+    {sqlTableWhere}
     group by rp.ProgId
 ) a 
 join XpProg p on a.ProgId=p.Id
 ";
-                    /*
-                    sql = $@"
-select distinct 
-    p.Code as Id, {authStr} as Str
-from XpRoleProg rp
-join XpUserRole ur on rp.RoleId=ur.RoleId
-join XpProg p on rp.ProgId=p.Id
-where ur.UserId=@UserId
-group by p.Code
-";*/
                     var rows = await _Db.GetModelsA<IdStrDto>(sql, args);
                     result = (rows == null || rows.Count == 0)
                         ? ""
