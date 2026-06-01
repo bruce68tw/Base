@@ -1,4 +1,5 @@
-﻿using Base.Models;
+﻿using Base.Enums;
+using Base.Models;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 
@@ -47,9 +48,9 @@ namespace Base.Services
             return new CrudGetSvc(Ctrl, GetDto(), HasDraft);
         }
 
-        public virtual async Task<JObject?> GetUpdJsonA(string key)
+        public virtual async Task<JObject?> GetUpdJsonA(string key, CrudEnum fun = CrudEnum.Update)
         {
-            return await GetSvc().GetUpdJsonA(key);
+            return await GetSvc().GetUpdJsonA(key, fun);
         }
 
         public virtual async Task<JObject?> GetViewJsonA(string key)

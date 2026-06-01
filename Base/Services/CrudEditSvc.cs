@@ -684,7 +684,7 @@ namespace Base.Services
         /// <param name="key">key of master table</param>
         /// <param name="json"></param>
         /// <returns>ResultDto</returns>
-        public async Task<ResultDto> UpdateA(string key, JObject json)
+        public async Task<ResultDto> UpdateA(string key, JObject json, CrudEnum fun = CrudEnum.Update)
         {
             //return error if empty key
             if (key == "")
@@ -697,7 +697,7 @@ namespace Base.Services
             _isNewMain = false;
 
             //check for AuthType=Row if need
-            if (_Fun.IsAuthRowAndLogin())
+            if (_Fun.IsAuthRowAndLogin() && fun != CrudEnum.Create)
             {
                 var data = await GetDbRowA(_editDto, key);    //return data
                 var brError = CheckAuthRow(data!, CrudEnum.Update);

@@ -30,12 +30,12 @@ namespace Base.Services
             _dbStr = dbStr;
         }
 
-        public async Task<JObject?> GetUpdJsonA(string key)
+        public async Task<JObject?> GetUpdJsonA(string key, CrudEnum fun = CrudEnum.Update)
         {
             //檢查權限
             var json = _hasDraft ? await GetDraftJsonA(key) : null;
             return (json == null)
-                ? await GetJsonByFunA(CrudEnum.Update, key)
+                ? await GetJsonByFunA(fun, key)
                 : json;
         }
 

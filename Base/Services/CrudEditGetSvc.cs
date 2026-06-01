@@ -158,7 +158,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="key">傳入key值, 有可能不是main table的pkey !!, 例如簽核共用Edit.cs時</param>
         /// <returns></returns>
-        protected async Task<JObject?> GetJsonA(CrudEnum crudEnum, string key)
+        protected async Task<JObject?> GetJsonA(CrudEnum fun, string key)
         {
             if (!_Str.CheckKey(key)) return null;
 
@@ -170,10 +170,10 @@ namespace Base.Services
             key = row![_editDto.PkeyFid]!.ToString();   //這個才是真正的key !!
             result[_Fun.FidRows] = new JArray(row);
 
-            //check for AuthType=Row if need
-            if (_Fun.IsAuthRowAndLogin())
+            //check for AuthType=Row if need, "新增"不檢查!!
+            if (_Fun.IsAuthRowAndLogin() && fun != CrudEnum.Create)
             {
-                var brError = CheckAuthRow(row, crudEnum);
+                var brError = CheckAuthRow(row, fun);
                 if (_Str.NotEmpty(brError))
                 {
                     result = _Json.GetBrError(brError);
@@ -202,9 +202,9 @@ namespace Base.Services
         /// check AuthType=Row if need
         /// </summary>
         /// <returns>BR error code if any</returns>
-        protected string CheckAuthRow(JObject row, CrudEnum crudEnum)
+        protected string CheckAuthRow(JObject row, CrudEnum fun)
         {
-            var range = _Auth.GetAuthRange(_ctrl, crudEnum);
+            var range = _Auth.GetAuthRange(_ctrl, fun);
             if (range == AuthRangeEnum.User)
             {
                 if (!_Json.IsFidEqual(row, _Fun.FidUser, _Fun.UserId()))
