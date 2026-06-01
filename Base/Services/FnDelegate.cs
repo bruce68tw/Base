@@ -79,4 +79,11 @@ namespace Base.Services
     /// <param name="okRows"></param>
     /// <returns>list error string, '' for success</returns>
     public delegate Task<List<string>> FnSaveImportRowsA<T>(List<T> okRows) where T : class, new();
+
+    /// <summary>
+    /// 簽核完成後的處理, 包含退回
+    /// </summary>
+    /// <param name="okRows"></param>
+    /// <returns>error msg if any</returns>
+    public delegate Task<string> FnAfterSignRowA(string flowStatus, Db db);
 }

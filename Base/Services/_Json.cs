@@ -383,7 +383,7 @@ namespace Base.Services
         //compare json[fid] and value
         public static bool IsFidEqual(JObject json, string fid, string value)
         {
-            return (json[fid]!.ToString() ==  value);
+            return (json[fid] != null && json[fid]!.ToString() ==  value);
         }
 
         /// <summary>

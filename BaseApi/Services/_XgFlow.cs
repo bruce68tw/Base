@@ -518,7 +518,7 @@ insert into dbo.{signTable}(
         /// <param name="signNote">sign note</param>
         /// <returns>ResultDto for called by controller</returns>
         public static async Task<ResultDto> SignRowA(string flowSignId, bool signYes,
-            string signNote, bool isTest)
+            string signNote, bool isTest, FnAfterSignRowA? FnAfterSignRowA = null)
         {
             #region 1.check XpFlowSign/XpTestFlowSign row existed
             Db? db = null;
@@ -529,27 +529,27 @@ insert into dbo.{signTable}(
             await db.BeginTranA();
 
             //get XpFlowSign/XpTestFlowSign row
-            var mapTable = GetMapTable(isTest);
-            var signTable = GetSignTable(isTest);
+            var flowMapTable = GetMapTable(isTest);
+            var flowSignTable = GetSignTable(isTest);
             var sql = $@"
 select s.FlowMapId, s.FlowLevel, r.TotalLevel 
-from dbo.{signTable} s
-join dbo.{mapTable} r on s.FlowMapId=r.Id
+from dbo.{flowSignTable} s
+join dbo.{flowMapTable} r on s.FlowMapId=r.Id
 where s.Id='{flowSignId}' 
 and s.SignStatus='{SignStatusEstr.None}'
 ";
             var signRow = await db.GetRowA(sql);
             if (signRow == null)
             {
-                error = $"not found {signTable} row.(Id={flowSignId})";
+                error = $"not found {flowSignTable} row.(Id={flowSignId})";
                 goto lab_error;
             }
             #endregion
 
-            #region 2.update XpFlowSign/XpTestFlowSign row
+            #region 2.update XpFlowSign/test row
             var signStatus = signYes ? SignStatusEstr.Agree : SignStatusEstr.Back;
             sql = $@"
-update dbo.{signTable} set 
+update dbo.{flowSignTable} set 
     SignStatus=@SignStatus, 
     Note=@Note,
     SignTime=getDate()
@@ -558,25 +558,25 @@ where Id='{flowSignId}'
             var count = await db.ExecSqlA(sql, ["SignStatus", signStatus, "Note", signNote]);
             if (count != 1)
             {
-                error = "_XpFlow.cs SignRowA() failed, should only update one row: " + sql;
+                error = $"{flowSignTable} should only update one row: {sql}";
                 goto lab_error;
             }
             #endregion
 
-            //3.update source row FlowLevel/FlowStatus
+            #region 3.update XpFlowMap/test table
             //flowStatus: Y(agree flow), N(not agree), 0(signing)
-
-            //退回時, 如果中止則flowStatus=N, 否則為1(表示繼續流程)
             string flowStatus;
             int nowLevel;
             if (signYes)
             {
+                //同意, 如果是最後一關則 Agree, 否則繼續 Work
                 nowLevel = Convert.ToInt32(signRow["FlowLevel"]);
                 flowStatus = (nowLevel == Convert.ToInt32(signRow["TotalLevel"])) 
                     ? FlowStatusEstr.Agree : FlowStatusEstr.Work;
             }
             else
             {
+                //退回
                 nowLevel = 0;
                 flowStatus = FlowStatusEstr.Back;
             }
@@ -587,32 +587,48 @@ where Id='{flowSignId}'
                 signYes ? nowLevel + 1 :
                 _Fun.FlowBackToFirst ? 1 : 0;
 
-            //update source table
+            //update XpFlowMap/test set FlowLevel, FlowStatus
             var flowMapId = signRow["FlowMapId"]!.ToString();
             sql = $@"
-update dbo.{mapTable} set
+update dbo.{flowMapTable} set
     FlowLevel={flowLevel},
     FlowStatus='{flowStatus}'
 where Id='{flowMapId}'
 ";
-            #region case ok error
+            #endregion
+
+            //case ok error
             count = await db.ExecSqlA(sql);
             if (count != 1)
             {
-                error = "_XpFlow.cs SignRow() failed, should update one row: " + sql;
+                error = $"{flowMapTable} should only update one row: {sql}";
                 goto lab_error;
             }
-            #endregion
 
-            #region case of ok
+            //rollback function if any
+            if (FnAfterSignRowA != null)
+            {
+                try
+                {
+                    error = await FnAfterSignRowA(flowStatus, db);
+                    if (!string.IsNullOrEmpty(error))
+                        goto lab_error;
+                }
+                catch (Exception ex)
+                {
+                    error = "FnAfterSignRowA() exception: " + ex.Message;
+                    goto lab_error;
+                }
+            }
+
+            //case of ok
             await db.CommitA();
             await db.DisposeAsync();
 
             return new ResultDto()
             {
-                Value = "2",  //update 2 rows
+                Value = "2",  //update 2 tables
             };
-            #endregion
 
         //case of error
         lab_error:
@@ -621,7 +637,7 @@ where Id='{flowMapId}'
                 await db.RollbackA();
                 await db.DisposeAsync();
             }
-            return _Model.GetError(error);
+            return _Model.GetError("_XgFlow.cs SignRowA() failed: " + error);
         }
 
     }//class
