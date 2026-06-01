@@ -107,7 +107,8 @@ namespace BaseApi.Attributes
                 //4.return error model
                 context.Result = new JsonResult(new
                 {
-                    Value = new { _ErrorMsg = error }
+                    //Value = new { _ErrorMsg = error }
+                    _ErrorMsg = error
                 });
             }
             else if (returnType == "IActionResult")
