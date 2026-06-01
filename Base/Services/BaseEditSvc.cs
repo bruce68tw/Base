@@ -53,9 +53,9 @@ namespace Base.Services
             return await GetSvc().GetUpdJsonA(key, fun);
         }
 
-        public virtual async Task<JObject?> GetViewJsonA(string key)
+        public virtual async Task<JObject?> GetViewJsonA(string key, CrudEnum fun = CrudEnum.View)
         {
-            return await GetSvc().GetViewJsonA(key);
+            return await GetSvc().GetViewJsonA(key, fun);
         }
 
         public virtual async Task<JObject?> GetDraftJsonA(string key)

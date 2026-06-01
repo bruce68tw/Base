@@ -39,9 +39,9 @@ namespace Base.Services
                 : json;
         }
 
-        public async Task<JObject?> GetViewJsonA(string key)
+        public async Task<JObject?> GetViewJsonA(string key, CrudEnum fun = CrudEnum.View)
         {
-            return await GetJsonByFunA(CrudEnum.View, key);
+            return await GetJsonByFunA(fun, key);
         }
 
         public async Task<JObject?> GetDraftJsonA(string key)
