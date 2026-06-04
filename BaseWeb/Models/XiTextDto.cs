@@ -17,6 +17,9 @@ namespace BaseWeb.Models
 
         public string FnOnBlur { get; set; } = "";
 
+        //如果有值則右側會出現find icon
+        public string FnOnFind { get; set; } = "";
+
         /// <summary>
         /// 對應 InputPatternEstr, 如為中文, 則會
         /// </summary>

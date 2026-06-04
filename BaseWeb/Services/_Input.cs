@@ -693,6 +693,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
+
+        //可以在裡面右側加上 find icon
         public static string XiText(XiTextDto dto)
         {
             //base attr: fid,name,readonly,ext attr
@@ -705,9 +707,31 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 GetMaxLength(dto.MaxLen) +
                 GetPattern(dto.Pattern);
 
+
             //get input html, xi-box for 控制 validate error 位置
-            var css = GetCssClass("form-control xi-box", dto.ClsBox, dto.Width);
-            var html = $"<input{attr} data-type='{InputTypeEstr.Text}' class='{css}'>";
+            //加上 find icon if need
+            string css;
+            string html;
+            if (_Str.IsEmpty(dto.FnOnFind))
+            {
+                css = GetCssClass("form-control xi-box", dto.ClsBox, dto.Width);
+                html = $"<input{attr} data-type='{InputTypeEstr.Text}' class='{css}'>";
+            }
+            else
+            {
+                css = GetCssClass("position-relative xi-box", dto.ClsBox, dto.Width);
+                html = $"<input{attr} data-type='{InputTypeEstr.Text}' class='form-control'>";
+
+                //裡面使用bootstrap 5 css class
+                html = $@"
+<div class='{css}'>
+    {html}
+    <button type='button' data-onclick='{dto.FnOnFind}' class='btn position-absolute top-50 end-0 translate-middle-y me-1'>
+        <i class='ico-find'></i>
+    </button>
+</div>
+";
+            }
 
             //add title,required,tip,cols for single form
             //consider this field could in datatable(no title) !!
