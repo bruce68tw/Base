@@ -91,17 +91,17 @@ namespace Base.Services
         /// get auth range of one crud fun
         /// </summary>
         /// <param name="prog"></param>
-        /// <param name="crudEnum"></param>
+        /// <param name="fun"></param>
         /// <param name="authStr"></param>
         /// <returns></returns>
-        public static AuthRangeEnum GetAuthRange(string prog, CrudEnum crudEnum, string authStr = "")
+        public static AuthRangeEnum GetAuthRange(string prog, CrudEnum fun, string authStr = "")
         {
             if (string.IsNullOrEmpty(authStr))
                 authStr = _Fun.GetBaseUser().ProgAuthStrs;
 
             //var sep = ",";
             var funList = _Str.GetMid(authStr, "," + prog + ":", ",");
-            var funPos = (int)crudEnum;
+            var funPos = (int)fun;
             if (funList.Length <= funPos) return AuthRangeEnum.None;
 
             //pos 0, fun is auth row or not(0/1)

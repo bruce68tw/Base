@@ -17,6 +17,11 @@ namespace Base.Services
         public string Ctrl;
 
         /// <summary>
+        /// 目前功能
+        /// </summary>
+        public CrudEnum Fun;
+
+        /// <summary>
         /// 是否有草稿功能
         /// </summary>
         public bool HasDraft;
@@ -50,11 +55,13 @@ namespace Base.Services
 
         public virtual async Task<JObject?> GetUpdJsonA(string key, CrudEnum fun = CrudEnum.Update)
         {
+            Fun = fun;
             return await GetSvc().GetUpdJsonA(key, fun);
         }
 
         public virtual async Task<JObject?> GetViewJsonA(string key, CrudEnum fun = CrudEnum.View)
         {
+            Fun = fun;
             return await GetSvc().GetViewJsonA(key, fun);
         }
 

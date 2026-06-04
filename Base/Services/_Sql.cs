@@ -6,6 +6,19 @@ namespace Base.Services
 {
     public class _Sql
     {
+        public static string GetCondByAuth(string ctrl, BaseUserDto? br = null)
+        {
+            br ??= _Fun.GetBaseUser();
+            var range = _Auth.GetAuthRange(ctrl, CrudEnum.Read, br.ProgAuthStrs);
+            return range switch
+            {
+                AuthRangeEnum.User => $" and {_Fun.FidUser}='{br.UserId}'",
+                AuthRangeEnum.Dept => $" and {_Fun.FidDept}='{br.DeptId}'",
+                AuthRangeEnum.All => "",
+                _ => " and 1=0"
+            };
+        }
+
         /// <summary>
         /// convert sql string to model 
         /// </summary>

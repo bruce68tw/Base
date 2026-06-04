@@ -598,8 +598,9 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             if (dto.Rows == null || dto.Rows.Count == 0)
             {
                 dto.Rows = [
-                    new IdStrDto(){ Id = "1", Str = "Radio1" },
-                    new IdStrDto(){ Id = "2", Str = "Radio2" },
+                    new IdStrDto(){ Id = "1", Str = "" },
+                    //new IdStrDto(){ Id = "1", Str = "Radio1" },
+                    //new IdStrDto(){ Id = "2", Str = "Radio2" },
                 ];
             }
 
@@ -625,8 +626,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             {
                 //change empty to nbsp, or radio will be wrong !!
                 var row = dto.Rows[i];
-                if (row.Str == "")
-                    row.Str = "&nbsp;";
+                //if (row.Str == "")
+                //    row.Str = "&nbsp;";
 
                 //get attr, value attr will disappear, use data-value instead !!
                 var attr = GetInputAttr(dto.Fid, dto.Edit, false, dto.InputAttr) +
