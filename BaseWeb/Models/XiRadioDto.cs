@@ -12,7 +12,7 @@ namespace BaseWeb.Models
         }
         */
 
-        public List<IdStrDto> Rows { get; set; } = null!;
+        public List<IdStrDto>? Rows { get; set; } = null!;
 
         /**
          * 預設為水平排列         
