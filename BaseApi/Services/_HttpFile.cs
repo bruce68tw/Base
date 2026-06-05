@@ -168,7 +168,8 @@ namespace BaseApi.Services
         /// <param name="isMulti">if true, fileJson fid will like 't03_FileNameX', X is row no</param>
         /// <param name="preFile">檔名前置字元 if any
         /// <returns></returns>
-        public static async Task<bool> SaveCrudFilesA(JObject inputJson, JObject newKey, string saveDir, List<IFormFile> files, string serverFid, bool isMulti = true, string preFile =  "")
+        public static async Task<bool> SaveCrudFilesA(JObject inputJson, JObject newKey, string saveDir, 
+            List<IFormFile> files, string serverFid, bool isMulti = true, string preFile =  "")
         {
             if (_List.IsEmpty(files)) return true;
 

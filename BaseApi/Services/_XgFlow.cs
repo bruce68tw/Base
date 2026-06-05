@@ -366,7 +366,7 @@ insert into dbo.{signTable}(
                     await db.ExecSqlA(sql, [
                         "Id", _Str.NewId(),
                         "NodeName", (level == 0) ? startNodeName : line.FromNodeName,
-                        "FlowLevel", oldTotalLevel + level, //考慮退回重簽
+                        "FlowLevel", findLineCount + level, //考慮退回重簽
                         "SignerId", signerId,
                         "SignerName", signerName,
                         "SignStatus", (level == 0) ? SignStatusEstr.Agree : SignStatusEstr.None,
