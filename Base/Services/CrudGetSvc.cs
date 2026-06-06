@@ -34,17 +34,17 @@ namespace Base.Services
         {
             //檢查權限
             //Fun = fun;
-            _editDto = editDto;
+            //_editDto = editDto;
             var json = _hasDraft ? await GetDraftJsonA(key) : null;
             return (json == null)
-                ? await GetJsonByFunA(fun, key)
+                ? await GetJsonByFunA(fun, key, editDto)
                 : json;
         }
 
         public async Task<JObject?> GetViewJsonA(string key, EditDto editDto, CrudEnum fun = CrudEnum.View)
         {
-            _editDto = editDto;
-            return await GetJsonByFunA(fun, key);
+            //_editDto = editDto;
+            return await GetJsonByFunA(fun, key, editDto);
         }
 
         public async Task<JObject?> GetDraftJsonA(string key)

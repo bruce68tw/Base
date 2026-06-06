@@ -106,7 +106,7 @@ namespace Base.Services
 
         public virtual async Task<ResultDto> DeleteA(string key)
         {
-            return await EditSvc().DeleteA(key);
+            return await EditSvc().DeleteA(key, GetDto(CrudEnum.Delete));
         }
 
     }//class

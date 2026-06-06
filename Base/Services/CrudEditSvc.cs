@@ -659,7 +659,7 @@ namespace Base.Services
         private bool IsTrans(EditDto editDto)
         {
             var childLen = GetEditChildLen(editDto);
-            return _editDto.AutoTrans
+            return editDto.AutoTrans
                 ? (childLen > 0)
                 : false;
         }
@@ -674,9 +674,9 @@ namespace Base.Services
             //todo: 如果有草稿模式, 刪除草稿 if any
 
             _isNewMain = true;
-            _editDto = editDto;
+            //_editDto = editDto;
             RowSetNew(_Json.GetRows0(json)!);
-            return await SaveJsonA(json);
+            return await SaveJsonA(json, editDto);
         }
 
         /// <summary>
@@ -696,12 +696,12 @@ namespace Base.Services
             //set instance variables
             _key = key;
             _isNewMain = false;
-            _editDto = editDto;
+            //_editDto = editDto;
 
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin() && fun != CrudEnum.Create)
             {
-                var data = await GetDbRowA(_editDto, key);    //return data
+                var data = await GetDbRowA(editDto, key);    //return data
                 var brError = CheckAuthRow(data!, CrudEnum.Update);
                 if (brError != "") return _Model.GetBrError(brError);
             }
@@ -713,7 +713,7 @@ namespace Base.Services
                 rows[0][_editDto.PkeyFid] = key;
             */
 
-            return await SaveJsonA(json);
+            return await SaveJsonA(json, editDto);
         }
 
         public async Task<ResultDto> DraftA(string key, JObject json)
@@ -735,13 +735,13 @@ namespace Base.Services
         /// </summary>
         /// <param name="inputJson">input json</param>
         /// <returns></returns>
-        private async Task<ResultDto> SaveJsonA(JObject inputJson)
+        private async Task<ResultDto> SaveJsonA(JObject inputJson, EditDto editDto)
         {
             //check input & set fidNos same time
             var log = false;
             Db? db = null;
             string error;
-            var trans = IsTrans(_editDto);
+            var trans = IsTrans(editDto);
             List<ErrorRowDto>? validErrors = null;
             if (inputJson == null)
             {
@@ -752,7 +752,7 @@ namespace Base.Services
 
             //check main row
             //SetFidNo(_edit);
-            error = ValidJsonLoop(0, _editDto, inputJson);
+            error = ValidJsonLoop(0, editDto, inputJson);
             if (_Str.NotEmpty(error))
             {
                 log = true;
@@ -760,26 +760,26 @@ namespace Base.Services
             }
 
             //validateion
-            if (_editDto.FnValidateA != null)
+            if (editDto.FnValidateA != null)
             {
-                validErrors = await _editDto.FnValidateA(_isNewMain, inputJson);
+                validErrors = await editDto.FnValidateA(_isNewMain, inputJson);
                 if (_List.NotEmpty(validErrors))
                     goto lab_error;
             }
 
             //set new key if need
             //addFunName = false;
-            error = (_editDto.FnSetNewKeyJsonA == null)
-                ? await SetNewKeyJsonA(inputJson, _editDto)
-                : await _editDto.FnSetNewKeyJsonA(_isNewMain, this, inputJson, _editDto);
+            error = (editDto.FnSetNewKeyJsonA == null)
+                ? await SetNewKeyJsonA(inputJson, editDto)
+                : await editDto.FnSetNewKeyJsonA(_isNewMain, this, inputJson, editDto);
             if (_Str.NotEmpty(error)) goto lab_error;
 
             //call FnWhenSaveA if need
-            if (_editDto.FnWhenSaveA != null)
+            if (editDto.FnWhenSaveA != null)
             {
                 try
                 {
-                    error = await _editDto.FnWhenSaveA(_isNewMain, this, inputJson, _newKeyJson);
+                    error = await editDto.FnWhenSaveA(_isNewMain, this, inputJson, _newKeyJson);
                     if (_Str.NotEmpty(error)) goto lab_error;
                 }
                 catch (Exception ex)
@@ -797,16 +797,16 @@ namespace Base.Services
             SetNow();
 
             //save db recursive
-            if (!await SaveJsonLoopA("0", null, inputJson, _editDto, db)) 
+            if (!await SaveJsonLoopA("0", null, inputJson, editDto, db)) 
                 goto lab_error;
 
             //call AfterSave() if need
             log = true;
-            if (_editDto.FnAfterSaveA != null)
+            if (editDto.FnAfterSaveA != null)
             {
                 try
                 {
-                    error = await _editDto.FnAfterSaveA(_isNewMain, this, db, _newKeyJson);
+                    error = await editDto.FnAfterSaveA(_isNewMain, this, db, _newKeyJson);
                     if (_Str.NotEmpty(error)) goto lab_error;
                 }
                 catch (Exception ex)
@@ -1133,18 +1133,18 @@ namespace Base.Services
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public async Task<ResultDto> DeleteA(string key)
+        public async Task<ResultDto> DeleteA(string key, EditDto editDto)
         {
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin())
             {
-                var data = await GetDbRowA(_editDto, key);    //return data
+                var data = await GetDbRowA(editDto, key);    //return data
                 var brError = CheckAuthRow(data!, CrudEnum.Delete);
                 if (_Str.NotEmpty(brError))
                     return _Model.GetBrError(brError);
             }
 
-            return await DeleteByKeysA(new List<string>() { key });
+            return await DeleteByKeysA(new List<string>() { key }, editDto);
         }
 
         /// <summary>
@@ -1152,13 +1152,13 @@ namespace Base.Services
         /// </summary>
         /// <param name="keys">row key list</param>
         /// <returns></returns>
-        public async Task<ResultDto> DeleteByKeysA(List<string> keys)
+        public async Task<ResultDto> DeleteByKeysA(List<string> keys, EditDto editDto)
         {
             //check input
             if (!_List.CheckKey(keys)) return _Model.GetError();
 
             //transaction or not
-            var trans = IsTrans(_editDto);
+            var trans = IsTrans(editDto);
             var db = GetDb();
             if (trans) await db.BeginTranA();
 
@@ -1166,7 +1166,7 @@ namespace Base.Services
             SetNow();
 
             var json = new JObject() { [_Fun.FidDeletes] = _List.ToStr(keys) };
-            if (!await SaveJsonLoopA("0", null, json, _editDto, db))
+            if (!await SaveJsonLoopA("0", null, json, editDto, db))
                 goto lab_error;
 
             if (trans) await db.CommitA();

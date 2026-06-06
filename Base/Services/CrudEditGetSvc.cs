@@ -22,7 +22,7 @@ namespace Base.Services
         //protected const string Childs = "_childs";    //child json list
 
         //master edit
-        protected EditDto _editDto = null!;
+        //protected EditDto _editDto = null!;
         protected string _ctrl = "";       //controll name
 
         //db str in config file
@@ -74,9 +74,9 @@ namespace Base.Services
             return $"{_Fun.DirDraft}{_ctrl}_{_Fun.UserId()}_{key}.json";
         }
 
-        protected async Task<JObject?> GetJsonByFunA(CrudEnum fun, string key)
+        protected async Task<JObject?> GetJsonByFunA(CrudEnum fun, string key, EditDto editDto)
         {
-            return await GetJsonA(fun, key);
+            return await GetJsonA(fun, key, editDto);
         }
 
         //add argument into _argFids, _argValues
@@ -165,16 +165,16 @@ namespace Base.Services
         /// </summary>
         /// <param name="key">傳入key值, 有可能不是main table的pkey !!, 例如簽核共用Edit.cs時</param>
         /// <returns></returns>
-        protected async Task<JObject?> GetJsonA(CrudEnum fun, string key)
+        protected async Task<JObject?> GetJsonA(CrudEnum fun, string key, EditDto editDto)
         {
             if (!_Str.CheckKey(key)) return null;
 
             var result = new JObject();
             var db = GetDb();
-            var row = await GetDbRowA(_editDto, key, db);    //return data
+            var row = await GetDbRowA(editDto, key, db);    //return data
             if (row == null) goto lab_exit;
 
-            key = row![_editDto.PkeyFid]!.ToString();   //這個才是真正的key !!
+            key = row![editDto.PkeyFid]!.ToString();   //這個才是真正的key !!
             result[_Fun.FidRows] = new JArray(row);
 
             //check for AuthType=Row if need, "新增"不檢查!!
@@ -189,7 +189,7 @@ namespace Base.Services
             }
 
             //get child rows (recursive)
-            var editChilds = _editDto.Childs;
+            var editChilds = editDto.Childs;
             if (editChilds != null && editChilds.Length > 0)
             {
                 var childs = new JArray();
