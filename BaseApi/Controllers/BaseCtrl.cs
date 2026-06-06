@@ -1,7 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
 using Base.Services;
-using BaseApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 
@@ -32,27 +31,27 @@ namespace BaseApi.Controllers
         /// </summary>
         /// <param name="json"></param>
         /// <returns></returns>
-        protected ContentResult JsonToCnt(JObject? json)
+        public ContentResult JsonToCnt(JObject? json)
         {
             json ??= _Json.GetBrError("FindNone");
             return Content(json.ToString(), ContentTypeEstr.Json);
         }
 
-        protected ContentResult JsonsToCnt(JArray? rows)
+        public ContentResult JsonsToCnt(JArray? rows)
         {
             //如果傳回空字串前端會parser error !!
             string json = rows?.ToString(Newtonsoft.Json.Formatting.None) ?? "[]";
             return Content(json, ContentTypeEstr.Json);
         }
 
-        protected IActionResult FileDtoToResult(DownFileDto file)
+        public IActionResult FileDtoToResult(DownFileDto file)
         {
             return (string.IsNullOrEmpty(file.Error))
                 ? File(file.Stream, file.ContentType, file.FileName)
                 : BadRequest(file.Error);
         }
 
-        protected IActionResult ViewFile(FileResult? file)
+        public IActionResult ViewFile(FileResult? file)
         {
             return (file == null) ? NotFound() : file;
         }
