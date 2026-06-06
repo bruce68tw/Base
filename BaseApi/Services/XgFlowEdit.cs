@@ -1,3 +1,4 @@
+using Base.Enums;
 using Base.Models;
 using Base.Services;
 using Newtonsoft.Json.Linq;
@@ -9,7 +10,7 @@ namespace BaseApi.Services
     {
         public XgFlowEdit(string ctrl) : base(ctrl) { }
 
-        override public EditDto GetDto()
+        override public EditDto GetDto(CrudEnum fun)
         {
             return new EditDto()
             {
@@ -69,12 +70,12 @@ namespace BaseApi.Services
 
         public override async Task<ResultDto> CreateA(JObject json)
         {
-            return await EditSvc().CreateA(json);
+            return await EditSvc().CreateA(json, GetDto(CrudEnum.Create));
         }
 
         public override async Task<ResultDto> UpdateA(string key, JObject json)
         {
-            return await EditSvc().UpdateA(key, json);
+            return await EditSvc().UpdateA(key, json, GetDto(CrudEnum.Update));
         }
 
         /// <summary>

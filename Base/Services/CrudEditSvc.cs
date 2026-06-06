@@ -45,11 +45,11 @@ namespace Base.Services
 		/// <param name="ctrl"></param>
 		/// <param name="editDto"></param>
 		/// <param name="dbStr"></param>
-		public CrudEditSvc(string ctrl, EditDto editDto, string dbStr = "")
-            : base(ctrl, editDto, dbStr)
+		public CrudEditSvc(string ctrl, string dbStr = "")
+            : base(ctrl, dbStr)
         {
             _ctrl = ctrl;
-            _editDto = editDto;
+            //_editDto = editDto;
             _dbStr = dbStr;
         }
 
@@ -669,11 +669,12 @@ namespace Base.Services
         /// </summary>
         /// <param name="json"></param>
         /// <returns>ResultDto</returns>
-        public async Task<ResultDto> CreateA(JObject json)
+        public async Task<ResultDto> CreateA(JObject json, EditDto editDto)
         {
             //todo: 如果有草稿模式, 刪除草稿 if any
 
             _isNewMain = true;
+            _editDto = editDto;
             RowSetNew(_Json.GetRows0(json)!);
             return await SaveJsonA(json);
         }
@@ -684,7 +685,7 @@ namespace Base.Services
         /// <param name="key">key of master table</param>
         /// <param name="json"></param>
         /// <returns>ResultDto</returns>
-        public async Task<ResultDto> UpdateA(string key, JObject json, CrudEnum fun = CrudEnum.Update)
+        public async Task<ResultDto> UpdateA(string key, JObject json, EditDto editDto, CrudEnum fun = CrudEnum.Update)
         {
             //return error if empty key
             if (key == "")
@@ -695,6 +696,7 @@ namespace Base.Services
             //set instance variables
             _key = key;
             _isNewMain = false;
+            _editDto = editDto;
 
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin() && fun != CrudEnum.Create)

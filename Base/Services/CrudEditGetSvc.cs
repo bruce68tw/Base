@@ -36,20 +36,27 @@ namespace Base.Services
 		protected List<object?> _sqlArgs = [];
 
         //constructor
-        public CrudEditGetSvc(string ctrl, EditDto editDto, string dbStr = "")
+        public CrudEditGetSvc(string ctrl, string dbStr = "")
         {
             _ctrl = ctrl;
-            _editDto = editDto;
+            //_editDto = editDto;
             _dbStr = dbStr;
         }
 
-		/// <summary>
-		/// 傳回Db, 外面可呼叫, 建立CRUD Edit/Get 服務時直到存取DB才建立資料庫連線
+        /*
+        protected void SetEditDto(EditDto editDto)
+        {
+            _editDto ??= editDto;
+        }
+        */
+
+        /// <summary>
+        /// 傳回Db, 外面可呼叫, 建立CRUD Edit/Get 服務時直到存取DB才建立資料庫連線
         /// 如果要自行控制DB關閉, 可傳入 outside=true
-		/// </summary>
-		/// <param name="outside">外部開啟</param>
-		/// <returns></returns>
-		public Db GetDb(bool outside = false)
+        /// </summary>
+        /// <param name="outside">外部開啟</param>
+        /// <returns></returns>
+        public Db GetDb(bool outside = false)
         {
             if (_db == null)
             {

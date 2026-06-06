@@ -21,26 +21,29 @@ namespace Base.Services
         protected bool _hasDraft = false;
 
         //constructor
-        public CrudGetSvc(string ctrl, EditDto editDto, bool hasDraft = false, string dbStr = "")
-            : base(ctrl, editDto, dbStr)
+        public CrudGetSvc(string ctrl, bool hasDraft = false, string dbStr = "")
+            : base(ctrl, dbStr)
         {
             _ctrl = ctrl;
-            _editDto = editDto;
+            //_editDto = editDto;
             _hasDraft = hasDraft;
             _dbStr = dbStr;
         }
 
-        public async Task<JObject?> GetUpdJsonA(string key, CrudEnum fun = CrudEnum.Update)
+        public async Task<JObject?> GetUpdJsonA(string key, EditDto editDto, CrudEnum fun = CrudEnum.Update)
         {
             //檢查權限
+            //Fun = fun;
+            _editDto = editDto;
             var json = _hasDraft ? await GetDraftJsonA(key) : null;
             return (json == null)
                 ? await GetJsonByFunA(fun, key)
                 : json;
         }
 
-        public async Task<JObject?> GetViewJsonA(string key, CrudEnum fun = CrudEnum.View)
+        public async Task<JObject?> GetViewJsonA(string key, EditDto editDto, CrudEnum fun = CrudEnum.View)
         {
+            _editDto = editDto;
             return await GetJsonByFunA(fun, key);
         }
 
