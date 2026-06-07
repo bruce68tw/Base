@@ -16,7 +16,7 @@ namespace Base.Enums
         Export,
         View,
         Other,
-        Sign,       //簽核(在other後面，不出現在權限設定畫面), 必須要有新增權限!!
+        //Sign,       //簽核(在other後面，不出現在權限設定畫面), 必須要有新增權限!!
         Empty = 99
     }
 }

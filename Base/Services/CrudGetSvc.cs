@@ -50,7 +50,7 @@ namespace Base.Services
         public async Task<JObject?> GetSignJsonA(string key, EditDto editDto)
         {
             //_editDto = editDto;
-            return await GetJsonByFunA(CrudEnum.Sign, key, editDto);
+            return await GetJsonByFunA(CrudEnum.Create, key, editDto);
         }
 
         public async Task<JObject?> GetDraftJsonA(string key)

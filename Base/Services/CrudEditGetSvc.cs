@@ -74,7 +74,7 @@ namespace Base.Services
             return $"{_Fun.DirDraft}{_ctrl}_{_Fun.UserId()}_{key}.json";
         }
 
-        protected async Task<JObject?> GetJsonByFunA(CrudEnum fun, string key, EditDto editDto)
+        public async Task<JObject?> GetJsonByFunA(CrudEnum fun, string key, EditDto editDto)
         {
             return await GetJsonA(fun, key, editDto);
         }

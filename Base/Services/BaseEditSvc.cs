@@ -79,14 +79,17 @@ namespace Base.Services
 
         public virtual async Task<JObject?> GetSignJsonA(string key)
         {
-            //Fun = CrudEnum.Sign;
-            //var fun = CrudEnum.Sign;
-            return await GetSvc().GetSignJsonA(key, GetDto(CrudEnum.Sign));
+            return await GetSvc().GetSignJsonA(key, GetDto(CrudEnum.Create));
         }
 
         public virtual async Task<JObject?> GetDraftJsonA(string key)
         {
             return await GetSvc().GetDraftJsonA(key);
+        }
+
+        public virtual async Task<JObject?> GetJsonByFunA(string key, CrudEnum fun)
+        {
+            return await GetSvc().GetJsonByFunA(fun, key, GetDto(fun));
         }
 
         //save new

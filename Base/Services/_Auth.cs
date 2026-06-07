@@ -100,8 +100,8 @@ namespace Base.Services
                 authStr = _Fun.GetBaseUser().ProgAuthStrs;
 
             //簽核需要"新增"權限
-            if (fun == CrudEnum.Sign)
-                fun = CrudEnum.Create;
+            //if (fun == CrudEnum.Sign)
+            //    fun = CrudEnum.Create;
 
             //var sep = ",";
             var funList = _Str.GetMid(authStr, "," + prog + ":", ",");
