@@ -29,9 +29,9 @@ namespace Base.Services
         /// </summary>
         /// <param name="authStr">program auth string list, has ',' at begin/end</param>
         /// <param name="prog">program id</param>
-        /// <param name="crudEnum">crud function, see CrudFunEstr, empty for controller, value for action</param>
+        /// <param name="fun">crud function, see CrudFunEstr, empty for controller, value for action</param>
         /// <returns>bool</returns>
-        public static bool CheckAuth(string prog, CrudEnum crudEnum, string authStr = "")
+        public static bool CheckAuth(string prog, CrudEnum fun, string authStr = "")
         {
             if (string.IsNullOrEmpty(authStr))
                 authStr = _Fun.GetBaseUser().ProgAuthStrs;
@@ -44,9 +44,9 @@ namespace Base.Services
             else
             {
                 //authStr format: ,xxx:121,xxx:001,
-                return (crudEnum == CrudEnum.Empty)
+                return (fun == CrudEnum.Empty)
                     ? authStr.Contains("," + prog + ":")
-                    : GetAuthRange(prog, crudEnum, authStr) != AuthRangeEnum.None;
+                    : GetAuthRange(prog, fun, authStr) != AuthRangeEnum.None;
             }
         }
 
@@ -54,18 +54,18 @@ namespace Base.Services
         /// 檢查個人資料權限是否符合目前登入者
         /// </summary>
         /// <param name="ctrl"></param>
-        /// <param name="crudEnum"></param>
+        /// <param name="fun"></param>
         /// <param name="table"></param>
         /// <param name="userFid"></param>
         /// <param name="key"></param>
         /// <param name="userValue"></param>
         /// <param name="db"></param>
         /// <returns>BR error code if any</returns>
-        public static async Task<string> CheckAuthUserA(string ctrl, CrudEnum crudEnum, string table, 
+        public static async Task<string> CheckAuthUserA(string ctrl, CrudEnum fun, string table, 
             string userFid, string key, Db? db = null)
         {
             var br = _Fun.GetBaseUser();
-            var authRange = GetAuthRange(ctrl, crudEnum, br.ProgAuthStrs);
+            var authRange = GetAuthRange(ctrl, fun, br.ProgAuthStrs);
             if (authRange == AuthRangeEnum.None) return _Str.GetBrError(_Fun.FidNoAuthUser);
             if (authRange == AuthRangeEnum.All) return "";
 
@@ -98,6 +98,10 @@ namespace Base.Services
         {
             if (string.IsNullOrEmpty(authStr))
                 authStr = _Fun.GetBaseUser().ProgAuthStrs;
+
+            //簽核需要"新增"權限
+            if (fun == CrudEnum.Sign)
+                fun = CrudEnum.Create;
 
             //var sep = ",";
             var funList = _Str.GetMid(authStr, "," + prog + ":", ",");

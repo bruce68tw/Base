@@ -431,6 +431,7 @@ namespace Base.Services
                 var name = reader.GetDataTypeName(i).ToLower();
                 int type = name.Contains("smalldatetime") ? DbColTypeEnum.Date :
                     name.Contains("datetime") ? DbColTypeEnum.Datetime :
+                    name.Contains("date") ? DbColTypeEnum.Date :
                     name.Contains("bit") ? DbColTypeEnum.Bit :
                     name.Contains("int") ? DbColTypeEnum.Int :
                     name.Contains("decimal") ? DbColTypeEnum.Decimal :

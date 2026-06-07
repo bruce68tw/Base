@@ -30,21 +30,27 @@ namespace Base.Services
             _dbStr = dbStr;
         }
 
-        public async Task<JObject?> GetUpdJsonA(string key, EditDto editDto, CrudEnum fun = CrudEnum.Update)
+        public async Task<JObject?> GetUpdJsonA(string key, EditDto editDto)
         {
             //檢查權限
             //Fun = fun;
             //_editDto = editDto;
             var json = _hasDraft ? await GetDraftJsonA(key) : null;
             return (json == null)
-                ? await GetJsonByFunA(fun, key, editDto)
+                ? await GetJsonByFunA(CrudEnum.Update, key, editDto)
                 : json;
         }
 
-        public async Task<JObject?> GetViewJsonA(string key, EditDto editDto, CrudEnum fun = CrudEnum.View)
+        public async Task<JObject?> GetViewJsonA(string key, EditDto editDto)
         {
             //_editDto = editDto;
-            return await GetJsonByFunA(fun, key, editDto);
+            return await GetJsonByFunA(CrudEnum.View, key, editDto);
+        }
+
+        public async Task<JObject?> GetSignJsonA(string key, EditDto editDto)
+        {
+            //_editDto = editDto;
+            return await GetJsonByFunA(CrudEnum.Sign, key, editDto);
         }
 
         public async Task<JObject?> GetDraftJsonA(string key)

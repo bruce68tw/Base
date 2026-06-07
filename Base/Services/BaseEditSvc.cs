@@ -62,24 +62,26 @@ namespace Base.Services
             _getSvc ??= new CrudGetSvc(Ctrl, HasDraft);
             return _getSvc;
         }
-        /*
-        private void SetEditDto()
-        {
-            _editDto ??= GetDto();
-        }
-        */
 
-        public virtual async Task<JObject?> GetUpdJsonA(string key, CrudEnum fun = CrudEnum.Update)
+        public virtual async Task<JObject?> GetUpdJsonA(string key)
         {
-            Fun = fun;
-            //SetEditDto();
-            return await GetSvc().GetUpdJsonA(key, GetDto(fun), fun);
+            //Fun = fun;
+            //var fun = CrudEnum.Update;
+            return await GetSvc().GetUpdJsonA(key, GetDto(CrudEnum.Update));
         }
 
-        public virtual async Task<JObject?> GetViewJsonA(string key, CrudEnum fun = CrudEnum.View)
+        public virtual async Task<JObject?> GetViewJsonA(string key)
         {
-            Fun = fun;
-            return await GetSvc().GetViewJsonA(key, GetDto(fun), fun);
+            //Fun = fun;
+            //var fun = CrudEnum.View;
+            return await GetSvc().GetViewJsonA(key, GetDto(CrudEnum.View));
+        }
+
+        public virtual async Task<JObject?> GetSignJsonA(string key)
+        {
+            //Fun = CrudEnum.Sign;
+            //var fun = CrudEnum.Sign;
+            return await GetSvc().GetSignJsonA(key, GetDto(CrudEnum.Sign));
         }
 
         public virtual async Task<JObject?> GetDraftJsonA(string key)
