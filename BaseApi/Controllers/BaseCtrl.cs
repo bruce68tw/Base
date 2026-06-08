@@ -30,10 +30,11 @@ namespace BaseApi.Controllers
         /// json to content result
         /// </summary>
         /// <param name="json"></param>
+        /// <param name="emptyToMsg">空值自動轉系統訊息</param>
         /// <returns></returns>
-        public ContentResult JsonToCnt(JObject? json)
+        public ContentResult JsonToCnt(JObject? json, bool emptyToMsg = true)
         {
-            json ??= _Json.GetBrError("FindNone");
+            json ??= emptyToMsg ? _Json.GetBrError("FindNone") : [];
             return Content(json.ToString(), ContentTypeEstr.Json);
         }
 
