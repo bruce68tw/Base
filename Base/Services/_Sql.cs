@@ -12,8 +12,8 @@ namespace Base.Services
             var range = _Auth.GetAuthRange(ctrl, CrudEnum.Read, br.ProgAuthStrs);
             return range switch
             {
-                AuthRangeEnum.User => $" and {_Fun.FidUser}='{br.UserId}'",
-                AuthRangeEnum.Dept => $" and {_Fun.FidDept}='{br.DeptId}'",
+                AuthRangeEnum.User => $" and u.Id='{br.UserId}'",
+                AuthRangeEnum.Dept => $" and u.DeptId='{br.DeptId}'",
                 AuthRangeEnum.All => "",
                 _ => " and 1=0"
             };
