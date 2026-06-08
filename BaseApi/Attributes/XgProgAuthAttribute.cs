@@ -90,7 +90,7 @@ namespace BaseApi.Attributes
                     //return view of no access right.
                     context.Result = new ViewResult
                     {
-                        ViewName = "~/Views/Shared/Error.cshtml",
+                        ViewName = "~/Views/Shared/_Error.cshtml",
                         //Model為唯讀, 必須用ViewData傳值 !!
                         ViewData = new ViewDataDictionary(
                             new EmptyModelMetadataProvider(),
