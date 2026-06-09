@@ -52,7 +52,8 @@ namespace BaseApi.Controllers
                 : BadRequest(file.Error);
         }
 
-        public IActionResult ViewFile(FileResult? file)
+        //檢視檔案, 由子代呼叫
+        public IActionResult FileToResult(FileResult? file)
         {
             return (file == null) ? NotFound() : file;
         }
