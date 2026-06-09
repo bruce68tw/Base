@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Base.Services
 {
@@ -10,6 +11,13 @@ namespace Base.Services
     /// </summary>
     public class _Code
     {
+        public const string AuthRange = "xAuthRange";
+
+        public static async Task<List<IdStrDto>?> AuthRangeA(Db? db = null)
+        {
+            return await _List.TypeToListA(AuthRange, db);
+        }
+
         //FilterArray -> FilterJsons
         //filter json array
         public static JArray? FilterJsons(JArray rows, string fid, string value)

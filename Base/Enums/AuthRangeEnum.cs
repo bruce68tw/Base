@@ -1,7 +1,7 @@
 ﻿namespace Base.Enums
 {
     /// <summary>
-    /// crud auth range
+    /// crud auth range, mapping to XpCode xAuthRange
     /// </summary>
     public enum AuthRangeEnum
     {
