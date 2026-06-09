@@ -143,7 +143,7 @@ where ur.UserId='{userId}'
                         : $@"
 from dbo.XpRoleProg rp
 join dbo.XpProg p on rp.ProgId=p.Id
-join dbo.XpUserRole ur on rp.SourceId=ur.RoleId or (@RoleId != '' and rp.SourceId=@RoleId)
+join dbo.XpUserRole ur on rp.RoleId=ur.RoleId or (@RoleId != '' and rp.RoleId=@RoleId)
 where ur.UserId='{userId}'
 ";
 
@@ -185,7 +185,7 @@ where ur.UserId='{userId}'
 "
                         : $@"
 from dbo.XpRoleProg rp
-join dbo.XpUserRole ur on rp.SourceId=ur.RoleId or (@RoleId != '' and rp.SourceId=@RoleId)
+join dbo.XpUserRole ur on rp.RoleId=ur.RoleId or (@RoleId != '' and rp.RoleId=@RoleId)
 where ur.UserId='{userId}' 
 ";
 

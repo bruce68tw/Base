@@ -136,7 +136,7 @@ namespace Base.Services
         /// </summary>
         public static bool MultiLang = false;
 
-        //角色是否區分部門(是否使用XpDeptRole), 如果true則XpRoleProg.SourceId=XpDeptRole.Id, false則=XpRole.Id !!
+        //角色是否區分部門(是否使用XpDeptRole), 如果true則XpRoleProg有DeptRoleId !!
         public static bool UseDeptRole = false;
         #endregion
 
