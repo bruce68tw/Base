@@ -283,7 +283,6 @@ and SourceId=@SourceId
                 var line = flowLines[idx];
                 var uid = "";
                 var signerIds = new List<string>();
-                //var isRoleCode = false;
                 var hasRows = false;
                 DateTime? signTime = (level == 0) ? now : null;
                 DateTime? getTime = (level <= 1) ? now : null;  //等於上一筆的signTime, level=0也填入有助排序
@@ -323,7 +322,6 @@ and SourceId=@SourceId
                             break;
                         case SignerTypeEstr.DeptRole:
                             userType = "Dept Role";
-                            //isRoleCode = true;
                             if (line.SignerValue != null)
                                 uid = await db.GetStrA(string.Format(SqlDeptRole, line.SignerValue));
                             break;
