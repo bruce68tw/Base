@@ -723,11 +723,11 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 css = GetCssClass("position-relative xi-box", dto.ClsBox, dto.Width);
                 html = $"<input{attr} data-type='{InputTypeEstr.Text}' class='form-control'>";
 
-                //裡面使用bootstrap 5 css class
+                //裡面使用bootstrap 5 css class, 放 data-edit 受編輯狀態空制
                 html = $@"
 <div class='{css}'>
     {html}
-    <button type='button' data-onclick='{dto.FnOnFind}' class='btn position-absolute top-50 end-0 translate-middle-y me-1'>
+    <button type='button' data-onclick='{dto.FnOnFind}' data-edit class='btn position-absolute top-50 end-0 translate-middle-y me-1'>
         <i class='ico-find'></i>
     </button>
 </div>
