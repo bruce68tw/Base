@@ -79,7 +79,7 @@ select s.NodeName, s.SignerName, s.GetTime, s.SignTime, s.Note,
 from dbo.XpFlowSign s
 join dbo.XpFlowMap m on s.FlowMapId=m.Id
 join dbo.XpFlow f on m.FlowId=f.Id
-join dbo.XpCode c on c.Type='xfSignStatus' and s.SignStatus=c.Value
+join dbo.XpCode c on c.Type='{_Code.SignStatus}' and s.SignStatus=c.Value
 where m.ProgCode='{progCode}'
 and m.SourceId='{sourceId}'
 order by s.FlowLevel
@@ -108,11 +108,11 @@ order by Type, Sort";
             if (rows == null) return;
 
             //await using var db = new Db();
-            viewBag.NodeTypes = _Code.FilterList(rows, "xfNodeType");
-            viewBag.SignerTypes = _Code.FilterList(rows, "xfSignerType");
-            viewBag.AndOrs = _Code.FilterList(rows, "xfAndOr");
-            viewBag.LineOps = _Code.FilterList(rows, "xfLineOp");
-            viewBag.LineFromTypes = _Code.FilterList(rows, "xfLineFromType");
+            viewBag.NodeTypes = _Code.FilterList(rows, _Code.NodeType);
+            viewBag.SignerTypes = _Code.FilterList(rows, _Code.SignerType);
+            viewBag.AndOrs = _Code.FilterList(rows, _Code.AndOr);
+            viewBag.LineOps = _Code.FilterList(rows, _Code.LineOp);
+            viewBag.LineFromTypes = _Code.FilterList(rows, _Code.LineFromType);
         }
 
         /// <summary>
