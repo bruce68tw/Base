@@ -98,7 +98,7 @@
     <PackageReference Include="SkiaSharp" Version="3.119.2" />
     <PackageReference Include="StackExchange.Redis" Version="2.13.1" />
     <PackageReference Include="System.Data.OleDb" Version="10.0.8" />
-    <PackageReference Include="System.DirectoryServices" Version="10.0.8" />
+    <PackageReference Include="System.DirectoryServices" Version="9.0.17" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.8" />
   </ItemGroup>
 
