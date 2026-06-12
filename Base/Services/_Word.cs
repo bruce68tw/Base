@@ -9,10 +9,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+/*
 //for docx image
-using A = DocumentFormat.OpenXml.Drawing;
+using Draw = DocumentFormat.OpenXml.Drawing;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
+*/
 
 namespace Base.Services
 {
@@ -22,10 +24,12 @@ namespace Base.Services
         //public const string Carrier = "<w:br/>";
         //public const string PageBreak = "<w:p><w:pPr><w:sectPr><w:type w:val=\"nextPage\" /></w:sectPr></w:pPr></w:p>";
 
+        /*
         //checked char type(yes/no)
         public const int Checkbox = 1;  //checkbox
         public const int Radio = 2;     //radio
         public const int CharV = 3;     //V char
+        */
 
         /// <summary>
         /// _HttpWord.MsByTplRow -> _Word.TplToMsA
@@ -90,7 +94,7 @@ namespace Base.Services
                     imagePart.FeedData(stream);
                 }
             }
-            wordDoc!.MainDocumentPart!.Document.Save();
+            wordDoc!.MainDocumentPart!.Document!.Save();
         }
 
         /// <summary>
@@ -112,7 +116,7 @@ namespace Base.Services
                 for (var i = 1; i < srcFiles.Length; i++)
                 {
                     //add page break
-                    mainPart!.Document.Body!.AppendChild(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
+                    mainPart!.Document!.Body!.AppendChild(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
 
                     //add file
                     var altChunkId = "AltChunkId" + i;
@@ -128,7 +132,7 @@ namespace Base.Services
                     };
                     mainPart.Document.Body.InsertAfter(altChunk, mainPart.Document.Body.Elements<Paragraph>().Last());
                 }
-                mainPart!.Document.Save();
+                mainPart!.Document!.Save();
                 //docx.Close();
             }
 
@@ -140,6 +144,8 @@ namespace Base.Services
             }
         }
 
+        #region 可能移到 WordSetSvc.cs 
+        /*
         //word doc add image, and convert image to text
         public static void DocxAddImage(WordprocessingDocument docx, ref string text, List<WordImageDto> images)
         {
@@ -152,15 +158,15 @@ namespace Base.Services
                 //var width = Convert.ToDouble(images[i + 1]);
                 //var height = Convert.ToDouble(images[i + 2]);
                 //var tag = images[i + 3];
-                var imageService = new WordImageSvc(image.FilePath, image.Width, image.Height);
+                var imageSvc = new WordImageSvc(image.FilePath, image.Width, image.Height);
                 var newText = "";
-                if (imageService.DataStream != null)
+                if (imageSvc.DataStream != null)
                 {
                     //TODO: how multiple images ??
                     var imagePart = mainPart!.AddImagePart(ImagePartType.Jpeg);
-                    imagePart.FeedData(imageService.DataStream);
+                    imagePart.FeedData(imageSvc.DataStream);
                     var imagePartId = mainPart.GetIdOfPart(imagePart);
-                    newText = GetImageRun(imagePartId, imageService).InnerXml;
+                    newText = GetImageRun(imagePartId, imageSvc).InnerXml;
                 }
 
                 text.Replace(image.Tag, newText);
@@ -204,9 +210,9 @@ namespace Base.Services
                              Name = imageService.ImageName,
                          },
                          new DW.NonVisualGraphicFrameDrawingProperties(
-                             new A.GraphicFrameLocks() { NoChangeAspect = true }),
-                         new A.Graphic(
-                             new A.GraphicData(
+                             new Draw.GraphicFrameLocks() { NoChangeAspect = true }),
+                         new Draw.Graphic(
+                             new Draw.GraphicData(
                                  new PIC.Picture(
                                      new PIC.NonVisualPictureProperties(
                                          new PIC.NonVisualDrawingProperties()
@@ -216,9 +222,9 @@ namespace Base.Services
                                          },
                                          new PIC.NonVisualPictureDrawingProperties()),
                                      new PIC.BlipFill(
-                                         new A.Blip(
-                                             new A.BlipExtensionList(
-                                                 new A.BlipExtension()
+                                         new Draw.Blip(
+                                             new Draw.BlipExtensionList(
+                                                 new Draw.BlipExtension()
                                                  {
                                                      Uri =
                                                         "{28A0092B-C50C-407E-A947-70E740481C1C}"
@@ -227,22 +233,22 @@ namespace Base.Services
                                          {
                                              Embed = imagePartId,
                                              CompressionState =
-                                             A.BlipCompressionValues.Print
+                                             Draw.BlipCompressionValues.Print
                                          },
-                                         new A.Stretch(
-                                             new A.FillRectangle())),
+                                         new Draw.Stretch(
+                                             new Draw.FillRectangle())),
                                      new PIC.ShapeProperties(
-                                         new A.Transform2D(
-                                             new A.Offset() { X = 0L, Y = 0L },
-                                             new A.Extents()
+                                         new Draw.Transform2D(
+                                             new Draw.Offset() { X = 0L, Y = 0L },
+                                             new Draw.Extents()
                                              {
                                                  Cx = imageService.WidthInEMU,
                                                  Cy = imageService.HeightInEMU
                                              }),
-                                         new A.PresetGeometry(
-                                             new A.AdjustValueList()
+                                         new Draw.PresetGeometry(
+                                             new Draw.AdjustValueList()
                                          )
-                                         { Preset = A.ShapeTypeValues.Rectangle }))
+                                         { Preset = Draw.ShapeTypeValues.Rectangle }))
                              )
                              { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" })
                      )
@@ -299,7 +305,7 @@ namespace Base.Services
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="rowTpl"></param>
-        /// <param name="rows"></param>
+        /// <param name="rows">可以是json或model</param>
         /// <returns></returns>
         public static string TplFillRows(string rowTpl, IEnumerable<dynamic> rows)
         {
@@ -390,10 +396,15 @@ namespace Base.Services
 
         public static string YesNo(bool status, int type = Checkbox)
         {
-            if (type == Checkbox) return status ? "■" : "□";
-            if (type == Radio) return status ? "●" : "○";
-            else return status ? "V" : "";
+            return type switch
+            {
+                Checkbox => status ? "■" : "□",
+                Radio => status ? "●" : "○",
+                _ => status ? "V" : "",     //default is checkbox
+            };
         }
+        */
+        #endregion
 
         #region remark code
         /// <summary>
@@ -528,8 +539,6 @@ namespace Base.Services
             return str;
         }
         */
-
-
         #endregion
 
     }//class

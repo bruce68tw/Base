@@ -8,11 +8,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-using D = DocumentFormat.OpenXml.Drawing;
+using Draw = DocumentFormat.OpenXml.Drawing;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 
 namespace Base.Services
 {
+    //word套表
     public class WordSetSvc
     {
         //checked char type(yes/no)
@@ -39,7 +40,7 @@ namespace Base.Services
             // 開啟 Word 文件 (唯讀)
             using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
 
-            // 2. 將模板讀入記憶體流
+            // 2. 將模板內容讀入記憶體流
             _ms = new MemoryStream();
             fs.CopyTo(_ms);
             _ms.Position = 0;  // 重設流位置
@@ -48,19 +49,21 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get result memory stream
+        /// 傳回處理結果的 memory stream
         /// </summary>
-        /// <param name="row"></param>
-        /// <param name="childs"></param>
-        /// <param name="images"></param>
+        /// <param name="row">主table資料, 可為json或model</param>
+        /// <param name="childs">外部傳入空值(非null), 在本程式設定內容</param>
+        /// <param name="images">圖檔</param>
         /// <returns></returns>
-        public MemoryStream? GetResultMs(dynamic? row,
-            List<dynamic>? childs = null, List<WordImageDto>? images = null)
+        public MemoryStream? GetResultMs(dynamic? row, List<dynamic>? childs = null, 
+            List<WordImageDto>? images = null)
         {
             //fill childs first(只存在table), 減少row的欄位
             if (childs != null)
+            {
                 for (var i = 0; i < childs.Count; i++)
                     FillTable(i, childs[i]);
+            }
 
             //fill row, 包含段落和table
             if (row != null)
@@ -68,11 +71,13 @@ namespace Base.Services
 
             //add images
             if (_List.NotEmpty(images))
+            {
                 foreach (var image in images!)
                     AddImage(image);
+            }
 
             //var ms = new MemoryStream();
-            _docx.MainDocumentPart!.Document.Save();
+            _docx.MainDocumentPart!.Document!.Save();
             _docx.Dispose();
             _ms.Position = 0;  // 重置位置
             return _ms;
@@ -102,16 +107,16 @@ namespace Base.Services
             if (!cell.Elements<Paragraph>().Any()) cell.Append(para);
         }
 
-        private void FillMain(dynamic sourceRow)
+        private void FillMain(dynamic srcRow)
         {
-            if (sourceRow == null || _docx.MainDocumentPart?.Document.Body == null)
+            if (srcRow == null || _docx.MainDocumentPart?.Document!.Body == null)
                 return;
 
-            Dictionary<string, string> row;
-            if (_Object.IsJObject(sourceRow))
+            Dictionary<string, string> pair;
+            if (_Object.IsJObject(srcRow))
             {
-                var obj = sourceRow as JObject;
-                row = obj!.Properties()
+                var obj = srcRow as JObject;
+                pair = obj!.Properties()
                     .ToDictionary(
                         prop => $"[{prop.Name}]",   //包含[]方便後面運算
                         prop => prop.Value!.ToString()
@@ -119,14 +124,14 @@ namespace Base.Services
             }
             else
             {
-                var obj = (object)sourceRow!;
-                row = obj.GetType().GetProperties()
+                var obj = (object)srcRow!;
+                pair = obj.GetType().GetProperties()
                     .ToDictionary(
                         prop => $"[{prop.Name}]",
                         prop => prop.GetValue(obj)?.ToString() ?? string.Empty
                     );
             }
-            FillMainByRow(row);
+            FillMainByRow(pair);
         }
 
         /*
@@ -149,22 +154,22 @@ namespace Base.Services
         }
         */
 
-        private void FillMainByRow(Dictionary<string, string> row)
+        private void FillMainByRow(Dictionary<string, string> pair)
         {
             // 取得所有文字節點，篩選出含有任何屬性標記的節點
-            var body = _docx.MainDocumentPart?.Document.Body!;
+            var body = _docx.MainDocumentPart?.Document!.Body!;
             var texts = body.Elements<Paragraph>()
                 .Concat(body.Elements<Table>()
                     .SelectMany(table => table.Descendants<Paragraph>()))
                 .SelectMany(para => para.Elements<Run>())
                 .Select(run => run.GetFirstChild<Text>())
-                .Where(text => text != null && row.Keys.Any(key => text!.Text.Contains(key)))
+                .Where(text => text != null && pair.Keys.Any(key => text!.Text.Contains(key)))
                 .ToList();
 
             foreach (var text in texts ?? [])
             {
                 // 使用字典加速替換
-                foreach (var col in row)
+                foreach (var col in pair)
                 {
                     if (text!.Text.Contains(col.Key))
                         text.Text = text.Text.Replace(col.Key, col.Value);
@@ -193,17 +198,17 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// 將資料填入table(only)
+        /// 將資料填入word table(only)
         /// </summary>
         /// <param name="index"></param>
-        /// <param name="sourceRows"></param>
-        private void FillTable(int index, IEnumerable<dynamic>? sourceRows)
+        /// <param name="srcRows">可以是json或model</param>
+        private void FillTable(int index, IEnumerable<dynamic>? srcRows)
         {
-            if (sourceRows == null || !sourceRows.Any()) return;
+            if (srcRows == null || !srcRows.Any()) return;
 
             // 找到包含指定標記的表格列            
             var tag = $"[!{index}]";    // 找含有 [!x] 的範本列, base 0
-            var tplRow = _docx.MainDocumentPart?.Document.Body?.Elements<Table>()
+            var tplRow = _docx.MainDocumentPart?.Document!.Body?.Elements<Table>()
                 .SelectMany(t => t.Elements<TableRow>())
                 .FirstOrDefault(r => r.Elements<TableCell>().Any(c => c.InnerText.Contains(tag)));
             if (tplRow == null) return;
@@ -221,13 +226,13 @@ namespace Base.Services
             if (table == null) return;
 
             // 是否為 JSON
-            List<Dictionary<string, string>> rows = [];
-            if (_Object.IsJObject(sourceRows.First()))
+            List<Dictionary<string, string>> pairs = [];
+            if (_Object.IsJObject(srcRows.First()))
             {
-                foreach (var sourceRow in sourceRows)
+                foreach (var srcRow in srcRows)
                 {
-                    var obj = sourceRow as JObject;
-                    rows.Add(obj!.Properties()
+                    var obj = srcRow as JObject;
+                    pairs.Add(obj!.Properties()
                         .ToDictionary(
                             prop => $"[{prop.Name}]",   //包含[]方便後面運算
                             prop => prop.Value!.ToString()
@@ -236,10 +241,10 @@ namespace Base.Services
             }
             else
             {
-                foreach (var sourceRow in sourceRows)
+                foreach (var srcRow in srcRows)
                 {
-                    var obj = (object)sourceRow!;
-                    rows.Add(obj.GetType().GetProperties()
+                    var obj = (object)srcRow!;
+                    pairs.Add(obj.GetType().GetProperties()
                         .ToDictionary(
                             prop => $"[{prop.Name}]",   //包含[]方便後面運算
                             prop => prop.GetValue(obj)?.ToString() ?? string.Empty
@@ -247,10 +252,10 @@ namespace Base.Services
                 }
             }
 
-            FillTableByRows(table, tplRow, rows);
+            FillTableByRows(table, tplRow, pairs);
         }
 
-        private void FillTableByRows(Table table, TableRow tplRow, List<Dictionary<string, string>> rows)
+        private void FillTableByRows(Table table, TableRow tplRow, List<Dictionary<string, string>> pairs)
         {
             // 取得tplRow的欄位資訊
             var idNums = new List<IdNumDto>();
@@ -258,22 +263,22 @@ namespace Base.Services
             var cellIdxs = tplRow.Elements<TableCell>()
                 .Select((cell, idx) => new { cell, idx })
                 .ToList();
-            foreach (var col in rows[0])
+            foreach (var pair in pairs[0])
             {
                 var findData = cellIdxs
-                    .FirstOrDefault(ci => ci.cell.InnerText.Contains(col.Key));
+                    .FirstOrDefault(ci => ci.cell.InnerText.Contains(pair.Key));
                 if (findData != null)
                 {
                     idNums.Add(new IdNumDto
                     {
-                        Id = col.Key,
+                        Id = pair.Key,
                         Num = findData.idx,
                     });
                 }
             }
 
             // 新增資料列
-            foreach (var row in rows)
+            foreach (var row in pairs)
             {
                 // 複製範本列
                 var newRow = (TableRow)tplRow.CloneNode(true);
@@ -399,7 +404,7 @@ namespace Base.Services
             if (mainPart == null) return;
 
             // 找到指定名稱的圖片 (非視覺屬性 name = imageDto.Code)
-            var pic = mainPart.Document
+            var pic = mainPart.Document!
                 .Descendants<DW.Inline>()
                 .FirstOrDefault(inl => inl.DocProperties?.Description == imageDto.Code);
             if (pic == null) return;
@@ -408,18 +413,18 @@ namespace Base.Services
             //    .ToList();
 
             // 取得圖片嵌入 (blip)
-            var blip = pic.Descendants<D.Blip>().FirstOrDefault();
+            var blip = pic.Descendants<Draw.Blip>().FirstOrDefault();
             if (blip == null) return;
 
             // 取得圖片大小 Extents
-            var extent = pic.Descendants<D.Extents>().FirstOrDefault();
-            if (extent == null) return;
+            var ext = pic.Descendants<Draw.Extents>().FirstOrDefault();
+            if (ext == null) return;
 
-            long width = extent!.Cx!;
-            long height = extent!.Cy!;
+            long width = ext!.Cx!;
+            long height = ext!.Cy!;
 
             // 讀取新圖片檔案 Bytes
-            byte[] newPicBytes = File.ReadAllBytes(imageDto.FilePath);
+            byte[] picBytes = File.ReadAllBytes(imageDto.FilePath);
 
             // 刪除舊圖片 Part
             var oldRelId = blip.Embed?.Value;
@@ -435,7 +440,7 @@ namespace Base.Services
 
             // 新增圖片 Part
             var newImagePart = mainPart.AddImagePart(ImagePartType.Png);
-            using (var stream = new MemoryStream(newPicBytes))
+            using (var stream = new MemoryStream(picBytes))
             {
                 newImagePart.FeedData(stream);
             }
@@ -444,8 +449,8 @@ namespace Base.Services
             blip!.Embed!.Value = mainPart.GetIdOfPart(newImagePart);
 
             // 保持圖片大小
-            extent.Cx = width;
-            extent.Cy = height;
+            ext.Cx = width;
+            ext.Cy = height;
         }
 
 
@@ -470,7 +475,8 @@ namespace Base.Services
         /// <param name="startNo">start column no</param>
         /// <param name="endNo">end column no</param>
         /// <param name="type">char type, 1:checkbox, 2:radio, 3:V</param>
-        private void ValueToChecks(JObject row, string value, string preFid, int startNo, int endNo, int type = Checkbox)
+        private void ValueToChecks(JObject row, string value, string preFid, 
+            int startNo, int endNo, int type = Checkbox)
         {
             for (var i = startNo; i <= endNo; i++)
             {
@@ -487,12 +493,12 @@ namespace Base.Services
 
         private string YesNo(bool status, int type = Checkbox)
         {
-            if (type == Checkbox)
-                return status ? "■" : "□";
-            if (type == Radio)
-                return status ? "●" : "○";
-            else
-                return status ? "V" : "";
+            return type switch
+            {
+                Checkbox => status ? "■" : "□",
+                Radio => status ? "●" : "○",
+                _ => status ? "V" : "",     //default is checkbox
+            };
         }
 
 
