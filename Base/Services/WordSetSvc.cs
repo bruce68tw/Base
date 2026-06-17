@@ -1,8 +1,12 @@
 ﻿using Base.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
+//using DocumentFormat.OpenXml.Spreadsheet;
+
+//using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
+using Pipelines.Sockets.Unofficial.Arenas;
 using SixLabors.ImageSharp;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +14,10 @@ using System.Linq;
 
 using Draw = DocumentFormat.OpenXml.Drawing;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
+//using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
+//using RunProp = DocumentFormat.OpenXml.Wordprocessing.RunProperties;
+//using Table = DocumentFormat.OpenXml.Wordprocessing.Table;
+//using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 
 namespace Base.Services
 {
@@ -21,9 +29,13 @@ namespace Base.Services
         public const int Radio = 2;     //radio
         public const int CharV = 3;     //V char
 
+        public const string Childs = "childs";  //childs欄位名稱
+
         //instance variables
+        private bool _isOk = false;
         private WordprocessingDocument _docx = null!;
         private MemoryStream _ms = null!;
+        private Body _tplBody = null!;
 
         //constructor
         public WordSetSvc(string tplPath)
@@ -38,49 +50,203 @@ namespace Base.Services
             }
 
             // 開啟 Word 文件 (唯讀)
-            using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
+            //using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
 
             // 2. 將模板內容讀入記憶體流
             _ms = new MemoryStream();
-            fs.CopyTo(_ms);
+            File.OpenRead(tplPath).CopyTo(_ms);
             _ms.Position = 0;  // 重設流位置
 
             _docx = WordprocessingDocument.Open(_ms, true);
+            _tplBody = _docx.MainDocumentPart!.Document!.Body!;
+            _isOk = true;
+        }
+
+        public bool IsOk()
+        {
+            return _isOk;
         }
 
         /// <summary>
-        /// 傳回處理結果的 memory stream
+        /// _HttpWord.MsByTplRow -> _Word.TplToMsA -> TplRowsToMsA
+        /// word to memoryStream for convert pdf
         /// </summary>
-        /// <param name="row">主table資料, 可為json或model</param>
-        /// <param name="childs">外部傳入空值(非null), 在本程式設定內容</param>
-        /// <param name="images">圖檔</param>
+        /// <param name="tplPath"></param>
+        /// //<param name="mainRow">可為json或model</param>
+        /// <param name="rows">可為json或model</param>
+        /// <param name="images"></param>
         /// <returns></returns>
-        public MemoryStream? GetResultMs(dynamic? row, List<dynamic>? childs = null, 
-            List<WordImageDto>? images = null)
+        public MemoryStream? RowsToMs(IEnumerable<dynamic> rows, List<WordImageDto>? images = null)
         {
-            //fill childs first(只存在table), 減少row的欄位
-            if (childs != null)
+            //body.RemoveAllChildren(); // 清空原內容
+            var newBody = new Body();
+            foreach (var row in rows)
             {
-                for (var i = 0; i < childs.Count; i++)
-                    FillTable(i, childs[i]);
+                //clone whole template body
+                var newPage = _tplBody.CloneNode(true);
+
+                FillRow(newPage, row);
+
+                //只 append children，不要 append body
+                foreach (var child in newPage.ChildElements)
+                {
+                    newBody.Append(child.CloneNode(true));
+                }
+
+                //移除 SectionProperties ??
+                newPage.RemoveAllChildren<SectionProperties>();
+
+                // page break, temp remark
+                //newBody.AppendChild(CreatePageBreak());
             }
 
-            //fill row, 包含段落和table
-            if (row != null)
-                FillMain(row);
+            //替換body
+            _docx.MainDocumentPart!.Document!.Body = newBody;
+            _docx.MainDocumentPart.Document.Save();
+            _docx.Dispose();
+            _ms.Position = 0;
+            return _ms;
 
+            // 開啟 Word 文件 (唯讀)
+            //using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
+            //using var docx = WordprocessingDocument.Open(fs, false);  // false 代表唯讀
+
+            /*
+            // 2. 使用 OpenXML 讀取 Word 模板
+            var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
+
+            // 2. 將模板讀入記憶體流
+            var ms = new MemoryStream();
+            fs.CopyTo(ms);
+            ms.Position = 0;  // 重設流位置
+
+            var wordDoc = WordprocessingDocument.Open(ms, true);
+            */
+
+            // 將 WordprocessingDocument 傳入自訂的處理服務
+            //return new WordSetSvc(tplPath).RowToMs(mainRow, rows, images);
+        }
+
+        private void FillRow(OpenXmlElement page, dynamic row, List<WordImageDto>? images = null)
+        {
+            //fill childs first(只存在table), 減少row的欄位
+            JObject json = (row is JObject)
+                ? (row as JObject)!
+                : JObject.FromObject(row);
+            var childs = json["Childs"] as JArray;
+
+            //fill main table
+            var texts = page
+                .Descendants<Text>()
+                .ToList();
+
+            foreach (var text in texts ?? [])
+            {
+                // 使用類字典加速替換
+                foreach (var item in json)
+                {
+                    if (text!.Text.Contains(item.Key))
+                        text.Text = text.Text.Replace(item.Key, item.Value!.ToString());
+                }
+            }
+
+            //fill childs
+            if (childs!.Any())
+            {
+                for(var i=0; i<childs!.Count; i++)
+                {
+                    FillTable(page, i, (JArray)childs![i]);
+                }
+            }
+
+            /* temp remark
             //add images
             if (_List.NotEmpty(images))
             {
                 foreach (var image in images!)
-                    AddImage(image);
+                    AddImage(root, image);
+            }
+            */
+        }
+
+        /// <summary>
+        /// 將資料填入word table(only)
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="rows">可以是json或model</param>
+        private void FillTable(OpenXmlElement page, int index, JArray jsons)
+        {
+            if (!jsons.Any()) return;
+
+            // 找到包含指定標記的表格列            
+            var tag = $"[!{index}]";    // 找含有 [!x] 的範本列, base 0
+            var oldTplRow = page.Elements<Table>()
+                .SelectMany(t => t.Elements<TableRow>())
+                .FirstOrDefault(r => r.Elements<TableCell>().Any(c => c.InnerText.Contains(tag)));
+            if (oldTplRow == null) return;
+
+            /*
+            // 清除tplRow的欄位標記
+            var cell = oldTplRow.Elements<TableCell>()
+                .First(c => c.InnerText.Contains(tag));
+            foreach (var paragraph in cell.Elements<Paragraph>())
+                foreach (var run in paragraph.Elements<Run>())
+                    foreach (var text in run.Elements<Text>())
+                        text.Text = text.Text.Replace(tag, "");
+            */
+
+            // 取得表格
+            var oldTable = (oldTplRow.Parent as Table)!;
+            var tplRow = (TableRow)oldTplRow.CloneNode(true);
+            oldTplRow.Remove();
+            var table = (Table)oldTable.CloneNode(true);    //new table, 不含範本列
+
+            //if (table == null) return;
+
+            // 取得tplRow的欄位資訊
+            var idNums = new List<IdNumDto>();
+            //var row0 = (JObject)rows[0];
+            var cellIdxs = oldTplRow.Elements<TableCell>()
+                .Select((cell, idx) => new { cell, idx })
+                .ToList();
+            foreach (var item in (JObject)jsons[0])
+            {
+                var findData = cellIdxs
+                    .FirstOrDefault(ci => ci.cell.InnerText.Contains(item.Key));
+                if (findData != null)
+                {
+                    idNums.Add(new IdNumDto
+                    {
+                        Id = item.Key,
+                        Num = findData.idx,
+                    });
+                }
             }
 
-            //var ms = new MemoryStream();
-            _docx.MainDocumentPart!.Document!.Save();
-            _docx.Dispose();
-            _ms.Position = 0;  // 重置位置
-            return _ms;
+            // 新增資料列
+            foreach (JObject json in jsons)
+            {
+                // 複製範本列
+                var newRow = (TableRow)oldTplRow.CloneNode(true);
+
+                // 動態替換欄位，例如 [Name]、[Age]
+                foreach (var item in idNums)
+                {
+                    var value = json[item.Id]?.ToString() ?? "";
+                    var cell2 = newRow.Elements<TableCell>().ElementAtOrDefault(item.Num);
+                    if (cell2 != null)
+                        CellSetText(cell2, value);
+                }
+
+                // 將新列加入表格
+                table.AppendChild(newRow);
+            }
+
+            // 新增完成後刪除範本列
+            //tplRow.Remove();
+
+            //寫入 root
+            oldTable.Parent!.ReplaceChild(table, oldTable);
         }
 
         /// <summary>
@@ -106,293 +272,6 @@ namespace Base.Services
 
             if (!cell.Elements<Paragraph>().Any()) cell.Append(para);
         }
-
-        private void FillMain(dynamic srcRow)
-        {
-            if (srcRow == null || _docx.MainDocumentPart?.Document!.Body == null)
-                return;
-
-            Dictionary<string, string> pair;
-            if (_Object.IsJObject(srcRow))
-            {
-                var obj = srcRow as JObject;
-                pair = obj!.Properties()
-                    .ToDictionary(
-                        prop => $"[{prop.Name}]",   //包含[]方便後面運算
-                        prop => prop.Value!.ToString()
-                    );
-            }
-            else
-            {
-                var obj = (object)srcRow!;
-                pair = obj.GetType().GetProperties()
-                    .ToDictionary(
-                        prop => $"[{prop.Name}]",
-                        prop => prop.GetValue(obj)?.ToString() ?? string.Empty
-                    );
-            }
-            FillMainByRow(pair);
-        }
-
-        /*
-        private void FillJson(JObject row)
-        {
-            var body = _docx.MainDocumentPart?.Document.Body!;
-            foreach (var para in body.Elements<Paragraph>())
-                foreach (var run in para.Elements<Run>())
-                {
-                    var textElm = run.GetFirstChild<Text>();
-                    if (textElm != null)
-                    {
-                        foreach (var item in row)
-                        {
-                            var newText = textElm.Text.Replace($"[{item.Key}]", item.Value!.ToString());
-                            textElm.Text = newText;
-                        }
-                    }
-                }
-        }
-        */
-
-        private void FillMainByRow(Dictionary<string, string> pair)
-        {
-            // 取得所有文字節點，篩選出含有任何屬性標記的節點
-            var body = _docx.MainDocumentPart?.Document!.Body!;
-            var texts = body.Elements<Paragraph>()
-                .Concat(body.Elements<Table>()
-                    .SelectMany(table => table.Descendants<Paragraph>()))
-                .SelectMany(para => para.Elements<Run>())
-                .Select(run => run.GetFirstChild<Text>())
-                .Where(text => text != null && pair.Keys.Any(key => text!.Text.Contains(key)))
-                .ToList();
-
-            foreach (var text in texts ?? [])
-            {
-                // 使用字典加速替換
-                foreach (var col in pair)
-                {
-                    if (text!.Text.Contains(col.Key))
-                        text.Text = text.Text.Replace(col.Key, col.Value);
-                }
-            }
-        }
-
-        /*
-        private void FillModel<T>(T row)
-        {
-            var props = row!.GetType().GetProperties();
-            var body = _docx.MainDocumentPart?.Document.Body!;
-            foreach (var para in body.Elements<Paragraph>())
-                foreach (var run in para.Elements<Run>())
-                    foreach (var prop in props)
-                    {
-                        var value = prop.GetValue(row, null);
-                        var textElm = run.GetFirstChild<Text>();
-                        if (textElm != null)
-                        {
-                            var newText = textElm.Text.Replace($"[{prop.Name}]", (value == null) ? "" : value.ToString());
-                            textElm.Text = newText;
-                        }
-                    }
-        }
-        */
-
-        /// <summary>
-        /// 將資料填入word table(only)
-        /// </summary>
-        /// <param name="index"></param>
-        /// <param name="srcRows">可以是json或model</param>
-        private void FillTable(int index, IEnumerable<dynamic>? srcRows)
-        {
-            if (srcRows == null || !srcRows.Any()) return;
-
-            // 找到包含指定標記的表格列            
-            var tag = $"[!{index}]";    // 找含有 [!x] 的範本列, base 0
-            var tplRow = _docx.MainDocumentPart?.Document!.Body?.Elements<Table>()
-                .SelectMany(t => t.Elements<TableRow>())
-                .FirstOrDefault(r => r.Elements<TableCell>().Any(c => c.InnerText.Contains(tag)));
-            if (tplRow == null) return;
-
-            // 清除tplRow的標記
-            var cell = tplRow.Elements<TableCell>()
-                .First(c => c.InnerText.Contains(tag));
-            foreach (var paragraph in cell.Elements<Paragraph>())
-                foreach (var run in paragraph.Elements<Run>())
-                    foreach (var text in run.Elements<Text>())
-                        text.Text = text.Text.Replace(tag, "");
-
-            // 取得表格
-            var table = tplRow.Parent as Table;
-            if (table == null) return;
-
-            // 是否為 JSON
-            List<Dictionary<string, string>> pairs = [];
-            if (_Object.IsJObject(srcRows.First()))
-            {
-                foreach (var srcRow in srcRows)
-                {
-                    var obj = srcRow as JObject;
-                    pairs.Add(obj!.Properties()
-                        .ToDictionary(
-                            prop => $"[{prop.Name}]",   //包含[]方便後面運算
-                            prop => prop.Value!.ToString()
-                        ));
-                }
-            }
-            else
-            {
-                foreach (var srcRow in srcRows)
-                {
-                    var obj = (object)srcRow!;
-                    pairs.Add(obj.GetType().GetProperties()
-                        .ToDictionary(
-                            prop => $"[{prop.Name}]",   //包含[]方便後面運算
-                            prop => prop.GetValue(obj)?.ToString() ?? string.Empty
-                        ));
-                }
-            }
-
-            FillTableByRows(table, tplRow, pairs);
-        }
-
-        private void FillTableByRows(Table table, TableRow tplRow, List<Dictionary<string, string>> pairs)
-        {
-            // 取得tplRow的欄位資訊
-            var idNums = new List<IdNumDto>();
-            //var row0 = (JObject)rows[0];
-            var cellIdxs = tplRow.Elements<TableCell>()
-                .Select((cell, idx) => new { cell, idx })
-                .ToList();
-            foreach (var pair in pairs[0])
-            {
-                var findData = cellIdxs
-                    .FirstOrDefault(ci => ci.cell.InnerText.Contains(pair.Key));
-                if (findData != null)
-                {
-                    idNums.Add(new IdNumDto
-                    {
-                        Id = pair.Key,
-                        Num = findData.idx,
-                    });
-                }
-            }
-
-            // 新增資料列
-            foreach (var row in pairs)
-            {
-                // 複製範本列
-                var newRow = (TableRow)tplRow.CloneNode(true);
-
-                // 動態替換欄位，例如 [Name]、[Age]
-                foreach (var item in idNums)
-                {
-                    var value = row[item.Id]?.ToString() ?? "";
-                    var cell = newRow.Elements<TableCell>().ElementAtOrDefault(item.Num);
-                    if (cell != null)
-                        CellSetText(cell, value);
-                }
-
-                // 將新列加入表格
-                table.AppendChild(newRow);
-            }
-
-            // 新增完成後刪除範本列
-            tplRow.Remove();
-        }
-
-        /*
-        private void FillJsons(Table table, TableRow tplRow, JArray rows)
-        {
-            // 取得欄位資訊
-            var nos = new List<IdNumDto>();
-            var row0 = (JObject)rows[0];
-            var cells = tplRow.Elements<TableCell>().ToList();
-
-            foreach (var item in row0)
-            {
-                var fid = item!.Key;
-                var index = cells
-                    .Select((cell, idx) => new { cell, idx })
-                    .FirstOrDefault(ci => ci.cell.InnerText.Contains($"[{fid}]"))?.idx ?? -1;
-
-                if (index >= 0)
-                {
-                    nos.Add(new IdNumDto
-                    {
-                        Id = fid,
-                        Num = index,
-                    });
-                }
-            }
-
-            // 新增資料列
-            foreach (var row in rows)
-            {
-                // 複製範本列
-                var newRow = (TableRow)tplRow.CloneNode(true);
-
-                // 動態替換欄位，例如 [Name]、[Age]
-                foreach (var no in nos)
-                {
-                    var value = row[no.Id]?.ToString() ?? "";
-                    var cell = newRow.Elements<TableCell>().ElementAtOrDefault(no.Num);
-                    if (cell != null)
-                        CellSetText(cell, value);
-                }
-
-                // 將新列加入表格
-                table.AppendChild(newRow);
-            }
-
-            // 新增完成後刪除範本列
-            tplRow.Remove();
-        }
-
-        private void FillModels<T>(Table table, TableRow tplRow, IEnumerable<T> rows)
-        {
-            // 取得欄位資訊
-            var nos = new List<int>();
-            var props = rows.First()!.GetType().GetProperties(); // 減少在 loop 中取值
-            var cells = tplRow.Elements<TableCell>().ToList();
-
-            foreach (var prop in props)
-            {
-                var fid = prop.Name;
-                var index = cells
-                    .Select((cell, idx) => new { cell, idx })
-                    .FirstOrDefault(ci => ci.cell.InnerText.Contains($"[{fid}]"))?.idx ?? -1;
-                if (index >= 0)
-                {
-                    nos.Add(index);
-                }
-            }
-
-            // 新增資料列
-            foreach (var row in rows)
-            {
-                // 複製範本列
-                var newRow = (TableRow)tplRow.CloneNode(true);
-
-                // 動態替換欄位，例如 [Name]、[Age]
-                foreach (var no in nos)
-                {
-                    var prop = props[no];
-                    var value = prop.GetValue(row)?.ToString() ?? "";
-                    var cell = newRow.Elements<TableCell>().ElementAtOrDefault(no);
-                    if (cell != null)
-                    {
-                        CellSetText(cell, value);
-                    }
-                }
-
-                // 將新列加入表格
-                table.AppendChild(newRow);
-            }
-
-            // 新增完成後刪除範本列
-            tplRow.Remove();
-        }
-        */
 
         /// <summary>
         /// word內使用anchor類型圖案
@@ -500,102 +379,6 @@ namespace Base.Services
                 _ => status ? "V" : "",     //default is checkbox
             };
         }
-
-
-        #region remark code
-        /*
-        /// <summary>
-        /// write into docx stream, consider multiple rows(copy from _WebWord.cs Output())
-        /// </summary>
-        /// <param name="row"></param>
-        /// <param name="stream"></param>
-        /// <param name="images"></param>
-        /// <param name="rows">"multiple" rows</param>
-        public bool StreamFillData(JObject row, Stream stream, List<WordImageDto> images = null, List<WordRowsDto> wordRows = null)
-        {
-            //stream -> docx
-            using (var docx = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document))
-            {
-                //call delegate if need
-                //var mainPart = docx.MainDocumentPart;
-
-                //=== 2.do single row start ===
-                //read template file
-                var mainTpl = GetMainPartStr();
-
-                //add image first
-                if (images != null)
-                    DocxAddImage(docx, ref mainTpl, images);
-
-                //fill master row
-                mainTpl = StrFillRow(mainTpl, row);
-                //foreach (var item in row)
-                //    mainTpl = mainTpl.Replace("[" + item.Key + "]", item.Value.ToString());
-
-                //multiple rows
-                if (wordRows != null)
-                {
-                    foreach(var wordRow in wordRows)
-                    {
-                        //find tag name
-                        //find box tag & row -> template string
-                        var tplStart = 0;
-                        var tplEnd = 0;
-                        var rowTpl = "";
-                        var rowList = "";
-                        foreach(JObject row2 in wordRow.Rows)
-                        {
-                            var rowStr = rowTpl;
-                            foreach (var item in row2)
-                                rowStr = rowStr.Replace("[" + item.Key + "]", item.Value.ToString());
-                            rowList += rowStr;
-                        }
-
-                        mainTpl = mainTpl.Substring(0, tplStart) + rowList + mainTpl.Substring(0, tplEnd);
-                    }
-                }
-
-                StrToDocxMain(mainTpl, docx);
-
-                //Debug.Assert(IsDocxValid(doc), "Invalid File!");
-
-                //no save, but can debug !!
-                //mainPart.Document.Save();
-                //=== 2. end ===
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// ?? if multiple area has fixed rows, can treat as single row
-        /// table field id add pre a,b,c(for multiple tables), add tail 0,1,2 for row no
-        /// </summary>
-        /// <param name="rows">multiple rows, nullable</param>
-        /// <param name="row">single row to write into</param>
-        /// <param name="preTable">table field id pre a,b,c</param>
-        /// <param name="maxRows">multiple area with fixed rows</param>
-        /// <param name="cols">table column list, no pre/tail char (rows could be null, so this input is need)</param>
-        public void FixedRowsToRow(JArray rows, JObject row, string preTable, int maxRows, List<string> cols)
-        {
-            //write row
-            //if (extCols != null)
-            //    cols.AddRange(extCols);
-            var colLen = cols.Count;
-            var rowLen = (rows == null) ? 0 : rows.Count;
-            for (var i = 0; i < maxRows; i++)
-            {
-                //reset table column or write into
-                if (rowLen > i)
-                    for (var j = 0; j < colLen; j++)
-                        row[preTable + cols[j] + i] = rows[i][cols[j]].ToString();
-                else
-                    for (var j = 0; j < colLen; j++)
-                        row[preTable + cols[j] + i] = "";
-
-            }
-        }
-        */
-        #endregion
 
     }//class
 }

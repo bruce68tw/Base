@@ -10,9 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Break = DocumentFormat.OpenXml.Wordprocessing.Break;
-using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
-
 /*
 //for docx image
 using Draw = DocumentFormat.OpenXml.Drawing;
@@ -22,7 +19,8 @@ using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 
 namespace Base.Services
 {
-    public static class _Word
+    //word套表, 以靜態類別呈現較方便
+    public static class _WordSet
     {
         //word carrier
         //public const string Carrier = "<w:br/>";
@@ -35,129 +33,32 @@ namespace Base.Services
         public const int CharV = 3;     //V char
         */
 
-        /// <summary>
-        /// _HttpWord.MsByTplRow -> _Word.TplToMsA -> TplRowsToMsA
-        /// template and rows to memory stream
-        /// </summary>
-        /// <param name="tplPath"></param>
-        /// //<param name="mainRow">可為json或model</param>
-        /// <param name="rows">可為json或model</param>
-        /// <param name="images"></param>
-        /// <returns></returns>
-        public static MemoryStream? TplRowsToMs(string tplPath, IEnumerable<dynamic> rows,
-            List<WordImageDto>? images = null)
+        public static void AddImage(string oldWordPath, string newWordPath, string newImagePath)
         {
-            // 1. 檢查模板檔案
-            if (!File.Exists(tplPath))
+            // Copy the original file to the new path
+            File.Copy(oldWordPath, newWordPath, true);
+
+            using var wordDoc = WordprocessingDocument.Open(newWordPath, true);
+            var mainPart = wordDoc.MainDocumentPart;
+            var images = mainPart!.Document!.Body!.Descendants<Drawing>()
+                .Where(d => d.Inline!.DocProperties!.Description == "Photo");
+
+            //var aa = mainPart.Document.Body.Descendants<Drawing>().Select(d => d.Inline.DocProperties).ToList();
+
+            foreach (var drawing in images)
             {
-                _Log.Error($"_Word.cs TplRowsToMsA() no template file ({tplPath})");
-                return null;
-            }
-
-            return new WordSetSvc(tplPath).RowsToMs(rows, images);
-            /*
-            var ms = new MemoryStream();
-            File.OpenRead(tplPath).CopyTo(ms);
-            ms.Position = 0;
-
-            var doc = WordprocessingDocument.Open(ms, true);
-            var tplBody = doc.MainDocumentPart!.Document!.Body!;
-            //var tplBlock = CloneTemplateBlock(body);
-
-            //body.RemoveAllChildren(); // 清空原內容
-            var newBody = new Body();
-            foreach (var row in rows)
-            {
-                //clone whole template body
-                var newPage = tplBody.CloneNode(true);
-
-                Fill(newPage, row);
-
-                //只 append children，不要 append body
-                foreach (var child in newPage.ChildElements)
+                var blip = drawing.Inline!.Graphic!.GraphicData!.Descendants<DocumentFormat.OpenXml.Drawing.Blip>().FirstOrDefault();
+                if (blip != null)
                 {
-                    newBody.Append(child.CloneNode(true));
+                    var imagePart = (ImagePart)mainPart.GetPartById(blip.Embed!);
+
+                    using var stream = new FileStream(newImagePath, FileMode.Open, FileAccess.Read);
+                    imagePart.FeedData(stream);
                 }
-
-                //移除 SectionProperties
-                newPage.RemoveAllChildren<SectionProperties>();
-
-                // page break
-                newBody.AppendChild(CreatePageBreak());
             }
-
-            //替換body
-            doc.MainDocumentPart.Document.Body = newBody;
-            doc.MainDocumentPart.Document.Save();
-            return ms;
-
-            // 開啟 Word 文件 (唯讀)
-            //using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
-            //using var docx = WordprocessingDocument.Open(fs, false);  // false 代表唯讀
-            */
-
-            /*
-            // 2. 使用 OpenXML 讀取 Word 模板
-            var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
-
-            // 2. 將模板讀入記憶體流
-            var ms = new MemoryStream();
-            fs.CopyTo(ms);
-            ms.Position = 0;  // 重設流位置
-
-            var wordDoc = WordprocessingDocument.Open(ms, true);
-            */
-
-            // 將 WordprocessingDocument 傳入自訂的處理服務
-            //return new WordSetSvc(tplPath).RowToMs(mainRow, rows, images);
+            wordDoc!.MainDocumentPart!.Document!.Save();
         }
 
-        /// <summary>
-        /// merge word files into one
-        /// </summary>
-        /// <param name="srcFiles">source word files/param>
-        /// <param name="toFile">target word file</param>
-        /// <param name="deleteSrc">delete source file or not</param>
-        public static void MergeFiles(string[] srcFiles, string toFile, bool deleteSrc)
-        {
-            //copy first file to target
-            File.Copy(srcFiles[0], toFile, true);
-
-            using (var docx = WordprocessingDocument.Open(toFile, true))
-            {
-                var mainPart = docx.MainDocumentPart;
-
-                //skip first file
-                for (var i = 1; i < srcFiles.Length; i++)
-                {
-                    //add page break
-                    mainPart!.Document!.Body!.AppendChild(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
-
-                    //add file
-                    var altChunkId = "AltChunkId" + i;
-                    var chunk = mainPart.AddAlternativeFormatImportPart(
-                        AlternativeFormatImportPartType.WordprocessingML, altChunkId);
-                    using (var fileStream = File.Open(srcFiles[i], FileMode.Open))
-                    {
-                        chunk.FeedData(fileStream);
-                    }
-                    var altChunk = new AltChunk
-                    {
-                        Id = altChunkId
-                    };
-                    mainPart.Document.Body.InsertAfter(altChunk, mainPart.Document.Body.Elements<Paragraph>().Last());
-                }
-                mainPart!.Document!.Save();
-                //docx.Close();
-            }
-
-            //delete source files if need
-            if (deleteSrc)
-            {
-                foreach (var file in srcFiles)
-                    File.Delete(file);
-            }
-        }
 
         #region 可能移到 WordSetSvc.cs 
         /*

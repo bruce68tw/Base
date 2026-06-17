@@ -28,24 +28,25 @@ namespace BaseApi.Services
         /// <param name="childs">可為JArray或List<Model>, IEnumerable for anonymous type</param>
         /// <param name="images"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<bool> OutputTplA(string tplPath, string fileName, dynamic row,
-            List<dynamic>? childs = null, List<WordImageDto>? images = null)
+        public static async Task<bool> OutputTplA(string tplPath, string fileName, List<dynamic> rows, List<WordImageDto>? images = null)
         {
-            var ms = await _Word.TplToMsA(tplPath, row, childs, images);
+            var ms = _Word.TplRowsToMs(tplPath, rows, images);
             if (ms == null) return false;
 
             await _FunApi.ExportByStreamA(ms, fileName);
             return true;
         }
 
+        /*
         //test
         public static bool OutputTplA2()
         {
             var oldWordPath = "C:\\_project\\HrAdm\\_template\\zh-TW\\UserExt.docx";
             var newWordPath = "C:\\_project\\HrAdm\\_template\\zh-TW\\UserExt_new.docx";
             var newImagePath = "C:\\_project\\HrAdm\\_upload\\UserExt\\PhotoFile_Alex.png";
-            _Word.AddImage(oldWordPath, newWordPath, newImagePath);
+            _WordSet.AddImage(oldWordPath, newWordPath, newImagePath);
             return false;
         }
+        */
     }//class
 }

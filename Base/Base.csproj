@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Compile Remove="Services\_Office.cs" />
+    <Compile Remove="Services\_WordSet.cs" />
   </ItemGroup>
 
   <ItemGroup>
