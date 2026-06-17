@@ -1,7 +1,7 @@
 ﻿using Base.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
+//using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Validation;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
@@ -10,8 +10,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Break = DocumentFormat.OpenXml.Wordprocessing.Break;
-using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
+//using Break = DocumentFormat.OpenXml.Wordprocessing.Break;
+//using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
 
 /*
 //for docx image
@@ -47,69 +47,21 @@ namespace Base.Services
         public static MemoryStream? TplRowsToMs(string tplPath, IEnumerable<dynamic> rows,
             List<WordImageDto>? images = null)
         {
+            /*
             // 1. 檢查模板檔案
             if (!File.Exists(tplPath))
             {
                 _Log.Error($"_Word.cs TplRowsToMsA() no template file ({tplPath})");
                 return null;
             }
+            */
 
             return new WordSetSvc(tplPath).RowsToMs(rows, images);
-            /*
-            var ms = new MemoryStream();
-            File.OpenRead(tplPath).CopyTo(ms);
-            ms.Position = 0;
+        }
 
-            var doc = WordprocessingDocument.Open(ms, true);
-            var tplBody = doc.MainDocumentPart!.Document!.Body!;
-            //var tplBlock = CloneTemplateBlock(body);
-
-            //body.RemoveAllChildren(); // 清空原內容
-            var newBody = new Body();
-            foreach (var row in rows)
-            {
-                //clone whole template body
-                var newPage = tplBody.CloneNode(true);
-
-                Fill(newPage, row);
-
-                //只 append children，不要 append body
-                foreach (var child in newPage.ChildElements)
-                {
-                    newBody.Append(child.CloneNode(true));
-                }
-
-                //移除 SectionProperties
-                newPage.RemoveAllChildren<SectionProperties>();
-
-                // page break
-                newBody.AppendChild(CreatePageBreak());
-            }
-
-            //替換body
-            doc.MainDocumentPart.Document.Body = newBody;
-            doc.MainDocumentPart.Document.Save();
-            return ms;
-
-            // 開啟 Word 文件 (唯讀)
-            //using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
-            //using var docx = WordprocessingDocument.Open(fs, false);  // false 代表唯讀
-            */
-
-            /*
-            // 2. 使用 OpenXML 讀取 Word 模板
-            var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
-
-            // 2. 將模板讀入記憶體流
-            var ms = new MemoryStream();
-            fs.CopyTo(ms);
-            ms.Position = 0;  // 重設流位置
-
-            var wordDoc = WordprocessingDocument.Open(ms, true);
-            */
-
-            // 將 WordprocessingDocument 傳入自訂的處理服務
-            //return new WordSetSvc(tplPath).RowToMs(mainRow, rows, images);
+        public static MemoryStream? TplRowToMs(string tplPath, dynamic row, List<WordImageDto>? images = null)
+        {
+            return new WordSetSvc(tplPath).RowToMs(row, images);
         }
 
         /// <summary>

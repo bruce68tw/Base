@@ -1,9 +1,6 @@
 ﻿using Base.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-//using DocumentFormat.OpenXml.Spreadsheet;
-
-//using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
 using Pipelines.Sockets.Unofficial.Arenas;
@@ -11,13 +8,8 @@ using SixLabors.ImageSharp;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
 using Draw = DocumentFormat.OpenXml.Drawing;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
-//using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
-//using RunProp = DocumentFormat.OpenXml.Wordprocessing.RunProperties;
-//using Table = DocumentFormat.OpenXml.Wordprocessing.Table;
-//using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 
 namespace Base.Services
 {
@@ -29,7 +21,8 @@ namespace Base.Services
         public const int Radio = 2;     //radio
         public const int CharV = 3;     //V char
 
-        public const string Childs = "childs";  //childs欄位名稱
+        public const string Childs = "Childs";  //childs欄位名稱
+        public const string Child = "Child";    //childs欄位名稱
 
         //instance variables
         private bool _isOk = false;
@@ -67,6 +60,19 @@ namespace Base.Services
             return _isOk;
         }
 
+        public MemoryStream? RowToMs(dynamic row, List<WordImageDto>? images = null)
+        {
+            FillRow(_tplBody, row);
+
+            //fill images
+            FillImages(images);
+
+            _docx.MainDocumentPart!.Document!.Save();
+            _docx.Dispose();
+            _ms.Position = 0;
+            return _ms;
+        }
+
         /// <summary>
         /// _HttpWord.MsByTplRow -> _Word.TplToMsA -> TplRowsToMsA
         /// word to memoryStream for convert pdf
@@ -100,40 +106,27 @@ namespace Base.Services
                 //newBody.AppendChild(CreatePageBreak());
             }
 
+            //fill images
+            FillImages(images);
+
             //替換body
             _docx.MainDocumentPart!.Document!.Body = newBody;
             _docx.MainDocumentPart.Document.Save();
             _docx.Dispose();
             _ms.Position = 0;
             return _ms;
-
-            // 開啟 Word 文件 (唯讀)
-            //using var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
-            //using var docx = WordprocessingDocument.Open(fs, false);  // false 代表唯讀
-
-            /*
-            // 2. 使用 OpenXML 讀取 Word 模板
-            var fs = new FileStream(tplPath, FileMode.Open, FileAccess.Read);
-
-            // 2. 將模板讀入記憶體流
-            var ms = new MemoryStream();
-            fs.CopyTo(ms);
-            ms.Position = 0;  // 重設流位置
-
-            var wordDoc = WordprocessingDocument.Open(ms, true);
-            */
-
-            // 將 WordprocessingDocument 傳入自訂的處理服務
-            //return new WordSetSvc(tplPath).RowToMs(mainRow, rows, images);
         }
 
-        private void FillRow(OpenXmlElement page, dynamic row, List<WordImageDto>? images = null)
+        private void FillRow(OpenXmlElement page, dynamic row)
         {
             //fill childs first(只存在table), 減少row的欄位
             JObject json = (row is JObject)
                 ? (row as JObject)!
                 : JObject.FromObject(row);
-            var childs = json["Childs"] as JArray;
+            var childs = json[Childs] as JArray;
+            var child = json[Child] as JArray;
+            if (childs == null && child != null)
+                childs = [child];
 
             //fill main table
             var texts = page
@@ -153,20 +146,9 @@ namespace Base.Services
             //fill childs
             if (childs!.Any())
             {
-                for(var i=0; i<childs!.Count; i++)
-                {
-                    FillTable(page, i, (JArray)childs![i]);
-                }
+                for (var i = 0; i < childs!.Count; i++)
+                    FillTable(page, i, childs[i] as JArray);
             }
-
-            /* temp remark
-            //add images
-            if (_List.NotEmpty(images))
-            {
-                foreach (var image in images!)
-                    AddImage(root, image);
-            }
-            */
         }
 
         /// <summary>
@@ -174,9 +156,9 @@ namespace Base.Services
         /// </summary>
         /// <param name="index"></param>
         /// <param name="rows">可以是json或model</param>
-        private void FillTable(OpenXmlElement page, int index, JArray jsons)
+        private void FillTable(OpenXmlElement page, int index, JArray? jsons)
         {
-            if (!jsons.Any()) return;
+            if (jsons == null || !jsons.Any()) return;
 
             // 找到包含指定標記的表格列            
             var tag = $"[!{index}]";    // 找含有 [!x] 的範本列, base 0
@@ -274,62 +256,65 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// word內使用anchor類型圖案
+        /// word內使用anchor類型圖案, 直接寫入 _docx !!
         /// </summary>
-        /// <param name="imageDto"></param>
-        private void AddImage(WordImageDto imageDto)
+        /// <param name="image"></param>
+        private void FillImages(List<WordImageDto>? images)
         {
             var mainPart = _docx.MainDocumentPart;
-            if (mainPart == null) return;
+            if (mainPart == null || images == null || images.Count == 0) return;
 
-            // 找到指定名稱的圖片 (非視覺屬性 name = imageDto.Code)
-            var pic = mainPart.Document!
-                .Descendants<DW.Inline>()
-                .FirstOrDefault(inl => inl.DocProperties?.Description == imageDto.Code);
-            if (pic == null) return;
-
-            //var aa = mainPart.Document.Descendants<D.Blip>()
-            //    .ToList();
-
-            // 取得圖片嵌入 (blip)
-            var blip = pic.Descendants<Draw.Blip>().FirstOrDefault();
-            if (blip == null) return;
-
-            // 取得圖片大小 Extents
-            var ext = pic.Descendants<Draw.Extents>().FirstOrDefault();
-            if (ext == null) return;
-
-            long width = ext!.Cx!;
-            long height = ext!.Cy!;
-
-            // 讀取新圖片檔案 Bytes
-            byte[] picBytes = File.ReadAllBytes(imageDto.FilePath);
-
-            // 刪除舊圖片 Part
-            var oldRelId = blip.Embed?.Value;
-            if (string.IsNullOrEmpty(oldRelId)) return;
-
-            //var oldImagePart = (ImagePart)mainPart.GetPartById(oldRelId);
-            //mainPart.DeletePart(oldImagePart);
-            if (mainPart.Parts.Any(p => p.RelationshipId == oldRelId))
+            foreach (var image in images)
             {
-                var oldImagePart = (ImagePart)mainPart.GetPartById(oldRelId);
-                mainPart.DeletePart(oldImagePart);
+                // 找到指定名稱的圖片 (非視覺屬性 name = imageDto.Code)
+                var pic = mainPart.Document!
+                    .Descendants<DW.Inline>()
+                    .FirstOrDefault(inl => inl.DocProperties?.Description == image.Code);
+                if (pic == null) continue;
+
+                //var aa = mainPart.Document.Descendants<D.Blip>()
+                //    .ToList();
+
+                // 取得圖片嵌入 (blip)
+                var blip = pic.Descendants<Draw.Blip>().FirstOrDefault();
+                if (blip == null) continue;
+
+                // 取得圖片大小 Extents
+                var ext = pic.Descendants<Draw.Extents>().FirstOrDefault();
+                if (ext == null) continue;
+
+                long width = ext!.Cx!;
+                long height = ext!.Cy!;
+
+                // 讀取新圖片檔案 Bytes
+                byte[] picBytes = File.ReadAllBytes(image.FilePath);
+
+                // 刪除舊圖片 Part
+                var oldRelId = blip.Embed?.Value;
+                if (string.IsNullOrEmpty(oldRelId)) continue;
+
+                //var oldImagePart = (ImagePart)mainPart.GetPartById(oldRelId);
+                //mainPart.DeletePart(oldImagePart);
+                if (mainPart.Parts.Any(p => p.RelationshipId == oldRelId))
+                {
+                    var oldImagePart = (ImagePart)mainPart.GetPartById(oldRelId);
+                    mainPart.DeletePart(oldImagePart);
+                }
+
+                // 新增圖片 Part
+                var newImagePart = mainPart.AddImagePart(ImagePartType.Png);
+                using (var stream = new MemoryStream(picBytes))
+                {
+                    newImagePart.FeedData(stream);
+                }
+
+                // 更新圖片 Embed ID
+                blip!.Embed!.Value = mainPart.GetIdOfPart(newImagePart);
+
+                // 保持圖片大小
+                ext.Cx = width;
+                ext.Cy = height;
             }
-
-            // 新增圖片 Part
-            var newImagePart = mainPart.AddImagePart(ImagePartType.Png);
-            using (var stream = new MemoryStream(picBytes))
-            {
-                newImagePart.FeedData(stream);
-            }
-
-            // 更新圖片 Embed ID
-            blip!.Embed!.Value = mainPart.GetIdOfPart(newImagePart);
-
-            // 保持圖片大小
-            ext.Cx = width;
-            ext.Cy = height;
         }
 
 

@@ -63,7 +63,8 @@ namespace BaseApi.Services
                 resp.Headers.Append("Content-Disposition", "attachment; filename=\"" + HttpUtility.UrlPathEncode(fileName) + "\"");
 
             var ext = _File.GetFileExt(fileName);
-            resp.ContentType = _Http.ExtToContentType(ext, true);
+            //resp.ContentType = _Http.ExtToContentType(ext, true); //會開啟檔案
+            resp.ContentType = "application/octet-stream";  //強制下載, 但無作用, 還是會開啟!!
 
             //stream.Flush();
             stream.Position = 0;
