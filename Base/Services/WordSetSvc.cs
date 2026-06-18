@@ -60,6 +60,12 @@ namespace Base.Services
             return _isOk;
         }
 
+        /// <summary>
+        /// 一筆資料產生memorystream
+        /// </summary>
+        /// <param name="row">可為json或model, 包含Child或Childs欄位</param>
+        /// <param name="images"></param>
+        /// <returns></returns>
         public MemoryStream? RowToMs(dynamic row, List<WordImageDto>? images = null)
         {
             FillRow(_tplBody, row);
@@ -77,14 +83,13 @@ namespace Base.Services
         /// _HttpWord.MsByTplRow -> _Word.TplToMsA -> TplRowsToMsA
         /// word to memoryStream for convert pdf
         /// </summary>
-        /// <param name="tplPath"></param>
-        /// //<param name="mainRow">可為json或model</param>
         /// <param name="rows">可為json或model</param>
         /// <param name="images"></param>
         /// <returns></returns>
         public MemoryStream? RowsToMs(IEnumerable<dynamic> rows, List<WordImageDto>? images = null)
         {
             //body.RemoveAllChildren(); // 清空原內容
+            var hasPage = false;
             var newBody = new Body();
             foreach (var row in rows)
             {
@@ -100,10 +105,16 @@ namespace Base.Services
                 }
 
                 //移除 SectionProperties ??
-                newPage.RemoveAllChildren<SectionProperties>();
+                //newPage.RemoveAllChildren<SectionProperties>();
 
-                // page break, temp remark
-                //newBody.AppendChild(CreatePageBreak());
+                //add page break
+                if (hasPage)
+                {
+                    newBody.Append(new Paragraph(
+                        new Run(new Break { Type = BreakValues.Page })
+                    ));
+                }
+                hasPage = true;
             }
 
             //fill images

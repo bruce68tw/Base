@@ -47,15 +47,6 @@ namespace Base.Services
         public static MemoryStream? TplRowsToMs(string tplPath, IEnumerable<dynamic> rows,
             List<WordImageDto>? images = null)
         {
-            /*
-            // 1. 檢查模板檔案
-            if (!File.Exists(tplPath))
-            {
-                _Log.Error($"_Word.cs TplRowsToMsA() no template file ({tplPath})");
-                return null;
-            }
-            */
-
             return new WordSetSvc(tplPath).RowsToMs(rows, images);
         }
 
@@ -113,33 +104,6 @@ namespace Base.Services
 
         #region 可能移到 WordSetSvc.cs 
         /*
-        //word doc add image, and convert image to text
-        public static void DocxAddImage(WordprocessingDocument docx, ref string text, List<WordImageDto> images)
-        {
-            if (images.Count == 0) return;
-
-            MainDocumentPart mainPart = docx.MainDocumentPart!;
-            foreach (var image in images)
-            {
-                //var imagePath = images[i];
-                //var width = Convert.ToDouble(images[i + 1]);
-                //var height = Convert.ToDouble(images[i + 2]);
-                //var tag = images[i + 3];
-                var imageSvc = new WordImageSvc(image.FilePath, image.Width, image.Height);
-                var newText = "";
-                if (imageSvc.DataStream != null)
-                {
-                    //TODO: how multiple images ??
-                    var imagePart = mainPart!.AddImagePart(ImagePartType.Jpeg);
-                    imagePart.FeedData(imageSvc.DataStream);
-                    var imagePartId = mainPart.GetIdOfPart(imagePart);
-                    newText = GetImageRun(imagePartId, imageSvc).InnerXml;
-                }
-
-                text.Replace(image.Tag, newText);
-            }
-        }
-
         //check docx content has error or not
         public static bool IsDocxValid(WordprocessingDocument docx)
         {
@@ -230,85 +194,6 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// fill template string and return row string
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="rowTpl"></param>
-        /// <param name="row"></param>
-        /// <returns></returns>
-        public static string TplFillRow(string rowTpl, dynamic row)
-        {
-            return (row is JObject)
-                ? TplFillJson(rowTpl, row) 
-                : TplFillModel(rowTpl, row);
-        }
-
-        public static string TplFillModel<T>(string rowTpl, T row)
-        {
-            //if (row == null) return rowTpl;
-
-            var props = row!.GetType().GetProperties();
-            var result = rowTpl;
-            foreach (var prop in props)
-            {
-                var value = prop.GetValue(row, null);
-                result = result.Replace("[" + prop.Name + "]", (value == null) ? "" : value.ToString());
-            }
-            return result;
-        }
-
-        public static string TplFillJson(string rowTpl, JObject row)
-        {
-            var result = rowTpl;
-            foreach (var item in row)
-            {
-                result = result.Replace("[" + item.Key + "]", item.Value!.ToString());
-            }
-            return result;
-        }
-
-        /// <summary>
-        /// fill template string and return rows string
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="rowTpl"></param>
-        /// <param name="rows">可以是json或model</param>
-        /// <returns></returns>
-        public static string TplFillRows(string rowTpl, IEnumerable<dynamic> rows)
-        {
-            if (!rows.Any()) return "";
-
-            //var rows = (List<T>)row0s;
-            //if (rows.Count == 0)
-            //    return "";
-
-            var result = "";
-            var row0 = rows.First();
-            if (row0 is JObject)
-            {
-                foreach (var row in rows)
-                {
-                    result += TplFillJson(rowTpl, row);
-                }
-            }
-            else
-            {
-                var props = row0.GetType().GetProperties(); //減少在loop取值
-                foreach (var row in rows)
-                {
-                    var text = rowTpl;
-                    foreach (var prop in props)
-                    {
-                        var value = prop.GetValue(row, null);
-                        text = text.Replace("[" + prop.Name + "]", (value == null) ? "" : value.ToString());
-                    }
-                    result += text;
-                }
-            }
-            return result;
-        }
-
-        /// <summary>
         /// if multiple area has fixed rows, can treat as single row
         /// table field id add pre a,b,c(for multiple tables), add tail 0,1,2 for row no
         /// </summary>
@@ -335,40 +220,6 @@ namespace Base.Services
                         row[preTable + cols[j] + i] = "";
 
             }
-        }
-
-        /// <summary>
-        /// set multiple checkbox fields
-        /// </summary>
-        /// <param name="row">source row</param>
-        /// <param name="value">field value</param>
-        /// <param name="preFid">field pre char</param>
-        /// <param name="startNo">start column no</param>
-        /// <param name="endNo">end column no</param>
-        /// <param name="type">char type, 1:checkbox, 2:radio, 3:V</param>
-        public static void ValueToChecks(JObject row, string value, string preFid, int startNo, int endNo, int type = Checkbox)
-        {
-            for (var i = startNo; i <= endNo; i++)
-            {
-                var fid = preFid + i;
-                row[fid] = YesNo(value == i.ToString(), type);
-            }
-        }
-
-        //get Checkbox/Radio button
-        public static string YesNo(string status, int type = Checkbox)
-        {
-            return YesNo(status == "1", type);
-        }
-
-        public static string YesNo(bool status, int type = Checkbox)
-        {
-            return type switch
-            {
-                Checkbox => status ? "■" : "□",
-                Radio => status ? "●" : "○",
-                _ => status ? "V" : "",     //default is checkbox
-            };
         }
         */
         #endregion
