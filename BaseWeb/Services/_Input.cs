@@ -670,7 +670,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
 
             //xiRead 無條件加上 x-inline
             //xi-read2 表示 edit style
-            var css = "x-inline" + (dto.EditStyle ? " xi-read2" : " xi-read");
+            var css = "x-inline" + (dto.Border ? " xi-read2" : " xi-read");
             if (dto.Width > 0)
                 css += $" x-w{dto.Width}";
             if (dto.ClsBox != "")

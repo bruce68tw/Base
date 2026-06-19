@@ -1,16 +1,13 @@
 ﻿namespace BaseWeb.Models
 {
+    /// <summary>
+    /// XiHtml HTML編輯器欄位的傳入參數類型，使用 SummerNote 套件
+    /// </summary>
     public class XiHtmlDto : XiBaseDto
     {
-        /*
-        public XiHtmlDto()
-        {
-            MaxLen = 0;
-            //RowsCount = 10;
-        }
-        */
-
+        /// <summary>
+        /// 同 XiTextDto
+        /// </summary>
         public int MaxLen { get; set; } = 0;
-        //public int RowsCount { get; set; }
     }
 }
