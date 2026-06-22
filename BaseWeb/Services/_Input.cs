@@ -15,7 +15,7 @@ namespace BaseWeb.Services
     public static class _Input
     {
         //public const string XgRequired = "x-required";     //for label
-        public const string XdRequired = "required";     //for input ??
+        //public const string XdRequired = "required";     //for input ??
 
         /*
         //for helper binding
@@ -660,6 +660,16 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
 	<input type='radio' {attr}>{label}
 	<span class='xi-rspan'></span>
 </label>
+";
+        }
+
+        public static string XiRadioText(XiRadioTextDto dto)
+        {
+            return $@"
+<div class='x-hbox'>
+    {XiRadio(dto)}
+    {XiText(new() { Fid = dto.Fid + "Desc", MaxLen = dto.TextMaxLen, ClsBox = dto.TextClsBox })}
+</div>
 ";
         }
 
