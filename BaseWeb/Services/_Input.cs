@@ -372,12 +372,13 @@ namespace BaseWeb.Services
                 html = InputAddLayout(html, dto.Required, dto, true);
             return html;
         }
-        public static string XiCheckText(string fid, string label, int maxLen, string clsBox)
+        //old args: string fid, string label, int maxLen, string clsBox
+        public static string XiCheckText(XiCheckTextDto dto)
         {
             return $@"
 <div class='x-hbox'>
-    {XiCheck(new() { Fid = fid, Label = label })}
-    {XiText(new() { Fid = fid + "Desc", MaxLen = maxLen, ClsBox = clsBox})}
+    {XiCheck(new() { Fid = dto.Fid, Label = dto.Label })}
+    {XiText(new() { Fid = dto.Fid + "Desc", MaxLen = dto.TextMaxLen, ClsBox = dto.TextClsBox})}
 </div>
 ";
         }
