@@ -377,7 +377,7 @@ namespace BaseWeb.Services
         {
             return $@"
 <div class='x-hbox'>
-    {XiCheck(new() { Fid = dto.Fid, Label = dto.Label })}
+    {XiCheck(dto)}
     {XiText(new() { Fid = dto.Fid + "Desc", MaxLen = dto.TextMaxLen, ClsBox = dto.TextClsBox})}
 </div>
 ";
