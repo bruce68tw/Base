@@ -29,11 +29,12 @@ namespace BaseWeb.Services
         */
 
         /// <summary>
+        /// GetRequiredSpan -> GetReqSpan
         /// get label html string with required sign.
         /// </summary>
         /// <param name="required"></param>
         /// <returns></returns>
-        public static string GetRequiredSpan(bool required)
+        public static string GetReqSpan(bool required)
         {
             return required ? "<span class='x-required'>*</span>" : "";
         }
@@ -93,8 +94,9 @@ namespace BaseWeb.Services
                 : " placeholder='" + inputTip + "'";
         }
 
+        //GetRequired -> GetReqAttr
         //get required attribute ??
-        public static string GetRequired(bool required)
+        public static string GetReqAttr(bool required)
         {
             return required ? " required" : "";
         }
@@ -287,7 +289,7 @@ namespace BaseWeb.Services
             }
 
             //加上 required, label內容順序固定為 req、title、tip(前端按照此順序處理!!)
-            var reqSpan = GetRequiredSpan(required);
+            var reqSpan = GetReqSpan(required);
             var clsLabel = labelHideRwd ? _Fun.ClsHideRwd : "";
             string result;
             var colLen = colList.Count;
