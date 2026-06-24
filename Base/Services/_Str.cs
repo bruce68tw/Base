@@ -763,6 +763,11 @@ namespace Base.Services
             return AesEnDecodeByFile(false, data);
         }
 
+        public static string EncodeByKey(string data, string key)
+        {
+            return AesEnDecodeByKey(true, data, key);
+        }
+
         public static string DecodeByKey(string data, string key)
         {
             return AesEnDecodeByKey(false, data, key);
