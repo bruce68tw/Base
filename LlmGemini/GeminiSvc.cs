@@ -1,21 +1,13 @@
-﻿using AngleSharp.Dom;
-using Base.Interfaces;
-using System.Net.Http.Json;
-using System.Text.Json;
+﻿using Base.Interfaces;
 using System.Text;
-using HttpMethod = System.Net.Http.HttpMethod;
-using DocumentFormat.OpenXml.EMMA;
-using DocumentFormat.OpenXml.Wordprocessing;
+using System.Text.Json;
 
-namespace LlmChatGpt
+namespace LlmGemini
 {
     public class GeminiSvc : ILLMSvc
     {
         const string UrlApi = "https://generativelanguage.googleapis.com/v1beta/models";
-        const string ModelType = "gemini-1.5-flash";
-
-        //string model = "gemini-1.5-flash";
-        //string url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
+        const string ModelType = "gemini-3-flash";
 
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
@@ -55,7 +47,7 @@ namespace LlmChatGpt
             };
 
             // 3. 序列化並發送請求
-            string bodyText = JsonSerializer.Serialize(body);
+            var bodyText = JsonSerializer.Serialize(body);
             var content = new StringContent(bodyText, Encoding.UTF8, "application/json");
 
             var url = $"{UrlApi}/{ModelType}:generateContent?key={_apiKey}";
@@ -63,7 +55,7 @@ namespace LlmChatGpt
             try
             {
                 var resp = await _httpClient.PostAsync(url, content);
-                resp.EnsureSuccessStatusCode();
+                //resp.EnsureSuccessStatusCode();
                 var respText = await resp.Content.ReadAsStringAsync();
                 return respText;
             }
@@ -72,21 +64,6 @@ namespace LlmChatGpt
                 Console.WriteLine($"發生錯誤: {ex.Message}");
                 return "";
             }
-
-            /*
-            var request = new HttpRequestMessage(HttpMethod.Post, UrlApi);
-            request.Headers.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
-            request.Content = JsonContent.Create(body);
-
-            var resp = await _httpClient.SendAsync(request);
-            var respText = await resp.Content.ReadAsStringAsync();
-
-            if (!resp.IsSuccessStatusCode)
-                throw new Exception($"HTTP {(int)resp.StatusCode}: {respText}");
-
-            return respText;
-            */
         }
     }
 }
