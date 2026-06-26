@@ -740,6 +740,7 @@ namespace Base.Services
             return (pos < 0) ? source : source[(pos + 1)..];
         }
 
+        #region 可逆加解密, 使用AES
         /*
         /// <summary>
         /// 加密重要資料(組態欄位), 加密後以base64編碼
@@ -758,9 +759,14 @@ namespace Base.Services
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
+        /*
         public static string DecodeByFile(string data)
         {
             return AesEnDecodeByFile(false, data);
+        }
+        public static string EncodeByFile(string data)
+        {
+            return AesEnDecodeByFile(true, data);
         }
 
         public static string EncodeByKey(string data, string key)
@@ -772,7 +778,9 @@ namespace Base.Services
         {
             return AesEnDecodeByKey(false, data, key);
         }
+        */
 
+        //外部可能需要
         public static string GetKey()
         {
             return _fileKey;
@@ -780,6 +788,7 @@ namespace Base.Services
 
         /// <summary>
         /// 從key.txt讀取AES key, 以base64編碼(去除字尾=), 解密後存到變數, 供加解密使用, 只讀取一次, 沒有則回傳空字串
+        /// called by: _Str.cs, _Fun.Init()解密組態欄位
         /// </summary>
         /// <returns></returns>
         public static string ReadFileKey()
@@ -799,21 +808,31 @@ namespace Base.Services
         }
 
         /// <summary>
+        /// 使用 AES 加解密
         /// AES 加/解密重要資料(組態欄位), 加解密後以base64編碼/解碼
         /// 先判斷是否需要加密, 再從目前目錄讀取key.xxx.txt
         /// </summary>
         /// <param name="isEncode">true(加密), false(解密)</param>
         /// <param name="data"></param>
         /// <returns>加解密後以base64編碼/解碼</returns>
-        private static string AesEnDecodeByFile(bool isEncode, string data)
+        public static string Encode(string data)
         {
             //if (!_Fun.Config.Encode) return data;
             if (_fileKey == null)
                 ReadFileKey();
 
-            return (_fileKey == "") ? "" :
-                isEncode ? Encode(data, _fileKey!) :
-                Decode(data, _fileKey!);
+            return (_fileKey == "") 
+                ? "" : EncodeByKey(data, _fileKey!);
+        }
+
+        public static string Decode(string data)
+        {
+            //if (!_Fun.Config.Encode) return data;
+            if (_fileKey == null)
+                ReadFileKey();
+
+            return (_fileKey == "") 
+                ? "" : DecodeByKey(data, _fileKey!);
         }
 
         /// <summary>
@@ -823,6 +842,7 @@ namespace Base.Services
         /// <param name="data"></param>
         /// <param name="key"></param>
         /// <returns>加解密後以base64編碼/解碼</returns>
+        /*
         private static string AesEnDecodeByKey(bool isEncode, string data, string key)
         {
             //AES加解密, AES iv 使用空白
@@ -830,8 +850,9 @@ namespace Base.Services
                 ? Encode(data, key)
                 : Decode(data, key);
         }
+        */
 
-        private static void AesInit(System.Security.Cryptography.Aes aes, string key)
+        private static void AesInit(Aes aes, string key)
         {
             //key長度必須為16,24,32, 不足者後面補0
             var len = key.Length;
@@ -854,10 +875,10 @@ namespace Base.Services
         /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns>encoded base64 string</returns>
-        public static string Encode(string data, string key)
+        public static string EncodeByKey(string data, string key)
         {
             byte[] bytes;
-            using (var aes = System.Security.Cryptography.Aes.Create())
+            using (var aes = Aes.Create())
             {
                 AesInit(aes, key);
                 var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
@@ -885,12 +906,13 @@ namespace Base.Services
         */
 
         /// <summary>
+        /// Decode -> DecodeByKey
         /// 資料解密, 使用 AES ECB mode, padding PKCS7, iv 使用key
         /// </summary>
         /// <param name="data">encoded base64 string</param>
         /// <param name="key"></param>
         /// <returns>decoded plain text</returns>
-        public static string Decode(string data, string key)
+        public static string DecodeByKey(string data, string key)
         {
             //key ??= _Fun.AesKey;
             string result;
@@ -905,7 +927,7 @@ namespace Base.Services
                 return "";
             }
 
-            using (var aes = System.Security.Cryptography.Aes.Create())
+            using (var aes = Aes.Create())
             {
                 AesInit(aes, key);
                 var encryptor = aes.CreateDecryptor(aes.Key, aes.IV);
@@ -916,6 +938,7 @@ namespace Base.Services
             }
             return result;
         }
+        #endregion
 
         /*
         //get guid base36 string(25 char)
