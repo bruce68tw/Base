@@ -10,7 +10,7 @@ namespace BaseApi.Services
     {
         public XgFlowEdit(string ctrl) : base(ctrl) { }
 
-        override public EditDto GetDto(CrudEnum fun)
+        override public EditDto GetDto()
         {
             return new EditDto()
             {
@@ -70,12 +70,12 @@ namespace BaseApi.Services
 
         public override async Task<ResultDto> CreateA(JObject json)
         {
-            return await EditSvc().CreateA(json, GetDto(CrudEnum.Create));
+            return await EditSvc().CreateA(json, GetDto());
         }
 
         public override async Task<ResultDto> UpdateA(string key, JObject json)
         {
-            return await EditSvc().UpdateA(key, json, GetDto(CrudEnum.Update));
+            return await EditSvc().UpdateA(key, json, GetDto());
         }
 
         /// <summary>

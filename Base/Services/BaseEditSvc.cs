@@ -44,7 +44,7 @@ namespace Base.Services
         }
 
         //derived class implement.
-        abstract public EditDto GetDto(CrudEnum fun);
+        abstract public EditDto GetDto();
 
         //EditService -> EditSvc
         public CrudEditSvc EditSvc()
@@ -67,19 +67,19 @@ namespace Base.Services
         {
             //Fun = fun;
             //var fun = CrudEnum.Update;
-            return await GetSvc().GetUpdJsonA(key, GetDto(CrudEnum.Update));
+            return await GetSvc().GetUpdJsonA(key, GetDto());
         }
 
         public virtual async Task<JObject?> GetViewJsonA(string key)
         {
             //Fun = fun;
             //var fun = CrudEnum.View;
-            return await GetSvc().GetViewJsonA(key, GetDto(CrudEnum.View));
+            return await GetSvc().GetViewJsonA(key, GetDto());
         }
 
         public virtual async Task<JObject?> GetSignJsonA(string key)
         {
-            return await GetSvc().GetSignJsonA(key, GetDto(CrudEnum.Create));
+            return await GetSvc().GetSignJsonA(key, GetDto());
         }
 
         public virtual async Task<JObject?> GetDraftJsonA(string key)
@@ -89,19 +89,19 @@ namespace Base.Services
 
         public virtual async Task<JObject?> GetJsonByFunA(string key, CrudEnum fun)
         {
-            return await GetSvc().GetJsonByFunA(fun, key, GetDto(fun));
+            return await GetSvc().GetJsonByFunA(fun, key, GetDto());
         }
 
         //save new
         public virtual async Task<ResultDto> CreateA(JObject json)
         {
-            return await EditSvc().CreateA(json, GetDto(CrudEnum.Create));
+            return await EditSvc().CreateA(json, GetDto());
         }
 
         //save updatge, can override
         public virtual async Task<ResultDto> UpdateA(string key, JObject json)
         {
-            return await EditSvc().UpdateA(key, json, GetDto(CrudEnum.Update));
+            return await EditSvc().UpdateA(key, json, GetDto());
         }
 
         public virtual async Task<ResultDto> DraftA(string key, JObject json)
@@ -111,7 +111,7 @@ namespace Base.Services
 
         public virtual async Task<ResultDto> DeleteA(string key)
         {
-            return await EditSvc().DeleteA(key, GetDto(CrudEnum.Delete));
+            return await EditSvc().DeleteA(key, GetDto());
         }
 
     }//class
