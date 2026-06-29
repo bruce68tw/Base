@@ -32,6 +32,24 @@ namespace Base.Services
 
 
         /// <summary>
+        /// 加密多個欄位, 以ColSep分隔, 先組成字串再加密
+        /// </summary>
+        /// <param name="items"></param>
+        /// <returns></returns>
+        public static string EncodeCols(params object[] items)
+        {
+            if (items == null || items.Length == 0)
+                return "";
+
+            var result = items[0].ToString()!;
+            for(var i=1; i<items.Length; i++ )
+            {
+                result += _Fun.ColSep + items[i].ToString();
+            }
+            return Encode(result);
+        }
+
+        /// <summary>
         /// 將加密欄位解碼成欄位陣列, 以ColSep分隔
         /// </summary>
         /// <param name="col"></param>
