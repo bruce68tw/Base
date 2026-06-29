@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -167,13 +168,7 @@ namespace BaseApi.Services
             return $"{req.Path}{req.QueryString}";
         }
 
-        /// <summary>
-        /// call url and get result
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="args"></param>
-        /// <param name="isGet"></param>
-        /// <returns></returns>
+        /* old syntax
         public static async Task<string> GetUrlResultA(string url, string args = "", bool isGet = true)
         {
             //TODO
@@ -195,6 +190,37 @@ namespace BaseApi.Services
             //stream.Close();
             stream.Dispose();
             return result;
+        }
+        */
+
+        /// <summary>
+        /// call url and get result
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="args"></param>
+        /// <param name="isGet"></param>
+        /// <returns></returns>
+        public static async Task<string> GetUrlResultA(string url, string args = "", bool isGet = true)
+        {
+            HttpResponseMessage response;
+
+            if (isGet)
+            {
+                response = await new HttpClient().GetAsync(url);
+            }
+            else
+            {
+                var content = new StringContent(
+                    args,
+                    Encoding.ASCII,
+                    "application/x-www-form-urlencoded");
+
+                response = await new HttpClient().PostAsync(url, content);
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsStringAsync();
         }
 
         /// <summary>
@@ -333,11 +359,23 @@ namespace BaseApi.Services
                 }
             }
 
+            /* old syntax
             using (var textPaint = new SKPaint { TextSize = fontSize, IsAntialias = true, Color = SKColors.Blue })
             {
                 // Draw the text
                 canvas.DrawText(code, 5, 3 + fontSize, textPaint);
             }
+            */
+            using var paint = new SKPaint
+            {
+                Color = SKColors.Blue,
+                IsAntialias = true
+            };
+            using var font = new SKFont
+            {
+                Size = fontSize
+            };
+            canvas.DrawText(code, 5, 3 + fontSize, font, paint);
 
             // Draw points for interruption
             for (int i = 0; i <= 499; i++)

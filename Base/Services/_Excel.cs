@@ -71,14 +71,14 @@ namespace Base.Services
             var newDb = _Db.CheckOpenDb(ref db);
             var wbPart = docx.WorkbookPart;
             var ssPart = wbPart!.GetPartsOfType<SharedStringTablePart>().First();
-            var ssTable = ssPart.SharedStringTable;
+            var ssTable = ssPart.SharedStringTable!;
 
             //var ok = true;
             var error = "";
             var colLen = excelCols.Length;
             var dateLen = (isDates == null) ? 0 : isDates.Length;
             var cols = new string[colLen + 1];  //first column must be LineNo
-            var rows = wbPart.WorksheetParts.ElementAt(sheetNo).Worksheet.Descendants<Row>();
+            var rows = wbPart.WorksheetParts.ElementAt(sheetNo).Worksheet!.Descendants<Row>();
             var rowLen = rows.LongCount();
             for (var i = excelStartRow - 1; i < rowLen; i++)
             {
@@ -213,9 +213,9 @@ namespace Base.Services
             #region prepare excel variables
             //SheetData? sheetData = null;
             var colCount = cols.Count;
-            var sheet = docx.WorkbookPart!.Workbook.Descendants<Sheet>().FirstOrDefault();
+            var sheet = docx.WorkbookPart!.Workbook!.Descendants<Sheet>().FirstOrDefault();
             var wsPart = (WorksheetPart)docx.WorkbookPart.GetPartById(sheet!.Id!);
-            var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
+            var sheetData = wsPart.Worksheet!.GetFirstChild<SheetData>();
             #endregion
 
             //3.loop of write excel rows, use template

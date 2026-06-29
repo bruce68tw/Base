@@ -19,7 +19,7 @@ namespace Base.Services
         /// <summary>
         /// 目前功能
         /// </summary>
-        public CrudEnum Fun;
+        //public CrudEnum Fun;
 
         /// <summary>
         /// 是否有草稿功能

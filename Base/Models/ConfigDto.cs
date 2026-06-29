@@ -17,6 +17,7 @@ namespace Base.Models
         //refer LoginTypeEstr
         public string LoginType { get; set; } = LoginTypeEstr.None;
 
+        //包含2/3個欄位, 逗號分隔, format: 0(server),1(domain),3(port default 389), ex:ldap2012,aa.bb.cc,389
         public string AdServer { get; set; } = "";
 
         //(加密)db connect string

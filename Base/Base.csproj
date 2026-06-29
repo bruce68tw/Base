@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\zz_Ad.cs" />
     <Compile Remove="Services\_Office.cs" />
     <Compile Remove="Services\_WordSet.cs" />
   </ItemGroup>
@@ -64,6 +65,7 @@
     <None Remove="Services\LogError.cs_old" />
     <None Remove="Services\UserDataService.cs_old" />
     <None Remove="Services\UserProfile0Service.cs_old" />
+    <None Remove="Services\WordSetSvc.cs.bak" />
     <None Remove="Services\WordSetSvc.cs_npoi" />
     <None Remove="Services\WordSetSvc.cs_old" />
     <None Remove="Services\WordSetSvc.cs_op" />
@@ -95,6 +97,7 @@
     <PackageReference Include="HtmlSanitizer" Version="9.0.892" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="4.0.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
     <PackageReference Include="SkiaSharp" Version="3.119.2" />
     <PackageReference Include="StackExchange.Redis" Version="2.13.1" />

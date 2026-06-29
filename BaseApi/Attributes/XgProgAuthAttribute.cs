@@ -11,24 +11,18 @@ using System.Threading.Tasks;
 
 namespace BaseApi.Attributes
 {
-    public class XgProgAuthAttribute : ActionFilterAttribute
+    /// <summary>
+    /// constructor
+    /// </summary>
+    /// <param name="crudEnum"></param>
+    /// <param name="ctrl">get controller name if empty</param>
+    public class XgProgAuthAttribute(CrudEnum crudEnum = CrudEnum.Empty, string ctrl = "") : ActionFilterAttribute
     {
         /// <summary>
         /// crud function type
         /// </summary>
-        private readonly CrudEnum _crudEnum;
-        private readonly string _ctrl;
-
-        /// <summary>
-        /// constructor
-        /// </summary>
-        /// <param name="crudEnum"></param>
-        /// <param name="ctrl">get controller name if empty</param>
-        public XgProgAuthAttribute(CrudEnum crudEnum = CrudEnum.Empty, string ctrl = "")
-        {
-            _crudEnum = crudEnum;
-            _ctrl = ctrl;
-        }
+        private readonly CrudEnum _crudEnum = crudEnum;
+        private readonly string _ctrl = ctrl;
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {

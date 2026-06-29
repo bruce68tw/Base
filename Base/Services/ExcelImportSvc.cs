@@ -72,13 +72,13 @@ namespace Base.Services
             //var errorMsg = "";
             var wbPart = docx.WorkbookPart;
             var wsPart = (WorksheetPart)wbPart!.GetPartById(
-                wbPart.Workbook.Descendants<Sheet>().ElementAt(importDto.SheetNo).Id!);
+                wbPart.Workbook!.Descendants<Sheet>().ElementAt(importDto.SheetNo).Id!);
 
             //加上where後只傳回非空白列
-            var excelRows = wsPart.Worksheet.Descendants<Row>()    //include empty rows
+            var excelRows = wsPart.Worksheet!.Descendants<Row>()    //include empty rows
                 .Where(r => r.Elements<Cell>().Any(c => !string.IsNullOrWhiteSpace(c.InnerText)));
 
-            var ssTable = wbPart.GetPartsOfType<SharedStringTablePart>().First().SharedStringTable;
+            var ssTable = wbPart.GetPartsOfType<SharedStringTablePart>().First().SharedStringTable!;
             #endregion
 
             #region set importDto.ExcelFids, excelFidLen
@@ -284,8 +284,8 @@ namespace Base.Services
                 var docx2 = SpreadsheetDocument.Open(failFilePath, true);
                 var wbPart2 = docx2.WorkbookPart!;
                 var wsPart2 = (WorksheetPart)wbPart2.GetPartById(
-                    wbPart2.Workbook.Descendants<Sheet>().ElementAt(0).Id!);
-                var sheetData2 = wsPart2.Worksheet.GetFirstChild<SheetData>();
+                    wbPart2.Workbook!.Descendants<Sheet>().ElementAt(0).Id!);
+                var sheetData2 = wsPart2.Worksheet!.GetFirstChild<SheetData>();
 
                 //新增空白列(含格式, 合併儲存格)
                 var startRow = importDto.FidRowNo;    //insert position, base 0

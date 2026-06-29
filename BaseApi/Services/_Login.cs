@@ -77,7 +77,7 @@ where u.Account=@Account
                 {
                     if (!string.IsNullOrEmpty(_Fun.Config.AdServer))
                     {
-                        var user = _Ad.Login(_Fun.Config.AdServer, vo.Account, vo.Pwd);
+                        var user = await _Ldap.LoginA(_Fun.Config.AdServer, vo.Account, vo.Pwd);
                         if (user != null)
                         {
                             status = true;
@@ -152,7 +152,7 @@ where u.Account=@Account
         //字串加上單引號 if need
         private static string AddQuote(string value)
         {
-            if (!value.Contains("'"))
+            if (!value.Contains('\''))
                 value = $"'{value}'";
             return value;
         }
