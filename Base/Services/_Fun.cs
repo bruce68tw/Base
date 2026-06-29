@@ -47,6 +47,9 @@ namespace Base.Services
         public const string CsDtFmt2 = "yyyy/MM/dd HH:mm";
         public const string CsDateFmt = "yyyy/MM/dd";
 
+        //欄位分隔符號
+        public const string ColSep = "@@";
+
         //carrier
         //public const string TextCarrier = "\r\n";     //for string
         public static string TextCarrier = Environment.NewLine;     //for 跨平台

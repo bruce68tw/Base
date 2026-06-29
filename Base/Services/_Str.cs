@@ -32,6 +32,16 @@ namespace Base.Services
 
 
         /// <summary>
+        /// 將加密欄位解碼成欄位陣列, 以ColSep分隔
+        /// </summary>
+        /// <param name="col"></param>
+        /// <returns></returns>
+        public static string[] DecodeToCols(string col)
+        {
+            return Decode(col).Split(_Fun.ColSep);
+        }
+
+        /// <summary>
         /// 日期字串加1
         /// </summary>
         /// <param name="dateStr">yyyyMMdd + 序號, 如果不是今天則使用今天</param>
