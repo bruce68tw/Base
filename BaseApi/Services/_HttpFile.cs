@@ -240,18 +240,6 @@ namespace BaseApi.Services
             return false;
         }
 
-        /*
-        //parse file key, 如果key為數字而且長度<=3, 則視為new key
-        //return > 0 表示new key
-        private static int ParseFileKey(string key)
-        {
-            return _Str.IsEmpty(key) ? -1 :
-                key.Length > 3 ? 0 :
-                Int32.TryParse(key, out int num) ? num :
-                0;
-        }
-        */
-
         /// <summary>
         /// (single row)save upload file, & update db(DB save file related path !!)
         /// consider accessibility html page, upload file name should be same as saved file
@@ -336,13 +324,6 @@ namespace BaseApi.Services
             }
         }
 
-        /*
-        public static FileContentResult EchoImage(string path)
-        {
-            return new FileContentResult(File.ReadAllBytes(path), "image/jpg");
-        }
-        */
-
         /// <summary>
         /// view image file or download file
         /// </summary>
@@ -371,37 +352,13 @@ namespace BaseApi.Services
                     return null;
                 }
             }
-            /*
-            if (isImage && !hasFile)
-            {
-                return hasFile
-                    ? new FileContentResult(await File.ReadAllBytesAsync(upPath), contentType)
-                    : new FileContentResult(await File.ReadAllBytesAsync(_Fun.NoImagePath), "image/jpg");
-            }
 
-            //not image type below
-            //check existed
-            //if (!hasFile) return new NotFoundResult();
-            if (!hasFile) return null;
-            */
-            //var stream = File.OpenRead(upPath);
-            //return new FileStreamResult(stream, contentType);
-
-            return new PhysicalFileResult(upPath, contentType);
-            /*
+            return new PhysicalFileResult(upPath, contentType)
             {
                 FileDownloadName = _Str.IsEmpty(downFileName)
                     ? _File.GetFileName(path)
                     : downFileName
             };
-            */
-            /*            
-            return new FileContentResult(await File.ReadAllBytesAsync(upPath), contentType)
-            {
-                FileDownloadName = _Str.IsEmpty(downFileName)
-                    ? _File.GetFileName(path) : downFileName
-            };
-            */
         }
 
         #region remark code

@@ -265,9 +265,10 @@ namespace Base.Services
             if (_Str.IsEmpty(importDto.LogRowId))
                 importDto.LogRowId = _Str.NewId();
             var fileStem = _Str.AddDirSep(dirUpload) + importDto.LogRowId;
+            var fileExt = _File.UpExtRename("xlsx");
 
             // 新版 SpreadsheetDocument 移除 SaveAs 代碼，改為使用 Clone 方法
-            using (var newDocx = docx.Clone(fileStem + ".xlsx"))
+            using (var newDocx = docx.Clone(fileStem + "." + fileExt))
             {
                 newDocx.Dispose(); // 儲存並關閉新文件
             }
@@ -278,7 +279,7 @@ namespace Base.Services
             if (failCount > 0)
             {
                 //get docx
-                var failFilePath = fileStem + "_fail.xlsx";
+                var failFilePath = fileStem + "_fail." + fileExt;
                 File.Copy(importDto.TplPath, failFilePath, true);
 
                 var docx2 = SpreadsheetDocument.Open(failFilePath, true);
