@@ -1,6 +1,7 @@
 ﻿using Base.Enums;
 using Base.Models;
 using Base.Services;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -61,7 +62,7 @@ from dbo.XpFlowMap m
 where m.ProgCode=@ProgCode
 and m.SourceId=@SourceId;
 ";
-            await _Db.GetRowsA(sql, ["ProgCode", progCode, "SourceId", sourceId], db);
+            await _Db.ExecSqlA(sql, ["ProgCode", progCode, "SourceId", sourceId], db);
         }
 
         /// <summary>
@@ -89,7 +90,7 @@ order by s.FlowLevel
 
         /// <summary>
         /// ReadSetViewBagA -> SetViewBagA
-        /// controller Read set viewBag
+        /// 讀取全部簽核相關的 XpCode 資料，供 controller 設定 viewBag
         /// </summary>
         /// <param name="viewBag"></param>
         /// <param name="db"></param>
@@ -120,7 +121,7 @@ order by Type, Sort";
         /// create workflow signing rows: XpFlowMap, XpFlowSign(or test)
         /// 修改時不會建立XpFlowMap
         /// </summary>
-        /// <param name="isNew">是否新增</param>
+        /// <param name="isNew">是否新增, false表示申請者退回後重新送單</param>
         /// <param name="row">flow data</param>
         /// <param name="ownerId">資料擁有者</param>
         /// <param name="flowCode">XpFlow.Code</param>
@@ -223,7 +224,7 @@ order by l.FromNodeId, l.Sort
                 nowNodeName = findLine.ToNodeName;
             }//loop
 
-            //insert XpFlowMap
+            #region insert XpFlowMap
             var userId = _Fun.UserId();
             var flowId = firstLine.FlowId;
             var mapTable = GetMapTable(isTest);
@@ -273,8 +274,9 @@ and SourceId=@SourceId
 ";
                 await db.ExecSqlA(sql, args);
             }
+            #endregion
 
-            //insert XpFlowSign/XpTestFlowSign rows
+            #region insert XpFlowSign/XpTestFlowSign rows
             var level = 0;  //current flow level, start 0
             var userType = "";
             foreach (var idx in findLineIdxs)
@@ -336,11 +338,12 @@ and SourceId=@SourceId
 insert into dbo.{signTable}(
     Id, FlowMapId, FlowLevel,
     NodeName, SignerId, SignerName, 
-    SignStatus, SignTime, GetTime) values(
+    SignStatus, GetTime, SignTime) values(
 @Id, '{flowMapId}', @FlowLevel,
 @NodeName, @SignerId, @SignerName, 
-@SignStatus, @SignTime, @GetTime)
+@SignStatus, @GetTime, @SignTime)
 ";
+                #endregion
 
                 //insert XpFlowSign rows by userId list
                 foreach (var signerId in signerIds!)
@@ -358,9 +361,8 @@ insert into dbo.{signTable}(
                         error = $"SignerId not existed. ({userType}={signerId})";
                         goto lab_exit;
                     }
-                    #endregion
 
-                    #region 8.insert XpFlowSign/XpTestFlowSign, 同時傳入其他欄位
+                    //8.insert XpFlowSign/XpTestFlowSign, 同時傳入其他欄位
                     await db.ExecSqlA(sql, [
                         "Id", _Str.NewId(),
                         "NodeName", (level == 0) ? startNodeName : line.FromNodeName,
@@ -368,14 +370,14 @@ insert into dbo.{signTable}(
                         "SignerId", signerId,
                         "SignerName", signerName,
                         "SignStatus", (level == 0) ? SignStatusEstr.Agree : SignStatusEstr.None,
-                        "SignTime", signTime!,
                         "GetTime", getTime!,
+                        "SignTime", signTime!,
                     ]);
                 }
 
                 level++;
-                #endregion
             }
+            #endregion
 
             //case of ok
             return "";
@@ -384,14 +386,14 @@ insert into dbo.{signTable}(
         lab_exit:
             return isTest
                 ? error
-                : $"_XgFlow.cs CreateSign() failed(Flow.Code={flowCode}): {error}";
+                : $"_XgFlow.cs CreateSignA() failed(XpFlow.Code={flowCode}): {error}";
         }
 
-        private static string GetMapTable(bool isTest)
+        public static string GetMapTable(bool isTest)
         {
             return isTest ? "XpTestFlowMap" : "XpFlowMap";
         }
-        private static string GetSignTable(bool isTest)
+        public static string GetSignTable(bool isTest)
         {
             return isTest ? "XpTestFlowSign" : "XpFlowSign";
         }
@@ -527,19 +529,19 @@ insert into dbo.{signTable}(
             await db.BeginTranA();
 
             //get XpFlowSign/XpTestFlowSign row
-            var flowMapTable = GetMapTable(isTest);
-            var flowSignTable = GetSignTable(isTest);
+            var mapTable = GetMapTable(isTest);
+            var signTable = GetSignTable(isTest);
             var sql = $@"
 select s.FlowMapId, s.FlowLevel, r.TotalLevel 
-from dbo.{flowSignTable} s
-join dbo.{flowMapTable} r on s.FlowMapId=r.Id
+from dbo.{signTable} s
+join dbo.{mapTable} r on s.FlowMapId=r.Id
 where s.Id='{flowSignId}' 
 and s.SignStatus='{SignStatusEstr.None}'
 ";
             var signRow = await db.GetRowA(sql);
             if (signRow == null)
             {
-                error = $"not found {flowSignTable} row.(Id={flowSignId})";
+                error = $"not found {signTable} row.(Id={flowSignId})";
                 goto lab_error;
             }
             #endregion
@@ -547,7 +549,7 @@ and s.SignStatus='{SignStatusEstr.None}'
             #region 2.update XpFlowSign/test row
             var signStatus = signYes ? SignStatusEstr.Agree : SignStatusEstr.Back;
             sql = $@"
-update dbo.{flowSignTable} set 
+update dbo.{signTable} set 
     SignStatus=@SignStatus, 
     Note=@Note,
     SignTime=getDate()
@@ -556,8 +558,36 @@ where Id='{flowSignId}'
             var count = await db.ExecSqlA(sql, ["SignStatus", signStatus, "Note", signNote]);
             if (count != 1)
             {
-                error = $"{flowSignTable} should only update one row: {sql}";
+                error = $"{signTable} should only update one row: {sql}";
                 goto lab_error;
+            }
+            #endregion
+
+            #region 2a.insert XpFlowSign/test if need
+            var flowMapId = signRow["FlowMapId"]!.ToString();
+            var signLevel = Convert.ToInt32(signRow["FlowLevel"]);
+            if (_Fun.UseNextSigner)
+            {
+                var userId = _Fun.UserId();
+                var nextSigner = await _XgFlow2.GetNextSignerA(userId, db);
+                if (nextSigner == null)
+                {
+                    error = "Find No XpUser.NextSignerId.";
+                    goto lab_error;
+                }
+
+                sql = $@"
+insert into dbo.{signTable}(
+    Id, FlowMapId, FlowLevel,
+    NodeName, SignerId, SignerName, 
+    SignStatus, GetTime, SignTime) values(
+'{_Str.NewId()}', '{flowMapId}', {signLevel + 1},
+'', '{nextSigner!.Id}', '{nextSigner!.Str}', 
+'{SignStatusEstr.None}', @Now, null);
+";
+                await db.ExecSqlA(sql, [
+                    "Now", DateTime.Now,
+                ]);
             }
             #endregion
 
@@ -586,9 +616,8 @@ where Id='{flowSignId}'
                 _Fun.FlowBackToFirst ? 1 : 0;
 
             //update XpFlowMap/test set FlowLevel, FlowStatus
-            var flowMapId = signRow["FlowMapId"]!.ToString();
             sql = $@"
-update dbo.{flowMapTable} set
+update dbo.{mapTable} set
     FlowLevel={flowLevel},
     FlowStatus='{flowStatus}'
 where Id='{flowMapId}'
@@ -599,7 +628,7 @@ where Id='{flowMapId}'
             count = await db.ExecSqlA(sql);
             if (count != 1)
             {
-                error = $"{flowMapTable} should only update one row: {sql}";
+                error = $"{mapTable} should only update one row: {sql}";
                 goto lab_error;
             }
 

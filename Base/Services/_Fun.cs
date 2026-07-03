@@ -115,6 +115,18 @@ namespace Base.Services
         public static string DeptAll = "";
         //不管UseDeptRole為何, 如果有一個角色表示全部人權限, 則要設定RoleAll=XpRole.Id表示'全部人'角色
         public static string RoleAll = "";
+
+        /// <summary>
+        /// 是否使用多國語
+        /// 例如: 如果有多國讀取的XpCode.Name欄位會加上語系
+        /// </summary>
+        public static bool MultiLang = false;
+
+        //角色是否區分部門(是否使用XpDeptRole), 如果true則XpRoleProg有DeptRoleId !!
+        public static bool UseDeptRole = false;
+
+        //true表示使用XpUser.NextSignerId, false表示使用XpFlow設定簽核流程
+        public static bool UseNextSigner = false;
         #endregion
 
         #region input parameters
@@ -132,15 +144,6 @@ namespace Base.Services
 
         //program auth type
         public static AuthTypeEnum AuthType = AuthTypeEnum.None;
-
-        /// <summary>
-        /// 是否使用多國語
-        /// 例如: 如果有多國讀取的XpCode.Name欄位會加上語系
-        /// </summary>
-        public static bool MultiLang = false;
-
-        //角色是否區分部門(是否使用XpDeptRole), 如果true則XpRoleProg有DeptRoleId !!
-        public static bool UseDeptRole = false;
         #endregion
 
         #region dir varibles
@@ -200,8 +203,7 @@ namespace Base.Services
         /// <param name="multiLang">是否使用多國語</param>
         /// <param name="useDeptRole">角色是否區分部門, 如果true則會存取 XpDeptRole table</param>
         /// <returns>error msg if any</returns>
-        public static string Init(bool isDev, IServiceProvider? diBox, DbTypeEnum dbType, 
-            AuthTypeEnum authType, bool multiLang = false, bool useDeptRole = false)
+        public static string Init(bool isDev, IServiceProvider? diBox, DbTypeEnum dbType, AuthTypeEnum authType)
         {
             #region set instance variables
 			IsDev = isDev;
@@ -210,8 +212,8 @@ namespace Base.Services
             DbType = dbType;
             //AuthType = (Config.LoginType == LoginTypeEstr.None) ? AuthTypeEnum.None : authType; //無登入必為無權限 !!
             AuthType = authType;
-            MultiLang = multiLang;
-            UseDeptRole = useDeptRole;
+            //MultiLang = multiLang;
+            //UseDeptRole = useDeptRole;
 
             Config!.HtmlImageUrl = _Str.AddWebSlash(Config.HtmlImageUrl);
             //Nonce = _Str.NewId();
