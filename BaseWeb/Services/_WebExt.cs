@@ -1,8 +1,8 @@
 ﻿using Base.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.CookiePolicy;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -46,8 +46,59 @@ namespace BaseWeb.Services
             return builder;
         }
 
-        //資安: CSP, Anti-clickjacking
-        public static IApplicationBuilder SetApp(this IApplicationBuilder app)
+        public static IServiceCollection SetServices(this IServiceCollection services)
+        {
+            services.AddControllersWithViews(opts => { opts.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()); })
+                //services.AddControllersWithViews()
+                //view Localization
+                //.AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+                //use pascal for newtonSoft json
+                .AddNewtonsoftJson(opts => { opts.UseMemberCasing(); })
+                //use pascal for MVC json
+                .AddJsonOptions(opts => { opts.JsonSerializerOptions.PropertyNamingPolicy = null; });
+
+            //3.http context
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            return services;
+        }
+
+        public static WebApplication SetApp(this WebApplication app, bool isDev)
+        {
+            // Configure the HTTP request pipeline.
+            if (isDev)
+            {
+                //app.UseMigrationsEndPoint();
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Home/Error");
+                app.UseHsts();  //for https, default HSTS 30 days. for change see https://aka.ms/aspnetcore-hsts.
+            }
+
+            app.UseHttpsRedirection();
+            //app.UseStaticFiles();
+            app.UseRouting();
+            app.UseCors(); //加上後會套用到全域
+            app.UseAuthentication();    //認証
+            app.UseAuthorization();     //授權
+            //app.UseSession();
+
+            app.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Login}/{id?}");
+
+            return app;
+        }
+
+        /// <summary>
+        /// SetApp -> SetAppSafe
+        /// 資安: CSP, Anti-clickjacking
+        /// </summary>
+        /// <param name="app"></param>
+        /// <returns></returns>
+        public static IApplicationBuilder SetAppSafe(this WebApplication app)
         {
             //var newId = _Str.NewId();
             var newId = Convert.ToBase64String(Guid.NewGuid().ToByteArray()); // 產生一次 nonce，兩者共用
@@ -60,9 +111,9 @@ namespace BaseWeb.Services
                 {
                     var headers = ctx.Context.Response.Headers;
                     headers["Referrer-Policy"] = "no-referrer";
-                    headers["X-Content-Type-Options"] = "nosniff";
-                    headers["X-Frame-Options"] = "DENY";
-                    headers["X-XSS-Protection"] = "1; mode=block";     //舊但仍有用
+                    headers.XContentTypeOptions = "nosniff";
+                    headers.XFrameOptions = "DENY";
+                    headers.XXSSProtection = "1; mode=block";     //舊但仍有用
                     headers.Remove("X-Powered-By");
                     //headers.Remove("Server");   //無作用!!
                 }
@@ -75,9 +126,10 @@ namespace BaseWeb.Services
                 //script, style使用nonce 讓前端使用 inline !!
                 //"img-src 'self' data:" bootstrap select 才能顯示右方箭頭 !!
                 var headers = ctx.Response.Headers;
-                headers["Content-Security-Policy"] =
+                headers.ContentSecurityPolicy =
                     "default-src 'self';" +
-                    "connect-src 'self';" +
+                    //"connect-src 'self';" +
+                    "connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:*;" + 
                     "font-src 'self';" +
                     "form-action 'self';" +
                     "frame-ancestors 'self';" +
@@ -91,9 +143,9 @@ namespace BaseWeb.Services
                     //$"script-src 'self' 'unsafe-inline'; style-src 'self' 'nonce-{newId}'; ";
 
                 headers["Referrer-Policy"] = "no-referrer";
-                headers["X-Content-Type-Options"] = "nosniff";
-                headers["X-Frame-Options"] = "DENY";
-                headers["X-XSS-Protection"] = "1; mode=block";     //舊但仍有用
+                headers.XContentTypeOptions = "nosniff";
+                headers.XFrameOptions = "DENY";
+                headers.XXSSProtection = "1; mode=block";     //舊但仍有用
                 headers.Remove("X-Powered-By");
                 //headers.Remove("Server");
                 await next();

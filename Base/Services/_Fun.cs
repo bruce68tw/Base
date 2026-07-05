@@ -47,7 +47,7 @@ namespace Base.Services
         public const string CsDtFmt2 = "yyyy/MM/dd HH:mm";
         public const string CsDateFmt = "yyyy/MM/dd";
 
-        //欄位分隔符號
+        //欄位之間的分隔符號, ex:將多個欄位合併後加密
         public const string ColSep = "@@";
 
         //carrier
@@ -56,7 +56,7 @@ namespace Base.Services
         public const string HtmlCarrier = "<br>";     //for html
 
         //default pagin rows
-        public const int PageRows = 10;
+        //public const int PageRows = 10;
 
         //default auto Id length
         public const int AutoIdShort = 6;
@@ -99,7 +99,7 @@ namespace Base.Services
         public static string UserEqual = "u.Id='{0}'";
         public static string DeptEqual = "u.DeptId='{0}'";
 
-        //AES & JWT key, be set when initial
+        //AES & JWT key fid, be set when initial
         //public static string AesKey = "YourAesKey";
         public static string JwtKey = "YourJwtKey";
 
@@ -121,6 +121,12 @@ namespace Base.Services
         /// 例如: 如果有多國讀取的XpCode.Name欄位會加上語系
         /// </summary>
         public static bool MultiLang = false;
+
+        //多國語系清單
+        public static string[] Locales = ["zh-TW", "en-US", "zh-CN"];
+
+        //多國語系清單
+        public static string DefaultLocale = "en-US";
 
         //角色是否區分部門(是否使用XpDeptRole), 如果true則XpRoleProg有DeptRoleId !!
         public static bool UseDeptRole = false;
@@ -200,10 +206,11 @@ namespace Base.Services
         /// <param name="diBox">type 必須允許null, 否則compile error !!</param>
         /// <param name="dbType">資料庫種類</param>
         /// <param name="authType">權限種類</param>
-        /// <param name="multiLang">是否使用多國語</param>
-        /// <param name="useDeptRole">角色是否區分部門, 如果true則會存取 XpDeptRole table</param>
+        /// //<param name="multiLang">是否使用多國語</param>
+        /// //<param name="useDeptRole">角色是否區分部門, 如果true則會存取 XpDeptRole table</param>
         /// <returns>error msg if any</returns>
-        public static string Init(bool isDev, IServiceProvider? diBox, DbTypeEnum dbType, AuthTypeEnum authType)
+        public static string Init(bool isDev, IServiceProvider? diBox, DbTypeEnum dbType, 
+            AuthTypeEnum authType, bool multiLang = false)
         {
             #region set instance variables
 			IsDev = isDev;
@@ -212,7 +219,7 @@ namespace Base.Services
             DbType = dbType;
             //AuthType = (Config.LoginType == LoginTypeEstr.None) ? AuthTypeEnum.None : authType; //無登入必為無權限 !!
             AuthType = authType;
-            //MultiLang = multiLang;
+            MultiLang = multiLang;
             //UseDeptRole = useDeptRole;
 
             Config!.HtmlImageUrl = _Str.AddWebSlash(Config.HtmlImageUrl);

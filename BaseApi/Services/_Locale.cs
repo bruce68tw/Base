@@ -63,16 +63,31 @@ namespace BaseApi.Services
                 _brList.Add(locale, br);    //add first
             }
 
+            if (_Fun.MultiLang)
+            {
+                //使用切換方式, 不設定default
+                CultureInfo.CurrentUICulture = new CultureInfo(locale);
+                //CultureInfo.CurrentCulture = new CultureInfo(locale);
+            }
+            else
+            {
+                //直接設定default culture
+                CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo(locale);    //控制 Resource(.resx)
+                //CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(locale);;   //控制數字/日期格式
+            }
+
+            /*
             //set default language, after .net 4.5 ver just set DefaultThread
             //if (CultureInfo.CurrentCulture.Name != locale)
             //{
             var culture = new CultureInfo(locale);
-                CultureInfo.DefaultThreadCurrentCulture = culture;
-                CultureInfo.DefaultThreadCurrentUICulture = culture;
+            //CultureInfo.DefaultThreadCurrentCulture = culture;      //控制數字/日期格式
+            CultureInfo.DefaultThreadCurrentUICulture = culture;    //控制 Resource(.resx)
 
                 //Thread.CurrentThread.CurrentCulture = culture;
                 //Thread.CurrentThread.CurrentUICulture = culture;
             //}
+            */
 
             return true;
             //cookie set locale code
@@ -124,7 +139,7 @@ namespace BaseApi.Services
         private static async Task<BaseResDto?> ReadBaseResA(string locale)
         {
             //error = ""; //initial
-            var file = _FunApi.DirWeb + "locale/" + locale + "/BR.json";
+            var file = $"{_FunApi.DirWeb}locale/{locale}/BR.json";
             if (!File.Exists(file))
             {
                 await _Log.ErrorRootA("no file: " + file);
