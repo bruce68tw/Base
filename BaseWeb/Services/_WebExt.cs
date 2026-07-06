@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 
 namespace BaseWeb.Services
 {
@@ -49,6 +52,7 @@ namespace BaseWeb.Services
 
         public static IServiceCollection SetServices(this IServiceCollection services, bool multiLang)
         {
+            //資安: controller 防止 CSRF
             var mvc = services.AddControllersWithViews(opts => { opts.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()); })
                 //services.AddControllersWithViews()
                 //view Localization
@@ -58,6 +62,9 @@ namespace BaseWeb.Services
                 //use pascal for MVC json
                 .AddJsonOptions(opts => { opts.JsonSerializerOptions.PropertyNamingPolicy = null; });
 
+            //3.http context
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
             if (multiLang)
             {
                 //view Localization
@@ -65,10 +72,23 @@ namespace BaseWeb.Services
 
                 //2.set Resources path
                 services.AddLocalization(opts => opts.ResourcesPath = "Resources");
-            }
 
-            //3.http context
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+                //多國語初始化 if need
+                //services.AddLocalization();
+
+                List<CultureInfo> cultures = [];
+                foreach (var item in _Fun.Locales)
+                {
+                    cultures.Add(new CultureInfo(item));
+                }
+
+                var options = new RequestLocalizationOptions
+                {
+                    DefaultRequestCulture = new RequestCulture(_Fun.Config.Locale),
+                    SupportedCultures = cultures,
+                    SupportedUICultures = cultures,
+                };
+            }
 
             return services;
         }
@@ -99,6 +119,7 @@ namespace BaseWeb.Services
                 name: "default",
                 pattern: "{controller=Home}/{action=Login}/{id?}");
 
+            app.SetAppSafe();
             return app;
         }
 
@@ -108,7 +129,7 @@ namespace BaseWeb.Services
         /// </summary>
         /// <param name="app"></param>
         /// <returns></returns>
-        public static IApplicationBuilder SetAppSafe(this WebApplication app)
+        private static WebApplication SetAppSafe(this WebApplication app)
         {
             //var newId = _Str.NewId();
             var newId = Convert.ToBase64String(Guid.NewGuid().ToByteArray()); // 產生一次 nonce，兩者共用
