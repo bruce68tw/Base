@@ -271,7 +271,7 @@ join XpProg p on a.ProgId=p.Id
         /// <param name="superMode"></param>
         /// <param name="fnSetPwd">無密碼時開啟SetPwd</param>
         /// <returns>return [] if null</returns>
-        public static async Task<List<MenuDto>> GetMenu1A(string fnSetPwd, bool superMode = false)
+        public static async Task<List<MenuDto>> GetMenu1A(string fnSetPwd = "", bool superMode = false)
         {
             //get Program name from XpProg
             var sql = $@"
@@ -280,7 +280,7 @@ from dbo.XpProg
 order by Sort
 ";
             var menus = await _Db.GetModelsA<MenuDto>(sql);
-            if (!superMode)
+            if (!superMode && !string.IsNullOrEmpty(fnSetPwd))
                 RemoveEmptyMenu(menus, fnSetPwd, false);
 
             return menus ?? [];

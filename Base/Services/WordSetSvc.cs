@@ -21,8 +21,8 @@ namespace Base.Services
         public const int Radio = 2;     //radio
         public const int CharV = 3;     //V char
 
-        public const string Childs = "Childs";  //childs欄位名稱
-        public const string Child = "Child";    //childs欄位名稱
+        //public const string Childs = "_Childs";  //childs欄位名稱
+        //public const string Child = "_Child";    //child欄位名稱
 
         //instance variables
         private bool _isOk = false;
@@ -128,14 +128,19 @@ namespace Base.Services
             return _ms;
         }
 
+        /// <summary>
+        /// fill row
+        /// </summary>
+        /// <param name="page"></param>
+        /// <param name="row">包含_Child、_Childs欄位</param>
         private void FillRow(OpenXmlElement page, dynamic row)
         {
             //fill childs first(只存在table), 減少row的欄位
             JObject json = (row is JObject)
                 ? (row as JObject)!
                 : JObject.FromObject(row);
-            var childs = json[Childs] as JArray;
-            var child = json[Child] as JArray;
+            var childs = json[_Fun.FidChilds] as JArray;
+            var child = json[_Fun.FidChild] as JArray;
             if (childs == null && child != null)
                 childs = [child];
 

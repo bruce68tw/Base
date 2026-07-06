@@ -8,18 +8,21 @@ using System.Threading.Tasks;
 
 namespace BaseApi.Services
 {
-    //第2種簽核流程, 讀取 XpUser.NextSignerId 欄位, 取代原本的 XpFlowNode.SignerType/SignerValue
+    /// <summary>
+    /// 第2種簽核流程, 使用 XpUser.NextSignerId 做為下一關簽核者, 用法:
+    ///  1.XpUser 增加 NextSignerId 欄位
+    ///  2.呼叫 _Fun.Init() 後, 設定 _Fun.UseNextSigner = true;
+    ///  3.存檔時, 使用 _XgFlow2.CreateSignA 代替 _XgFlow.CreateSignA 來建立簽核資料。
+    /// </summary>
     public class _XgFlow2
     {
         /// <summary>
-        /// CreateSignRowsA -> CreateSignA
         /// create workflow signing rows: XpFlowMap, XpFlowSign(or test)
         /// 修改時不會建立XpFlowMap
         /// </summary>
-        /// <param name="isNew">是否新增</param>
+        /// <param name="isNew">是否新增, false表示申請者退回後重新送單</param>
         /// <param name="row">flow data</param>
         /// <param name="ownerId">資料擁有者</param>
-        /// //<param name="flowCode">XpFlow.Code</param>
         /// <param name="progCode">XpProg.Code</param>
         /// <param name="sourceId">source row Id(key)</param>
         /// <param name="db"></param>
@@ -27,14 +30,11 @@ namespace BaseApi.Services
         public static async Task<string> CreateSignA(bool isNew, JObject row, DateTime now, string ownerId, 
             string progCode, string sourceId, bool isTest, Db db)
         {
-
             #region insert XpFlowMap, 類似 _XgFlow
-            var error = "";
-            var sql = "";
+            string error, sql, flowMapId;
             var userId = _Fun.UserId();
             var mapTable = _XgFlow.GetMapTable(isTest);
             var signTable = _XgFlow.GetSignTable(isTest);
-            var flowMapId = "";
             var signLevel = 0;
             //FlowLevel=1, 第0關會直接送出
             if (isNew)

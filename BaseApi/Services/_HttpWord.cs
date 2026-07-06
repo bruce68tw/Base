@@ -19,16 +19,35 @@ namespace BaseApi.Services
     public static class _HttpWord
     {
         /// <summary>
-        /// ExportByTplRowA -> OutputTplA
+        /// ExportByTplRowA -> OutputTplA ->OutputTplRowsA
         /// export file by template and row
         /// </summary>
         /// <param name="tplPath">tpl path</param>
         /// <param name="fileName">export file name</param>
-        /// <param name="row">可為JObject或Model</param>
+        /// <param name="rows">可為JObject或Model</param>
         /// <param name="childs">可為JArray或List<Model>, IEnumerable for anonymous type</param>
         /// <param name="images"></param>
         /// <returns>error msg if any</returns>
-        public static async Task<bool> OutputTplA(string tplPath, string fileName, List<dynamic> rows, List<WordImageDto>? images = null)
+        public static async Task<bool> OutputTplRowA(string tplPath, string fileName, dynamic row, List<WordImageDto>? images = null)
+        {
+            var ms = _Word.TplRowToMs(tplPath, row, images);
+            if (ms == null) return false;
+
+            await _FunApi.ExportByStreamA(ms, fileName);
+            return true;
+        }
+
+        /// <summary>
+        /// ExportByTplRowA -> OutputTplA ->OutputTplRowsA
+        /// export file by template and row
+        /// </summary>
+        /// <param name="tplPath">tpl path</param>
+        /// <param name="fileName">export file name</param>
+        /// <param name="rows">可為JObject或Model</param>
+        /// <param name="childs">可為JArray或List<Model>, IEnumerable for anonymous type</param>
+        /// <param name="images"></param>
+        /// <returns>error msg if any</returns>
+        public static async Task<bool> OutputTplRowsA(string tplPath, string fileName, List<dynamic> rows, List<WordImageDto>? images = null)
         {
             var ms = _Word.TplRowsToMs(tplPath, rows, images);
             if (ms == null) return false;

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -46,9 +47,9 @@ namespace BaseWeb.Services
             return builder;
         }
 
-        public static IServiceCollection SetServices(this IServiceCollection services)
+        public static IServiceCollection SetServices(this IServiceCollection services, bool multiLang)
         {
-            services.AddControllersWithViews(opts => { opts.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()); })
+            var mvc = services.AddControllersWithViews(opts => { opts.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()); })
                 //services.AddControllersWithViews()
                 //view Localization
                 //.AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
@@ -56,6 +57,15 @@ namespace BaseWeb.Services
                 .AddNewtonsoftJson(opts => { opts.UseMemberCasing(); })
                 //use pascal for MVC json
                 .AddJsonOptions(opts => { opts.JsonSerializerOptions.PropertyNamingPolicy = null; });
+
+            if (multiLang)
+            {
+                //view Localization
+                mvc.AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix);
+
+                //2.set Resources path
+                services.AddLocalization(opts => opts.ResourcesPath = "Resources");
+            }
 
             //3.http context
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -78,9 +88,9 @@ namespace BaseWeb.Services
             }
 
             app.UseHttpsRedirection();
-            //app.UseStaticFiles();
+            app.UseStaticFiles();
             app.UseRouting();
-            app.UseCors(); //加上後會套用到全域
+            app.UseCors();      //加上後會套用到全域
             app.UseAuthentication();    //認証
             app.UseAuthorization();     //授權
             //app.UseSession();

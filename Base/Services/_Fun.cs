@@ -35,7 +35,8 @@ namespace Base.Services
 
         //for CrudEditSvc, 多個檔案使用
         public const string FidRows = "_rows";          //rows fid for CrudEdit
-        public const string FidChilds = "_childs";      //childs fid for CrudEdit
+        public const string FidChild = "_child";        //child fid for WordSetSvc
+        public const string FidChilds = "_childs";      //childs fid for CrudEdit、WordSetSvc
         public const string FidDeletes = "_deletes";    //delete key string list
 
         public const string FidBaseUser = "_BaseUser";  //base user info
