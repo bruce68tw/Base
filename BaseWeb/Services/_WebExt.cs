@@ -14,7 +14,7 @@ namespace BaseWeb.Services
 {
     public static class _WebExt
     {
-        public static WebApplicationBuilder SetBuilder(this WebApplicationBuilder builder, string origin)
+        public static WebApplicationBuilder SetBuilder(this WebApplicationBuilder builder)
         {
             //set builder, 無作用!!
             //web.config 必須設定 <requestFiltering removeServerHeader="true" /> !!
@@ -35,7 +35,7 @@ namespace BaseWeb.Services
             });
 
             //cors
-            string[] origins = origin.Split(',');
+            string[] origins = _Fun.Config.AllowOrigins.Split(',');
             services.AddCors(opts =>
             {
                 opts.AddDefaultPolicy(a =>
