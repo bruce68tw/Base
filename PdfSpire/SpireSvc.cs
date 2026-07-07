@@ -39,12 +39,13 @@ namespace PdfSpire
         }
 
         /// <summary>
-        /// pdf file add images
+        /// (無跨平台)pdf file add images
         /// </summary>
         /// <param name="fromPath"></param>
         /// <param name="toPath"></param>
         /// <param name="imageDtos"></param>
         /// <returns></returns>
+        /*
         public bool AddImages(string fromPath, string toPath, PdfImageDto[] imageDtos)
         {
             // 建立新的 PDF 文件，從現有檔案載入
@@ -90,6 +91,77 @@ namespace PdfSpire
 
             return true;
         }
+        */
 
-    }
+        /// <summary>
+        /// (跨平台)pdf file add images
+        /// </summary>
+        /// <param name="fromPath"></param>
+        /// <param name="toPath"></param>
+        /// <param name="imageDtos"></param>
+        /// <returns></returns>
+        public bool AddImages(string fromPath, string toPath, PdfImageDto[] imageDtos)
+        {
+            using var pdf = new PdfDocument(fromPath);
+            foreach (var imageDto in imageDtos)
+            {
+                var page = pdf.Pages[0];
+                var pdfImage = PdfImage.FromFile(imageDto.FilePath);
+
+                float imageWidth = pdfImage.Width;
+                float imageHeight = pdfImage.Height;
+                float newWidth = (float)imageDto.Width;
+                float scale = newWidth / imageWidth;
+                float newHeight = imageHeight * scale;
+
+                // 原始座標
+                var rect = new RectangleF(
+                    (float)imageDto.PosX,
+                    (float)imageDto.PosY,
+                    newWidth,
+                    newHeight
+                );
+
+                // PDF 橫印旋轉修正
+                rect = ConvertRotation(page, rect);
+
+                // 蓋章
+                page.Canvas.DrawImage(pdfImage, rect);
+            }
+
+            pdf.SaveToFile(toPath, Spire.Pdf.FileFormat.PDF);
+            return true;
+        }
+
+        /// <summary>
+        /// 依照 PDF Page 的 Rotation 修正圖片位置座標。
+        /// 
+        /// PDF 的 Rotation 只影響閱讀顯示方向，並不會改變 PDF 內部 Canvas 座標系統。
+        /// 當 PDF 頁面為橫向列印 (90/270 度旋轉) 時，
+        /// 需要將圖片蓋章位置轉換到正確的 Canvas 座標，
+        /// 避免圖片出現在錯誤的位置。
+        /// 
+        /// 注意：此函式只調整位置與尺寸座標，不旋轉圖片內容。
+        /// </summary>
+        private RectangleF ConvertRotation(PdfPageBase page, RectangleF rect)
+        {
+            return page.Rotation switch
+            {
+                PdfPageRotateAngle.RotateAngle90 => new RectangleF(
+                    page.Size.Height - rect.Y - rect.Height,
+                    rect.X,
+                    rect.Height,
+                    rect.Width
+                ),
+                PdfPageRotateAngle.RotateAngle270 => new RectangleF(
+                    rect.Y,
+                    page.Size.Width - rect.X - rect.Width,
+                    rect.Height,
+                    rect.Width
+                ),
+                _ => rect,
+            };
+        }
+
+    }//class
 }

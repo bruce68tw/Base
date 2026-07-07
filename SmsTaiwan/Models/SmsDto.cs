@@ -23,9 +23,9 @@ namespace SmsTaiwan.Models
         //public string dstaddr { get; set; }
 
         [StringLength(10)]
-        public string encoding { get; set; }
+        public string encoding { get; set; } = "";
 
-        public string smbody { get; set; }
+        public string smbody { get; set; } = "";
 
         //public string smbodyOriginal { get; set; }
 
