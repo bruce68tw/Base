@@ -1,5 +1,5 @@
 ﻿//import type { JQuery } from "jquery";
-import BR from './Locale/zh-TW/BR';
+import _BR from './Locale/zh-TW/_BR';
 
 declare global {
     type JQueryN = JQuery | null;
@@ -16,7 +16,7 @@ declare global {
     type StrNumN = string | number | null;
 
     /** 全域多國語資源 */
-    var _BR: typeof BR;
+    var _BR: typeof _BR;
 
     /** 目前功能畫面 */
     var _me: any;

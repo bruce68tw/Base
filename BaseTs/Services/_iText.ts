@@ -6,7 +6,7 @@ export default class _iText extends _iBase {
         const filter = "[data-mask!='']";
         _Obj.getByFt(filter, box).each(function (this: any) {
             const me = $(this);
-            me.mask(me.data('mask'));
+            (me as any).mask(me.data('mask'));
         });
     }
 }

@@ -1,3 +1,4 @@
+import 'bootstrap-datepicker';
 import _iBase from './_iBase';
 import _Obj from './_Obj';
 import _Fun from './_Fun';
@@ -12,8 +13,8 @@ export default class _iDate extends _iBase {
    * param obj {object} date input object
    * return mm date
    */
-  public static getO(obj: any): any {
-    return _Date.uiToMmDate(obj.val());
+  public static getO(obj: JQuery): string {
+    return _Date.uiToMmDate(obj.val() as string);
   }
 
   /**
@@ -21,7 +22,7 @@ export default class _iDate extends _iBase {
    * param obj {object} date input object
    * param value {string} format: _Fun.MmDateFmt
    */
-  public static setO(obj: any, value: string): void {
+  public static setO(obj: JQuery, value: string): void {
     _iDate._boxSetDate(_iDate._objToBox(obj), value);
   }
 
@@ -29,7 +30,7 @@ export default class _iDate extends _iBase {
    * set edit status
    * param obj {object} date input object
    */
-  public static setEditO(obj: any, status: boolean): void {
+  public static setEditO(obj: JQuery, status: boolean): void {
     obj.prop('disabled', !status);
   }
 
@@ -40,15 +41,15 @@ export default class _iDate extends _iBase {
    * param box {object}
    * param fid {string} optional
    */ 
-  public static init(box: any, fid?: string): void {
+  public static init(box: JQuery, fid?: string): void {
     const obj = _Str.isEmpty(fid)
       ? box.find(_iDate.BoxFilter)
-      : _Obj.get(fid, box).closet(_iDate.BoxFilter);
+      : _Obj.get(fid, box).closest(_iDate.BoxFilter);
       
     if (obj.length === 0) return;
 
     //initial
-    obj.datepicker({
+    (obj as any).datepicker({
       language: _Fun.locale,
       autoclose: true,
       showOnFocus: false,
@@ -63,13 +64,13 @@ export default class _iDate extends _iBase {
 
   //show/hide datepicker
   public static onToggle(): void {
-    const btn = _Fun.getMe();
-    _iDate._elmToBox(btn).datepicker('show');
+    const btn = _Fun.getMeElm();
+    (_iDate._elmToBox(btn) as any).datepicker('show');
   }
 
   //reset value
   public static onReset(): void {
-    const btn = _Fun.getMe();
+    const btn = _Fun.getMeElm();
     const box = _iDate._elmToBox(btn);
     const input = _iDate._boxGetInput(box);
     if (_iDate.getEditO(input)) {
@@ -78,7 +79,7 @@ export default class _iDate extends _iBase {
   }    
 
   //get edit status, return bool
-  public static getEditO(obj: any): boolean {
+  public static getEditO(obj: JQuery): boolean {
     return !obj.is(':disabled');
   }
 
@@ -86,24 +87,24 @@ export default class _iDate extends _iBase {
    * input element to date box
    * return {object}
    */
-  private static _elmToBox(elm: any): any {
+  private static _elmToBox(elm: HTMLElement): JQuery {
     return _iDate._objToBox($(elm));
   }
 
-  private static _objToBox(obj: any): any {
+  private static _objToBox(obj: JQuery): JQuery {
     return obj.closest(_iDate.BoxFilter);
   }
 
-  private static _boxSetDate(box: any, date: any): void {
+  private static _boxSetDate(box: JQuery, date: string): void {
     date = _Date.dsToUiDate(date);
-    box.datepicker('update', date);
+    (box as any).datepicker('update', date);
     box.trigger({
       type: 'changeDate',
       date: date
-    });
+    } as any);
   }
 
-  private static _boxGetInput(box: any): any {
+  private static _boxGetInput(box: JQuery): JQuery {
     return box.find('input');
   }
 }

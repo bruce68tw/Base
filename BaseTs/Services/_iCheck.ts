@@ -64,11 +64,8 @@ export default class _iCheck extends _iBase {
     static getCheck0Values(form: JQuery): string[] {
         const ary: string[] = [];
         const item = _Obj.getByFt(_iCheck.fltCheckeds, form);
-        if (item != null && item.length == 0){
-
-        }
-        if (_Array.notEmpty(items as any[])) {
-            items.each(function (this: HTMLElement, i: number) {
+        if (_Obj.notEmpty(item)) {
+            item.each(function (this: HTMLElement, i: number) {
                 ary[i] = $(this).data('value') as string;
             });
         }
@@ -83,9 +80,9 @@ export default class _iCheck extends _iBase {
      */
     static getCheckedValues(form: JQuery, preFid: string): string[] {
         const ary: string[] = [];
-        const items = _Obj.getByFt(`[data-fid^='${preFid}']:checked`, form);
-        if (_Array.notEmpty(items)) {
-            items.each(function (this: HTMLElement, i: number) {
+        const item = _Obj.getByFt(`[data-fid^='${preFid}']:checked`, form);
+        if (_Obj.notEmpty(item)) {
+            item.each(function (this: HTMLElement, i: number) {
                 ary[i] = $(this).data('value') as string;
             });
         }

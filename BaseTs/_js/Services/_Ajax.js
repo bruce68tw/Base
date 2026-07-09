@@ -178,7 +178,8 @@ export default class _Ajax {
                 const errJson = {};
                 for (let i = 0; i < result.ErrorRows.length; i++) {
                     const row = result.ErrorRows[i];
-                    const edit = _Str.isEmpty(row.FormId) ? _me.edit0 : $('#' + row.FormId);
+                    const edit = (row.EditNo == 0)
+                        ? _me.edit0 : _me.crudE.getEditByNo(row.EditNo);
                     errJson[row.Fid] = row.Msg;
                     edit.validator.showErrors(errJson);
                 }

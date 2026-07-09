@@ -59,14 +59,14 @@ export default class FlowView {
         });
     }
 
-    public loadNodes(rows: any[]): void {
+    public loadNodes(rows: Json[]): void {
         this.reset();
         for (let i = 0; i < rows.length; i++) {
             this.addNode(rows[i]);
         }
     }
 
-    public loadLines(rows: any[] | null): void {
+    public loadLines(rows?: Json[]): void {
         if (rows != null) {
             for (let i = 0; i < rows.length; i++) {
                 this.addLine(rows[i]);
@@ -74,13 +74,13 @@ export default class FlowView {
         }
     }
 
-    public addNode(json: any): FlowNode {
+    public addNode(json: Json): FlowNode {
         let node = new FlowNode(this, json);
         this.nodes.push(node);
         return node;
     }
 
-    public addLine(json: any): FlowLine {
+    public addLine(json: Json): FlowLine {
         return new FlowLine(this, json);
     }
 
@@ -109,7 +109,7 @@ export default class FlowView {
         return json;
     }
 
-    public idToNode(id: number | string): FlowNode | undefined {
+    public idToNode?(id: StrNum): FlowNode {
         return this.nodes.find(node => node.getId() == id);
     }
 

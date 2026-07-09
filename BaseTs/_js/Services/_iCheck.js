@@ -1,6 +1,5 @@
 import _iBase from './_iBase';
 import _Obj from './_Obj';
-import _Array from './_Array';
 export default class _iCheck extends _iBase {
     /**
      * Check0Id -> FidCheck0
@@ -47,7 +46,7 @@ export default class _iCheck extends _iBase {
         return obj.is(':checked');
     }
     /**
-     * todo: getCheckeds -> getCheck0Values
+     * getCheckeds -> getCheck0Values
      * get checked checkebox data-value string array
      * form {object} container
      * fid {string} (optional '_check0') data-fid value
@@ -55,9 +54,9 @@ export default class _iCheck extends _iBase {
      */
     static getCheck0Values(form) {
         const ary = [];
-        const items = _Obj.getByFt(_iCheck.fltCheckeds, form);
-        if (_Array.notEmpty(items)) {
-            items.each(function (i) {
+        const item = _Obj.getByFt(_iCheck.fltCheckeds, form);
+        if (_Obj.notEmpty(item)) {
+            item.each(function (i) {
                 ary[i] = $(this).data('value');
             });
         }
@@ -71,9 +70,9 @@ export default class _iCheck extends _iBase {
      */
     static getCheckedValues(form, preFid) {
         const ary = [];
-        const items = _Obj.getByFt(`[data-fid^='${preFid}']:checked`, form);
-        if (_Array.notEmpty(items)) {
-            items.each(function (i) {
+        const item = _Obj.getByFt(`[data-fid^='${preFid}']:checked`, form);
+        if (_Obj.notEmpty(item)) {
+            item.each(function (i) {
                 ary[i] = $(this).data('value');
             });
         }

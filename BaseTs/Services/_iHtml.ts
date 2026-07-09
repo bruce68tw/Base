@@ -7,19 +7,19 @@ export default class _iHtml extends _iBase {
     static getO(obj: JQuery): any {
         //return obj.html();
         //return obj.val();
-        return obj.summernote('code');
+        return (obj as any).summernote('code');
     }
 
     static setO(obj: JQuery, value: string): void {
         //value = $('<div/>').html(value).text(); //decode
-        obj.summernote('code', value);
+        (obj as any).summernote('code', value);
         //obj.html(value);
         //obj.val(value);
     }
 
     //set edit status
     static setEditO(obj: JQuery, status: boolean): void {
-        obj.summernote(status ? 'enable' : 'disable');
+        (obj as any).summernote(status ? 'enable' : 'disable');
     }
 
     /**
@@ -33,7 +33,7 @@ export default class _iHtml extends _iBase {
             const upMe = $(this);
             upMe.data('prog', prog);    //for onImageUpload()
             //init summernote
-            upMe.summernote({
+            (upMe as any).summernote({
                 height: height || 200,
                 //new version use callbacks !!
                 callbacks: {
@@ -44,11 +44,12 @@ export default class _iHtml extends _iBase {
                         
                         //sync value
                         const me = $(this);
-                        if (me.summernote('isEmpty')) {
+                        if ((me as any).summernote('isEmpty')) {
                             me.val('');
                             //empty html value, carefully cause endless loop !!
-                            if (me.summernote('code') !== '') {
-                                me.summernote('code', '');
+                            let me2 = me as any;
+                            if (me2.summernote('code') !== '') {
+                                me2.summernote('code', '');
                             }
                         } else {
                             me.val(contents);
@@ -80,7 +81,7 @@ export default class _iHtml extends _iBase {
                                 //create image element & add into editor
                                 const image = document.createElement('img');
                                 image.src = url;
-                                me.summernote('insertNode', image); //new version syntax !!
+                                (me as any).summernote('insertNode', image); //new version syntax !!
                             }
                         });
                     },
@@ -118,9 +119,9 @@ export default class _iHtml extends _iBase {
 
     //set edit status for all html input
     static setEdits(box: JQuery, subFilter: string, status: boolean): void {
-        const items = box.find(_iHtml.Filter + subFilter);
-        if (items.length > 0) {
-            items.summernote(status ? 'enable' : 'disable');
+        const item = box.find(_iHtml.Filter + subFilter);
+        if (item.length > 0) {
+            (item as any).summernote(status ? 'enable' : 'disable');
         }
     }
 

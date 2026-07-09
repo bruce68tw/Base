@@ -49,7 +49,7 @@ export default class _iFile extends _iBase {
     //file: input element
     static onChangeFile(): void {
         //case of empty file
-        const fileElm = _Fun.getMeElm();
+        const fileElm = _Fun.getMeElm() as HTMLInputElement;
         const obj = _iFile._elmToObj(fileElm);
         const fileObj = $(fileElm);
         const value = fileElm.value; //full path

@@ -1,3 +1,4 @@
+import 'jquery-pjax';
 import _Leftmenu from './_Leftmenu';
 import _Prog from './_Prog';
 import _Str from './_Str';
@@ -13,7 +14,7 @@ export default class _Pjax {
     static init(boxFt: string): void {
         //if skip 'POST', it will trigger twice !!
         const docu = $(document);
-        docu.pjax('[data-pjax]', boxFt, { type: 'POST' });
+        (docu as any).pjax('[data-pjax]', boxFt, { type: 'POST' });
 
         //點擊功能項目時記錄功能名稱
         docu.on('click', '.x-leftmenu [data-pjax]', function (this: any) {

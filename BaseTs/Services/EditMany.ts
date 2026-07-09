@@ -231,7 +231,7 @@ export default class EditMany {
 
     private valid(): boolean {
         return this.fnValid ? this.fnValid() :
-            this.hasEform ? this.eform.validTable(this.validator) :
+            this.hasEform ? (this.eform as any).validTable(this.validator) :
             true;
     }
 

@@ -5,16 +5,11 @@ export interface JwtHeaders {
     [key: string]: string;
 }
 
-export interface AjaxConfig {
-    headers?: JwtHeaders;
-    [key: string]: any;
-}
-
 export default class _Jwt {
     /**
      * get header json object for jwt
      */
-    static jsonAddJwtHeader(json: AjaxConfig): void {
+    static jsonAddJwtHeader(json: Json): void {
         if (_Fun.jwtToken) {
             json.headers = _Jwt.getJwtAuth();
         }

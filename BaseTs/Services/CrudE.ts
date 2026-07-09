@@ -325,7 +325,7 @@ export default class CrudE {
     return this._nowFun !== FunEstr.View;
   }
 
-  private async _getJsonAndEditA(fun: string, key: any): Promise<boolean> {
+  private async _getJsonAndEditA(fun: string, key: StrNum): Promise<boolean> {
     if (_me.fnGetJsonAndEditA) {
       return await _me.fnGetJsonAndEditA(fun, key);
     }
@@ -338,9 +338,10 @@ export default class CrudE {
     const act = (fun == FunEstr.Update) ? 'GetUpdJson' :
       (fun == FunEstr.Create) ? 'GetSignJson' :
       'GetViewJson';
-    return await _Ajax.getJsonA(act, data, function (json: any) {
+    await _Ajax.getJsonA(act, data, function (json: any) {
       me.loadJsonAndEdit(json, fun);
     });
+    return true;
   }
 
   public loadJsonAndEdit(json: any, fun: string): void {

@@ -1,3 +1,4 @@
+import 'bootstrap-datepicker';
 import _iBase from './_iBase';
 import _Obj from './_Obj';
 import _Fun from './_Fun';
@@ -38,7 +39,7 @@ export default class _iDate extends _iBase {
     static init(box, fid) {
         const obj = _Str.isEmpty(fid)
             ? box.find(_iDate.BoxFilter)
-            : _Obj.get(fid, box).closet(_iDate.BoxFilter);
+            : _Obj.get(fid, box).closest(_iDate.BoxFilter);
         if (obj.length === 0)
             return;
         //initial
@@ -55,12 +56,12 @@ export default class _iDate extends _iBase {
     }
     //show/hide datepicker
     static onToggle() {
-        const btn = _Fun.getMe();
+        const btn = _Fun.getMeElm();
         _iDate._elmToBox(btn).datepicker('show');
     }
     //reset value
     static onReset() {
-        const btn = _Fun.getMe();
+        const btn = _Fun.getMeElm();
         const box = _iDate._elmToBox(btn);
         const input = _iDate._boxGetInput(box);
         if (_iDate.getEditO(input)) {

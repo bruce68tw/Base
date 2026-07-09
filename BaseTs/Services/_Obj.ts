@@ -1,7 +1,12 @@
 import _Input from './_Input';
 import _Var from './_Var';
 
+//操作 jQuery object
 export default class _Obj {
+  static toAny(obj: JQuery): any {
+    return obj as any;
+  }
+
   static setEdit(obj: JQuery, status: boolean): void {
     obj.prop('disabled', !status);
   }

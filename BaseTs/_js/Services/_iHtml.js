@@ -41,8 +41,9 @@ export default class _iHtml extends _iBase {
                         if (me.summernote('isEmpty')) {
                             me.val('');
                             //empty html value, carefully cause endless loop !!
-                            if (me.summernote('code') !== '') {
-                                me.summernote('code', '');
+                            let me2 = me;
+                            if (me2.summernote('code') !== '') {
+                                me2.summernote('code', '');
                             }
                         }
                         else {
@@ -107,9 +108,9 @@ export default class _iHtml extends _iBase {
     }
     //set edit status for all html input
     static setEdits(box, subFilter, status) {
-        const items = box.find(_iHtml.Filter + subFilter);
-        if (items.length > 0) {
-            items.summernote(status ? 'enable' : 'disable');
+        const item = box.find(_iHtml.Filter + subFilter);
+        if (item.length > 0) {
+            item.summernote(status ? 'enable' : 'disable');
         }
     }
 }

@@ -1,6 +1,10 @@
 import _Input from './_Input';
 import _Var from './_Var';
+//操作 jQuery object
 export default class _Obj {
+    static toAny(obj) {
+        return obj;
+    }
     static setEdit(obj, status) {
         obj.prop('disabled', !status);
     }
@@ -13,6 +17,7 @@ export default class _Obj {
     /**
      * getF -> getByFt
      * get object by filter string
+     * 傳回JQuery物件, 裡面包含多個 element,
      */
     static getByFt(ft, box) {
         const obj = box.find(ft);

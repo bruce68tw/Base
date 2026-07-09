@@ -1,3 +1,4 @@
+import 'jquery-pjax';
 import _Leftmenu from './_Leftmenu';
 import _Prog from './_Prog';
 import _Str from './_Str';

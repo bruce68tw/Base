@@ -1,3 +1,4 @@
+import "bootstrap";
 export default class _Leftmenu {
     static menu;
     static init() {

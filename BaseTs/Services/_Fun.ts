@@ -19,22 +19,23 @@ export interface DtColDef {
 
 export default class _Fun {
     // #region constant (big camel) ===
-    static readonly MmDateFmt: string = 'YYYY/MM/DD';
-    static readonly MmDtFmt: string = 'YYYY/MM/DD HH:mm:ss';
-    static readonly FidErrorMsg: string = '_ErrorMsg';
-    static readonly PreBrError: string = 'B:';
-    static readonly CssFlag: string = 'x-flag';
-    static readonly HideRwd: string = 'x-hide-rwd';
+    static readonly MmDateFmt = 'YYYY/MM/DD';
+    static readonly MmDtFmt = 'YYYY/MM/DD HH:mm:ss';
+    static readonly FidErrorMsg = '_ErrorMsg';
+    static readonly PreBrError = 'B:';
+    static readonly CssFlag = 'x-flag';
+    static readonly HideRwd = 'x-hide-rwd';
     // #endregion
 
     // variables
-    static locale: string = 'zh-TW';
-    static maxFileSize: number = 50971520;
-    static isRwd: boolean = false;
-    static pageRows: number = 10;
-    static userId: string = '';
-    static nowDom: any = '';
-    static lengthMenu: number[] = [10, 20, 50, 100];
+    static userId = '';
+    static locale = 'zh-TW';
+    static maxFileSize = 50971520;  //upload file limit(50M)
+    static isRwd = false;   
+    static pageRows = 10;   //must be 10,20(not 25),50,100
+    static nowDom: any = '';    //now dom event element
+    static lengthMenu = [10, 20, 50, 100];
+    static jwtToken = '';   //for JWT, 登入後自行設定內容
 
     // mid variables
     static data: Json = {};
@@ -54,16 +55,23 @@ export default class _Fun {
      * param {string} pjaxArea Filter
      */
     static init(locale: string): void {
+        //set jwt token
+        _Fun.jwtToken = localStorage.getItem('_jwtToken') || '';
+        localStorage.removeItem('_jwtToken');
+
+        //initial
         _Fun.locale = locale;
         _Leftmenu.init();
         _Pjax.init('.x-main-right');
         _Tool.init();
         moment.locale(_Fun.locale);
 
+        //註冊事件, 避免使用inline script for CSRF
         var body = $('body');
         _Fun.setEvent(body, 'click');
         _Fun.setEvent(body, 'change');
 
+        //資安: 防止CSRF
         $.ajaxSetup({
             headers: {
                 'RequestVerificationToken': $('meta[name="csrf-token"]').attr('content')

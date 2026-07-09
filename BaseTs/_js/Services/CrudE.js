@@ -55,6 +55,9 @@ export default class CrudE {
         }
         this._Edit0 = _me.edit0;
     }
+    getEditByNo(editNo) {
+        return this._Edits[editNo];
+    }
     viewFileByEditNo(editNo, table, fid) {
         this._Edits[editNo].onViewFile(table, fid);
     }
@@ -289,9 +292,10 @@ export default class CrudE {
         const act = (fun == FunEstr.Update) ? 'GetUpdJson' :
             (fun == FunEstr.Create) ? 'GetSignJson' :
                 'GetViewJson';
-        return await _Ajax.getJsonA(act, data, function (json) {
+        await _Ajax.getJsonA(act, data, function (json) {
             me.loadJsonAndEdit(json, fun);
         });
+        return true;
     }
     loadJsonAndEdit(json, fun) {
         this.loadJson(json);

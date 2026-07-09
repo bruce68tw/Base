@@ -1,4 +1,3 @@
-import _Obj from './_Obj';
 export default class _Browser {
     // 傳到後端的語系code 欄位
     static _langCode = '_langCode';
@@ -10,10 +9,11 @@ export default class _Browser {
     static setLang(lang: string): void {
         $.cookie(_Browser._langCode, lang);
     }
-    */
-    static zz_print(id, fm, fnCallback) {
+
+    static zz_print(id: string, fm?: any, fnCallback?: () => void): void {
         _Browser.zz_printO(_Obj.getById(id, fm, fnCallback));
     }
+    */
     static zz_printO(obj, fnCallback) {
         window.print();
         /*

@@ -1,22 +1,24 @@
 import MouseEstr from '../Enums/MouseEstr';
+import FlowView from './FlowView';
+import FlowNode from './FlowNode';
 
 export default class FlowLine {
-    private readonly MaxCntCnt1: number = 6;
-    private readonly MinSideCnt2: number = 16;
-    private readonly MinCntCnt3: number = 20;
-    private readonly MinSideSide13: number = 12;
-    private readonly ArrowLen: number = 10;
-    private readonly ArrowWidth: number = 5;
+    private readonly MaxCntCnt1 = 6;
+    private readonly MinSideCnt2 = 16;
+    private readonly MinCntCnt3 = 20;
+    private readonly MinSideSide13 = 12;
+    private readonly ArrowLen = 10;
+    private readonly ArrowWidth = 5;
 
-    private readonly FromTypeAuto: string = 'A';
-    private readonly FromTypeV: string = 'V';
-    private readonly FromTypeH: string = 'H';
+    private readonly FromTypeAuto = 'A';
+    private readonly FromTypeV = 'V';
+    private readonly FromTypeH = 'H';
 
-    public flowView: any;
-    public json: any;
+    public flowView: FlowView;
+    public json: Json;
     public svg: any;
-    public fromNode: any;
-    public toNode: any;
+    public fromNode: FlowNode;
+    public toNode: FlowNode;
     public path: any;
     public path2: any;
     public labelElm: any;
@@ -26,7 +28,7 @@ export default class FlowLine {
     public isFromTypeV!: boolean;
     public isFromTypeH!: boolean;
 
-    constructor(flowView: any, json: any, fromNode: any, toNode: any) {
+    constructor(flowView: FlowView, json: Json, fromNode?: FlowNode, toNode?: FlowNode) {
         json = json || {};
         json.FromType = json.FromType || this.FromTypeAuto;
         json.Label = json.Label || '';

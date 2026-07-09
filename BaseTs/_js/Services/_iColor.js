@@ -1,16 +1,17 @@
 import _Obj from './_Obj';
 //不繼承 iBase
+//bootstrap-colorpicker 支援到 bootstrap4, 若要用此功能可改用其他元件
 export default class _iColor {
-    static init() {
+    /*
+    static init(): void {
         $('.x-color').colorpicker({
-        //component: true,
-        /*
-        onchange: function (me, color) {
-            $(me).css('background-color', color.toHex());
-        },
-        */
+            //component: true,
+            //onchange: function (me, color) {
+            //    $(me).css('background-color', color.toHex());
+            //},
         });
     }
+    */
     static get(fid, form) {
         return _iColor.getO(_Obj.get(fid, form));
     }
