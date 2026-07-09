@@ -9,7 +9,7 @@ ver2
   npm install -D chart.js@4.4.1 
   npm install -D moment@2.30.1 
   npm install -D bootstrap-datepicker@1.9.0
-  npm install -D jquery.pjax@2.0.1
+  npm install -D jquery-pjax@2.0.1
 
 其他說明：
   1.npx tsc 編譯生成 js到指定目錄
