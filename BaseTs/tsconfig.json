@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", // 編譯版本
+    "module": "ESNext", // ES Module
+    "moduleResolution": "Bundler", // Vite相容解析
+    "outDir": "_js", //JavaScript 輸出目錄
+    "strict": false, // 舊JS轉TS較容易
+    "skipLibCheck": true, // 忽略第三方型別
+    "types": [ "jquery", "jquery.validation", "datatables.net" ]
+  },
+  "include": [
+    "global.d.ts",
+    "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules" //排除 npm 套件
+  ]
+}
