@@ -1,7 +1,7 @@
 ﻿namespace Base.Models
 {
     /// <summary>
-    /// locale resource for base class
+    /// 後端 locale resource for base class
     /// 調用 _Json.CopyModel(), 必須宣告為類別屬性 !!
     /// </summary>
     public class BaseResDto

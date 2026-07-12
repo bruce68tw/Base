@@ -1,0 +1,25 @@
+﻿{
+  "BtnCreate": "新增",
+  "BtnAddRow": "新增一列",
+  "BtnFind": "查询",
+  "BtnFind2": "进阶",
+  "BtnDraft": "草稿",
+  "BtnSave": "储存",
+  "BtnSaveSend": "儲存&送出",
+  "BtnToRead": "回上一页",
+  "BtnExport": "汇出",
+  "BtnReset": "清除",
+  "BtnOpen": "开启",
+  "BtnYes": "确定",
+  "BtnCancel": "取消",
+  "BtnClose": "关闭",
+
+  "TipUpdate": "修改這筆資料",
+  "TipDelete": "刪除這筆資料",
+  "TipView": "檢視這筆資料",
+  "TipDeleteRow": "删除此笔资料",
+
+  "NoAuth": "您沒有執行此功能的相關權限，請洽管理者。",
+  "PlsSelect": "-请选取-",
+  "Working": "作业处理中..."
+}

@@ -17,19 +17,19 @@ namespace BaseApi.Services
         //loaded localization list, <locale, BaseResDto>
         private static Dictionary<string, BaseResDto> _brList = [];
 
-		/*
+        /*
         public static string ConfigLocale()
         {
             return _Fun.Config.Locale;
         }
         */
 
-		/// <summary>
-		/// 傳回語系代碼包含"-", 例如: zh-TW
-		/// 如果非多國語則不必讀取BaseUser
-		/// </summary>
-		/// <returns></returns>
-		public static string GetLocale()
+        /// <summary>
+        /// 傳回語系代碼包含"-", 例如: zh-TW
+        /// 如果非多國語則不必讀取BaseUser
+        /// </summary>
+        /// <returns></returns>
+        public static string GetLocale()
 		{
 			return _Fun.MultiLang ? _Fun.GetBaseUser().Locale : _Fun.Config.Locale;
         }

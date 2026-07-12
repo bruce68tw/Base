@@ -1,0 +1,5 @@
+.vs/
+_dist/
+*.rar
+*.bak
+node_modules/

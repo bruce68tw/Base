@@ -1,0 +1,11 @@
+import $ from "jquery";
+import "bootstrap";
+import moment from "moment";
+import Mustache from "mustache";
+import { Chart, registerables } from "chart.js";
+Chart.register(...registerables);
+window.$ = $;
+window.jQuery = $;
+window.moment = moment;
+window.Mustache = Mustache;
+window.Chart = Chart;
