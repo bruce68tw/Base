@@ -24,7 +24,7 @@ export default class CrudR {
     private _updName: string | undefined;
     public hasDraft: boolean;
 
-    constructor(dtConfig: any, edits: any[], updName?: string) {
+    constructor(dtConfig: any, edits?: any[], updName?: string) {
         //save middle variables
         this.temp = {};
 
