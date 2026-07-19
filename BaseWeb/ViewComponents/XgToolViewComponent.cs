@@ -19,7 +19,7 @@ namespace BaseWeb.ViewComponents
 <!-- alert -->
 <div class='alert alert-success alert-dismissable x-alert d-none'>
     <span class='xd-msg'></span>
-    <button type='button' class='btn btn-link' data-onclick='_tool.onAlertClose'>
+    <button type='button' class='btn btn-link' data-onclick='_Tool.onAlertClose'>
         <i class='ico-delete'></i>
     </button>
 </div>
@@ -36,7 +36,7 @@ namespace BaseWeb.ViewComponents
                 <p class='xd-msg'></p>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn x-btn1 xd-close' data-onclick='_tool.onMsgClose'>{baseR.BtnClose}</button>
+                <button type='button' class='btn x-btn1 xd-close' data-onclick='_Tool.onMsgClose'>{baseR.BtnClose}</button>
             </div>
         </div>
     </div>
@@ -53,8 +53,8 @@ namespace BaseWeb.ViewComponents
                 <p class='xd-msg'></p>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn x-btn-cancel xd-cancel' data-onclick='_tool.onAnsNo'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_tool.onAnsYes'>{baseR.BtnYes}</button>
+                <button type='button' class='btn x-btn-cancel xd-cancel' data-onclick='_Tool.onAnsNo'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_Tool.onAnsYes'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
@@ -66,14 +66,14 @@ namespace BaseWeb.ViewComponents
         <div class='modal-content'>
             <div class='modal-header'>
                 <!-- close button 改用事件 -->
-                <button type='button' class='btn-close' aria-label='Close' data-onclick='_tool.onAnsA' data-args='0'></button>
+                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
             </div>
             <div class='modal-body'>
                 <p class='xd-msg'></p>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn x-btn-cancel xd-cancel' data-onclick='_tool.onAnsA' data-args='0'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_tool.onAnsA' data-args='1'>{baseR.BtnYes}</button>
+                <button type='button' class='btn x-btn-cancel xd-cancel' data-onclick='_Tool.onAnsNo'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_Tool.onAnsYes'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
@@ -93,7 +93,7 @@ namespace BaseWeb.ViewComponents
             </div>
             <div class='modal-footer'>
                 <button type='button' class='btn x-btn-cancel xd-cancel' data-bs-dismiss='modal'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_tool.onAreaYes'>{baseR.BtnYes}</button>
+                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_Tool.onAreaYes'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
