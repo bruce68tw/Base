@@ -516,7 +516,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
     <button type='button' class='btn btn-link' data-onclick='_ifile.onDeleteFile' {dataEdit}>
         <i class='ico-delete'></i>
     </button>
-    <a href='#' class='btn btn-link' data-onclick='_me.onViewFile' data-args='{dto.Table},{dto.Fid}'>{dto.Value}</a>
+    <a href='#' class='btn btn-link' data-onclick='_me.fnViewFileA' data-args='{dto.Table},{dto.Fid}'>{dto.Value}</a>
 </div>";
 
             //add label if need
@@ -586,7 +586,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         {
             //add class xi-unsave for not save Db !!
             var attr = GetInputAttr(dto.Fid, "", false, dto.InputAttr) +
-                $" data-type='{InputTypeEstr.Link}' data-onclick='_me.onViewFile' data-args='{dto.Table},{dto.Fid}'";
+                $" data-type='{InputTypeEstr.Link}' data-onclick='_me.fnViewFileA' data-args='{dto.Table},{dto.Fid}'";
 
             var css = GetCssClass("xi-unsave", dto.ClsBox, dto.Width);
             var html = $"<a href='#' {attr} class='{css}'>{dto.Value}</a>";
