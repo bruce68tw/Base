@@ -184,15 +184,15 @@ namespace BaseWeb.Services
             //var dataEdit = GetDataEdit(edit);
 
             //.date會設定css width=180px, /*同時 xidate 無條件加上 x-inline*/
-            //使用 .date 執行 _idate 初始化, 因為包含多個元素, 所以必須將box對應datepicker !!
+            //使用 .date 執行 _iDate 初始化, 因為包含多個元素, 所以必須將box對應datepicker !!
             //input-group & input-group-addon are need for datepicker !!
             return $@"
 <div class='input-group date {clsBox}' data-provide='datepicker' {inputAttr}>
     <input{attr} value='{value}' data-init='{value}' type='text' class='form-control'>
     <div class='input-group-addon'></div>
     <span>
-        <i class='ico-delete' data-onclick='_idate.onReset'></i>
-        <i class='ico-date' data-onclick='_idate.onToggle'></i>
+        <i class='ico-delete' data-onclick='_iDate.onReset'></i>
+        <i class='ico-date' data-onclick='_iDate.onToggle'></i>
     </span>
 </div>";
         }
@@ -507,13 +507,13 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //button open/delete will be handled by status, but link(view) is on.
             var html = $@"
 <div class='form-control xi-box xi-box-file {dto.ClsBox}'>
-    <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' data-onchange='_ifile.onChangeFile' class='d-none'>
+    <input type='file' data-max='{dto.MaxSize}' data-exts='{exts}' data-onchange='_iFile.onChangeFile' class='d-none'>
     <input{attr} data-type='{InputTypeEstr.File}' type='hidden' class='xd-valid'>
 
-    <button type='button' class='btn btn-link' data-onclick='_ifile.onOpenFile' {dataEdit}>
+    <button type='button' class='btn btn-link' data-onclick='_iFile.onOpenFile' {dataEdit}>
         <i class='ico-open'></i>
     </button>
-    <button type='button' class='btn btn-link' data-onclick='_ifile.onDeleteFile' {dataEdit}>
+    <button type='button' class='btn btn-link' data-onclick='_iFile.onDeleteFile' {dataEdit}>
         <i class='ico-delete'></i>
     </button>
     <a href='#' class='btn btn-link' data-onclick='_me.fnViewFileA' data-args='{dto.Table},{dto.Fid}'>{dto.Value}</a>
