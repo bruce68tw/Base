@@ -148,7 +148,7 @@ namespace BaseWeb.Services
         {
             //var newId = _Str.NewId();
             var newId = Convert.ToBase64String(Guid.NewGuid().ToByteArray()); // 產生一次 nonce，兩者共用
-            _Fun.Nonce = newId; //set global
+            _Fun3.Nonce = newId; //set global
 
             app.UseStaticFiles(new StaticFileOptions
             {

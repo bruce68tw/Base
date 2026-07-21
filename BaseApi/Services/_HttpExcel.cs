@@ -87,7 +87,7 @@ namespace BaseApi.Services
             _Excel.DocxByRows(rows, docx, srcRowNo);
             docx.Dispose(); //must dispose, or get empty excel !!
             //ms.Position = 0;
-            await _FunApi.ExportByStreamA(ms, fileName);
+            await _Fun2.ExportByStreamA(ms, fileName);
         }
 
         #region remark code

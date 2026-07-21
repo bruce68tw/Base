@@ -107,7 +107,7 @@ namespace Base.Services
         public static string SystemError = "System Error, Please Contact Administrator.";
 
         //for 資安 script, style 使用 inline
-        public static string Nonce = "";
+        //public static string Nonce = "";
 
         //簽核拒絶時退回第一關, 如果false將會關閉流程
         public static bool FlowBackToFirst = true;
@@ -316,12 +316,6 @@ Offset {2} Rows Fetch Next {3} Rows Only
 
             //case of ok
             return "";
-        }
-
-        //傳回時間序號做為url後面亂數
-        public static string Ver()
-        {
-            return "?v=" + DateTime.Now.ToString("HHmmss");
         }
 
         //get current dir

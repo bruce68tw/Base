@@ -139,7 +139,7 @@ namespace BaseApi.Services
         private static async Task<BaseResDto?> ReadBaseResA(string locale)
         {
             //error = ""; //initial
-            var file = $"{_FunApi.DirWeb}locale/{locale}/BR.json";
+            var file = $"{_Fun2.DirWeb}locale/{locale}/BR.json";
             if (!File.Exists(file))
             {
                 await _Log.ErrorRootA("no file: " + file);

@@ -174,9 +174,9 @@ namespace BaseApi.Services
             if (_List.IsEmpty(files)) return true;
 
             string error;
-            if (inputJson[_FunApi.FileJson] == null)
+            if (inputJson[_Fun2.FileJson] == null)
             {
-                error = "inputJson[" + _FunApi.FileJson + "] is empty.";
+                error = "inputJson[" + _Fun2.FileJson + "] is empty.";
                 goto lab_error;
             }
 
@@ -190,7 +190,7 @@ namespace BaseApi.Services
             //save files
             _File.MakeDir(saveDir);
             saveDir = _Str.AddDirSep(saveDir);
-            var fileJson = (JObject)inputJson[_FunApi.FileJson]!;   //file vs pkey
+            var fileJson = (JObject)inputJson[_Fun2.FileJson]!;   //file vs pkey
             var newKeyCol = values[0];  //equals to 't' + levelStr, ex:t0
             var fid = values[1];        //file fid, ex:ImageFile
             JObject? newKey2 = (newKey[newKeyCol] == null) ? null : (JObject)newKey[newKeyCol]!;

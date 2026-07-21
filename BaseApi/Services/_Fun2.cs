@@ -8,7 +8,7 @@ using System.Web;
 namespace BaseApi.Services
 {
 #pragma warning disable CA2211 // 非常數欄位不應可見
-    public static class _FunApi
+    public static class _Fun2
     {
         //server side fid for file input collection, must pre '_'
         //key-value of file serverFid vs row key
@@ -27,7 +27,7 @@ namespace BaseApi.Services
         //public static string NoImagePath = "";
 
         //constructor
-        static _FunApi()
+        static _Fun2()
         {
             var dir = _Fun.DirRoot + "wwwroot/";
             DirWeb = Directory.Exists(dir)

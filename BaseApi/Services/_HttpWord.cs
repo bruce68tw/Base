@@ -33,7 +33,7 @@ namespace BaseApi.Services
             var ms = _Word.TplRowToMs(tplPath, row, images);
             if (ms == null) return false;
 
-            await _FunApi.ExportByStreamA(ms, fileName);
+            await _Fun2.ExportByStreamA(ms, fileName);
             return true;
         }
 
@@ -52,7 +52,7 @@ namespace BaseApi.Services
             var ms = _Word.TplRowsToMs(tplPath, rows, images);
             if (ms == null) return false;
 
-            await _FunApi.ExportByStreamA(ms, fileName);
+            await _Fun2.ExportByStreamA(ms, fileName);
             return true;
         }
 
