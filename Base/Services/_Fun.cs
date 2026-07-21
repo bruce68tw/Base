@@ -318,7 +318,13 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return "";
         }
 
-        //get current userId
+        //傳回時間序號做為url後面亂數
+        public static string Ver()
+        {
+            return "?v=" + DateTime.Now.ToString("HHmmss");
+        }
+
+        //get current dir
         public static string Dir(string folder, bool tailSep = true)
         {
             return DirRoot + folder + (tailSep ? DirSep : "");

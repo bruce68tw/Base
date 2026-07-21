@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,17 @@ namespace BaseWeb.Services
                 opts.MinimumSameSitePolicy = SameSiteMode.Strict;
                 opts.Secure = CookieSecurePolicy.Always;
                 opts.HttpOnly = HttpOnlyPolicy.Always;
+            });
+
+            //啟用壓縮
+            services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+                options.Providers.Add<GzipCompressionProvider>();
+            });
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = System.IO.Compression.CompressionLevel.Fastest;
             });
 
             //cors
@@ -106,6 +118,9 @@ namespace BaseWeb.Services
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();  //for https, default HSTS 30 days. for change see https://aka.ms/aspnetcore-hsts.
             }
+
+            //壓縮
+            app.UseResponseCompression();
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

@@ -72,7 +72,7 @@ namespace BaseWeb.ViewComponents
                 <p class='xd-msg'></p>
             </div>
             <div class='modal-footer'>
-                <button type='button' class='btn x-btn-cancel xd-cancel' data-onclick='_Tool.onAnsNo'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn x-btn-cancel xd-cancel' data-bs-dismiss='modal'>{baseR.BtnCancel}</button>
                 <button type='button' class='btn x-btn1 xd-yes' data-onclick='_Tool.onAnsYes'>{baseR.BtnYes}</button>
             </div>
         </div>
