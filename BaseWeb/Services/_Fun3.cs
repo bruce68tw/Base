@@ -11,7 +11,7 @@ namespace BaseWeb.Services
         //傳回 script src 文字, 加上時間序號做為url後面亂數
         public static IHtmlContent Script(string prog)
         {
-            var time = DateTime.Now.ToString("HHmmss");
+            var time = DateTime.Now.ToString("HHmmssfff");
             return new HtmlString($"type=\"module\" nonce=\"{Nonce}\" src=\"/jsView/{prog}.js?v={time}\"");
         }
 
