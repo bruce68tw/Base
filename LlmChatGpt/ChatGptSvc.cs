@@ -4,7 +4,7 @@ using HttpMethod = System.Net.Http.HttpMethod;
 
 namespace LlmChatGpt
 {
-    public class ChatGptSvc : ILLMSvc
+    public class ChatGptSvc : ILlmSvc
     {
         const string UrlApi = "https://api.openai.com/v1/responses";
         const string ModelType = "gpt-5.4-mini";

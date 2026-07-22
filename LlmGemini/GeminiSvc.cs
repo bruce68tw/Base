@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace LlmGemini
 {
-    public class GeminiSvc : ILLMSvc
+    public class GeminiSvc : ILlmSvc
     {
         const string UrlApi = "https://generativelanguage.googleapis.com/v1beta/models";
         const string ModelType = "gemini-3-flash";
