@@ -13,6 +13,25 @@ namespace BaseWeb.ViewComponents
         /// <returns>must be HtmlString, or will get extra quote !!</returns>
         public HtmlString Invoke()
         {
+/* 全部改用 ansA
+<!-- ans, 使用 callback function, data-bs-keyboard='false' blur不會關閉 -->
+<div id='xAns' class='modal fade x-msg' data-bs-keyboard='false'>
+    <div class='modal-dialog' role='document'>
+        <div class='modal-content'>
+            <div class='modal-header'>
+                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
+            </div>
+            <div class='modal-body'>
+                <p class='xd-msg'></p>
+            </div>
+            <div class='modal-footer'>
+                <button type='button' class='btn x-btn-cancel xd-cancel' data-onclick='_Tool.onAnsNo'>{baseR.BtnCancel}</button>
+                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_Tool.onAnsYes'>{baseR.BtnYes}</button>
+            </div>
+        </div>
+    </div>
+</div>
+*/ 
             //modal html
             var baseR = _Locale.GetBaseRes();
             var html = $@"
@@ -37,24 +56,6 @@ namespace BaseWeb.ViewComponents
             </div>
             <div class='modal-footer'>
                 <button type='button' class='btn x-btn1 xd-close' data-onclick='_Tool.onMsgClose'>{baseR.BtnClose}</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ans, 使用 callback function, data-bs-keyboard='false' blur不會關閉 -->
-<div id='xAns' class='modal fade x-msg' data-bs-keyboard='false'>
-    <div class='modal-dialog' role='document'>
-        <div class='modal-content'>
-            <div class='modal-header'>
-                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
-            </div>
-            <div class='modal-body'>
-                <p class='xd-msg'></p>
-            </div>
-            <div class='modal-footer'>
-                <button type='button' class='btn x-btn-cancel xd-cancel' data-onclick='_Tool.onAnsNo'>{baseR.BtnCancel}</button>
-                <button type='button' class='btn x-btn1 xd-yes' data-onclick='_Tool.onAnsYes'>{baseR.BtnYes}</button>
             </div>
         </div>
     </div>
