@@ -230,6 +230,13 @@ namespace Base.Services
             return null;
         }
 
+        //rename file name, 檔名後面加上字串, 副檔名不變
+        public static string FnameAddTail(string fname, string tail)
+        {
+            var ext = Path.GetExtension(fname);  //has dot(.)
+            return fname.Substring(0, fname.Length - ext.Length) + tail + ext;
+        }
+
         /*
         //rename file, 檔名後面加上日期&時分
         public static bool Rename(string path)
