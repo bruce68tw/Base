@@ -8,8 +8,8 @@ namespace BaseWeb.ViewComponents
     public class XgSave3ViewComponent : ViewComponent
     {
         public HtmlString Invoke(string align = "center", string fnOnBack = "_me.crudR.onToRead",
-            string fnOnDraft = "_me.crudE.onDraftA",
-            string fnOnSave = "_me.crudE.onSaveA")
+            string fnOnDraft = "_me.crudE.onDraft",
+            string fnOnSave = "_me.crudE.onSave")
         {
             var baseR = _Locale.GetBaseRes();
             var html = $@"
