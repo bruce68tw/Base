@@ -316,6 +316,7 @@ namespace Base.Services
             return list?[0];
         }
 
+        //sql欄位可以不是string, 在這裡轉成字串
         public async Task<List<string>?> GetStrsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
@@ -323,7 +324,7 @@ namespace Base.Services
 
             var list = new List<string>();
             while (reader.Read())
-                list.Add(reader.IsDBNull(0) ? "" : (string)reader[0]);
+                list.Add(reader.IsDBNull(0) ? "" : reader[0].ToString()!);
 
             reader.Close();
             return (list.Count == 0) ? null : list;
