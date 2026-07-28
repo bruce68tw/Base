@@ -119,16 +119,19 @@ namespace BaseWeb.Services
         /// <summary>
         /// return ext class for 輸入欄位
         /// </summary>
-        /// <param name="clsNow"></param>
-        /// <param name="clsExt"></param>
-        /// <param name="width">如果有值則會使用 x-inline 並且使用固定寬度 x-wxxx</param>
+        /// <param name="clsNow">目前css class</param>
+        /// <param name="clsExt">額外css class</param>
+        /// <param name="width">使用固定寬度 x-wxxx, 有值則加上 x-inline(??, 暫不使用)</param>
         /// <returns></returns>
         public static string GetCssClass(string clsNow, string clsExt, int width)
         {
             if (clsExt != "")
                 clsNow += " " + clsExt;
             if (width > 0)
-                clsNow += $" x-inline x-w{width}";
+            {
+                //clsNow += $" x-inline x-w{width}";
+                clsNow += $" x-w{width}";
+            }
             return clsNow;
         }
 
@@ -297,21 +300,24 @@ namespace BaseWeb.Services
             {
                 //horizontal
                 //加上 input tail for 水平label,input only
+                //如果有 inputNote 則外層加上 x-hbox
                 var inputNote = "";
+                var cssHbox = "";
                 if (!string.IsNullOrEmpty(dto.InputNote))
                 {
                     inputNote = $"<span class='x-input-note'>{dto.InputNote}</span>";
+                    cssHbox = "x-hbox";
                 }
 
                 //get html
                 clsLabel += " x-label";
                 result = string.Format(@"
 <div class='col-md-{0} {5}'{2}>{3}</div>
-<div class='col-md-{1} x-input x-hbox'>
+<div class='col-md-{1} x-input {7}'>
     {4}
     {6}
 </div>
-", colList[0], colList[1], labelTip2, (reqSpan + dto.Title + iconTip), html, _Str.KeepOneSpace(clsLabel), inputNote);
+", colList[0], colList[1], labelTip2, (reqSpan + dto.Title + iconTip), html, _Str.KeepOneSpace(clsLabel), inputNote, cssHbox);
             }
             else
             {
