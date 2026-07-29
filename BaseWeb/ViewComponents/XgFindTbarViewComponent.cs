@@ -28,7 +28,7 @@ namespace BaseWeb.ViewComponents
 
             //set toolbar buttons, 使用string.format, 無法使用 $"" !!
             var baseR = _Locale.GetBaseRes();
-            var html = $"<button type='button' class='btn x-btn1 xd-read' data-onclick='_me.crudR.onFind'>{baseR.BtnFind}<i class='ico-find'></i></button>";
+            var html = $"<button id='btnFind' type='button' class='btn x-btn1 xd-read' data-onclick='_me.crudR.onFind'>{baseR.BtnFind}<i class='ico-find'></i></button>";
             if (dto.HasReset)
                 html += $"<button type='button' class='btn x-btn-cancel' data-onclick='_me.crudR.onResetFind'>{baseR.BtnReset}<i class='ico-delete'></i></button>";
             if (dto.HasFind2)
