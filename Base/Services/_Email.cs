@@ -236,7 +236,7 @@ namespace Base.Services
         /// <returns></returns>
         public static async Task SendByMsgA(MailMessage msg, SmtpDto? smtp = null, bool sendImage = true)
         {
-            await SendByMsgsA(new List<MailMessage>() { msg }, smtp, sendImage);
+            await SendByMsgsA([msg], smtp, sendImage);
         }
 
         /// <summary>

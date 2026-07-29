@@ -71,9 +71,18 @@ namespace Base.Services
         public static void Error(string msg)
         {
             LogFile(GetFilePath("error"), msg);
+        }
+
+        /// <summary>
+        /// log error & send email to root
+        /// </summary>
+        /// <param name="msg">log message</param>
+        public static async Task ErrorA(string msg)
+        {
+            LogFile(GetFilePath("error"), msg);
 
             //send root
-            //if (emailRoot) await _Email.SendRootA(msg);
+            await _Email.SendRootA(msg);
         }
 
         /*
