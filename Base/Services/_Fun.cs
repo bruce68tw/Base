@@ -318,6 +318,14 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return "";
         }
 
+        //傳回RoleAll條件
+        public static string RoleAllCond(string fid, bool equal)
+        {
+            return (RoleAll == "")
+                ? "1=1"
+                : $"{fid}{(equal ? "=" : "!=")}'{RoleAll}'";
+        }
+
         //get current dir
         public static string Dir(string folder, bool tailSep = true)
         {
