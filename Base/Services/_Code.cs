@@ -22,9 +22,49 @@ namespace Base.Services
         public const string FlowStatus = "xfFlowStatus";
         //public const string SignStatus = "xfSignStatus";
 
+        public static async Task<List<IdStrDto>?> SqlToCodesA(string sql, Db? db = null)
+        {
+            return await _Db.SqlToCodesA(sql, null, db) ?? [];
+        }
+
+        //get code table rows
+        public static async Task<List<IdStrDto>?> TypeToCodesA(string type, Db? db = null)
+        {
+            var sql = $@"
+select 
+    Value as Id, Name as Str
+from dbo.XpCode
+where Type='{type}'
+order by Sort";
+            return await SqlToCodesA(sql, db);
+        }
+
+        public static List<IdStrDto> AddEmpty(List<IdStrDto>? codes, string plsSelect)
+        {
+            codes ??= [];
+            codes.Insert(0, new IdStrDto()
+            {
+                Id = "",
+                Str = plsSelect,
+            });
+            return codes;
+        }
+
+        public static async Task<List<IdStrDto>?> RolesA(Db? db = null)
+        {
+            var sql = $@"
+select 
+    Id, [Name] as Str
+from dbo.XpRole
+where {_Fun.RoleAllCond("Id", false)}
+order by Sort
+";
+            return await SqlToCodesA(sql, db);
+        }
+
         public static async Task<List<IdStrDto>?> AuthRangeA(Db? db = null)
         {
-            return await _List.TypeToListA(AuthRange, db);
+            return await TypeToCodesA(AuthRange, db);
         }
 
         public static async Task<List<IdStrDto>?> XpFlowA(Db? db = null)
@@ -42,7 +82,7 @@ join dbo.XpDept d on dr.DeptId=d.Id
 join dbo.XpRole r on dr.RoleId=r.Id
 order by d.Sort, r.Sort
 ";
-            return await _Db.SqlToCodesA(sql, null, db);
+            return await SqlToCodesA(sql, db);
         }
 
         //1階
@@ -52,7 +92,7 @@ order by d.Sort, r.Sort
 select p.Id, p.Name as Str
 from dbo.XpProg p
 order by p.Sort";
-            return await _Db.SqlToCodesA(sql, null, db);
+            return await SqlToCodesA(sql, db);
         }
 
         //2階, 排序：先依MenuGroup的Sort，再依Prog的Sort
@@ -63,7 +103,7 @@ select p.Id, p.Name as Str
 from dbo.XpProg p
 join dbo.XpCode c on c.Type='MenuGroup' and p.MenuGroup=c.Value
 order by c.Sort, p.Sort";
-            return await _Db.SqlToCodesA(sql, null, db);
+            return await SqlToCodesA(sql, db);
         }
 
         public static async Task<List<IdStrDto>?> DeptA(Db? db = null)
@@ -78,7 +118,7 @@ order by c.Sort, p.Sort";
         /// <returns></returns>
         public static List<IdStrDto>? CodesToSignStatuses(List<IdStrExtDto>? rows)
         {
-            return _Code.FilterList(rows, SignStatus)!
+            return FilterList(rows, SignStatus)!
                 .Where(a => a.Id is SignStatusEstr.Agree or SignStatusEstr.Back)
                 .ToList();
         }
@@ -91,16 +131,15 @@ order by c.Sort, p.Sort";
                 var sql = $@"
 select Id=Value, Str=Name
 from dbo.XpCode
-where Type='{_Code.SignStatus}'
+where Type='{SignStatus}'
 and Ext=1
 order by Sort
 ";
-                return await _Db.SqlToCodesA(sql, null, db);
-
+                return await SqlToCodesA(sql, db);
             }
             else
             {
-                return await _List.TypeToListA(_Code.SignStatus, db);
+                return await TypeToCodesA(_Code.SignStatus, db);
             }
         }
 

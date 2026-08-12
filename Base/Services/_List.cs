@@ -14,6 +14,7 @@ namespace Base.Services
                 .ToList();
         }
 
+        /*
         /// <summary>
         /// sql string to list for select input
         /// </summary>
@@ -54,6 +55,7 @@ order by Id)
 ";
             return await SqlToListA(sql, db);
         }
+        */
 
         /// <summary>
         /// convert list<string> to string
@@ -102,6 +104,7 @@ order by Id)
             return (list.Count == 0) ? null : list;
         }
 
+        /*
         public static List<IdStrDto> CodesAddEmpty(List<IdStrDto>? codes, string plsSelect)
         {
             codes ??= [];
@@ -112,6 +115,7 @@ order by Id)
             });
             return codes;
         }
+        */
 
         public static string? StrToId(List<IdStrDto>? codes, string str)
         {
