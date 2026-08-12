@@ -1,6 +1,5 @@
 ﻿using Base.Enums;
 using Base.Models;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -39,11 +38,11 @@ namespace Base.Services
         }
 
         //get code table rows
-        public static async Task<List<IdStrDto>> TypeToCodesA(string type, Db? db = null, List<object>? args = null)
+        public static async Task<List<IdStrDto>> TypeToCodesA(string type, Db? db = null, string locale = "")
         {
+            var name = string.IsNullOrEmpty(locale) ? "Name" : "Name_" + locale;
             var sql = $@"
-select 
-    Value as Id, Name as Str
+select Value as Id, {name} as Str
 from dbo.XpCode
 where Type='{type}'
 order by Sort";
