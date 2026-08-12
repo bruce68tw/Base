@@ -137,6 +137,7 @@ namespace Base.Services
         #endregion
 
         #region get List<IdStrDto>
+        /*
         /// <summary>
         /// table to xpCode
         /// </summary>
@@ -240,6 +241,7 @@ order by Type, Sort";
             await CheckCloseDbA(db, newDb);
             return rows;
         }
+        */
         #endregion
 
         //update
