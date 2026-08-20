@@ -15,7 +15,8 @@ namespace BaseWeb.Services
 {
     public static class _WebExt
     {
-        public static WebApplicationBuilder SetBuilder(this WebApplicationBuilder builder)
+        //因為是Ext函數, 所以名稱前面加上My方便辨視
+        public static WebApplicationBuilder SetMyBuilder(this WebApplicationBuilder builder)
         {
             //set builder, 無作用!!
             //web.config 必須設定 <requestFiltering removeServerHeader="true" /> !!
@@ -62,7 +63,7 @@ namespace BaseWeb.Services
             return builder;
         }
 
-        public static IServiceCollection SetServices(this IServiceCollection services, bool multiLang)
+        public static IServiceCollection SetMyServices(this IServiceCollection services, bool multiLang)
         {
             //資安: controller 防止 CSRF
             var mvc = services.AddControllersWithViews(opts => { opts.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()); })
@@ -105,7 +106,7 @@ namespace BaseWeb.Services
             return services;
         }
 
-        public static WebApplication SetApp(this WebApplication app, bool isDev)
+        public static WebApplication SetMyApp(this WebApplication app, bool isDev)
         {
             // Configure the HTTP request pipeline.
             if (isDev)
