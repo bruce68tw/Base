@@ -123,7 +123,8 @@ namespace Base.Services
         }
         */
 
-        public static string NullFieldToEmpty(JObject json, string fid)
+        //NullFieldToEmpty -> NullToEmpty
+        public static string NullToEmpty(JObject json, string fid)
         {
             return (json[fid] == null) 
                 ? "" : json[fid]!.ToString();

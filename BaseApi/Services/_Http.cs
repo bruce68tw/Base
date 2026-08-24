@@ -26,6 +26,14 @@ namespace BaseApi.Services
         }
         */
 
+        public static string? PjaxToLayout()
+        {
+            var isPjax = _Str.NotEmpty(GetRequest().Headers["X-PJAX"]);
+            return isPjax
+                ? null
+            : "~/Views/Shared/_Layout.cshtml";
+        }
+
         public static string UrlEncode(string data)
         {
             return HttpUtility.UrlEncode(data);

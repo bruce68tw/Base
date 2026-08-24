@@ -18,11 +18,11 @@ namespace BaseApi.Services
         /// 使用 View Object 登入
         /// </summary>
         /// <param name="vo">login view object</param>
-        /// <param name="roleAll">所有人都具備的角色</param>
         /// <param name="encodePwd">是否加密密碼欄位(only for 密碼驗証</param>
+        /// <param name="sql">sql 如果空白則使用default</param>
         /// <param name="extCol">要寫入session的一個額外欄位, 必須加上正確的 table 別名</param>
         /// <returns></returns>
-        public static async Task<bool> LoginByVoA(LoginVo vo, bool encodePwd = true, 
+        public static async Task<bool> LoginByVoA(LoginVo vo, bool encodePwd = true, string sql = "",
             string extCol = "", string extCol2 = "", string extCol3 = "")
         {
             //reset UI msg first
@@ -52,22 +52,22 @@ namespace BaseApi.Services
             var hasExtCol2 = !string.IsNullOrEmpty(extCol2);
             var hasExtCol3 = !string.IsNullOrEmpty(extCol3);
             var extColSql = "";
-            var extCol2Sql = "";
-            var extCol3Sql = "";
             if (hasExtCol)
                 extColSql = $", ExtCol={AddQuote(extCol)}";
             if (hasExtCol2)
-                extCol2Sql = $", ExtCol2={AddQuote(extCol2)}";
+                extColSql += $", ExtCol2={AddQuote(extCol2)}";
             if (hasExtCol3)
-                extCol3Sql = $", ExtCol2={AddQuote(extCol3)}";
+                extColSql += $", ExtCol2={AddQuote(extCol3)}";
 
-            var sql = $@"
+            if (_Str.IsEmpty(sql))
+                sql = $@"
 select u.Id as UserId, u.Name as UserName, u.Pwd,
-    u.DeptId, d.Name as DeptName{extColSql}{extCol2Sql}{extCol3Sql}
+    u.DeptId, d.Name as DeptName{extColSql}
 from dbo.XpUser u
 left join dbo.XpDept d on u.DeptId=d.Id
 where u.Account=@Account
 ";
+
             var status = false;
             var row = await _Db.GetRowA(sql, ["Account", vo.Account]);
             if (row != null)
@@ -117,9 +117,9 @@ where u.Account=@Account
             {
                 UserId = userId,
                 UserName = row["UserName"]!.ToString(),
+                DeptId = _Json.NullToEmpty(row, "DeptId"),
+                DeptName = _Json.NullToEmpty(row, "DeptName"),
                 HasPwd = hasPwd,
-                DeptId = row["DeptId"]!.ToString(),
-                DeptName = row["DeptName"]!.ToString(),
                 Locale = _Fun.Config.Locale,
                 ProgAuthStrs = await _Auth.GetAuthStrA(userId),
                 //IsLogin = true,

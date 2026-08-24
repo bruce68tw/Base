@@ -151,6 +151,22 @@ namespace BaseWeb.Services
             var newId = Convert.ToBase64String(Guid.NewGuid().ToByteArray()); // 產生一次 nonce，兩者共用
             _Fun3.Nonce = newId; //set global
 
+            //放後面, for 上面有設定 headers.XContentTypeOptions = "nosniff";
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                //temp remark block for testing
+                OnPrepareResponse = ctx =>
+                {
+                    var headers = ctx.Context.Response.Headers;
+                    headers["Referrer-Policy"] = "no-referrer";
+                    headers.XContentTypeOptions = "nosniff";
+                    headers.XFrameOptions = "DENY";
+                    headers.XXSSProtection = "1; mode=block";     //舊但仍有用
+                    headers.Remove("X-Powered-By");
+                    //headers.Remove("Server");   //無作用!!
+                }
+            });
+
             //temp remark block for testing
             app.Use(async (ctx, next) =>
             {
@@ -180,22 +196,6 @@ namespace BaseWeb.Services
                 headers.Remove("X-Powered-By");
                 //headers.Remove("Server");
                 await next();
-            });
-
-            //放後面, for 上面有設定 headers.XContentTypeOptions = "nosniff";
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                //temp remark block for testing
-                OnPrepareResponse = ctx =>
-                {
-                    var headers = ctx.Context.Response.Headers;
-                    headers["Referrer-Policy"] = "no-referrer";
-                    headers.XContentTypeOptions = "nosniff";
-                    headers.XFrameOptions = "DENY";
-                    headers.XXSSProtection = "1; mode=block";     //舊但仍有用
-                    headers.Remove("X-Powered-By");
-                    //headers.Remove("Server");   //無作用!!
-                }
             });
 
             // 要啟用 cookie policy 才會生效
