@@ -155,12 +155,12 @@ namespace Base.Services
                 foreach (var item in json)
                 {
                     if (text!.Text.Contains(item.Key))
-                        text.Text = text.Text.Replace(item.Key, item.Value!.ToString());
+                        text.Text = text.Text.Replace("["+item.Key+"]", item.Value!.ToString());
                 }
             }
 
             //fill childs
-            if (childs!.Any())
+            if (childs != null && childs!.Any())
             {
                 for (var i = 0; i < childs!.Count; i++)
                     FillTable(page, i, childs[i] as JArray);
