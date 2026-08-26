@@ -18,11 +18,11 @@ namespace BaseApi.Services
         /// 使用 View Object 登入
         /// </summary>
         /// <param name="vo">login view object</param>
+        /// <param name="sql">sql for 查詢用戶，如果空白則使用default</param>
         /// <param name="encodePwd">是否加密密碼欄位(only for 密碼驗証</param>
-        /// <param name="sql">sql 如果空白則使用default</param>
         /// <param name="extCol">要寫入session的一個額外欄位, 必須加上正確的 table 別名</param>
         /// <returns></returns>
-        public static async Task<bool> LoginByVoA(LoginVo vo, bool encodePwd = true, string sql = "",
+        public static async Task<bool> LoginByVoA(LoginVo vo, string sql = "", bool encodePwd = true, 
             string extCol = "", string extCol2 = "", string extCol3 = "")
         {
             //reset UI msg first
