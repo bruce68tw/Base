@@ -785,7 +785,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 : "";
             return $@"
 <div class='x-group'>
-    <span class='x-group-title' data-onclick='_group.toggle'>{title}
+    <span class='x-group-title' data-onclick='_Group.toggle'>{title}
         {iconHtml}
     </span>
     <div class='x-group-line'>{line}

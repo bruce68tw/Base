@@ -136,15 +136,13 @@ namespace Base.Services
 from dbo.XpRoleProg rp
 join dbo.XpProg p on rp.ProgId=p.Id
 join dbo.XpDeptRole dr on rp.DeptRoleId=dr.Id
-join dbo.XpUserRole ur on dr.RoleId=ur.RoleId or (@RoleId != '' and dr.RoleId=@RoleId)
+join dbo.XpUserRole ur on (ur.UserId='{userId}' and dr.RoleId=ur.RoleId) or (@RoleId != '' and dr.RoleId=@RoleId)
 join dbo.XpUser u on ur.UserId=u.Id and (dr.DeptId=u.DeptId or (@DeptId != '' and dr.DeptId=@DeptId))
-where ur.UserId='{userId}'
 "
                         : $@"
 from dbo.XpRoleProg rp
 join dbo.XpProg p on rp.ProgId=p.Id
-join dbo.XpUserRole ur on rp.RoleId=ur.RoleId or (@RoleId != '' and rp.RoleId=@RoleId)
-where ur.UserId='{userId}'
+join dbo.XpUserRole ur on (ur.UserId='{userId}' and rp.RoleId=ur.RoleId) or (@RoleId != '' and rp.RoleId=@RoleId)
 ";
 
                     //return format: code,...
@@ -179,14 +177,12 @@ select distinct
                         ? $@"
 from dbo.XpRoleProg rp
 join dbo.XpDeptRole dr on rp.DeptRoleId=dr.Id
-join dbo.XpUserRole ur on dr.RoleId=ur.RoleId or (@RoleId != '' and dr.RoleId=@RoleId)
+join dbo.XpUserRole ur on (ur.UserId='{userId}' and dr.RoleId=ur.RoleId) or (@RoleId != '' and dr.RoleId=@RoleId)
 join dbo.XpUser u on ur.UserId=u.Id and (dr.DeptId=u.DeptId or (@DeptId != '' and dr.DeptId=@DeptId))
-where ur.UserId='{userId}'
 "
                         : $@"
 from dbo.XpRoleProg rp
-join dbo.XpUserRole ur on rp.RoleId=ur.RoleId or (@RoleId != '' and rp.RoleId=@RoleId)
-where ur.UserId='{userId}' 
+join dbo.XpUserRole ur on (ur.UserId='{userId}' and rp.RoleId=ur.RoleId) or (@RoleId != '' and rp.RoleId=@RoleId)
 ";
 
                     sql = $@"

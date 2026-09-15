@@ -15,7 +15,8 @@ namespace BaseWeb.Services
 {
     public static class _WebExt
     {
-        public static WebApplicationBuilder SetBuilder(this WebApplicationBuilder builder)
+        //因為是Ext函數, 所以名稱前面加上My方便辨視
+        public static WebApplicationBuilder SetMyBuilder(this WebApplicationBuilder builder)
         {
             //set builder, 無作用!!
             //web.config 必須設定 <requestFiltering removeServerHeader="true" /> !!
@@ -62,7 +63,7 @@ namespace BaseWeb.Services
             return builder;
         }
 
-        public static IServiceCollection SetServices(this IServiceCollection services, bool multiLang)
+        public static IServiceCollection SetMyServices(this IServiceCollection services, bool multiLang)
         {
             //資安: controller 防止 CSRF
             var mvc = services.AddControllersWithViews(opts => { opts.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()); })
@@ -105,7 +106,7 @@ namespace BaseWeb.Services
             return services;
         }
 
-        public static WebApplication SetApp(this WebApplication app, bool isDev)
+        public static WebApplication SetMyApp(this WebApplication app, bool isDev)
         {
             // Configure the HTTP request pipeline.
             if (isDev)
@@ -150,23 +151,7 @@ namespace BaseWeb.Services
             var newId = Convert.ToBase64String(Guid.NewGuid().ToByteArray()); // 產生一次 nonce，兩者共用
             _Fun3.Nonce = newId; //set global
 
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                //temp remark
-                OnPrepareResponse = ctx =>
-                {
-                    var headers = ctx.Context.Response.Headers;
-                    headers["Referrer-Policy"] = "no-referrer";
-                    headers.XContentTypeOptions = "nosniff";
-                    headers.XFrameOptions = "DENY";
-                    headers.XXSSProtection = "1; mode=block";     //舊但仍有用
-                    headers.Remove("X-Powered-By");
-                    //headers.Remove("Server");   //無作用!!
-                }
-                //
-            });
-
-            //temp remark
+            //temp remark block for testing
             app.Use(async (ctx, next) =>
             {
                 //script, style使用nonce 讓前端使用 inline !!
@@ -196,9 +181,25 @@ namespace BaseWeb.Services
                 //headers.Remove("Server");
                 await next();
             });
-            //
 
-            app.UseCookiePolicy(); // 要啟用 cookie policy 才會生效
+            //放後面, for 上面有設定 headers.XContentTypeOptions = "nosniff";
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                //temp remark block for testing
+                OnPrepareResponse = ctx =>
+                {
+                    var headers = ctx.Context.Response.Headers;
+                    headers["Referrer-Policy"] = "no-referrer";
+                    headers.XContentTypeOptions = "nosniff";
+                    headers.XFrameOptions = "DENY";
+                    headers.XXSSProtection = "1; mode=block";     //舊但仍有用
+                    headers.Remove("X-Powered-By");
+                    //headers.Remove("Server");   //無作用!!
+                }
+            });
+
+            // 要啟用 cookie policy 才會生效
+            app.UseCookiePolicy(); 
             return app;
         }
     }

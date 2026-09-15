@@ -1,16 +1,37 @@
 ﻿using Base.Enums;
+using Base.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Base.Services
 {
     public class _File
     {
+        /// <summary>
+        /// 讀取 LLM 問題
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static LlmAskDto? ReadLlmAsk(string path)
+        {
+            try
+            {
+                var json = File.ReadAllText(path);
+                return JsonSerializer.Deserialize<LlmAskDto>(json);
+            }
+            catch (Exception ex)
+            {
+                _Log.Error("_File.cs ReadLlmAsk() failed: " + ex.Message);
+                return null;
+            }
+        }
+
         /// <summary>
         /// rename path ext to upload style
         /// </summary>

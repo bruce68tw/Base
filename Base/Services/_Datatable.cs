@@ -10,7 +10,7 @@ namespace Base.Services
             if (dt.findJson == null) return "";
             var json = _Str.ToJson(dt.findJson);
             return (json == null)
-                ? "" : _Json.NullFieldToEmpty(json, fid);
+                ? "" : _Json.NullToEmpty(json, fid);
 
             //return _Json.NullFieldToEmpty(_Str.ToJson(dt.findJson), fid);
             //return (findJson == null)

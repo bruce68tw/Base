@@ -1,6 +1,5 @@
 ﻿using Base.Enums;
 using Base.Models;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,18 +21,103 @@ namespace Base.Services
         public const string FlowStatus = "xfFlowStatus";
         //public const string SignStatus = "xfSignStatus";
 
-        public static async Task<List<IdStrDto>?> AuthRangeA(Db? db = null)
+        public static async Task<List<IdStrDto>> SqlToCodesA(string sql, Db? db = null, List<object>? args = null)
         {
-            return await _List.TypeToListA(AuthRange, db);
+            //return await _Db.SqlToCodesA(sql, null, db) ?? [];
+            return await _Db.GetModelsA<IdStrDto>(sql, args, db) ?? [];
         }
 
-        public static async Task<List<IdStrDto>?> XpFlowA(Db? db = null)
+        public static async Task<List<IdStrExtDto>> SqlToCodeExtsA(string sql, Db? db = null, List<object>? args = null)
         {
-            return await _Db.TableToCodesA("XpFlow", db);
+            return await _Db.GetModelsA<IdStrExtDto>(sql, args, db) ?? [];
+        }
+
+        public static async Task<List<IdStrExt2Dto>> SqlToCodeExt2sA(string sql, Db? db = null, List<object>? args = null)
+        {
+            return await _Db.GetModelsA<IdStrExt2Dto>(sql, args, db) ?? [];
+        }
+
+        //get code table rows
+        public static async Task<List<IdStrDto>> TypeToCodesA(string type, Db? db = null, string locale = "")
+        {
+            var name = string.IsNullOrEmpty(locale) ? "Name" : "Name_" + locale;
+            var sql = $@"
+select Value as Id, {name} as Str
+from dbo.XpCode
+where Type='{type}'
+order by Sort";
+            return await SqlToCodesA(sql, db);
+        }
+
+        public static async Task<List<IdStrDto>> TableToCodesA(string table, Db? db = null, string? sort = null)
+        {
+            //return await _Db.TableToCodesA("XpFlow", db, sort) ?? [];
+            sort ??= "Id";
+            var sql = $@"
+select Id, Name as Str
+from {table}
+order by {sort}";
+            return await SqlToCodesA(sql, db);
+        }
+
+        public static async Task<List<IdStrExtDto>> TableToCodeExtsA(string table, string extFid, 
+            Db? db = null, string? sort = null)
+        {
+            sort ??= "Id";
+            var sql = @$"
+select Id, Name as Str, {extFid} as Ext
+from {table}
+order by {sort}";
+            return await SqlToCodeExtsA(sql, db);
+        }
+
+        //get code table rows
+        public static async Task<List<IdStrExtDto>> TypesToCodesA(string[] types, Db? db = null, string locale = "")
+        {
+            var name = string.IsNullOrEmpty(locale) ? "Name" : "Name_" + locale;
+            var sql = $@"
+select Value as Id, {name} as Str, Type as Ext
+from dbo.XpCode
+where Type in ({_Array.ToStr(types, true)})
+order by Type, Sort";
+            return await SqlToCodeExtsA(sql, db);
+        }
+
+        public static List<IdStrDto> AddEmpty(List<IdStrDto>? codes, string plsSelect)
+        {
+            codes ??= [];
+            codes.Insert(0, new IdStrDto()
+            {
+                Id = "",
+                Str = plsSelect,
+            });
+            return codes;
+        }
+
+        public static async Task<List<IdStrDto>> RolesA(Db? db = null)
+        {
+            var sql = $@"
+select 
+    Id, [Name] as Str
+from dbo.XpRole
+where {_Fun.RoleAllCond("Id", false)}
+order by Sort
+";
+            return await SqlToCodesA(sql, db);
+        }
+
+        public static async Task<List<IdStrDto>> AuthRangeA(Db? db = null)
+        {
+            return await TypeToCodesA(AuthRange, db);
+        }
+
+        public static async Task<List<IdStrDto>> XpFlowA(Db? db = null)
+        {
+            return await TableToCodesA("XpFlow", db);
         }
 
         //讀取某個部門的角色，給使用者編輯用
-        public static async Task<List<IdStrDto>?> DeptRoleA(Db? db = null)
+        public static async Task<List<IdStrDto>> DeptRoleA(Db? db = null)
         {
             var sql = $@"
 select dr.Id, Str=d.Name+'-'+r.Name
@@ -42,33 +126,29 @@ join dbo.XpDept d on dr.DeptId=d.Id
 join dbo.XpRole r on dr.RoleId=r.Id
 order by d.Sort, r.Sort
 ";
-            return await _Db.SqlToCodesA(sql, null, db);
+            return await SqlToCodesA(sql, db);
         }
 
         //1階
-        public static async Task<List<IdStrDto>?> Prog1A(Db? db = null)
+        public static async Task<List<IdStrDto>> Prog1A(Db? db = null)
         {
-            var sql = $@"
-select p.Id, p.Name as Str
-from dbo.XpProg p
-order by p.Sort";
-            return await _Db.SqlToCodesA(sql, null, db);
+            return await TableToCodesA("dbo.XpProg", db, "Sort");
         }
 
         //2階, 排序：先依MenuGroup的Sort，再依Prog的Sort
-        public static async Task<List<IdStrDto>?> Prog2A(Db? db = null)
+        public static async Task<List<IdStrDto>> Prog2A(Db? db = null)
         {
             var sql = $@"
 select p.Id, p.Name as Str
 from dbo.XpProg p
 join dbo.XpCode c on c.Type='MenuGroup' and p.MenuGroup=c.Value
 order by c.Sort, p.Sort";
-            return await _Db.SqlToCodesA(sql, null, db);
+            return await SqlToCodesA(sql, db);
         }
 
-        public static async Task<List<IdStrDto>?> DeptA(Db? db = null)
+        public static async Task<List<IdStrDto>> DeptA(Db? db = null)
         {
-            return await _Db.TableToCodesA("XpDept", db, "Sort");
+            return await TableToCodesA("dbo.XpDept", db, "Sort");
         }
 
         /// <summary>
@@ -78,12 +158,12 @@ order by c.Sort, p.Sort";
         /// <returns></returns>
         public static List<IdStrDto>? CodesToSignStatuses(List<IdStrExtDto>? rows)
         {
-            return _Code.FilterList(rows, SignStatus)!
+            return FilterByExt(rows, SignStatus)!
                 .Where(a => a.Id is SignStatusEstr.Agree or SignStatusEstr.Back)
                 .ToList();
         }
 
-        public static async Task<List<IdStrDto>?> SignStatusA(bool forSign, Db? db = null)
+        public static async Task<List<IdStrDto>> SignStatusA(bool forSign, Db? db = null)
         {
             //return 
             if (forSign)
@@ -91,19 +171,19 @@ order by c.Sort, p.Sort";
                 var sql = $@"
 select Id=Value, Str=Name
 from dbo.XpCode
-where Type='{_Code.SignStatus}'
+where Type='{SignStatus}'
 and Ext=1
 order by Sort
 ";
-                return await _Db.SqlToCodesA(sql, null, db);
-
+                return await SqlToCodesA(sql, db);
             }
             else
             {
-                return await _List.TypeToListA(_Code.SignStatus, db);
+                return await TypeToCodesA(SignStatus, db);
             }
         }
 
+        /*
         //FilterArray -> FilterJsons
         //filter json array
         public static JArray? FilterJsons(JArray rows, string fid, string value)
@@ -116,9 +196,10 @@ order by Sort
             return (finds.Count == 0)
                 ? null : finds;
         }
+        */
 
-        //FilterRows -> FilterList
-        public static List<IdStrDto>? FilterList(List<IdStrExtDto>? rows, string value)
+        //FilterRows -> FilterList -> FilterByExt
+        public static List<IdStrDto>? FilterByExt(List<IdStrExtDto>? rows, string value)
         {
             return (rows == null || rows.Count == 0)
                 ? null

@@ -123,7 +123,8 @@ namespace Base.Services
         }
         */
 
-        public static string NullFieldToEmpty(JObject json, string fid)
+        //NullFieldToEmpty -> NullToEmpty
+        public static string NullToEmpty(JObject json, string fid)
         {
             return (json[fid] == null) 
                 ? "" : json[fid]!.ToString();
@@ -198,8 +199,9 @@ namespace Base.Services
                 ? "" : data[..^sep.Length];
         }
 
+        //FilterArray -> Filter
         //filter json array
-        public static JArray? FilterArray(JArray rows, string fid, string value)
+        public static JArray? Filter(JArray rows, string fid, string value)
         {
             //if (rows == null) return null;
 
@@ -210,10 +212,11 @@ namespace Base.Services
                 ? null : finds;
         }
 
+        //FindArray -> FilterOne
         //find json array 1 row
-        public static JObject? FindArray(JArray rows, string fid, string value)
+        public static JObject? FilterOne(JArray rows, string fid, string value)
         {
-            var finds = FilterArray(rows, fid, value);
+            var finds = Filter(rows, fid, value);
             return (finds == null) ? null : (JObject)finds[0];
         }
 

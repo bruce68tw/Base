@@ -105,15 +105,15 @@ select
 from dbo.XpCode
 where Type like 'xf%'
 order by Type, Sort";
-            var rows = await _Db.SqlToCodeExtsA(sql, null, db);
+            var rows = await _Code.SqlToCodeExtsA(sql, db);
             if (rows == null) return;
 
             //await using var db = new Db();
-            viewBag.NodeTypes = _Code.FilterList(rows, _Code.NodeType);
-            viewBag.SignerTypes = _Code.FilterList(rows, _Code.SignerType);
-            viewBag.AndOrs = _Code.FilterList(rows, _Code.AndOr);
-            viewBag.LineOps = _Code.FilterList(rows, _Code.LineOp);
-            viewBag.LineFromTypes = _Code.FilterList(rows, _Code.LineFromType);
+            viewBag.NodeTypes = _Code.FilterByExt(rows, _Code.NodeType);
+            viewBag.SignerTypes = _Code.FilterByExt(rows, _Code.SignerType);
+            viewBag.AndOrs = _Code.FilterByExt(rows, _Code.AndOr);
+            viewBag.LineOps = _Code.FilterByExt(rows, _Code.LineOp);
+            viewBag.LineFromTypes = _Code.FilterByExt(rows, _Code.LineFromType);
         }
 
         /// <summary>
