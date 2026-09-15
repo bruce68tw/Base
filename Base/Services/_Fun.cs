@@ -82,6 +82,8 @@ namespace Base.Services
         #endregion
 
         #region variables PG can modify
+        public static string[] Create2 = ["Creator", "Created"];
+
         /// <summary>
         /// session timeout(unit: minutes)
         /// </summary>

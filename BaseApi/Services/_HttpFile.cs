@@ -6,12 +6,31 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BaseApi.Services
 {
     public class _HttpFile
     {
+        public static async Task<string> ToStrA(IFormFile file, bool removeCarrier)
+        {
+            try
+            {
+                //如果回傳json字串, 則必須轉換換行符號
+                using var reader = new StreamReader(file.OpenReadStream());
+                var str = await reader.ReadToEndAsync();
+                return removeCarrier
+                    ? str.Replace("\r", "").Replace("\n", "")
+                    : str;
+            }
+            catch (Exception ex)
+            {
+                _Log.Error("_HttpFile.cs ToStr() failed: " + ex.Message);
+                return "";
+            }
+        }
+
         /// <summary>
         /// check upload file size
         /// </summary>
@@ -56,10 +75,8 @@ namespace BaseApi.Services
                 var dir = _File.PathToDir(filePath);
                 _File.MakeDir(dir);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await file.CopyToAsync(stream);
                 return true;
             }
             catch (Exception ex)

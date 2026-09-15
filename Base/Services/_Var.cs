@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2013.PowerPoint.Roaming;
-
-namespace Base.Services
+﻿namespace Base.Services
 {
     public class _Var
     {

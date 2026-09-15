@@ -3,7 +3,6 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
-using Pipelines.Sockets.Unofficial.Arenas;
 using SixLabors.ImageSharp;
 using System.Collections.Generic;
 using System.IO;

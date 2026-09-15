@@ -6,6 +6,7 @@ namespace Base.Enums
     /// </summary>
     public enum DbTypeEnum
     {
+        None,
         MSSql,
         MySql,
         Oracle

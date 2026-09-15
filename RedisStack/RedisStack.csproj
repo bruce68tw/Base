@@ -7,13 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Interfaces\zz_IEmbedDbSvc.cs" />
-    <Compile Remove="Interfaces\zz_ILiveLlmSvc.cs" />
-    <Compile Remove="Interfaces\zz_ILlmSvc.cs" />
-    <Compile Remove="Services\zz_RagSvc.cs" />
+    <PackageReference Include="Data1009.RedisStack" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BaseAI\BaseAI.csproj" />
     <ProjectReference Include="..\Base\Base.csproj" />
   </ItemGroup>
 

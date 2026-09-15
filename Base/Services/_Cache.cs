@@ -28,7 +28,7 @@ namespace Base.Services
         {
             var str = GetService().GetStr(userId, key);
             return _Str.IsEmpty(str)
-                ? default : _Model.JsonStrToModel<T>(str!);
+                ? default : _Model.StrToModel<T>(str!);
         }
 
         public static bool SetModel<T>(string userId, string key, T model)

@@ -1,9 +1,8 @@
 ﻿using Base.Interfaces;
+using Base.Services;
 using StackExchange.Redis;
-using System;
-using System.Threading.Tasks;
 
-namespace Base.Services
+namespace Redis.Services
 {
     /// <summary>
     /// Redis cache server(use StackExchange)

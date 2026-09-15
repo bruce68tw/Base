@@ -1,7 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
 using Newtonsoft.Json.Linq;
-using StackExchange.Redis;
 using System.IO;
 using System.Threading.Tasks;
 

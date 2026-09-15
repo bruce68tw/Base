@@ -84,14 +84,20 @@ namespace Base.Services
         */
 
         /// <summary>
+        /// JsonStrToModel -> StrToModel
         /// decode string into model 
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static T? JsonStrToModel<T>(string str)
+        public static T? StrToModel<T>(string str)
         {
             return JsonConvert.DeserializeObject<T>(str);
+        }
+
+        public static List<T>? StrToModels<T>(string str)
+        {
+            return JsonConvert.DeserializeObject<List<T>>(str);
         }
 
         /// <summary>

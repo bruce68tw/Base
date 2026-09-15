@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
-    /// database read/write 
+    /// database read/write, DB 使用非同步!! 
     /// </summary>
     public class Db : IAsyncDisposable
     {
