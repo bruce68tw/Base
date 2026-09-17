@@ -20,6 +20,7 @@ namespace Mongo
         private IMongoCollection<BsonDocument>? _collection;
         private bool _isOk = false;
 
+        /*
         public async Task<JArray?> GetRowsA(string sql, List<object>? sqlArgs = null)
         {
             try
@@ -33,7 +34,7 @@ namespace Mongo
             }
 
         }
-
+        */
 
         public bool Connect(string dbStr, string collectName)
         {

@@ -84,6 +84,15 @@ namespace Mongo
             });
         }
 
+        public void Dispose()
+        {
+            _collection = null;
+            _db = null;
+            _client = null;
+            //DbStr = string.Empty;
+            //DbName = string.Empty;
+            //CollectName = string.Empty;
+        }
 
     }
 }
