@@ -1,14 +1,7 @@
 ﻿using Base.Models;
-using DocumentFormat.OpenXml;
+using BaseOffice.Models;
 using DocumentFormat.OpenXml.Packaging;
-//using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Validation;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 //using Break = DocumentFormat.OpenXml.Wordprocessing.Break;
 //using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
@@ -20,7 +13,7 @@ using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 */
 
-namespace Base.Services
+namespace BaseOffice.Services
 {
     public static class _Word
     {

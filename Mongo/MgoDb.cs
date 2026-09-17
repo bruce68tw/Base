@@ -1,7 +1,10 @@
-﻿using Base.Services;
+﻿using Base.Enums;
+using Base.Models;
+using Base.Services;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using Newtonsoft.Json.Linq;
 
 namespace Mongo
 {
@@ -10,63 +13,27 @@ namespace Mongo
     /// MongoDB 基本 CRUD 輔助類別。
     /// 提供連線、建立、讀取、更新、刪除與資源釋放等基礎操作。
     /// </summary>
-    public class MongoSvc : IDisposable
+    public class MgoDb : IDisposable
     {
         private MongoClient? _client;
         private IMongoDatabase? _db;
         private IMongoCollection<BsonDocument>? _collection;
         private bool _isOk = false;
 
-        /// <summary>
-        /// MongoDB 連線字串。
-        /// </summary>
-        //public string DbStr { get; private set; } = string.Empty;
-
-        /// <summary>
-        /// 目前使用的資料庫名稱。
-        /// </summary>
-        //public string DbName { get; private set; } = string.Empty;
-
-        /// <summary>
-        /// 目前使用的集合名稱。
-        /// </summary>
-        //public string CollectName { get; private set; } = string.Empty;
-
-        /// <summary>
-        /// 判斷是否已完成連線並可進行 MongoDB 操作。
-        /// </summary>
-        //public bool _IsConnected => _client != null && _db != null && _collection != null;
-
-        /// <summary>
-        /// 建立 MongoDB 連線。
-        /// </summary>
-        /// <param name="dbStr">MongoDB 連線字串</param>
-        /// <param name="dbName">資料庫名稱</param>
-        /// <param name="collectName">集合名稱</param>
-        /*
-        public void Connect(string connectStr, string dbName, string collectName)
+        public async Task<JArray?> GetRowsA(string sql, List<object>? sqlArgs = null)
         {
-            // 連線字串不可空白
-            if (string.IsNullOrWhiteSpace(connectStr))
-                throw new ArgumentException("Connection string is required.", nameof(connectStr));
+            try
+            {
 
-            // 資料庫名稱不可空白
-            if (string.IsNullOrWhiteSpace(dbName))
-                throw new ArgumentException("Database name is required.", nameof(dbName));
+            }
+            catch (Exception ex)
+            {
+                await _Log.ErrorRootA($"MgoDb.cs GetRowsA() failed: {ex.Message}");
+                return null;
+            }
 
-            // 集合名稱不可空白
-            if (string.IsNullOrWhiteSpace(collectName))
-                throw new ArgumentException("Collection name is required.", nameof(collectName));
-
-            _client = new MongoClient(connectStr);
-            _db = _client.GetDatabase(dbName);
-            _collection = _db.GetCollection<BsonDocument>(collectName);
-
-            ConnectStr = connectStr;
-            DbName = dbName;
-            CollectName = collectName;
         }
-        */
+
 
         public bool Connect(string dbStr, string collectName)
         {
@@ -98,18 +65,6 @@ namespace Mongo
             //DbName = mongoUrl.DatabaseName;
             //CollectName = collectName;
         }
-
-        /*
-        /// <summary>
-        /// 確認目前已完成 MongoDB 連線，否則拋出例外。
-        /// </summary>
-        private void IsConnected()
-        {
-            var _isConnected = _client != null && _db != null && _collection != null;
-            if (!_isConnected)
-                throw new InvalidOperationException("MongoDB is not connected. Call Connect() first.");
-        }
-        */
 
         /// <summary>
         /// 建立一筆文件到 MongoDB 集合中。

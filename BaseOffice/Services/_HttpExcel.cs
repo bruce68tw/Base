@@ -1,12 +1,12 @@
 ﻿using Base.Models;
 using Base.Services;
+using BaseApi.Services;
+using BaseOffice.Models;
 using DocumentFormat.OpenXml.Packaging;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
-using System.IO;
-using System.Threading.Tasks;
 
-namespace BaseApi.Services
+namespace BaseOffice.Services
 {
     public static class _HttpExcel
     {

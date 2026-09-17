@@ -1,9 +1,8 @@
 ﻿using Base.Models;
-using Base.Services;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using BaseApi.Services;
+using BaseOffice.Models;
 
-namespace BaseApi.Services
+namespace BaseOffice.Services
 {
     /// <summary>
     /// use NPOI output word(docx), cause duplicate, put here(not in _Http.cs)

@@ -1,7 +1,6 @@
 ﻿using Base.Services;
-using System.Collections.Generic;
 
-namespace Base.Models
+namespace BaseOffice.Models
 {
     //for excel import function
     //import source file name: Id + ".xlsx"

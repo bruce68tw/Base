@@ -63,6 +63,11 @@ namespace Base.Services
             return _getSvc;
         }
 
+        public Db GetDb(bool outside = false)
+        {
+            return GetSvc().GetDb(outside);
+        }
+
         public virtual async Task<JObject?> GetUpdJsonA(string key)
         {
             //Fun = fun;

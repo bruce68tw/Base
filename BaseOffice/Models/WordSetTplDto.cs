@@ -1,4 +1,4 @@
-﻿namespace Base.Models
+﻿namespace BaseOffice.Models
 {
     //word set template dto
     public class WordSetTplDto

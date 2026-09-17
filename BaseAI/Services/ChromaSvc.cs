@@ -17,16 +17,24 @@ namespace BaseAI.Services
         private async Task<string> GetCollectIdA(string table)
         {
             const string preFun = "ChromaSvc.cs GetCollectId() failed: ";
-            using var resp = await _httpClient.GetAsync($"{_embedDbStr}/{table}");
-            if (!resp.IsSuccessStatusCode)
+            try
             {
-                _Log.Error(preFun + await resp.Content.ReadAsStringAsync());
+                using var resp = await _httpClient.GetAsync($"{_embedDbStr}/{table}");
+                if (!resp.IsSuccessStatusCode)
+                {
+                    _Log.Error(preFun + await resp.Content.ReadAsStringAsync());
+                    return "";
+                }
+
+                var json = await resp.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                return doc.RootElement.GetProperty("id").GetString()!;
+            }
+            catch (Exception ex)
+            {
+                _Log.Error(preFun + "連線Chroma失敗, " + ex.Message);
                 return "";
             }
-
-            var json = await resp.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(json);
-            return doc.RootElement.GetProperty("id").GetString()!;
         }
 
         public override async Task<bool> CreateA(string tableName, string id, float[] vector, string fileId)
@@ -34,8 +42,8 @@ namespace BaseAI.Services
             //connect table, 有 using var 所以不使用 goto
             const string preFun = "ChromaSvc.cs CreateA() failed: ";
             var collectId = await GetCollectIdA(tableName);
-            if (string.IsNullOrEmpty(collectId))
-                return false;
+            if (string.IsNullOrEmpty(collectId)) return false;
+
             /*
             var resp = await _httpClient.GetAsync($"{_embedDbStr}/{_embedTableName}");
             if (!resp.IsSuccessStatusCode)
@@ -143,8 +151,7 @@ namespace BaseAI.Services
         {
             const string preFun = "ChromaSvc.cs DeleteByCondA() failed: ";
             var collectId = await GetCollectIdA(tableName);
-            if (string.IsNullOrEmpty(collectId))
-                return false;
+            if (string.IsNullOrEmpty(collectId)) return false;
 
             var json = new
             {

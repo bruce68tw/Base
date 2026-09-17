@@ -1,5 +1,5 @@
 ﻿
-namespace Base.Models
+namespace BaseOffice.Models
 {
     public class ExcelImportFieldDto
     {

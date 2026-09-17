@@ -1,16 +1,15 @@
 ﻿using Base.Models;
+using Base.Services;
+using BaseOffice.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Draw = DocumentFormat.OpenXml.Drawing;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 
-namespace Base.Services
+namespace BaseOffice.Services
 {
     //word套表
     public class WordSetSvc

@@ -1,4 +1,4 @@
-﻿namespace Base.Models
+﻿namespace BaseOffice.Models
 {
     //word image
     public class WordImageDto

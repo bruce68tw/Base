@@ -1,10 +1,7 @@
-﻿using System;
-//using System.Drawing;
-using System.IO;
-using SixLabors.ImageSharp;
+﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace Base.Services
+namespace BaseOffice.Services
 {
     //Word docx image
     //http://blog.darkthread.net/post-2017-11-06-insert-image-to-docx.aspx

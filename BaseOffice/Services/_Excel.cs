@@ -1,14 +1,10 @@
 ﻿using Base.Models;
+using Base.Services;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Base.Services
+namespace BaseOffice.Services
 {
     public class _Excel
     {

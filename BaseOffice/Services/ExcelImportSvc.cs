@@ -1,19 +1,16 @@
 ﻿using Base.Enums;
 using Base.Models;
+using Base.Services;
+using BaseOffice.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 //excel import
-namespace Base.Services
+namespace BaseOffice.Services
 {
     /// <summary>
     /// 匯入excel功能, 欄位名稱開頭為D:表示excel儲存格為日期欄位(實際存數字)
