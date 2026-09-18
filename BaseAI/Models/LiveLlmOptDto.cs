@@ -12,5 +12,6 @@
         public string Language { get; set; } = "zh-TW";
         public bool AudioResponse { get; set; } = true;
         public IReadOnlyCollection<LiveLlmToolDto> Tools { get; set; } = Array.Empty<LiveLlmToolDto>();
+        public IReadOnlyCollection<LiveLlmHistoryDto> History { get; set; } = Array.Empty<LiveLlmHistoryDto>();
     }
 }

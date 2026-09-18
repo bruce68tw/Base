@@ -6,7 +6,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
 
-namespace Mongo
+namespace Mongo.Services
 {
     /// <summary>
     /// 不同NoSql缺少一致性，所以這裡不繼承自定介面!! 
@@ -221,7 +221,7 @@ namespace Mongo
             {
                 var filter = IdToFilter(docuId);
                 var result = _collection!.DeleteOne(filter);
-                return (result.DeletedCount == 1);
+                return result.DeletedCount == 1;
             }
             catch (Exception ex)
             {
@@ -246,6 +246,30 @@ namespace Mongo
         {
             var filter = Builders<BsonDocument>.Filter.Eq(fid, value);
             return DeleteByFilter(filter);
+        }
+
+        /// <summary>原子追加陣列欄位內容，並可同時套用其他更新。</summary>
+        public bool PushToArray<TItem>(FilterDefinition<BsonDocument> filter, string field,
+            IEnumerable<TItem> items, UpdateDefinition<BsonDocument>? additionalUpdate = null)
+        {
+            try
+            {
+                var documents = items.Select(item => item is BsonDocument document
+                    ? document : item!.ToBsonDocument());
+                var updates = new List<UpdateDefinition<BsonDocument>>
+                {
+                    Builders<BsonDocument>.Update.PushEach(field, documents)
+                };
+                if (additionalUpdate != null) updates.Add(additionalUpdate);
+
+                var result = _collection!.UpdateOne(filter, Builders<BsonDocument>.Update.Combine(updates));
+                return result.MatchedCount == 1;
+            }
+            catch (Exception ex)
+            {
+                _Log.Error("MgoDb.cs PushToArray() failed: " + ex.Message);
+                return false;
+            }
         }
 
         /// <summary>

@@ -95,6 +95,30 @@ namespace BaseAI.Services
                 throw new InvalidOperationException(json["error"]?["message"]?.ToString() ?? "Gemini Live setup 失敗。");
             if (json["setupComplete"] == null)
                 throw new InvalidOperationException("Gemini Live 未回傳 setupComplete。");
+
+            if (optDto.History.Count > 0)
+            {
+                var turns = optDto.History
+                    .Where(message => message.Role is "user" or "assistant" && !string.IsNullOrWhiteSpace(message.Text))
+                    .Select(message => new
+                    {
+                        role = message.Role == "assistant" ? "model" : "user",
+                        parts = new[] { new { text = message.Text } }
+                    })
+                    .ToArray();
+
+                if (turns.Length > 0)
+                {
+                    await SendJsonA(new
+                    {
+                        clientContent = new
+                        {
+                            turns,
+                            turnComplete = false
+                        }
+                    }, ct);
+                }
+            }
         }
 
         /// <summary>

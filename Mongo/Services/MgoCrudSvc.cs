@@ -2,11 +2,10 @@
 using Base.Models;
 using Base.Services;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
 
-namespace Mongo
+namespace Mongo.Services
 {
     /// <summary>
     /// 不同NoSql缺少一致性，所以這裡不繼承自定介面!! 
