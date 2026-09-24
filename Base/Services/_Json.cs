@@ -10,6 +10,15 @@ namespace Base.Services
     public class _Json
     {
 
+        public static JObject PairToJson(string fid, string value)
+        {
+            return new JObject { [fid] = value };
+        }
+        public static string PairToJsonStr(string fid, string value)
+        {
+            return PairToJson(fid, value).ToString();
+        }
+
         //get page rows
         public static JArray? PageGetRows(JObject? json)
         {

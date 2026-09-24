@@ -1,30 +1,24 @@
 ﻿using Base.Enums;
 using Base.Models;
-using Ganss.Xss;
+using Base.Services;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Mongo.Models;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 /// <summary>
 /// 1.remove cache function
 /// 2.add read/write multiple table fun
 /// </summary>
-namespace Base.Services
+namespace Mongo.Services
 {
     /// <summary>
     /// for Crud Edit Service
     /// 讀取單筆資料時(Update/View), 傳回row、_childs
     /// </summary>
-    public class CrudEditSvc : CrudEditGetSvc
+    public class MgoEditSvc : MgoEditGetSvc
     {
-        //constant
-        //front end input json fields:
-        //private const string Rows = "_rows";        //multiple rows
-        //private const string Deletes = "_deletes";  //delete key string list
-        //private const string Childs = "_childs";    //child json list
-
         private const string FkeyFid = "_fkeyfid";  //foreign key fid, 欄位內容如果是數字表示必須參考上一層key值
         private const string IsNew = "_IsNew";      //是否new row, 後端產生用於判斷, 前端不再傳入
 
@@ -45,7 +39,7 @@ namespace Base.Services
 		/// <param name="ctrl"></param>
 		/// <param name="editDto"></param>
 		/// <param name="dbStr"></param>
-		public CrudEditSvc(string ctrl, string dbStr = "")
+		public MgoEditSvc(string ctrl, string dbStr = "")
             : base(ctrl, dbStr)
         {
             _ctrl = ctrl;
@@ -67,15 +61,7 @@ namespace Base.Services
             return _now;
         }
 
-        /*
-        //get key value of row
-        public string GetKey(EditDto edit, JObject row)
-        {
-            return row[edit.PkeyFid].ToString();
-        }
-        */
-
-        private int GetEditChildLen(EditDto edit)
+        private int GetEditChildLen(MgoEditDto edit)
         {
             return (edit.Childs == null) ? 0 : edit.Childs.Length;
         }
@@ -102,12 +88,6 @@ namespace Base.Services
         private JArray? GetChildRows(JObject upJson, int childIdx)
         {
             return _Json.GetChildRows(upJson, childIdx);
-            /*
-            var child = GetChildJson(upJson, childIdx);
-            return (child == null || child[Rows] == null)
-                ? null
-                : child[Rows] as JArray;
-            */
         }
 
         /// <summary>
@@ -119,16 +99,6 @@ namespace Base.Services
         private JObject? GetChildJson(JObject upJson, int childIdx)
         {
             return _Json.GetChildJson(upJson, childIdx);
-            /*
-            if (upJson == null || upJson[Childs] == null)
-                return null;
-
-            //JArray childs = upJson[Childs] as JArray;
-            return (upJson[Childs].Count() <= childIdx
-                    || _Json.IsEmpty(upJson[Childs][childIdx] as JObject))
-                ? null
-                : upJson[Childs][childIdx] as JObject;
-            */
         }
 
         /// <summary>
@@ -151,33 +121,7 @@ namespace Base.Services
         {
             return _Object.IsEmpty(row[kid])
                 ? -1 : _Num.KeyToUpRowNo(row[kid]!.ToString());
-
-            /*
-            if () return -1;
-            if (!Int32.TryParse(row[kid]!.ToString(), out int num)) return 0;
-            return num > 0 ? 0 : num * (-1);
-            */
-
-            /*
-            return _Object.IsEmpty(row[kid]) ? -1 :
-                !IsNewRow(row, kid) ? 0 :
-                Int32.TryParse(row[kid]!.ToString(), out int num) ? num : 
-                0;
-            */
         }
-
-        /*
-        /// <summary>
-        /// check is new key or not by kid
-        /// </summary>
-        /// <param name="row"></param>
-        /// <param name="kid"></param>
-        /// <returns></returns>
-        private bool IsNewKey(JObject row, string kid)
-        {
-            return GetNewRowUpNo(row, kid) < 0;
-        }
-        */
 
         /// <summary>
         /// check is new row or not by IsNew field
@@ -228,13 +172,13 @@ namespace Base.Services
         /// <param name="inputRow"></param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        private async Task<bool> InsertRowA(EditDto editDto, JObject inputRow, Db db)
+        private async Task<bool> InsertRowA(MgoEditDto editDto, JObject inputRow, MgoDb db)
         {
             if (editDto.Items == null || editDto.Items.Length == 0) return true;
 
             #region insert row if need
             var error = "";            
-            ResetArg();     //reset sqlArgs first
+            //ResetArg();     //reset sqlArgs first
 
             //set default value
             editDto.Items
@@ -245,6 +189,7 @@ namespace Base.Services
                     inputRow[a.Fid] = a.Value!.ToString();
                 });
 
+            /*
             //prepare sql
             var fids = "";
             var values = "";
@@ -258,7 +203,7 @@ namespace Base.Services
                 //if no fid then log error !!
                 if (editDto._FidNo![fid] == null)
                 {
-                    error = $"CrudEdit.cs InsertRow() field not existed({editDto.Table}.{fid})";
+                    error = $"MgoEditSvc.cs InsertRow() field not existed({editDto.Table}.{fid})";
                     goto lab_error;
                 }
 
@@ -279,7 +224,7 @@ namespace Base.Services
             //return false if no fields
             if (fids == "")
             {
-                error = "CrudEdit.cs InsertRow() fields are empty.";
+                error = "MgoEditSvc.cs InsertRow() fields are empty.";
                 goto lab_error;
             }
 
@@ -314,16 +259,15 @@ namespace Base.Services
                     values += $"'{now}',";
                 }
             }
+            */
 
             //insert db
-            var sql = $"Insert Into {editDto.Table} ({fids[0..^1]}) Values ({values[0..^1]})";
-            var result = await db.ExecSqlA(sql, _sqlArgs!);
-            if(result <= 0)
+            //var sql = $"Insert Into {editDto.Table} ({fids[0..^1]}) Values ({values[0..^1]})";
+            var result = db.Insert(editDto.Table, inputRow);
+            if(result)
             {
-                if (result == -2)
-                    _isUniqueKeyError = true;
-                //not log error here, Db.cs already log it.
-                //error = "CrudEdit.cs InsertRow() failed, insert no row.(" + sql + ")";
+                //if (result == -2)
+                //    _isUniqueKeyError = true;
                 goto lab_error;
             }
             #endregion
@@ -348,32 +292,19 @@ namespace Base.Services
 
         //update one row
         //return error msg if any
-        private async Task<bool> UpdateRowA(bool isLevel0, EditDto editDto, JObject inputRow, Db db)
+        private async Task<bool> UpdateRowA(bool isLevel0, MgoEditDto editDto, JObject inputRow, MgoDb db)
         {
             //skip if empty
             if (_Json.IsEmpty(inputRow)) return true;
 
-            /* not read db, just update
-            #region get existed db row
-            //var edit = _edit;
-            var rowKey = inputRow[edit.PkeyFid].ToString();
-            var sql = GetSql(edit, rowKey);
-            var dbRow = db.GetRow(sql, _sqlArgs);
-            if (dbRow == null)
-            {
-                _Log.Error("CrudEdit.cs UpdateRow() found no row: " + sql + db.GetArgsText(_sqlArgs));
-                return false;
-            }
-            #endregion
-            */
-
             #region update this row
             //reset sql arguments first
-            ResetArg();
+            //ResetArg();
 
             //get updated sql, compare db/input row
-            var sql = "";
+            //var sql = "";
             var rowKey = isLevel0 ? GetMainKey() : inputRow[editDto.PkeyFid]!.ToString();
+            /*
             foreach (var field in inputRow)
             {
                 //if no fid then log error !!
@@ -383,7 +314,7 @@ namespace Base.Services
 
                 if (editDto._FidNo![fid] == null)
                 {
-                    await _Log.ErrorRootA($"CrudEdit.cs UpdateRowA() field not existed({editDto.Table}.{fid})");
+                    await _Log.ErrorRootA($"MgoEditSvc.cs UpdateRowA() field not existed({editDto.Table}.{fid})");
                     return false;
                 }
 
@@ -397,22 +328,11 @@ namespace Base.Services
                 if (eitemDto.Read || !eitemDto.Update)
                     continue;
 
-                /* old code
-                if (!edit.Items[fidNo].Update
-                    //|| inputRow[fid] == null
-                    //|| inputRow[fid].ToString() == dbRow[fid].ToString()
-                    )
-                    continue;
-                */
-
                 //set empty date to null, or will be 1900/1/1 !!
-                //object value = (inputRow[key].ToString() == "" && (type == EnumDataType.Datetime || type == EnumDataType.Date))
-                //object? value = (inputRow[fid]!.ToString() == "" && editDto.EmptyToNulls.Contains(fid))
-                //    ? null : inputRow[fid]!.ToString();
                 var value = GetInputValue(editDto, eitemDto, inputRow, fid);
                 //add into sql
                 sql += fid + "=@" + fid + ",";
-                AddArg(fid, value);
+                //AddArg(fid, value);
             }
 
             //set sql, emtpy sql means no column is changed !!
@@ -432,12 +352,18 @@ namespace Base.Services
                     hasUser ? $",{fldUser}='{_Fun.UserId()}'" :
                     hasDate ? $",{fldDate}='{_Date.ToDbStr(_now)}'" : "";
             }
+            */
 
             //update db
-            sql = $"Update {editDto.Table} Set {sql[0..^1] + setCol4} Where {GetWhereAndArg(editDto, rowKey)}";
-            if (await db.ExecSqlA(sql, _sqlArgs!) == 0)
+            //sql = $"Update {editDto.Table} Set {sql[0..^1] + setCol4} Where {GetWhereAndArg(editDto, rowKey)}";
+            //if (await db.ExecSqlA(sql, _sqlArgs!) == 0)
+            //更新時移除主key
+            inputRow.Remove(editDto.PkeyFid);
+
+            //update
+            if (!db.Update(editDto.Table, rowKey, inputRow))
             {
-                await _Log.ErrorRootA($"CrudEditSvc.cs UpateRowA() failed, update 0 row.({sql})");
+                await _Log.ErrorRootA($"MgoEditSvc.cs UpateRowA() failed.");
                 return false;
             }
 
@@ -447,19 +373,21 @@ namespace Base.Services
             #endregion
         }
 
-        private object? GetInputValue(EditDto editDto, EitemDto eitemDto, JObject inputRow, string fid)
+        /*
+        private object? GetInputValue(MgoEditDto editDto, EitemDto eitemDto, JObject inputRow, string fid)
         {
             string value = inputRow[fid]!.ToString();
             return (value == "" && editDto.EmptyToNulls.Contains(fid)) ? null :
                 eitemDto.IsHtml ? new HtmlSanitizer().Sanitize(value) :
                 value;
         }
+        */
 
         /// <summary>
         /// set edit validate variables: _FidNo, _FidRequires
         /// </summary>
         /// <param name="editDto"></param>
-        private void SetValidVar(EditDto editDto)
+        private void SetValidVar(MgoEditDto editDto)
         {
             var items = editDto.Items;
             if (items == null || items.Length == 0) return;
@@ -484,7 +412,7 @@ namespace Base.Services
         /// <param name="editDto"></param>
         /// <param name="json"></param>
         /// <returns>error msg if any</returns>
-        private string ValidJsonLoop(int editLevel, EditDto editDto, JObject json)
+        private string ValidJsonLoop(int editLevel, MgoEditDto editDto, JObject json)
         {
             //if (json == null) return "";
 
@@ -528,7 +456,7 @@ namespace Base.Services
         /// <param name="editDto"></param>
         /// <param name="row"></param>
         /// <returns>error msg if any</returns>
-        private string ValidRow(EditDto editDto, JObject row)
+        private string ValidRow(MgoEditDto editDto, JObject row)
         {
             if (editDto.Items == null || editDto.Items.Length == 0) return "";
             if (_Json.IsEmptyNoSpec(row)) return "";
@@ -635,7 +563,7 @@ namespace Base.Services
             }
             catch (Exception ex)
             {
-                return "CrudEdit.cs ValidRow() failed: CheckType=" + typeName + ", msg=" + ex.Message;
+                return "MgoEditSvc.cs ValidRow() failed: CheckType=" + typeName + ", msg=" + ex.Message;
             }
 
             /*
@@ -655,7 +583,7 @@ namespace Base.Services
         }
 
         //is transaction or not
-        private bool IsTrans(EditDto editDto)
+        private bool IsTrans(MgoEditDto editDto)
         {
             var childLen = GetEditChildLen(editDto);
             return editDto.AutoTrans
@@ -668,7 +596,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="json"></param>
         /// <returns>ResultDto</returns>
-        public async Task<ResultDto> CreateA(JObject json, EditDto editDto)
+        public async Task<ResultDto> CreateA(JObject json, MgoEditDto editDto)
         {
             //todo: 如果有草稿模式, 刪除草稿 if any
 
@@ -684,43 +612,37 @@ namespace Base.Services
         /// <param name="key">key of master table</param>
         /// <param name="json"></param>
         /// <returns>ResultDto</returns>
-        public async Task<ResultDto> UpdateA(string key, JObject json, EditDto editDto, CrudEnum fun = CrudEnum.Update)
+        public async Task<ResultDto> UpdateA(string key, JObject json, MgoEditDto editDto, CrudEnum fun = CrudEnum.Update)
         {
             //return error if empty key
             if (key == "")
-                return _Model.GetError("CrudEdit.cs UpdateA() failed: key is empty.");
+                return _Model.GetError("MgoEditSvc.cs UpdateA() failed: key is empty.");
 
             //todo: 如果有草稿模式, 刪除草稿 if any
 
             //set instance variables
             _key = key;
             _isNewMain = false;
-            //_editDto = editDto;
 
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin() && fun != CrudEnum.Create)
             {
-                var data = await GetDbRowA(editDto, key);    //return data
+                var data = GetDbRow(editDto, key);    //return data
                 var brError = CheckAuthRow(data!, CrudEnum.Update);
                 if (brError != "") return _Model.GetBrError(brError);
             }
 
-            /*
-            //add kid value into json if empty
-            var rows = json[_Fun.FidRows] as JArray;
-            if (rows.Count == 1 && rows[0][_editDto.PkeyFid] == null)
-                rows[0][_editDto.PkeyFid] = key;
-            */
-
             return await SaveJsonA(json, editDto);
         }
 
+        /*
         public async Task<ResultDto> DraftA(string key, JObject json)
         {
             var path = GetDraftPath(key);
             await _File.StrToFileA(json.ToString(), path);
             return new ResultDto();
         }
+        */
 
         /// <summary>
         /// save rows including delete rows, use transaction
@@ -728,11 +650,11 @@ namespace Base.Services
         /// </summary>
         /// <param name="inputJson">input json</param>
         /// <returns></returns>
-        private async Task<ResultDto> SaveJsonA(JObject inputJson, EditDto editDto)
+        private async Task<ResultDto> SaveJsonA(JObject inputJson, MgoEditDto editDto)
         {
             //check input & set fidNos same time
             var log = false;
-            Db? db = null;
+            MgoDb? db = null;
             string error;
             var trans = IsTrans(editDto);
             List<ErrorRowDto>? validErrors = null;
@@ -811,7 +733,7 @@ namespace Base.Services
 
             //case of ok
             if (trans) await db.CommitA();
-            await CheckCloseDbA(db);
+                CheckCloseDb(db);
 
             return new ResultDto() { Value = _saveRows.ToString() };
 
@@ -819,11 +741,11 @@ namespace Base.Services
             if (db != null)
             {
                 if (trans) await db.RollbackA();
-				await CheckCloseDbA(db);
+				    CheckCloseDb(db);
 			}
 
             if (log) 
-                await _Log.ErrorRootA("CrudEditSvc.cs SaveJsonA() failed: " + error);
+                await _Log.ErrorRootA("MgoEditSvc.cs SaveJsonA() failed: " + error);
             //here!!
             return _List.NotEmpty(validErrors) ? _Model.GetValidError(validErrors!) :
                 _isUniqueKeyError ? _Model.GetBrError(_Fun.FidUniqueError) :
@@ -840,7 +762,7 @@ namespace Base.Services
 		/// <param name="db"></param>
 		/// <returns></returns>
 		private async Task<bool> SaveJsonLoopA(string levelStr, List<string>? upDeletes, 
-            JObject inputJson, EditDto editDto, Db db)
+            JObject inputJson, MgoEditDto editDto, MgoDb db)
         {
             var levelLen = levelStr.Length;
             var isLevel0 = (levelLen == 1);
@@ -927,7 +849,7 @@ namespace Base.Services
         /// <param name="inputJson"></param>
         /// <param name="editDto"></param>
         /// <returns>return error msg if any</returns>
-        public async Task<string> SetNewKeyJsonA(JObject inputJson, EditDto editDto)
+        public async Task<string> SetNewKeyJsonA(JObject inputJson, MgoEditDto editDto)
         {
             return await SetNewKeyJsonLoopA("0", null, inputJson, editDto);
         }
@@ -941,7 +863,7 @@ namespace Base.Services
         /// <param name="inputJson">不可null, JObject 包含rows、childs欄位</param>
         /// <param name="editDto"></param>
         /// <returns>error msg if any</returns>
-        private async Task<string> SetNewKeyJsonLoopA(string levelStr, JObject? upKeyJson, JObject inputJson, EditDto editDto)
+        private async Task<string> SetNewKeyJsonLoopA(string levelStr, JObject? upKeyJson, JObject inputJson, MgoEditDto editDto)
         {
             //if (inputJson == null) return "";
 
@@ -1073,7 +995,7 @@ namespace Base.Services
             return "";
 
         //lab_error:
-        //    return "CrudEdit.cs SetNewKeyJson2() failed: " + error;
+        //    return "MgoEditSvc.cs SetNewKeyJson2() failed: " + error;
         }
 
         /// <summary>
@@ -1118,7 +1040,7 @@ namespace Base.Services
             return "";
 
         labError:
-            return "CrudEdit.cs SetRelatId() failed: " + error;
+            return "MgoEditSvc.cs SetRelatId() failed: " + error;
         }
 
         /// <summary>
@@ -1126,12 +1048,12 @@ namespace Base.Services
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public async Task<ResultDto> DeleteA(string key, EditDto editDto)
+        public async Task<ResultDto> DeleteA(string key, MgoEditDto editDto)
         {
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin())
             {
-                var data = await GetDbRowA(editDto, key);    //return data
+                var data = GetDbRow(editDto, key);    //return data
                 var brError = CheckAuthRow(data!, CrudEnum.Delete);
                 if (_Str.NotEmpty(brError))
                     return _Model.GetBrError(brError);
@@ -1145,7 +1067,7 @@ namespace Base.Services
         /// </summary>
         /// <param name="keys">row key list</param>
         /// <returns></returns>
-        public async Task<ResultDto> DeleteByKeysA(List<string> keys, EditDto editDto)
+        public async Task<ResultDto> DeleteByKeysA(List<string> keys, MgoEditDto editDto)
         {
             //check input
             if (!_List.CheckKey(keys)) return _Model.GetError();
@@ -1163,13 +1085,13 @@ namespace Base.Services
                 goto lab_error;
 
             if (trans) await db.CommitA();
-			await CheckCloseDbA(db);
+			    CheckCloseDb(db);
 
 			return new ResultDto();
 
         lab_error:
             if (trans) await db.RollbackA();
-			await CheckCloseDbA(db);
+			    CheckCloseDb(db);
 
 			//TODO
 			return _Model.GetError();
@@ -1182,16 +1104,17 @@ namespace Base.Services
         /// <param name="keys">can be multi pkey value(consider seperator)</param>
         /// <param name="db"></param>
         /// <returns>error msg if any</returns>
-        private async Task<bool> DeleteRowsByKeysA(EditDto edit, List<string> keys, Db? db = null)
+        private async Task<bool> DeleteRowsByKeysA(MgoEditDto edit, List<string> keys, MgoDb? db = null)
         {
             //check input
             if (keys.Count == 0) return true;
 
             //reset
-            ResetArg();
+            //ResetArg();
 
             //delete rows
             var newDb = CheckOpenDb(ref db);
+            /*
             var values = "";
             //=== case of single pkey ===
             //set sql args
@@ -1202,26 +1125,56 @@ namespace Base.Services
                 AddArg(fid, keys[i].ToString());
                 values += "@" + fid + ",";
             }
+            */
 
             //update db
-            var sql = string.Format(_Fun.DeleteRowsSql, edit.Table, kid, values[0..^1]);
-            var count = await db!.ExecSqlA(sql, _sqlArgs!);
-            //if (count == 0)
-            //    goto lab_error;
-            await _Db.CheckCloseDbA(db, newDb);
+            //var sql = string.Format(_Fun.DeleteRowsSql, edit.Table, kid, values[0..^1]);
+            //var count = await db!.ExecSqlA(sql, _sqlArgs!);
+            var count = await db!.DeleteRowsByIdsA(edit.Table, keys);
+            _MgoDb.CheckCloseDb(db, newDb);
 
             //case of ok
             _saveRows += count;
             return true;
         }
 
-        private async Task<List<string>?> GetKeysByUpKeysA(EditDto edit, List<string> upKeys, Db db)
+        private async Task<List<string>?> GetKeysByUpKeysA(MgoEditDto edit, List<string> upKeys, MgoDb db)
+        {
+            if (upKeys == null || upKeys.Count == 0) return null;
+
+            // 1. 取得指定的 Collection (弱型別 BsonDocument)
+            if (!db.SetCollect(edit.Table)) return null;
+
+            //var collection = database.GetCollection<BsonDocument>(edit.Table);
+
+            // 2. 建立 In 條件 (對應 SQL 的 WHERE FkeyFid IN (...))
+            var filter = Builders<BsonDocument>.Filter.In(edit.FkeyFid, upKeys);
+
+            // 3. 執行查詢，並透過 Projection 只抓取需要的欄位 (PkeyFid)
+            var collect = db.GetCollect();
+            var rows = await collect.Find(filter)
+                .Project(Builders<BsonDocument>.Projection.Include(edit.PkeyFid))
+                .ToListAsync();
+
+            // 4. 將查詢到的 BsonDocument 結果轉換成 List<string>
+            var result = rows
+                .Where(a => a.Contains(edit.PkeyFid))
+                .Select(a => a[edit.PkeyFid]?.ToString() ?? string.Empty)
+                .Where(a => !string.IsNullOrEmpty(a))
+                .ToList();
+
+            return result.Count > 0 ? result : null;
+        }
+
+        /*
+        private async Task<List<string>?> zz_GetKeysByUpKeysA(MgoEditDto edit, List<string> upKeys, MgoDb db)
         {
             if (upKeys.Count == 0) return null;
 
             var sql = string.Format("select {0} from {1} where {2} in ({3})", edit.PkeyFid, edit.Table, edit.FkeyFid, _List.ToStr(upKeys, true));
             return await db.GetStrsA(sql);
         }
+        */
 
     }//class
 }

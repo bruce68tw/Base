@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Services\zz_MgoCrudSvc.c_old" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MongoDB.Bson" Version="3.4.3" />
     <PackageReference Include="MongoDB.Driver" Version="3.4.3" />
   </ItemGroup>

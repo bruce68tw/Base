@@ -324,12 +324,12 @@ order by c.Sort, p.Sort
         }
 
         /// <summary>
-        /// 過濾掉無權限的 menu, 同時移除空白的 items
+        /// 過濾掉無權限的 menu, 同時移除空白的 items, 改public for外部呼叫
         /// </summary>
         /// <param name="fid"></param>
         /// <param name="authRow"></param>
         /// <returns></returns>
-        private static void RemoveEmptyMenu(List<MenuDto>? menus, string fnSetPwd, bool has2Level)
+        public static void RemoveEmptyMenu(List<MenuDto>? menus, string fnSetPwd, bool has2Level)
         {
             if (menus == null) return;
 

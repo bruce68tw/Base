@@ -1,6 +1,6 @@
 ﻿namespace BaseAI.Services
 {
-    public class CeSvcTest
+    public class CengSvcTest
     {
         public async Task RunA()
         {

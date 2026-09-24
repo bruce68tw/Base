@@ -1,54 +1,41 @@
 ﻿using Base.Enums;
-using Base.Models;
+using Base.Services;
+using Mongo.Models;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 /// <summary>
 /// 1.remove cache function
 /// 2.add read/write multiple table fun
 /// </summary>
-namespace Base.Services
+namespace Mongo.Services
 {
     /// <summary>
-    /// 利用 EditDto 來讀取資料庫資料
+    /// 參考 CrudEditGetSvc
+    /// 利用 MgoEditDto 來讀取資料庫資料
     /// base class of CrudEditSvc, CrudGetSvc
     /// </summary>
-    public class CrudEditGetSvc
+    public class MgoEditGetSvc
     {
-        //constant
-        //front end input json fields:
-        //protected const string Rows = "_rows";        //multiple rows
-        //protected const string Childs = "_childs";    //child json list
 
         //master edit
-        //protected EditDto _editDto = null!;
         protected string _ctrl = "";       //controll name
 
         //db str in config file
         protected string _dbStr = "";
 
         //只開啟一個db
-        protected Db _db = null!;
+        protected MgoDb _db = null!;
 		protected bool _dbByOut = false;
 
 		//sql args pair(fid,value), 日期欄位為空時寫入null, 否則會變1900/1/1 !!
-		protected List<object?> _sqlArgs = [];
+		//protected List<object?> _sqlArgs = [];
 
         //constructor
-        public CrudEditGetSvc(string ctrl, string dbStr = "")
+        public MgoEditGetSvc(string ctrl, string dbStr)
         {
             _ctrl = ctrl;
-            //_editDto = editDto;
             _dbStr = dbStr;
         }
-
-        /*
-        protected void SetEditDto(EditDto editDto)
-        {
-            _editDto ??= editDto;
-        }
-        */
 
         /// <summary>
         /// 傳回Db, 外面可呼叫, 建立CRUD Edit/Get 服務時直到存取DB才建立資料庫連線
@@ -56,26 +43,27 @@ namespace Base.Services
         /// </summary>
         /// <param name="outside">外部開啟</param>
         /// <returns></returns>
-        public Db GetDb(bool outside = false)
+        public MgoDb GetDb(bool outside = false)
         {
             if (_db == null)
             {
                 _dbByOut = outside;
-				_db = new Db(_dbStr);
+				_db = new MgoDb(_dbStr);
 			}
 			return _db;
         }
 
-        protected bool CheckOpenDb(ref Db? db)
+        protected bool CheckOpenDb(ref MgoDb? db)
         {
-            return _Db.CheckOpenDb(ref db, _dbStr);
+            return _MgoDb.CheckOpenDb(ref db, _dbStr);
         }
 
-        protected async Task CheckCloseDbA(Db db)
+        protected void CheckCloseDb(MgoDb db)
         {
-            await _Db.CheckCloseDbA(db, _dbByOut);
+            _MgoDb.CheckCloseDb(db, _dbByOut);
         }
 
+        /*
         //get draft file path by key
         //called CrudGetSvc、CrudEditSvc、others
         public string GetDraftPath(string key)
@@ -83,12 +71,14 @@ namespace Base.Services
             key = _Str.EmptyToValue(key, "-1");     //-1表示新增
             return $"{_Fun.DirDraft}{_ctrl}_{_Fun.UserId()}_{key}.json";
         }
+        */
 
-        public async Task<JObject?> GetJsonByFunA(CrudEnum fun, string key, EditDto editDto)
+        public async Task<JObject?> GetJsonByFunA(CrudEnum fun, string key, MgoEditDto editDto)
         {
             return await GetJsonA(fun, key, editDto);
         }
 
+        /*
         //add argument into _argFids, _argValues
         protected void AddArg(string fid, object? value)
         {
@@ -104,7 +94,7 @@ namespace Base.Services
 
         //get where by pkey for query 1st table & updata tables, set sql args at the same time
         //for getRow & update
-        protected string GetWhereAndArg(EditDto edit, string key)
+        protected string GetWhereAndArg(MgoEditDto edit, string key)
         {
             //kid add "_" for avoid conflict when update
             var kid = "_" + edit.PkeyFid;  
@@ -113,21 +103,14 @@ namespace Base.Services
         }
 
         //get select sql 
-        protected string GetSql(EditDto edit, string key)
+        protected string GetSql(MgoEditDto edit, string key)
         {
             ResetArg();
             var where = GetWhereAndArg(edit, key);
             return GetSqlByWhere(edit, where);
         }
 
-        /*
-        protected string GetSqlByField(EditDto edit, string key)
-        {
-            return string.Format(edit.ReadSql, key);
-        }
-        */
-
-        protected string GetSqlByWhere(EditDto edit, string where)
+        protected string GetSqlByWhere(MgoEditDto edit, string where)
         {
             //add columns list
             var list = "";
@@ -140,6 +123,7 @@ namespace Base.Services
             var order = _Str.IsEmpty(edit.OrderBy) ? "" : " Order By " + edit.OrderBy;
             return "Select " + list + " From " + edit.Table + " Where " + where + order;
         }
+        */
 
         /// <summary>
         /// has _hideKey for CSRF issue, check this field before update row
@@ -147,23 +131,12 @@ namespace Base.Services
         /// <param name="key"></param>
         /// <param name="db"></param>
         /// <returns></returns>
-        public async Task<JObject?> GetDbRowA(EditDto edit, string key, Db? db = null)
+        public JObject? GetDbRow(MgoEditDto edit, string key, MgoDb? db = null)
         {
-            //reset sqlArgs first
-            //ResetArg();
-
             //return row & close db if need
             var newDb = CheckOpenDb(ref db);
-            /*
-            var sql = _Str.IsEmpty(edit.ReadSql)
-                ? GetSql(edit, key)
-                : GetSqlByField(edit, key);
-            var row = await db!.GetRowA(sql, _sqlArgs!);
-            */
-            var row = _Str.IsEmpty(edit.ReadSql)
-                ? await db!.GetRowA(GetSql(edit, key), _sqlArgs!)
-                : await db!.GetRowA(edit.ReadSql, ["Id", key]);
-            await _Db.CheckCloseDbA(db!, newDb);
+            var row = db!.GetRowById(edit.Table, key);
+            _MgoDb.CheckCloseDb(db!, newDb);
             return row;
         }
 
@@ -175,13 +148,13 @@ namespace Base.Services
         /// </summary>
         /// <param name="key">傳入key值, 有可能不是main table的pkey !!, 例如簽核共用Edit.cs時</param>
         /// <returns></returns>
-        protected async Task<JObject?> GetJsonA(CrudEnum fun, string key, EditDto editDto)
+        protected async Task<JObject?> GetJsonA(CrudEnum fun, string key, MgoEditDto editDto)
         {
             if (!_Str.CheckKey(key)) return null;
 
             var result = new JObject();
             var db = GetDb();
-            var row = await GetDbRowA(editDto, key, db);    //return data
+            var row = GetDbRow(editDto, key);    //return data
             if (row == null) goto lab_exit;
 
             key = row![editDto.PkeyFid]!.ToString();   //這個才是真正的key !!
@@ -211,7 +184,7 @@ namespace Base.Services
             
         lab_exit:
             if (!_dbByOut)
-                await db.DisposeAsync();
+                db.Dispose();
             return result;
         }
 
@@ -245,29 +218,28 @@ namespace Base.Services
         /// <param name="keys"></param>
         /// <param name="db"></param>
         /// <returns>JObject with prop: _rows, _childs</returns>
-        protected async Task<JObject?> GetChildDbJsonLoopA(int editLevel, EditDto edit, List<string> keys, Db db)
+        protected async Task<JObject?> GetChildDbJsonLoopA(int editLevel, MgoEditDto edit, List<string> keys, MgoDb db)
         {
             //get this rows
-            //var level1 = (editLevel == 1);
-            var hasReadSql = _Str.NotEmpty(edit.ReadSql);
-            JArray? rows;
+            //var hasReadSql = _Str.NotEmpty(edit.ReadSql);
+            JArray? rows = null;
             if (editLevel == 1)
             {
                 //第1層child where 使用 xxx=@Id
                 var fKeyFid = (edit.FkeyFid == "") ? edit.PkeyFid : edit.FkeyFid;
-                var sql = hasReadSql
-                    ? edit.ReadSql
-                    : GetSqlByWhere(edit, fKeyFid + "=@Id");
-                rows = await db.GetRowsA(sql, ["Id", keys[0]]);
+                //var sql = GetSqlByWhere(edit, fKeyFid + "=@Id");
+                var filter = db.PairToFilter(fKeyFid, keys[0]);
+                rows = await db.GetRowsByFilterA(edit.Table, filter);
             }
             else
             {
+                //todo: 先不考慮第2層以後
+                /*
                 //第2層child where 使用 xxx in ({0})
                 var keyList = _List.ToStr(keys, true);
-                var sql = hasReadSql
-                    ? string.Format(edit.ReadSql, keyList)
-                    : GetSqlByWhere(edit, edit.FkeyFid + $" in ({keyList})");
+                var sql = GetSqlByWhere(edit, edit.FkeyFid + $" in ({keyList})");
                 rows = await db.GetRowsA(sql);
+                */
             }
             if (rows == null) return null;
 

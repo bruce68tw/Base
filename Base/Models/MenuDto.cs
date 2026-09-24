@@ -33,6 +33,6 @@ namespace Base.Models
         public string Icon { get; set; } = "";
 
         //sub menu items
-        public List<MenuDto> Items { get; set; } = new();
+        public List<MenuDto> Items { get; set; } = [];
     }
 }

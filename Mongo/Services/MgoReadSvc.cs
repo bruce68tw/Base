@@ -13,37 +13,13 @@ namespace Mongo.Services
     /// MongoDB 基本 CRUD 輔助類別。
     /// 提供連線、建立、讀取、更新、刪除與資源釋放等基礎操作。
     /// </summary>
-    public class MgoCrudSvc : IDisposable
+    public class MgoReadSvc : IDisposable
     {
-        private MongoClient? _client;
-        private IMongoDatabase? _db;
-        //private IMongoCollection<BsonDocument>? _collection;
-        private string _table = "";
-        private bool _isOk = false;
+        private MgoDb _db = null!;
 
-        //db str in config file
-        private readonly string _dbStr = "";
-
-        public MgoCrudSvc(string dbStr = "")
+        public MgoReadSvc(string dbStr = "")
         {
-            _dbStr = dbStr;
-        }
-
-        /// <summary>
-        /// 依 table 名稱取得(或重新取得)collection，table 改變時會重新指向新的 collection。
-        /// </summary>
-        private IMongoCollection<BsonDocument>? GetCollection(string table)
-        {
-            if (_collection != null && _table == table) return;
-
-            if (_client == null)
-            {
-                var mongoUrl = new MongoUrl(_dbStr);
-                _client = new MongoClient(mongoUrl);
-                _db = _client.GetDatabase(mongoUrl.DatabaseName);
-            }
-            _collection = _db!.GetCollection<BsonDocument>(table);
-            _table = table;
+            _db = new MgoDb(dbStr);
         }
 
         /// <summary>
@@ -70,40 +46,40 @@ namespace Mongo.Services
         /// </summary>
         public async Task<JObject?> GetPageA(MgoReadDto readDto, EasyDtDto dtDto, string ctrl = "")
         {
-            if (string.IsNullOrWhiteSpace(readDto.Table))
-                return null;
-
-            GetCollection(readDto.Table);
+            var table = readDto.Table;
+            if (string.IsNullOrWhiteSpace(table)) return default;
+            if (!_db.SetCollect(table)) return default;
 
             dtDto.length = Math.Max(0, dtDto.length);
             dtDto.start = Math.Max(0, dtDto.start);
 
-            var filterDocu = string.IsNullOrWhiteSpace(dtDto.findJson)
-                ? []
-                : BsonDocument.Parse(dtDto.findJson);
-            var filter = new BsonDocumentFilterDefinition<BsonDocument>(filterDocu);
-
+            var filter = _db.JsonStrToFilter(dtDto.findJson);
             var rowCount = dtDto.recordsFiltered;
             if (rowCount < 0)
-                rowCount = (int)await _collection!.CountDocumentsAsync(filter);
+                rowCount = (int)await _db.GetCountByFilterA(table, filter);
 
-            var find = _collection.Find(filter);
+            //var filter = _db.CondToFilter(filter);
+            var query = _db.GetCollect()!.Find(filter);
             if (!string.IsNullOrWhiteSpace(dtDto.sort) && dtDto.sort.Length > 1)
             {
                 var sortField = dtDto.sort[1..];
                 var sort = dtDto.sort[0] == 'D'
                     ? Builders<BsonDocument>.Sort.Descending(sortField)
                     : Builders<BsonDocument>.Sort.Ascending(sortField);
-                find = find.Sort(sort);
+                query = query.Sort(sort);
             }
 
-            var docus = await find
+            var docus = await query
                 .Skip(dtDto.start)
                 .Limit(dtDto.length)
                 .ToListAsync();
+            var rows = (docus == null)
+                ? null : JArray.Parse(docus.ToJson());
+            /*
             var rows = new JArray();
             foreach (var docu in docus)
                 rows.Add(JObject.Parse(docu.ToJson()));
+            */
 
             return JObject.FromObject(new
             {
@@ -115,8 +91,9 @@ namespace Mongo.Services
         public void Dispose()
         {
             //_collection = null;
-            _db = null;
-            _client = null;
+            _db.Dispose();
+            _db = null!;
+            //_client = null;
             //_table = "";
             //DbStr = string.Empty;
             //DbName = string.Empty;
