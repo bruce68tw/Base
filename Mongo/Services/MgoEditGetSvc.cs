@@ -228,7 +228,7 @@ namespace Mongo.Services
                 //第1層child where 使用 xxx=@Id
                 var fKeyFid = (edit.FkeyFid == "") ? edit.PkeyFid : edit.FkeyFid;
                 //var sql = GetSqlByWhere(edit, fKeyFid + "=@Id");
-                var filter = db.PairToFilter(fKeyFid, keys[0]);
+                var filter = _MgoDb.PairToFilter(fKeyFid, keys[0]);
                 rows = await db.GetRowsByFilterA(edit.Table, filter);
             }
             else

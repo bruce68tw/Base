@@ -1,9 +1,10 @@
 ﻿using Base.Models;
-using Base.Services;
+using Mongo.Enums;
 using Mongo.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
 
 namespace Mongo.Services
 {
@@ -103,6 +104,87 @@ namespace Mongo.Services
             return rows;
         }
         #endregion
+
+        public static FilterDefinition<BsonDocument> JsonStrToFilter(string jsonStr)
+        {
+            if (string.IsNullOrEmpty(jsonStr))
+                return Builders<BsonDocument>.Filter.Empty;
+
+            //移除空白欄位, 避免用空值當作查詢條件
+            var json = JObject.Parse(jsonStr);
+            foreach (var prop in json.Properties().ToList())
+            {
+                if (prop.Value.Type == JTokenType.String && string.IsNullOrWhiteSpace(prop.Value.ToString()))
+                    prop.Remove();
+            }
+
+            return (json.Count == 0)
+                ? Builders<BsonDocument>.Filter.Empty
+                : json.ToString(Newtonsoft.Json.Formatting.None);
+        }
+
+        public static FilterDefinition<BsonDocument> PairToFilter(string fid, string value)
+        {
+            var qitems = PairToQitems(fid, value);
+            return QitemsToFilter(qitems);
+        }
+        public static List<MgoQitemDto> PairToQitems(string fid, string value)
+        {
+            List<MgoQitemDto> qitems =
+            [
+                new MgoQitemDto()
+                {
+                    Fid = fid,
+                    Value = value,
+                }
+            ];
+            return qitems;
+        }
+        public static FilterDefinition<BsonDocument> IdToFilter(string rowId)
+        {
+            return PairToFilter("_id", rowId);
+        }
+
+        public static FilterDefinition<BsonDocument> QitemsToFilter(List<MgoQitemDto>? qitems)
+        {
+            if (qitems == null || qitems.Count == 0)
+                return Builders<BsonDocument>.Filter.Empty;
+
+            var filters = new List<FilterDefinition<BsonDocument>>();
+            foreach (var qitem in qitems)
+            {
+                if (string.IsNullOrEmpty(qitem.Fid) || string.IsNullOrEmpty(qitem.Value))
+                    continue;
+
+                var value = qitem.Value;
+                var filter = qitem.Op switch
+                {
+                    MgoQitemOpEstr.Equal => Builders<BsonDocument>.Filter.Eq(qitem.Fid, value),
+                    MgoQitemOpEstr.Like => Builders<BsonDocument>.Filter.Regex(qitem.Fid,
+                        new BsonRegularExpression($"^{Regex.Escape(value)}", "i")),
+                    MgoQitemOpEstr.NotLike => Builders<BsonDocument>.Filter.Not(
+                        Builders<BsonDocument>.Filter.Regex(qitem.Fid,
+                            new BsonRegularExpression($"^{Regex.Escape(value)}", "i"))),
+                    MgoQitemOpEstr.In => GetInFilter(qitem.Fid, value),
+                    MgoQitemOpEstr.Like2 => Builders<BsonDocument>.Filter.Regex(qitem.Fid,
+                        new BsonRegularExpression(Regex.Escape(value), "i")),
+                    _ => null,
+                };
+                if (filter != null)
+                    filters.Add(filter);
+            }
+
+            return (filters.Count == 0)
+                ? Builders<BsonDocument>.Filter.Empty
+                : Builders<BsonDocument>.Filter.And(filters);
+        }
+
+        private static FilterDefinition<BsonDocument> GetInFilter(string fid, string value)
+        {
+            var values = value.Replace(" ", "").Replace("\r", "").Replace("\n", ",")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries);
+            return Builders<BsonDocument>.Filter.In(fid, values);
+        }
 
         /*
         #region get string

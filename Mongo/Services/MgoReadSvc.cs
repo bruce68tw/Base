@@ -53,7 +53,7 @@ namespace Mongo.Services
             dtDto.length = Math.Max(0, dtDto.length);
             dtDto.start = Math.Max(0, dtDto.start);
 
-            var filter = _db.JsonStrToFilter(dtDto.findJson);
+            var filter = _MgoDb.JsonStrToFilter(dtDto.findJson);
             var rowCount = dtDto.recordsFiltered;
             if (rowCount < 0)
                 rowCount = (int)await _db.GetCountByFilterA(table, filter);

@@ -121,47 +121,6 @@ namespace Mongo.Services
             return true;
         }
 
-        public FilterDefinition<BsonDocument> QitemsToFilter(List<MgoQitemDto>? qitems)
-        {
-            if (qitems == null || qitems.Count == 0)
-                return Builders<BsonDocument>.Filter.Empty;
-
-            var filters = new List<FilterDefinition<BsonDocument>>();
-            foreach (var qitem in qitems)
-            {
-                if (string.IsNullOrEmpty(qitem.Fid) || string.IsNullOrEmpty(qitem.Value))
-                    continue;
-
-                var value = qitem.Value;
-                var filter = qitem.Op switch
-                {
-                    MgoQitemOpEstr.Equal => Builders<BsonDocument>.Filter.Eq(qitem.Fid, value),
-                    MgoQitemOpEstr.Like => Builders<BsonDocument>.Filter.Regex(qitem.Fid,
-                        new BsonRegularExpression($"^{Regex.Escape(value)}", "i")),
-                    MgoQitemOpEstr.NotLike => Builders<BsonDocument>.Filter.Not(
-                        Builders<BsonDocument>.Filter.Regex(qitem.Fid,
-                            new BsonRegularExpression($"^{Regex.Escape(value)}", "i"))),
-                    MgoQitemOpEstr.In => GetInFilter(qitem.Fid, value),
-                    MgoQitemOpEstr.Like2 => Builders<BsonDocument>.Filter.Regex(qitem.Fid,
-                        new BsonRegularExpression(Regex.Escape(value), "i")),
-                    _ => null,
-                };
-                if (filter != null)
-                    filters.Add(filter);
-            }
-
-            return (filters.Count == 0)
-                ? Builders<BsonDocument>.Filter.Empty
-                : Builders<BsonDocument>.Filter.And(filters);
-        }
-
-        private static FilterDefinition<BsonDocument> GetInFilter(string fid, string value)
-        {
-            var values = value.Replace(" ", "").Replace("\r", "").Replace("\n", ",")
-                .Split(',', StringSplitOptions.RemoveEmptyEntries);
-            return Builders<BsonDocument>.Filter.In(fid, values);
-        }
-
         /*
         public FilterDefinition<BsonDocument> CondToFilter(string cond = "")
         {
@@ -229,7 +188,7 @@ namespace Mongo.Services
             if (string.IsNullOrWhiteSpace(rowId) || !SetCollect(table)) 
                 return default;
 
-            var filter = IdToFilter(rowId);
+            var filter = _MgoDb.IdToFilter(rowId);
             var row = (_session == null
                 ? _collect!.Find(filter)
                 : _collect!.Find(_session, filter)).FirstOrDefault();
@@ -256,7 +215,7 @@ namespace Mongo.Services
         /// <returns>符合條件的文件列表</returns>
         public async Task<JArray?> GetRowsA(string table, List<MgoQitemDto>? qitems = null, string sorts = "", int? maxCount = null)
         {
-            var filter = QitemsToFilter(qitems);
+            var filter = _MgoDb.QitemsToFilter(qitems);
             return await GetRowsByFilterA(table, filter, sorts, maxCount);
         }
 
@@ -282,7 +241,7 @@ namespace Mongo.Services
 
         public async Task<List<BsonDocument>?> GetBsonsA(string table, List<MgoQitemDto>? qitems = null, string sorts = "", int? maxCount = null)
         {
-            var filter = QitemsToFilter(qitems);
+            var filter = _MgoDb.QitemsToFilter(qitems);
             return await GetBsonsByFilterA(table, filter, sorts, maxCount);
         }
 
@@ -374,7 +333,7 @@ namespace Mongo.Services
             var errorFid = "";
             try
             {
-                var filter = QitemsToFilter(qitems);
+                var filter = _MgoDb.QitemsToFilter(qitems);
                 var query = _collect!.Find(filter);
                 if (maxCount.HasValue)
                     query = query.Limit(maxCount.Value);
@@ -429,7 +388,7 @@ namespace Mongo.Services
             try
             {
                 //只修改部分欄位使用 UpdateOne, 不是 ReplaceOne !!
-                var filter = IdToFilter(rowId);
+                var filter = _MgoDb.IdToFilter(rowId);
                 //var bson = row.ToBsonDocument();  //not work!!
                 //var bson = _Bson.JsonToBson(row);
                 //UpdateOne 頂層元素須為 $ 運算子, 直接傳入欄位文件會出現 "Element name 'xxx' is not valid"
@@ -459,7 +418,7 @@ namespace Mongo.Services
             //IsConnected();
             try
             {
-                var filter = IdToFilter(rowId);
+                var filter = _MgoDb.IdToFilter(rowId);
                 var result = _session == null
                     ? _collect!.DeleteOne(filter)
                     : _collect!.DeleteOne(_session, filter);
@@ -504,7 +463,7 @@ namespace Mongo.Services
             if (!SetCollect(table)) return 0;
 
             //IsConnected();
-            var filter = QitemsToFilter(qitems);
+            var filter = _MgoDb.QitemsToFilter(qitems);
             var result = _session == null
                 ? _collect!.DeleteMany(filter)
                 : _collect!.DeleteMany(_session, filter);
@@ -560,46 +519,6 @@ namespace Mongo.Services
             //DbStr = string.Empty;
             //DbName = string.Empty;
             //CollectName = string.Empty;
-        }
-
-        public FilterDefinition<BsonDocument> JsonStrToFilter(string jsonStr)
-        {
-            if (string.IsNullOrEmpty(jsonStr))
-                return Builders<BsonDocument>.Filter.Empty;
-
-            //移除空白欄位, 避免用空值當作查詢條件
-            var json = JObject.Parse(jsonStr);
-            foreach (var prop in json.Properties().ToList())
-            {
-                if (prop.Value.Type == JTokenType.String && string.IsNullOrWhiteSpace(prop.Value.ToString()))
-                    prop.Remove();
-            }
-
-            return (json.Count == 0)
-                ? Builders<BsonDocument>.Filter.Empty
-                : json.ToString(Newtonsoft.Json.Formatting.None);
-        }
-
-        public FilterDefinition<BsonDocument> PairToFilter(string fid, string value)
-        {
-            var qitems = PairToQitems(fid, value);
-            return QitemsToFilter(qitems);
-        }
-        public List<MgoQitemDto> PairToQitems(string fid, string value)
-        {
-            List<MgoQitemDto> qitems =
-            [
-                new MgoQitemDto()
-                {
-                    Fid = fid,
-                    Value = value,
-                }
-            ];
-            return qitems;
-        }
-        public FilterDefinition<BsonDocument> IdToFilter(string rowId)
-        {
-            return PairToFilter("_id", rowId);
         }
 
         /*
