@@ -1,7 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
 using Base.Services;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Mongo.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -189,11 +188,11 @@ namespace Mongo.Services
                     inputRow[a.Fid] = a.Value!.ToString();
                 });
 
+            var userId = _Fun.UserId();   //get userId from child class
             /*
             //prepare sql
             var fids = "";
             var values = "";
-            var userId = _Fun.UserId();   //get userId from child class
             foreach (var field in inputRow)
             {
                 //skip under line field
@@ -227,6 +226,7 @@ namespace Mongo.Services
                 error = "MgoEditSvc.cs InsertRow() fields are empty.";
                 goto lab_error;
             }
+            */
 
             //set creator, created if need
             //var setCol4 = "";
@@ -242,29 +242,28 @@ namespace Mongo.Services
                     var now = _Date.ToDbStr(_now);
                     RowSetFid(inputRow, fldUser!, userId);  //寫入inputRow, 外部程式可使用!!
                     RowSetFid(inputRow, fldDate!, now);
-                    fids += fldUser + "," + fldDate + ",";
-                    values += $"'{userId}','{now}',";
+                    //fids += fldUser + "," + fldDate + ",";
+                    //values += $"'{userId}','{now}',";
                 }
                 else if (hasUser)
                 {
                     RowSetFid(inputRow, fldUser!, userId);
-                    fids += fldUser + ",";
-                    values += $"'{userId}',";
+                    //fids += fldUser + ",";
+                    //values += $"'{userId}',";
                 }
                 else
                 {
                     var now = _Date.ToDbStr(_now);
                     RowSetFid(inputRow, fldDate!, now);
-                    fids += fldDate + ",";
-                    values += $"'{now}',";
+                    //fids += fldDate + ",";
+                    //values += $"'{now}',";
                 }
             }
-            */
 
             //insert db
             //var sql = $"Insert Into {editDto.Table} ({fids[0..^1]}) Values ({values[0..^1]})";
             var result = db.Insert(editDto.Table, inputRow);
-            if(result)
+            if(!result)
             {
                 //if (result == -2)
                 //    _isUniqueKeyError = true;
@@ -338,21 +337,40 @@ namespace Mongo.Services
             //set sql, emtpy sql means no column is changed !!
             if (sql == "")
                 return true;
+            */
 
             //set reviser, revised
             var col4Len = (editDto.Col4 == null) ? 0 : editDto.Col4.Length;
-            var setCol4 = "";
+            //var setCol4 = "";
             if (col4Len > 2)
             {
+                var userId = _Fun.UserId();
                 var hasUser = _Str.NotEmpty(editDto.Col4![2]);
                 var hasDate = col4Len > 3 && _Str.NotEmpty(editDto.Col4[3]);
                 var fldUser = editDto.Col4[2];
                 var fldDate = hasDate ? editDto.Col4[3] : "";
+                if (hasUser && hasDate)
+                {
+                    var now = _Date.ToDbStr(_now);
+                    RowSetFid(inputRow, fldUser!, userId);  //寫入inputRow, 外部程式可使用!!
+                    RowSetFid(inputRow, fldDate!, now);
+                }
+                else if (hasUser)
+                {
+                    RowSetFid(inputRow, fldUser!, userId);
+                }
+                else
+                {
+                    var now = _Date.ToDbStr(_now);
+                    RowSetFid(inputRow, fldDate!, now);
+                }
+
+                /*
                 setCol4 = (hasUser && hasDate) ? $",{fldUser}='{_Fun.UserId()}',{fldDate}='{_Date.ToDbStr(_now)}'" :
                     hasUser ? $",{fldUser}='{_Fun.UserId()}'" :
                     hasDate ? $",{fldDate}='{_Date.ToDbStr(_now)}'" : "";
+                */
             }
-            */
 
             //update db
             //sql = $"Update {editDto.Table} Set {sql[0..^1] + setCol4} Where {GetWhereAndArg(editDto, rowKey)}";
@@ -802,8 +820,24 @@ namespace Mongo.Services
                     //insert/update this, 如果允許前端傳入新key, 則不必檢查Id
                     if (!HasInputField(inputRow, kid)) continue;
 
+                    //is new or not
+                    var isNew = IsNewRow(inputRow!, kid);
+
+                    //移除底線欄位
+                    // 1. 找出當前層級所有符合條件（以 "_" 開頭且不為 "_id"）的欄位名稱
+                    var specKeys = inputRow!.Properties()
+                        .Where(a => a.Name.StartsWith("_") && a.Name != kid)
+                        .Select(p => p.Name)
+                        .ToList();
+
+                    // 2. 移除這些欄位
+                    foreach (var key in specKeys)
+                    {
+                        inputRow.Remove(key);
+                    }
+
                     //注意: 移除if括號時無法執行else區段!!
-                    if (IsNewRow(inputRow!, kid))
+                    if (isNew)
                     {
                         if (!await InsertRowA(editDto, inputRow!, db)) return false;
                     }

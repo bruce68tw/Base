@@ -37,6 +37,21 @@ namespace Mongo.Services
             if (newDb) db.Dispose();
         }
 
+        public static bool Update(string table, string rowId, JObject row, MgoDb? db = null)
+        {
+            var newDb = CheckOpenDb(ref db);
+            var ok = db!.Update(table, rowId, row);
+            CheckCloseDb(db!, newDb);
+            return ok;
+        }
+        public static bool UpdateByFilter(string table, FilterDefinition<BsonDocument> filter, JObject row, MgoDb? db = null)
+        {
+            var newDb = CheckOpenDb(ref db);
+            var ok = db!.UpdateByFilter(table, filter, row);
+            CheckCloseDb(db!, newDb);
+            return ok;
+        }
+
         #region GetRow(s)
         /// <summary>
         /// get json

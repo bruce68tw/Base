@@ -61,7 +61,7 @@ namespace Mongo.Services
             return _getSvc;
         }
 
-        public MgoDb GetDb(bool outside = false)
+        public MgoDb? GetDb(bool outside = false)
         {
             return GetSvc().GetDb(outside);
         }

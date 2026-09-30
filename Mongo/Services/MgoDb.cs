@@ -1,4 +1,6 @@
 ﻿using Base.Services;
+using DocumentFormat.OpenXml.Drawing.Spreadsheet;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Mongo.Enums;
 using Mongo.Models;
 using MongoDB.Bson;
@@ -22,7 +24,7 @@ namespace Mongo.Services
         private static readonly ConcurrentDictionary<string, MongoClient> _clientMap = new();
 
         private MongoClient? _client;   //有pool機制, 使用singleton(跨MgoDb實例共用, 見 s_clients)
-        private IMongoDatabase? _db;
+        private IMongoDatabase? _iMgoDb;
         private IMongoCollection<BsonDocument>? _collect;
         private IClientSessionHandle? _session;
         //private readonly string _dbStr = "";
@@ -42,7 +44,7 @@ namespace Mongo.Services
 
                 //相同連線字串共用同一個 MongoClient(與其內部連線池), 避免重複建立連線池
                 _client = _clientMap.GetOrAdd(dbStr, _ => new MongoClient(mongoUrl));
-                _db = _client.GetDatabase(mongoUrl.DatabaseName);
+                _iMgoDb = _client.GetDatabase(mongoUrl.DatabaseName);
                 //_collection = _db.GetCollection<BsonDocument>(collectName);
                 _isOk = true;
             }
@@ -58,7 +60,7 @@ namespace Mongo.Services
         //return error msg if any
         public async Task<bool> BeginTranA()
         {
-            if (!_isOk || _client == null || _db == null) return false;
+            if (!_isOk || _client == null || _iMgoDb == null) return false;
 
             try
             {
@@ -116,7 +118,7 @@ namespace Mongo.Services
             if (table != _table)
             {
                 _table = table;
-                _collect = _db!.GetCollection<BsonDocument>(table);
+                _collect = _iMgoDb!.GetCollection<BsonDocument>(table);
             }
             return true;
         }
@@ -143,23 +145,17 @@ namespace Mongo.Services
         {
             if (!SetCollect(table)) return false;
 
-            /*
-            IsConnected();
-            if (docu == null)
-                throw new ArgumentNullException(nameof(docu));
-            */
-
-            //var bson = row is BsonDocument docu2 ? docu2 : row.ToBsonDocument();
             try
             {
+                var bson = _Bson.JsonToBson(row);
                 if (_session == null)
-                    _collect!.InsertOne(row.ToBsonDocument());
+                    _collect!.InsertOne(bson);
                 else
-                    _collect!.InsertOne(_session, row.ToBsonDocument());
+                    _collect!.InsertOne(_session, bson);
                 return true;
             }
             catch (Exception ex) {
-                _Log.Error("MgoDb.cs Create() failed: " + ex.Message);
+                _Log.Error("MgoDb.cs Insert() failed: " + ex.Message);
                 return false;
             }
         }
@@ -234,7 +230,7 @@ namespace Mongo.Services
             QueryAddSort(query, sorts);
 
             var rows = await query.ToListAsync();
-            return (rows == null)
+            return (rows == null || rows.Count == 0)
                 ? default
                 : JArray.Parse(rows.ToJson());
         }
@@ -377,27 +373,28 @@ namespace Mongo.Services
         /// <returns>更新影響的筆數</returns>
         public bool Update(string table, string rowId, JObject row)
         {
+            var filter = _MgoDb.IdToFilter(rowId);
+            return UpdateByFilter(table, filter, row);
+        }
+
+        public bool UpdateByFilter(string table, FilterDefinition<BsonDocument> filter, JObject row)
+        {
             if (!SetCollect(table)) return false;
-
-            //var cond = IdToCond(docuId).ToString();
-
-            //if (!_isOk) return 0;
-            //if (row == null)
-            //    throw new ArgumentNullException(nameof(row));
 
             try
             {
                 //只修改部分欄位使用 UpdateOne, 不是 ReplaceOne !!
-                var filter = _MgoDb.IdToFilter(rowId);
+                //var filter = _MgoDb.IdToFilter(rowId);
                 //var bson = row.ToBsonDocument();  //not work!!
                 //var bson = _Bson.JsonToBson(row);
                 //UpdateOne 頂層元素須為 $ 運算子, 直接傳入欄位文件會出現 "Element name 'xxx' is not valid"
-                var bson = new BsonDocument("$set", _Bson.JsonToBson(row));   
+                var bson = new BsonDocument("$set", _Bson.JsonToBson(row));
                 var result = _session == null
                     ? _collect!.UpdateOne(filter, bson)
                     : _collect!.UpdateOne(_session, filter, bson);
                 //return result.ModifiedCount + result.MatchedCount;
-                return true;
+                return result.ModifiedCount > 0;
+                //return true;
             }
             catch (Exception ex)
             {
@@ -514,7 +511,7 @@ namespace Mongo.Services
             _session?.Dispose();
             _session = null;
             _collect = null;
-            _db = null;
+            _iMgoDb = null;
             _client = null;
             //DbStr = string.Empty;
             //DbName = string.Empty;

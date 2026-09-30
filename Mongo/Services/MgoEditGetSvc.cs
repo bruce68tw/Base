@@ -24,7 +24,7 @@ namespace Mongo.Services
         protected string _dbStr = "";
 
         //只開啟一個db
-        protected MgoDb _db = null!;
+        protected MgoDb? _db = null;
 		protected bool _dbByOut = false;
 
 		//sql args pair(fid,value), 日期欄位為空時寫入null, 否則會變1900/1/1 !!
@@ -43,7 +43,7 @@ namespace Mongo.Services
         /// </summary>
         /// <param name="outside">外部開啟</param>
         /// <returns></returns>
-        public MgoDb GetDb(bool outside = false)
+        public MgoDb? GetDb(bool outside = false)
         {
             if (_db == null)
             {
