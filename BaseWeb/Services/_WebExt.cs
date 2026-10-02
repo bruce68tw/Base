@@ -131,9 +131,11 @@ namespace BaseWeb.Services
             app.UseAuthorization();     //授權
             //app.UseSession();
 
+            //預設action: 免登入模式(FunConfig.LoginType=0)直接進Index, 否則進Login
+            var defaultAction = _Fun.IsNeedLogin() ? "Login" : "Index";
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Login}/{id?}");
+                pattern: $"{{controller=Home}}/{{action={defaultAction}}}/{{id?}}");
 
             app.SetAppSafe();
             return app;
