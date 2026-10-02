@@ -37,17 +37,17 @@ namespace Mongo.Services
             if (newDb) db.Dispose();
         }
 
-        public static bool Update(string table, string rowId, JObject row, MgoDb? db = null)
+        public static async Task<bool> UpdateA(string table, string rowId, JObject row, MgoDb? db = null)
         {
             var newDb = CheckOpenDb(ref db);
-            var ok = db!.Update(table, rowId, row);
+            var ok = await db!.UpdateA(table, rowId, row);
             CheckCloseDb(db!, newDb);
             return ok;
         }
-        public static bool UpdateByFilter(string table, FilterDefinition<BsonDocument> filter, JObject row, MgoDb? db = null)
+        public static async Task<bool> UpdateByFilterA(string table, FilterDefinition<BsonDocument> filter, JObject row, MgoDb? db = null)
         {
             var newDb = CheckOpenDb(ref db);
-            var ok = db!.UpdateByFilter(table, filter, row);
+            var ok = await db!.UpdateByFilterA(table, filter, row);
             CheckCloseDb(db!, newDb);
             return ok;
         }
@@ -72,7 +72,7 @@ namespace Mongo.Services
         public static async Task<JArray?> GetRowsA(string table, List<MgoQitemDto>? qitems = null, string sorts = "", MgoDb? db = null)
         {
             var newDb = CheckOpenDb(ref db);
-            var rows = await db!.GetRowsA(table, qitems, sorts);
+            var rows = await db!.GetJsonsA(table, qitems, sorts);
             CheckCloseDb(db, newDb);
             return rows;
         }
@@ -81,11 +81,13 @@ namespace Mongo.Services
         public static async Task<List<BsonDocument>?> GetBsonsA(string table, List<MgoQitemDto>? qitems = null, string sorts = "", int? maxCount = null, MgoDb? db = null)
         {
             var newDb = CheckOpenDb(ref db);
-            var rows = await db!.GetBsonsA(table, qitems, sorts, maxCount);
+            var jsons = await db!.GetJsonsA(table, qitems, sorts, maxCount);
+            var bsons = _Bson.JsonsToBsons(jsons);
             CheckCloseDb(db, newDb);
-            return rows;
+            return bsons;
         }
 
+        /*
         public static async Task<List<BsonDocument>?> GetBsonsByFilterA(string table, FilterDefinition<BsonDocument> filter, string sorts = "", int? maxCount = null, MgoDb? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -119,6 +121,7 @@ namespace Mongo.Services
             return rows;
         }
         #endregion
+        */
 
         public static FilterDefinition<BsonDocument> JsonStrToFilter(string jsonStr)
         {

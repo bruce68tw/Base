@@ -262,7 +262,7 @@ namespace Mongo.Services
 
             //insert db
             //var sql = $"Insert Into {editDto.Table} ({fids[0..^1]}) Values ({values[0..^1]})";
-            var result = db.Insert(editDto.Table, inputRow);
+            var result = await db.InsertA(editDto.Table, inputRow);
             if(!result)
             {
                 //if (result == -2)
@@ -379,7 +379,7 @@ namespace Mongo.Services
             inputRow.Remove(editDto.PkeyFid);
 
             //update
-            if (!db.Update(editDto.Table, rowKey, inputRow))
+            if (!await db.UpdateA(editDto.Table, rowKey, inputRow))
             {
                 await _Log.ErrorRootA($"MgoEditSvc.cs UpateRowA() failed.");
                 return false;
@@ -645,7 +645,7 @@ namespace Mongo.Services
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin() && fun != CrudEnum.Create)
             {
-                var data = GetDbRow(editDto, key);    //return data
+                var data = await GetDbRowA(editDto, key);    //return data
                 var brError = CheckAuthRow(data!, CrudEnum.Update);
                 if (brError != "") return _Model.GetBrError(brError);
             }
@@ -1087,7 +1087,7 @@ namespace Mongo.Services
             //check for AuthType=Row if need
             if (_Fun.IsAuthRowAndLogin())
             {
-                var data = GetDbRow(editDto, key);    //return data
+                var data = await GetDbRowA(editDto, key);    //return data
                 var brError = CheckAuthRow(data!, CrudEnum.Delete);
                 if (_Str.NotEmpty(brError))
                     return _Model.GetBrError(brError);
@@ -1164,7 +1164,7 @@ namespace Mongo.Services
             //update db
             //var sql = string.Format(_Fun.DeleteRowsSql, edit.Table, kid, values[0..^1]);
             //var count = await db!.ExecSqlA(sql, _sqlArgs!);
-            var count = await db!.DeleteRowsByIdsA(edit.Table, keys);
+            var count = await db!.DeleteListByIdsA(edit.Table, keys);
             _MgoDb.CheckCloseDb(db, newDb);
 
             //case of ok

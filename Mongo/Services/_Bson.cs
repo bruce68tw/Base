@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using Newtonsoft.Json.Linq;
 
 namespace Mongo.Services
@@ -17,6 +18,16 @@ namespace Mongo.Services
         {
             string str = json.ToString(Newtonsoft.Json.Formatting.None);
             return BsonDocument.Parse(str);
+        }
+
+        /// <summary>
+        /// 將 JArray 轉換為 List<BsonDocument>
+        /// </summary>
+        public static List<BsonDocument>? JsonsToBsons(JArray? jsons)
+        {
+            return (jsons == null)
+                ? default
+                : BsonSerializer.Deserialize<List<BsonDocument>>(jsons.ToString());
         }
 
     }//class

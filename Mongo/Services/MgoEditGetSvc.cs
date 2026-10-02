@@ -131,11 +131,11 @@ namespace Mongo.Services
         /// <param name="key"></param>
         /// <param name="db"></param>
         /// <returns></returns>
-        public JObject? GetDbRow(MgoEditDto edit, string key, MgoDb? db = null)
+        public async Task<JObject?> GetDbRowA(MgoEditDto edit, string key, MgoDb? db = null)
         {
             //return row & close db if need
             var newDb = CheckOpenDb(ref db);
-            var row = db!.GetRowById(edit.Table, key);
+            var row = await db!.GetJsonByIdA(edit.Table, key);
             _MgoDb.CheckCloseDb(db!, newDb);
             return row;
         }
@@ -154,7 +154,7 @@ namespace Mongo.Services
 
             var result = new JObject();
             var db = GetDb();
-            var row = GetDbRow(editDto, key);    //return data
+            var row = await GetDbRowA(editDto, key);    //return data
             if (row == null) goto lab_exit;
 
             key = row![editDto.PkeyFid]!.ToString();   //這個才是真正的key !!
@@ -229,7 +229,7 @@ namespace Mongo.Services
                 var fKeyFid = (edit.FkeyFid == "") ? edit.PkeyFid : edit.FkeyFid;
                 //var sql = GetSqlByWhere(edit, fKeyFid + "=@Id");
                 var filter = _MgoDb.PairToFilter(fKeyFid, keys[0]);
-                rows = await db.GetRowsByFilterA(edit.Table, filter);
+                rows = await db.GetJsonsByFilterA(edit.Table, filter);
             }
             else
             {

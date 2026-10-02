@@ -1,14 +1,10 @@
 ﻿using Base.Services;
-using DocumentFormat.OpenXml.Drawing.Spreadsheet;
-using DocumentFormat.OpenXml.Spreadsheet;
-using Mongo.Enums;
 using Mongo.Models;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 
 namespace Mongo.Services
 {
@@ -141,17 +137,30 @@ namespace Mongo.Services
         /// </summary>
         /// <typeparam name="TDocument">文件型別</typeparam>
         /// <param name="row">要插入的文件</param>
-        public bool Insert(string table, JObject row)
+        public async Task<bool> InsertA(string table, JObject row)
+        {
+            var bson = _Bson.JsonToBson(row);
+            return await InsertBsonA(table, bson);
+        }
+
+        /*
+        public async Task<bool> InsertModelA<T>(string table, T model)
+        {
+            var bson = model.ToBsonDocument();
+            return await InsertBsonA(table, bson);
+        }
+        */
+
+        private async Task<bool> InsertBsonA(string table, BsonDocument bson)
         {
             if (!SetCollect(table)) return false;
 
             try
             {
-                var bson = _Bson.JsonToBson(row);
                 if (_session == null)
-                    _collect!.InsertOne(bson);
+                    await _collect!.InsertOneAsync(bson);
                 else
-                    _collect!.InsertOne(_session, bson);
+                    await _collect!.InsertOneAsync(_session, bson);
                 return true;
             }
             catch (Exception ex) {
@@ -179,27 +188,32 @@ namespace Mongo.Services
         /// <typeparam name="TDocument">文件型別</typeparam>
         /// <param name="rowId">MongoDB 文件 ID</param>
         /// <returns>找到的文件；否則回傳預設值</returns>
-        public JObject? GetRowById(string table, string rowId)
+        public async Task<JObject?> GetJsonByIdA(string table, string rowId)
         {
             if (string.IsNullOrWhiteSpace(rowId) || !SetCollect(table)) 
                 return default;
 
             var filter = _MgoDb.IdToFilter(rowId);
             var row = (_session == null
-                ? _collect!.Find(filter)
-                : _collect!.Find(_session, filter)).FirstOrDefault();
+                ? await _collect!.FindAsync(filter)
+                : await _collect!.FindAsync(_session, filter)).FirstOrDefault();
             if (row == null) return default;
 
             //return BsonSerializer.Deserialize<JObject>(docu);
             return JObject.Parse(row.ToJson());
         }
 
-        public async Task<JObject?> GetRowA(string table, List<MgoQitemDto>? qitems = null, string sorts = "")
+        private JObject? GetOne(JArray? rows)
         {
-            var rows = await GetRowsA(table, qitems, sorts);
             return (rows == null)
                 ? default
                 : rows[0] as JObject;
+        }
+
+        public async Task<JObject?> GetJsonA(string table, List<MgoQitemDto>? qitems = null, string sorts = "")
+        {
+            var rows = await GetJsonsA(table, qitems, sorts);
+            return GetOne(rows);
         }
 
         /// <summary>
@@ -209,13 +223,19 @@ namespace Mongo.Services
         /// <param name="filter">MongoDB 篩選條件，預設為全部文件</param>
         /// <param name="maxCount">最大回傳筆數，可為 null 表示不限制</param>
         /// <returns>符合條件的文件列表</returns>
-        public async Task<JArray?> GetRowsA(string table, List<MgoQitemDto>? qitems = null, string sorts = "", int? maxCount = null)
+        public async Task<JArray?> GetJsonsA(string table, List<MgoQitemDto>? qitems = null, string sorts = "", int? maxCount = null)
         {
             var filter = _MgoDb.QitemsToFilter(qitems);
-            return await GetRowsByFilterA(table, filter, sorts, maxCount);
+            return await GetJsonsByFilterA(table, filter, sorts, maxCount);
         }
 
-        public async Task<JArray?> GetRowsByFilterA(string table, FilterDefinition<BsonDocument> filter, string sorts = "", int? maxCount = null)
+        public async Task<JObject?> GetJsonByFilterA(string table, FilterDefinition<BsonDocument> filter, string sorts = "")
+        {
+            var rows = await GetJsonsByFilterA(table, filter, sorts);
+            return GetOne(rows);
+        }
+
+        public async Task<JArray?> GetJsonsByFilterA(string table, FilterDefinition<BsonDocument> filter, string sorts = "", int? maxCount = null)
         {
             if (!SetCollect(table)) return default;
 
@@ -235,6 +255,7 @@ namespace Mongo.Services
                 : JArray.Parse(rows.ToJson());
         }
 
+        /*
         public async Task<List<BsonDocument>?> GetBsonsA(string table, List<MgoQitemDto>? qitems = null, string sorts = "", int? maxCount = null)
         {
             var filter = _MgoDb.QitemsToFilter(qitems);
@@ -257,6 +278,7 @@ namespace Mongo.Services
 
             return await query.ToListAsync();
         }
+        */
 
         /*
         /// <summary>
@@ -315,21 +337,33 @@ namespace Mongo.Services
             }
         }
 
+        /*
         public async Task<T?> GetModelA<T>(string table, List<MgoQitemDto>? qitems = null, string sorts = "")
         {
             var rows = await GetModelsA<T>(table, qitems, sorts);
             return (rows == null || rows.Count == 0) ? default : rows[0];
         }
 
+        public async Task<T?> GetModelByFilterA<T>(string table, FilterDefinition<BsonDocument> filter, string sorts = "")
+        {
+            var rows = await GetModelsByFilterA<T>(table, filter, sorts);
+            return (rows == null || rows.Count == 0) ? default : rows[0];
+        }
+
         public async Task<List<T>?> GetModelsA<T>(string table, List<MgoQitemDto>? qitems = null, 
             string sorts = "", int? maxCount = null)
+        {
+            var filter = _MgoDb.QitemsToFilter(qitems);
+            return await GetModelsByFilterA<T>(table, filter, sorts, maxCount);
+        }
+
+        public async Task<List<T>?> GetModelsByFilterA<T>(string table, FilterDefinition<BsonDocument> filter, string sorts = "", int? maxCount = null)
         {
             if (!SetCollect(table)) return default;
 
             var errorFid = "";
             try
             {
-                var filter = _MgoDb.QitemsToFilter(qitems);
                 var query = _collect!.Find(filter);
                 if (maxCount.HasValue)
                     query = query.Limit(maxCount.Value);
@@ -363,6 +397,7 @@ namespace Mongo.Services
                 return null;
             }
         }
+        */
 
         /// <summary>
         /// 依照 ID 更新文件。
@@ -371,13 +406,13 @@ namespace Mongo.Services
         /// <param name="rowId">MongoDB 文件 ID</param>
         /// <param name="row">更新後的文件內容</param>
         /// <returns>更新影響的筆數</returns>
-        public bool Update(string table, string rowId, JObject row)
+        public async Task<bool> UpdateA(string table, string rowId, JObject row)
         {
             var filter = _MgoDb.IdToFilter(rowId);
-            return UpdateByFilter(table, filter, row);
+            return await UpdateByFilterA(table, filter, row);
         }
 
-        public bool UpdateByFilter(string table, FilterDefinition<BsonDocument> filter, JObject row)
+        public async Task<bool> UpdateByFilterA(string table, FilterDefinition<BsonDocument> filter, JObject row)
         {
             if (!SetCollect(table)) return false;
 
@@ -390,8 +425,8 @@ namespace Mongo.Services
                 //UpdateOne 頂層元素須為 $ 運算子, 直接傳入欄位文件會出現 "Element name 'xxx' is not valid"
                 var bson = new BsonDocument("$set", _Bson.JsonToBson(row));
                 var result = _session == null
-                    ? _collect!.UpdateOne(filter, bson)
-                    : _collect!.UpdateOne(_session, filter, bson);
+                    ? await _collect!.UpdateOneAsync(filter, bson)
+                    : await _collect!.UpdateOneAsync(_session, filter, bson);
                 //return result.ModifiedCount + result.MatchedCount;
                 return result.ModifiedCount > 0;
                 //return true;
@@ -429,7 +464,7 @@ namespace Mongo.Services
         }
 
         //刪除多筆id
-        public async Task<int> DeleteRowsByIdsA(string table, List<string> keys)
+        public async Task<int> DeleteListByIdsA(string table, List<string> keys)
         {
             if (!SetCollect(table)) return 0;
 
@@ -454,7 +489,7 @@ namespace Mongo.Services
         /// </summary>
         /// <param name="filter">MongoDB 篩選條件</param>
         /// <returns>刪除的筆數</returns>
-        public int DeleteRows(string table, List<MgoQitemDto> qitems)
+        public int DeleteList(string table, List<MgoQitemDto> qitems)
         {
             if (qitems.Count == 0) return 0;
             if (!SetCollect(table)) return 0;

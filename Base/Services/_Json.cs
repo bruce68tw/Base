@@ -9,6 +9,13 @@ namespace Base.Services
 {
     public class _Json
     {
+        //json to model
+        public static T? ToModel<T>(JObject json)
+        {
+            return (json == null)
+                ? default
+                : json.ToObject<T>()!;
+        }
 
         public static JObject PairToJson(string fid, string value)
         {
