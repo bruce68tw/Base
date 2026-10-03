@@ -47,6 +47,10 @@ namespace BaseAI.Services
             //if (string.IsNullOrWhiteSpace(_apiKey))
             //    throw new InvalidOperationException("Gemini API key is not configured.");
 
+            // 重連前釋放上一個 session 的 socket wrapper 與底層 WebSocket。
+            _socketSvc?.Dispose();
+            _socket?.Dispose();
+
             _socket = new ClientWebSocket();
             await _socket.ConnectAsync(new Uri(_llmUrl), ct);
             _socketSvc = new SocketSvc(_socket);
