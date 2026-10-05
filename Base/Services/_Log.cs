@@ -41,6 +41,9 @@ namespace Base.Services
         /// <param name="msg">log msg</param>
         public static void Info(string msg)
         {
+            //temp add
+            //return;
+
             LogFile(GetFilePath("info"), msg);
         }
 

@@ -47,12 +47,12 @@ namespace BaseApi.Services
         public static HttpContext GetHttp()
         {
             var service = (IHttpContextAccessor)_Fun.DiBox!.GetService(typeof(IHttpContextAccessor))!;
-            return service.HttpContext;
+            return service.HttpContext!;
         }
 
         public static string GetIp(bool hasDot = true)
         {
-            var ip = GetHttp().Connection.RemoteIpAddress.ToString();
+            var ip = GetHttp().Connection.RemoteIpAddress!.ToString();
             return hasDot
                 ? ip
                 : ip.Replace(".", "");
@@ -236,12 +236,15 @@ namespace BaseApi.Services
         /// form submit時(模擬form submit)從hidden欄位_jwtToken讀取jwt
         /// </summary>
         /// <returns></returns>
-        public static BaseUserDto JwtToBr()
+        public static BaseUserDto JwtToBr(string token = "")
         {
             //for get userId, get jwt from http header first
             //var request = GetRequest();
-            var token = GetRequest().Headers["Authorization"]
-                .ToString().Replace("Bearer ", "");
+            if (token == "")
+            {
+                token = GetRequest().Headers["Authorization"]
+                    .ToString().Replace("Bearer ", "");
+            }
 
             /*
             //如果不存在則從 hidden 欄位_jwtToken讀取
@@ -266,7 +269,8 @@ namespace BaseApi.Services
         /// <returns></returns>
         private static BaseUserDto GetBaseUser(string userId)
         {
-            //get from HttpContext Items if any
+            //get from HttpContext Itemss if any, 它是只存活在單一 HTTP 請求內的字典
+            //如果同一個request已經讀取 BaseUser, 則直接從 Items 讀取, 不再從 cache讀取
             var fid = _Fun.FidBaseUser;
             var items = GetHttp().Items;
             if (items.ContainsKey(fid))

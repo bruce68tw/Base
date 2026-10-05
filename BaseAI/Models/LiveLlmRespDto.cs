@@ -16,5 +16,8 @@ namespace BaseAI.Models
         public string? MimeType { get; set; }
 
         public IReadOnlyCollection<LiveLlmToolCallDto>? ToolCalls { get; set; }
+
+        /// <summary>Usage 事件的本回合 token 總數（provider 回報的累計值）。</summary>
+        public int TotalTokens { get; set; }
     }
 }

@@ -7,10 +7,11 @@
     {
         Audio,
         Text,
-        InputTranscript,
-        OutputTranscript,
+        InputTranScript,
+        OutputTranScript,
         ToolCall,
         Error,
+        Usage,
         Completed
     }
 }
