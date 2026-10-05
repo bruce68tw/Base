@@ -30,5 +30,15 @@ namespace Mongo.Services
                 : BsonSerializer.Deserialize<List<BsonDocument>>(jsons.ToString());
         }
 
+        /// <summary>
+        /// bson to model
+        /// </summary>
+        public static T? ToModel<T>(BsonDocument bson)
+        {
+            return (bson == null)
+                ? default
+                : BsonSerializer.Deserialize<T>(bson);
+        }
+
     }//class
 }
