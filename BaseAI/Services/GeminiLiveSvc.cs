@@ -169,9 +169,9 @@ namespace BaseAI.Services
         /// <summary>
         /// 持續接收 Gemini Live 訊息，並依訊息內容產生錯誤、工具呼叫、音訊、逐字稿或回合完成事件。
         /// </summary>
-        public override async IAsyncEnumerable<LiveLlmRespDto> LlmToWebBatchA([EnumeratorCancellation] CancellationToken ct = default)
+        public override async IAsyncEnumerable<LiveLlmRespDto> LlmToWebTurnA([EnumeratorCancellation] CancellationToken ct = default)
         {
-            _Log.Info("LlmToWebBatchA");
+            _Log.Info("LlmToWebTurnA");
             while (IsOpen)
             {
                 var respText = await LlmToWebDataA(256 * 1024, ct);

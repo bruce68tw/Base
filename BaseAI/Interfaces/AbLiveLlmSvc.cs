@@ -129,7 +129,7 @@ namespace BaseAI.Interfaces
         /// <summary>持續接收 provider 事件，並以共用 DTO 逐筆輸出。</summary>
         /// <param name="ct">取消接收操作的權杖。</param>
         /// <returns>音訊、逐字稿、工具呼叫、錯誤或回合完成事件。</returns>
-        public abstract IAsyncEnumerable<LiveLlmRespDto> LlmToWebBatchA(CancellationToken ct = default);
+        public abstract IAsyncEnumerable<LiveLlmRespDto> LlmToWebTurnA(CancellationToken ct = default);
         #endregion
 
         /// <summary>以正常狀態關閉上游 provider 工作階段；尚未連線時不做事。</summary>
@@ -187,7 +187,7 @@ namespace BaseAI.Interfaces
             var turnBuffer = new TurnBuffer();
 
             // client 接收工作跨越多次 LLM session，確保重連時仍能接收並暫存訊息。
-            var uiToWeb = UiToWebBatchA(messages.Writer, lifeTime.Token);
+            var uiToWeb = UiToWebTurnA(messages.Writer, lifeTime.Token);
 
             try
             {
@@ -199,9 +199,9 @@ namespace BaseAI.Interfaces
                     // 分別控制 LLM 回應接收及 client 訊息送出，批次重連時可獨立停止兩條工作。
                     using var receiverCts = CancellationTokenSource.CreateLinkedTokenSource(lifeTime.Token);
                     using var senderCts = CancellationTokenSource.CreateLinkedTokenSource(lifeTime.Token);
-                    var webToLlm = WebToLlmBatchA(
+                    var webToLlm = WebToLlmTurnA(
                         messages.Reader, turnBuffer, senderCts.Token, lifeTime.Token);
-                    var webToUi = LlmToUiBatchA(
+                    var webToUi = LlmToUiTurnA(
                         turnBuffer, history, maxHistoryTurns,
                         fnTurnEnd, senderCts.Cancel, receiverCts.Token, fnToolCall);
 
@@ -257,9 +257,9 @@ namespace BaseAI.Interfaces
         }
 
         /// <summary>持續接收 client WebSocket 訊息，依序寫入有界佇列；結束時完成佇列。</summary>
-        private async Task UiToWebBatchA(ChannelWriter<string> writer, CancellationToken ct)
+        private async Task UiToWebTurnA(ChannelWriter<string> writer, CancellationToken ct)
         {
-            _Log.Info("UiToWebBatchA");
+            _Log.Info("UiToWebTurnA");
             try
             {
                 while (_uiSocketSvc.IsOpen && !ct.IsCancellationRequested)
@@ -277,10 +277,10 @@ namespace BaseAI.Interfaces
         }
 
         /// <summary>解析標準 client 訊息，並呼叫 provider 對應的音訊或文字傳送操作。</summary>
-        private async Task WebToLlmBatchA(ChannelReader<string> reader,
+        private async Task WebToLlmTurnA(ChannelReader<string> reader,
             TurnBuffer turnBuffer, CancellationToken readCt, CancellationToken sendCt)
         {
-            _Log.Info("WebToLlmBatchA");
+            _Log.Info("WebToLlmTurnA");
 
             await foreach (var msg in reader.ReadAllAsync(readCt))
             {
@@ -320,16 +320,17 @@ namespace BaseAI.Interfaces
 
         /// <summary>
         /// 將 provider 回應映射為 client 訊息，累積逐字稿及歷史，並在完成回合時詢問呼叫端是否重連。
+        /// Turn表回合, Socket傳送語音會分成多個trunk, Turn表示多個trunk
         /// </summary>
-        private async Task<bool> LlmToUiBatchA(
+        private async Task<bool> LlmToUiTurnA(
             TurnBuffer turnBuffer, List<LiveLlmHistoryDto> history, int maxHistoryTurns,
             Func<string, string, int, CancellationToken, Task<bool>> onTurnCompleted,
             Action pauseSender, CancellationToken ct,
             Func<LiveLlmToolCallDto, CancellationToken, Task<object>>? fnToolCall = null)
         {
-            //_Log.Info("LlmToUiBatchA");   //這裡不寫log, 會搞混
+            //_Log.Info("LlmToUiTurnA");   //這裡不寫log, 會搞混
 
-            await foreach (var response in LlmToWebBatchA(ct))
+            await foreach (var response in LlmToWebTurnA(ct))
             {
                 if (!_uiSocketSvc.IsOpen) break;
 

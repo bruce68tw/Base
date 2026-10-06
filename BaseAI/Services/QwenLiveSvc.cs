@@ -140,7 +140,7 @@ namespace BaseAI.Services
         }
 
         /// <summary>接收 Qwen Realtime 事件並轉為共用 Live LLM 回應 DTO。</summary>
-        public override async IAsyncEnumerable<LiveLlmRespDto> LlmToWebBatchA(
+        public override async IAsyncEnumerable<LiveLlmRespDto> LlmToWebTurnA(
             [EnumeratorCancellation] CancellationToken ct = default)
         {
             while (IsOpen)
