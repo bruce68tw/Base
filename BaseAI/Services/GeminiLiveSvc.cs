@@ -45,6 +45,7 @@ namespace BaseAI.Services
                             voiceConfig = new { prebuiltVoiceConfig = new { voiceName = optDto.VoiceName } }
                         }
                     },
+                    inputAudioTranscription = new { },
                     outputAudioTranscription = new { },
                     // 每個工具各自包成一組 functionDeclarations。
                     tools = optDto.Tools.Select(tool => new
@@ -254,6 +255,16 @@ namespace BaseAI.Services
                     {
                         Type = LiveLlmRespTypeEnum.OutputTranScript,
                         Text = tranScript
+                    };
+                }
+
+                var inputTranScript = content?["inputTranscription"]?["text"]?.ToString();
+                if (!string.IsNullOrWhiteSpace(inputTranScript))
+                {
+                    yield return new LiveLlmRespDto
+                    {
+                        Type = LiveLlmRespTypeEnum.InputTranScript,
+                        Text = inputTranScript
                     };
                 }
 

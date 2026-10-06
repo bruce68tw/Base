@@ -25,6 +25,7 @@ namespace BaseAI.Interfaces
         {
             private readonly object _syncRoot = new();
             private string _userText = string.Empty;
+            private bool _hasClientUserText;
             private readonly StringBuilder _assistantText = new();
             private int _totalTokens;
 
@@ -38,7 +39,22 @@ namespace BaseAI.Interfaces
             public void SetUserText(string text)
             {
                 if (string.IsNullOrWhiteSpace(text)) return;
-                lock (_syncRoot) _userText = text;
+                lock (_syncRoot)
+                {
+                    _userText = text;
+                    _hasClientUserText = true;
+                }
+            }
+
+            public void AppendInputTranscription(string text)
+            {
+                if (string.IsNullOrWhiteSpace(text)) return;
+                lock (_syncRoot)
+                {
+                    if (_hasClientUserText) return;
+                    if (_userText == "[Audio Input]") _userText = string.Empty;
+                    _userText += text;
+                }
             }
 
             /// <summary>僅在尚無使用者文字時設定備援文字。</summary>
@@ -67,6 +83,7 @@ namespace BaseAI.Interfaces
                     assistantText = _assistantText.ToString();
                     totalTokens = _totalTokens;
                     _userText = string.Empty;
+                    _hasClientUserText = false;
                     _assistantText.Clear();
                     _totalTokens = 0;
                     return !string.IsNullOrWhiteSpace(userText) &&
@@ -359,6 +376,11 @@ namespace BaseAI.Interfaces
                     // 逐字稿同時累積到回合緩衝，並即時顯示於前端。
                     turnBuffer.AppendAssistantText(response.Text);
                     await WebToUiDataA(new { type = "transcription", text = response.Text }, ct);
+                }
+                else if (response.Type == LiveLlmRespTypeEnum.InputTranScript &&
+                    !string.IsNullOrWhiteSpace(response.Text))
+                {
+                    turnBuffer.AppendInputTranscription(response.Text);
                 }
                 else if (response.Type == LiveLlmRespTypeEnum.Usage)
                 {
