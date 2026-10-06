@@ -1,6 +1,6 @@
 namespace BaseAI.Models
 {
-    public sealed class LiveLlmToolDto
+    public sealed class LlmToolDto
     {
         public string Name { get; set; } = "";
         public string Description { get; set; } = "";

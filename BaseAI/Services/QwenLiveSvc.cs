@@ -23,7 +23,7 @@ namespace BaseAI.Services
         /// 建立 Qwen Realtime WebSocket、送出 session 設定，並等待 session.updated。
         /// API key 可放在 endpoint 的 api_key/key query，或由 DASHSCOPE_API_KEY 環境變數提供。
         /// </summary>
-        public override async Task ConnectLlmA(LiveLlmOptDto optDto, CancellationToken ct = default)
+        public override async Task ConnectLlmA(LlmOptDto optDto, CancellationToken ct = default)
         {
             ArgumentNullException.ThrowIfNull(optDto);
 
@@ -140,7 +140,7 @@ namespace BaseAI.Services
         }
 
         /// <summary>接收 Qwen Realtime 事件並轉為共用 Live LLM 回應 DTO。</summary>
-        public override async IAsyncEnumerable<LiveLlmRespDto> LlmToWebTurnA(
+        public override async IAsyncEnumerable<LlmRespDto> OnLlmToWebTurnA(
             [EnumeratorCancellation] CancellationToken ct = default)
         {
             while (IsOpen)
@@ -172,9 +172,9 @@ namespace BaseAI.Services
                         var audio = json["delta"]?.Value<string>();
                         if (!string.IsNullOrWhiteSpace(audio))
                         {
-                            yield return new LiveLlmRespDto
+                            yield return new LlmRespDto
                             {
-                                Type = LiveLlmRespTypeEnum.Audio,
+                                Type = LlmRespTypeEnum.Audio,
                                 Audio = Convert.FromBase64String(audio),
                                 MimeType = "audio/pcm;rate=24000"
                             };
@@ -185,9 +185,9 @@ namespace BaseAI.Services
                         var inputText = json["transcript"]?.Value<string>();
                         if (!string.IsNullOrWhiteSpace(inputText))
                         {
-                            yield return new LiveLlmRespDto
+                            yield return new LlmRespDto
                             {
-                                Type = LiveLlmRespTypeEnum.InputTranScript,
+                                Type = LlmRespTypeEnum.InputTranScript,
                                 Text = inputText
                             };
                         }
@@ -197,9 +197,9 @@ namespace BaseAI.Services
                         var transcript = json["delta"]?.Value<string>();
                         if (!string.IsNullOrWhiteSpace(transcript))
                         {
-                            yield return new LiveLlmRespDto
+                            yield return new LlmRespDto
                             {
-                                Type = LiveLlmRespTypeEnum.OutputTranScript,
+                                Type = LlmRespTypeEnum.OutputTranScript,
                                 Text = transcript
                             };
                         }
@@ -209,18 +209,18 @@ namespace BaseAI.Services
                         var text = json["delta"]?.Value<string>();
                         if (!string.IsNullOrWhiteSpace(text))
                         {
-                            yield return new LiveLlmRespDto
+                            yield return new LlmRespDto
                             {
-                                Type = LiveLlmRespTypeEnum.Text,
+                                Type = LlmRespTypeEnum.Text,
                                 Text = text
                             };
                         }
                         break;
 
                     case "response.function_call_arguments.done":
-                        yield return new LiveLlmRespDto
+                        yield return new LlmRespDto
                         {
-                            Type = LiveLlmRespTypeEnum.ToolCall,
+                            Type = LlmRespTypeEnum.ToolCall,
                             ToolCalls =
                             [
                                 new LiveLlmToolCallDto
@@ -236,8 +236,8 @@ namespace BaseAI.Services
                     case "response.done":
                         var totalTokens = json["response"]?["usage"]?["total_tokens"]?.Value<int>() ?? 0;
                         if (totalTokens > 0)
-                            yield return new LiveLlmRespDto { Type = LiveLlmRespTypeEnum.Usage, TotalTokens = totalTokens };
-                        yield return new LiveLlmRespDto { Type = LiveLlmRespTypeEnum.Completed };
+                            yield return new LlmRespDto { Type = LlmRespTypeEnum.Usage, TotalTokens = totalTokens };
+                        yield return new LlmRespDto { Type = LlmRespTypeEnum.Completed };
                         break;
                 }
             }
@@ -261,7 +261,7 @@ namespace BaseAI.Services
             }
         }
 
-        private async Task SendHistoryA(IReadOnlyCollection<LiveLlmHistoryDto> history,
+        private async Task SendHistoryA(IReadOnlyCollection<LlmHistoryDto> history,
             CancellationToken ct)
         {
             foreach (var message in history)
@@ -303,9 +303,9 @@ namespace BaseAI.Services
                 .Select(key => $"{Uri.EscapeDataString(key!)}={Uri.EscapeDataString(query[key!] ?? string.Empty)}"));
         }
 
-        private static LiveLlmRespDto ErrorA(string message)
+        private static LlmRespDto ErrorA(string message)
         {
-            return new LiveLlmRespDto { Type = LiveLlmRespTypeEnum.Error, Text = message };
+            return new LlmRespDto { Type = LlmRespTypeEnum.Error, Text = message };
         }
 
     }

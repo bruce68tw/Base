@@ -5,9 +5,9 @@ namespace BaseAI.Models
     /// <summary>
     /// 
     /// </summary>
-    public class LiveLlmRespDto
+    public class LlmRespDto
     {
-        public LiveLlmRespTypeEnum Type { get; set; }
+        public LlmRespTypeEnum Type { get; set; }
 
         public byte[]? Audio { get; set; }
 

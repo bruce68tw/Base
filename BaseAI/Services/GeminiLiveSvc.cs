@@ -18,7 +18,7 @@ namespace BaseAI.Services
         /// <summary>
         /// 建立 Gemini Live WebSocket，送出模型設定、系統提示詞與工具宣告，並等待 setupComplete。
         /// </summary>
-        public override async Task ConnectLlmA(LiveLlmOptDto optDto, CancellationToken ct = default)
+        public override async Task ConnectLlmA(LlmOptDto optDto, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(optDto.EndPoint))
                 throw new ArgumentException("Gemini Live endpoint is required.", nameof(optDto));
@@ -169,9 +169,9 @@ namespace BaseAI.Services
         /// <summary>
         /// 持續接收 Gemini Live 訊息，並依訊息內容產生錯誤、工具呼叫、音訊、逐字稿或回合完成事件。
         /// </summary>
-        public override async IAsyncEnumerable<LiveLlmRespDto> LlmToWebTurnA([EnumeratorCancellation] CancellationToken ct = default)
+        public override async IAsyncEnumerable<LlmRespDto> OnLlmToWebTurnA([EnumeratorCancellation] CancellationToken ct = default)
         {
-            _Log.Info("LlmToWebTurnA");
+            _Log.Info("OnLlmToWebTurnA");
             while (IsOpen)
             {
                 var respText = await LlmToWebDataA(256 * 1024, ct);
@@ -185,35 +185,38 @@ namespace BaseAI.Services
                 try { respJson = JObject.Parse(respText); }
                 catch { }
 
+                //無資料
                 if (respJson == null)
                 {
                     // 保留接收迴圈，讓後續訊息仍可繼續處理。
-                    yield return new LiveLlmRespDto
+                    yield return new LlmRespDto
                     {
-                        Type = LiveLlmRespTypeEnum.Error,
+                        Type = LlmRespTypeEnum.Error,
                         Text = "Gemini Live 回傳無法解析的訊息。"
                     };
                     continue;
                 }
 
+                //Error
                 if (respJson["error"] != null)
                 {
                     // provider 端錯誤只回報，不中斷接收。
-                    yield return new LiveLlmRespDto
+                    yield return new LlmRespDto
                     {
-                        Type = LiveLlmRespTypeEnum.Error,
+                        Type = LlmRespTypeEnum.Error,
                         Text = respJson["error"]?["message"]?.ToString() ?? "Gemini Live 回傳錯誤。"
                     };
                     continue;
                 }
 
+                //Function Call
                 var funCalls = respJson["toolCall"]?["functionCalls"] as JArray;
                 if (funCalls != null)
                 {
                     // 工具呼叫需要由上層執行後，再透過 SendToolRespA 回傳結果。
-                    yield return new LiveLlmRespDto
+                    yield return new LlmRespDto
                     {
-                        Type = LiveLlmRespTypeEnum.ToolCall,
+                        Type = LlmRespTypeEnum.ToolCall,
                         ToolCalls = funCalls.Select(call => new LiveLlmToolCallDto
                         {
                             Id = call["id"]?.ToString() ?? "",
@@ -224,10 +227,15 @@ namespace BaseAI.Services
                     continue;
                 }
 
+                //語音
                 var content = respJson["serverContent"];
+                var isInterrupted = content?["interrupted"]?.Value<bool>() == true;
+                if (isInterrupted)
+                    yield return new LlmRespDto { Type = LlmRespTypeEnum.Interrupted };
+
                 // 音訊在 modelTurn.parts[].inlineData，預設輸出為 24 kHz PCM。
                 var turnParts = content?["modelTurn"]?["parts"] as JArray;
-                if (turnParts != null)
+                if (!isInterrupted && turnParts != null)
                 {
                     // 一個 modelTurn 可能同時包含多個音訊片段，因此逐一產生事件。
                     foreach (var part in turnParts)
@@ -236,9 +244,9 @@ namespace BaseAI.Services
                         var audioData = inlineData?["data"]?.ToString();
                         if (!string.IsNullOrWhiteSpace(audioData))
                         {
-                            yield return new LiveLlmRespDto
+                            yield return new LlmRespDto
                             {
-                                Type = LiveLlmRespTypeEnum.Audio,
+                                Type = LlmRespTypeEnum.Audio,
                                 Audio = Convert.FromBase64String(audioData),
                                 MimeType = inlineData?["mimeType"]?.ToString()
                                     ?? "audio/pcm;rate=24000"
@@ -247,34 +255,37 @@ namespace BaseAI.Services
                     }
                 }
 
+                //回答的語音轉譯文字
                 var tranScript = content?["outputTranscription"]?["text"]?.ToString();
                 if (!string.IsNullOrWhiteSpace(tranScript))
                 {
                     // outputAudioTranscription 會將模型語音轉成文字事件。
-                    yield return new LiveLlmRespDto
+                    yield return new LlmRespDto
                     {
-                        Type = LiveLlmRespTypeEnum.OutputTranScript,
+                        Type = LlmRespTypeEnum.OutputTranScript,
                         Text = tranScript
                     };
                 }
 
+                //輸入的語音轉譯文字
                 var inputTranScript = content?["inputTranscription"]?["text"]?.ToString();
                 if (!string.IsNullOrWhiteSpace(inputTranScript))
                 {
-                    yield return new LiveLlmRespDto
+                    yield return new LlmRespDto
                     {
-                        Type = LiveLlmRespTypeEnum.InputTranScript,
+                        Type = LlmRespTypeEnum.InputTranScript,
                         Text = inputTranScript
                     };
                 }
 
+                //token用量
                 var totalTokens = respJson["usageMetadata"]?["totalTokenCount"]?.Value<int>() ?? 0;
                 if (totalTokens > 0)
-                    yield return new LiveLlmRespDto { Type = LiveLlmRespTypeEnum.Usage, TotalTokens = totalTokens };
+                    yield return new LlmRespDto { Type = LlmRespTypeEnum.Usage, TotalTokens = totalTokens };
 
                 // turnComplete 可能與音訊、逐字稿同封訊息出現，因此最後才產生。
                 if (content?["turnComplete"]?.Value<bool>() == true)
-                    yield return new LiveLlmRespDto { Type = LiveLlmRespTypeEnum.Completed };
+                    yield return new LlmRespDto { Type = LlmRespTypeEnum.Completed };
             }
         }
 

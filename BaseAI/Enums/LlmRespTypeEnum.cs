@@ -3,7 +3,7 @@
     /// <summary>
     /// 
     /// </summary>
-    public enum LiveLlmRespTypeEnum
+    public enum LlmRespTypeEnum
     {
         Audio,
         Text,
@@ -12,6 +12,7 @@
         ToolCall,
         Error,
         Usage,
-        Completed
+        Completed,
+        Interrupted
     }
 }

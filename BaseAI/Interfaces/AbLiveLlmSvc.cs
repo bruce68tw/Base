@@ -1,8 +1,8 @@
 ﻿using Base.Services;
 using BaseAI.Enums;
 using BaseAI.Models;
+using BaseAI.Services;
 using Newtonsoft.Json.Linq;
-using System.Text;
 using System.Net.WebSockets;
 using System.Threading.Channels;
 
@@ -20,78 +20,6 @@ namespace BaseAI.Interfaces
         private readonly WebSocketSvc _uiSocketSvc = uiSocketSvc
             ?? throw new ArgumentNullException(nameof(uiSocketSvc));
 
-        /// <summary>收集單一對話回合的使用者輸入與助理逐字稿，並以鎖保護並行讀寫。</summary>
-        private sealed class TurnBuffer
-        {
-            private readonly object _syncRoot = new();
-            private string _userText = string.Empty;
-            private bool _hasClientUserText;
-            private readonly StringBuilder _assistantText = new();
-            private int _totalTokens;
-
-            /// <summary>記錄 provider 回報的本回合 token 累計值，以最後一筆為準。</summary>
-            public void SetTokens(int totalTokens)
-            {
-                lock (_syncRoot) _totalTokens = totalTokens;
-            }
-
-            /// <summary>設定使用者文字；空白內容不覆蓋既有值。</summary>
-            public void SetUserText(string text)
-            {
-                if (string.IsNullOrWhiteSpace(text)) return;
-                lock (_syncRoot)
-                {
-                    _userText = text;
-                    _hasClientUserText = true;
-                }
-            }
-
-            public void AppendInputTranscription(string text)
-            {
-                if (string.IsNullOrWhiteSpace(text)) return;
-                lock (_syncRoot)
-                {
-                    if (_hasClientUserText) return;
-                    if (_userText == "[Audio Input]") _userText = string.Empty;
-                    _userText += text;
-                }
-            }
-
-            /// <summary>僅在尚無使用者文字時設定備援文字。</summary>
-            public void SetFallbackUserText(string text)
-            {
-                lock (_syncRoot)
-                {
-                    if (string.IsNullOrWhiteSpace(_userText))
-                        _userText = text;
-                }
-            }
-
-            /// <summary>累加助理逐字稿片段。</summary>
-            public void AppendAssistantText(string text)
-            {
-                if (string.IsNullOrWhiteSpace(text)) return;
-                lock (_syncRoot) _assistantText.Append(text);
-            }
-
-            /// <summary>取出並清空本回合內容；使用者與助理文字皆有值才視為有效回合。</summary>
-            public bool TryComplete(out string userText, out string assistantText, out int totalTokens)
-            {
-                lock (_syncRoot)
-                {
-                    userText = _userText;
-                    assistantText = _assistantText.ToString();
-                    totalTokens = _totalTokens;
-                    _userText = string.Empty;
-                    _hasClientUserText = false;
-                    _assistantText.Clear();
-                    _totalTokens = 0;
-                    return !string.IsNullOrWhiteSpace(userText) &&
-                        !string.IsNullOrWhiteSpace(assistantText);
-                }
-            }
-        }
-
         /// <summary>server 連往 Live LLM provider 的 endpoint。</summary>
         protected string _llmUrl = llmUrl;
 
@@ -105,7 +33,7 @@ namespace BaseAI.Interfaces
         /// <summary>連線至 live llm provider，套用工作階段設定並完成必要的初始化。</summary>
         /// <param name="optDto">模型、提示詞、語音、工具及對話歷史等設定。</param>
         /// <param name="ct">取消連線或初始化操作的權杖。</param>
-        public abstract Task ConnectLlmA(LiveLlmOptDto optDto, CancellationToken ct = default);
+        public abstract Task ConnectLlmA(LlmOptDto optDto, CancellationToken ct = default);
 
         /// <summary>webSocket 傳送一段原始音訊資料至 provider。</summary>
         /// <param name="audioMem">符合目前 provider 音訊格式要求的位元組資料。</param>
@@ -129,7 +57,7 @@ namespace BaseAI.Interfaces
         /// <summary>持續接收 provider 事件，並以共用 DTO 逐筆輸出。</summary>
         /// <param name="ct">取消接收操作的權杖。</param>
         /// <returns>音訊、逐字稿、工具呼叫、錯誤或回合完成事件。</returns>
-        public abstract IAsyncEnumerable<LiveLlmRespDto> LlmToWebTurnA(CancellationToken ct = default);
+        public abstract IAsyncEnumerable<LlmRespDto> OnLlmToWebTurnA(CancellationToken ct = default);
         #endregion
 
         /// <summary>以正常狀態關閉上游 provider 工作階段；尚未連線時不做事。</summary>
@@ -166,7 +94,7 @@ namespace BaseAI.Interfaces
         /// <param name="maxHistoryTurns">重連時保留的最近對話回合數，每回合包含一筆 user 與一筆 assistant 歷史。</param>
         /// <param name="ct">取消整個橋接工作階段的權杖。</param>
         public async Task BuildBridgeA(
-            Func<IReadOnlyCollection<LiveLlmHistoryDto>, LiveLlmOptDto> fnGetLlmOpt,
+            Func<IReadOnlyCollection<LlmHistoryDto>, LlmOptDto> fnGetLlmOpt,
             Func<string, string, int, CancellationToken, Task<bool>> fnTurnEnd,
             int maxHistoryTurns = 10, CancellationToken ct = default,
             Func<LiveLlmToolCallDto, CancellationToken, Task<object>>? fnToolCall = null)
@@ -183,11 +111,11 @@ namespace BaseAI.Interfaces
                 SingleWriter = true
             });
             using var lifeTime = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            var history = new List<LiveLlmHistoryDto>();
-            var turnBuffer = new TurnBuffer();
+            var history = new List<LlmHistoryDto>();
+            var turnBuffer = new AudioTurnBufferSvc();
 
             // client 接收工作跨越多次 LLM session，確保重連時仍能接收並暫存訊息。
-            var uiToWeb = UiToWebTurnA(messages.Writer, lifeTime.Token);
+            var uiToWeb = OnUiToWebTurnA(messages.Writer, lifeTime.Token);
 
             try
             {
@@ -199,14 +127,14 @@ namespace BaseAI.Interfaces
                     // 分別控制 LLM 回應接收及 client 訊息送出，批次重連時可獨立停止兩條工作。
                     using var receiverCts = CancellationTokenSource.CreateLinkedTokenSource(lifeTime.Token);
                     using var senderCts = CancellationTokenSource.CreateLinkedTokenSource(lifeTime.Token);
-                    var webToLlm = WebToLlmTurnA(
+                    var webToLlm = OnWebToLlmTurnA(
                         messages.Reader, turnBuffer, senderCts.Token, lifeTime.Token);
-                    var webToUi = LlmToUiTurnA(
+                    var llmToUi = OnLlmToUiTurnA(
                         turnBuffer, history, maxHistoryTurns,
                         fnTurnEnd, senderCts.Cancel, receiverCts.Token, fnToolCall);
 
                     // 任一端結束便收束目前 session；clientReceive 本身會持續跨越 LLM 重連。
-                    var completedTask = await Task.WhenAny(uiToWeb, webToLlm, webToUi);
+                    var completedTask = await Task.WhenAny(uiToWeb, webToLlm, llmToUi);
                     var shouldReconnect = false;
                     try
                     {
@@ -219,7 +147,7 @@ namespace BaseAI.Interfaces
                             break;
                         }
 
-                        shouldReconnect = await webToUi;
+                        shouldReconnect = await llmToUi;
                     }
                     finally
                     {
@@ -227,7 +155,7 @@ namespace BaseAI.Interfaces
                         receiverCts.Cancel();
                         senderCts.Cancel();
                         await WatchTaskA(webToLlm);
-                        await WatchTaskA(webToUi);
+                        await WatchTaskA(llmToUi);
                     }
 
                     if (!shouldReconnect)
@@ -257,9 +185,9 @@ namespace BaseAI.Interfaces
         }
 
         /// <summary>持續接收 client WebSocket 訊息，依序寫入有界佇列；結束時完成佇列。</summary>
-        private async Task UiToWebTurnA(ChannelWriter<string> writer, CancellationToken ct)
+        private async Task OnUiToWebTurnA(ChannelWriter<string> writer, CancellationToken ct)
         {
-            _Log.Info("UiToWebTurnA");
+            _Log.Info("OnUiToWebTurnA");
             try
             {
                 while (_uiSocketSvc.IsOpen && !ct.IsCancellationRequested)
@@ -277,10 +205,10 @@ namespace BaseAI.Interfaces
         }
 
         /// <summary>解析標準 client 訊息，並呼叫 provider 對應的音訊或文字傳送操作。</summary>
-        private async Task WebToLlmTurnA(ChannelReader<string> reader,
-            TurnBuffer turnBuffer, CancellationToken readCt, CancellationToken sendCt)
+        private async Task OnWebToLlmTurnA(ChannelReader<string> reader,
+            AudioTurnBufferSvc turnBuffer, CancellationToken readCt, CancellationToken sendCt)
         {
-            _Log.Info("WebToLlmTurnA");
+            _Log.Info("OnWebToLlmTurnA");
 
             await foreach (var msg in reader.ReadAllAsync(readCt))
             {
@@ -322,19 +250,19 @@ namespace BaseAI.Interfaces
         /// 將 provider 回應映射為 client 訊息，累積逐字稿及歷史，並在完成回合時詢問呼叫端是否重連。
         /// Turn表回合, Socket傳送語音會分成多個trunk, Turn表示多個trunk
         /// </summary>
-        private async Task<bool> LlmToUiTurnA(
-            TurnBuffer turnBuffer, List<LiveLlmHistoryDto> history, int maxHistoryTurns,
+        private async Task<bool> OnLlmToUiTurnA(
+            AudioTurnBufferSvc turnBuffer, List<LlmHistoryDto> history, int maxHistoryTurns,
             Func<string, string, int, CancellationToken, Task<bool>> onTurnCompleted,
             Action pauseSender, CancellationToken ct,
             Func<LiveLlmToolCallDto, CancellationToken, Task<object>>? fnToolCall = null)
         {
-            //_Log.Info("LlmToUiTurnA");   //這裡不寫log, 會搞混
+            //_Log.Info("OnLlmToUiTurnA");   //這裡不寫log, 會搞混
 
-            await foreach (var response in LlmToWebTurnA(ct))
+            await foreach (var response in OnLlmToWebTurnA(ct))
             {
                 if (!_uiSocketSvc.IsOpen) break;
 
-                if (response.Type == LiveLlmRespTypeEnum.ToolCall && response.ToolCalls != null)
+                if (response.Type == LlmRespTypeEnum.ToolCall && response.ToolCalls != null)
                 {
                     // 未回覆工具結果時 provider 會一直等待，因此失敗也要回傳錯誤內容。
                     var toolResps = new List<LiveLlmToolRespDto>();
@@ -358,11 +286,15 @@ namespace BaseAI.Interfaces
                 }
 
                 // 錯誤事件轉成 error 訊息，但不結束接收迴圈。
-                if (response.Type == LiveLlmRespTypeEnum.Error)
+                if (response.Type == LlmRespTypeEnum.Error)
                 {
                     await WebToUiErrorA(response.Text ?? "Live LLM 回傳錯誤。", ct);
                 }
-                else if (response.Type == LiveLlmRespTypeEnum.Audio && response.Audio != null)
+                else if (response.Type == LlmRespTypeEnum.Interrupted)
+                {
+                    await WebToUiDataA(new { type = "interrupted" }, ct);
+                }
+                else if (response.Type == LlmRespTypeEnum.Audio && response.Audio != null)
                 {
                     // 音訊以 Base64 傳給前端播放。
                     await WebToUiDataA(new
@@ -371,31 +303,31 @@ namespace BaseAI.Interfaces
                         audioData = Convert.ToBase64String(response.Audio)
                     }, ct);
                 }
-                else if (response.Type == LiveLlmRespTypeEnum.OutputTranScript &&
+                else if (response.Type == LlmRespTypeEnum.OutputTranScript &&
                     !string.IsNullOrWhiteSpace(response.Text))
                 {
                     // 逐字稿同時累積到回合緩衝，並即時顯示於前端。
                     turnBuffer.AppendAssistantText(response.Text);
                     await WebToUiDataA(new { type = "transcription", text = response.Text }, ct);
                 }
-                else if (response.Type == LiveLlmRespTypeEnum.InputTranScript &&
+                else if (response.Type == LlmRespTypeEnum.InputTranScript &&
                     !string.IsNullOrWhiteSpace(response.Text))
                 {
-                    turnBuffer.AppendInputTranscription(response.Text);
+                    turnBuffer.AppendInputTranScript(response.Text);
                 }
-                else if (response.Type == LiveLlmRespTypeEnum.Usage)
+                else if (response.Type == LlmRespTypeEnum.Usage)
                 {
                     turnBuffer.SetTokens(response.TotalTokens);
                 }
-                else if (response.Type == LiveLlmRespTypeEnum.Completed)
+                else if (response.Type == LlmRespTypeEnum.Completed)
                 {
                     var shouldReconnect = false;
                     if (turnBuffer.TryComplete(out var userText, out var assistantText, out var totalTokens))
                     {
                         _Log.Info($"Turn tokens={totalTokens}");
                         // 將完整回合加進重連歷史，並限制歷史只保留最近指定回合數。
-                        history.Add(new LiveLlmHistoryDto { Role = "user", Text = userText });
-                        history.Add(new LiveLlmHistoryDto { Role = "assistant", Text = assistantText });
+                        history.Add(new LlmHistoryDto { Role = "user", Text = userText });
+                        history.Add(new LlmHistoryDto { Role = "assistant", Text = assistantText });
                         var maxHistoryMessages = maxHistoryTurns * 2;
                         if (history.Count > maxHistoryMessages)
                             history.RemoveRange(0, history.Count - maxHistoryMessages);
