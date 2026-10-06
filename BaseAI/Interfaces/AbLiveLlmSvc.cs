@@ -95,7 +95,7 @@ namespace BaseAI.Interfaces
         /// <param name="ct">取消整個橋接工作階段的權杖。</param>
         public async Task BuildBridgeA(
             Func<IReadOnlyCollection<LlmHistoryDto>, LlmOptDto> fnGetLlmOpt,
-            Func<string, string, int, CancellationToken, Task<bool>> fnTurnEnd,
+            Func<LlmTurnResultDto, CancellationToken, Task<bool>> fnTurnEnd,
             int maxHistoryTurns = 10, CancellationToken ct = default,
             Func<LiveLlmToolCallDto, CancellationToken, Task<object>>? fnToolCall = null)
         {
@@ -121,6 +121,7 @@ namespace BaseAI.Interfaces
             {
                 while (_uiSocketSvc.IsOpen && !lifeTime.IsCancellationRequested)
                 {
+                    turnBuffer.EnableLiveTranscription();
                     // 每次連線都用目前歷史重新產生設定，讓重連後的 provider session 延續對話。
                     await ConnectLlmA(fnGetLlmOpt(history.ToArray()), lifeTime.Token);
 
@@ -220,16 +221,24 @@ namespace BaseAI.Interfaces
                 var type = input["type"]?.Value<string>();
                 if (type == "audio")
                 {
-                    // 前端可附帶自行辨識的文字；音訊封包則逐包交給 provider。
-                    turnBuffer.SetUserText(input["transcribedText"]?.Value<string>() ?? string.Empty);
                     var audioData = input["audioData"]?.Value<string>();
                     if (!string.IsNullOrWhiteSpace(audioData))
-                        await WebToLlmAudioA(Convert.FromBase64String(audioData), sendCt);
+                        turnBuffer.BeginInputTurn();
+
+                    // 前端可附帶自行辨識的文字；音訊封包則逐包交給 provider。
+                    turnBuffer.SetUserText(input["transcribedText"]?.Value<string>() ?? string.Empty);
+                    if (!string.IsNullOrWhiteSpace(audioData))
+                    {
+                        var audioBytes = Convert.FromBase64String(audioData);
+                        turnBuffer.AppendInputAudio(audioBytes);
+                        await WebToLlmAudioA(audioBytes, sendCt);
+                    }
 
                     if (input["frontTurnComplete"]?.Value<bool>() == true)
                     {
                         // 音訊輸入結束時提交回合；沒有前端逐字稿則保留通用備援文字。
                         turnBuffer.SetFallbackUserText("[Audio Input]");
+                        turnBuffer.CompleteInputAudio();
                         await WebToLlmAudioEndA(sendCt);
                     }
                 }
@@ -252,7 +261,7 @@ namespace BaseAI.Interfaces
         /// </summary>
         private async Task<bool> OnLlmToUiTurnA(
             AudioTurnBufferSvc turnBuffer, List<LlmHistoryDto> history, int maxHistoryTurns,
-            Func<string, string, int, CancellationToken, Task<bool>> onTurnCompleted,
+            Func<LlmTurnResultDto, CancellationToken, Task<bool>> onTurnCompleted,
             Action pauseSender, CancellationToken ct,
             Func<LiveLlmToolCallDto, CancellationToken, Task<object>>? fnToolCall = null)
         {
@@ -290,12 +299,17 @@ namespace BaseAI.Interfaces
                 {
                     await WebToUiErrorA(response.Text ?? "Live LLM 回傳錯誤。", ct);
                 }
+                //中斷
                 else if (response.Type == LlmRespTypeEnum.Interrupted)
                 {
+                    if (turnBuffer.TryInterrupt(out var interruptedTurn))
+                        await onTurnCompleted(interruptedTurn, ct);
+
                     await WebToUiDataA(new { type = "interrupted" }, ct);
                 }
                 else if (response.Type == LlmRespTypeEnum.Audio && response.Audio != null)
                 {
+                    turnBuffer.MarkAssistantResponseInProgress();
                     // 音訊以 Base64 傳給前端播放。
                     await WebToUiDataA(new
                     {
@@ -306,6 +320,7 @@ namespace BaseAI.Interfaces
                 else if (response.Type == LlmRespTypeEnum.OutputTranScript &&
                     !string.IsNullOrWhiteSpace(response.Text))
                 {
+                    turnBuffer.MarkAssistantResponseInProgress();
                     // 逐字稿同時累積到回合緩衝，並即時顯示於前端。
                     turnBuffer.AppendAssistantText(response.Text);
                     await WebToUiDataA(new { type = "transcription", text = response.Text }, ct);
@@ -321,19 +336,25 @@ namespace BaseAI.Interfaces
                 }
                 else if (response.Type == LlmRespTypeEnum.Completed)
                 {
-                    var shouldReconnect = false;
-                    if (turnBuffer.TryComplete(out var userText, out var assistantText, out var totalTokens))
+                    if (turnBuffer.ConsumeInterruptedTail())
                     {
-                        _Log.Info($"Turn tokens={totalTokens}");
+                        await WebToUiDataA(new { type = "turnComplete" }, ct);
+                        continue;
+                    }
+
+                    var shouldReconnect = false;
+                    if (turnBuffer.TryComplete(out var turn))
+                    {
+                        _Log.Info($"Turn tokens={turn.TotalTokens}");
                         // 將完整回合加進重連歷史，並限制歷史只保留最近指定回合數。
-                        history.Add(new LlmHistoryDto { Role = "user", Text = userText });
-                        history.Add(new LlmHistoryDto { Role = "assistant", Text = assistantText });
+                        history.Add(new LlmHistoryDto { Role = "user", Text = turn.UserText });
+                        history.Add(new LlmHistoryDto { Role = "assistant", Text = turn.AssistantText });
                         var maxHistoryMessages = maxHistoryTurns * 2;
                         if (history.Count > maxHistoryMessages)
                             history.RemoveRange(0, history.Count - maxHistoryMessages);
 
                         // 保存、計數等應用政策交由呼叫端決定是否重連。
-                        shouldReconnect = await onTurnCompleted(userText, assistantText, totalTokens, ct);
+                        shouldReconnect = await onTurnCompleted(turn, ct);
                     }
 
                     if (shouldReconnect)

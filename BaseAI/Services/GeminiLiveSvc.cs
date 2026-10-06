@@ -213,6 +213,7 @@ namespace BaseAI.Services
                 var funCalls = respJson["toolCall"]?["functionCalls"] as JArray;
                 if (funCalls != null)
                 {
+                    _Log.Info($"Gemini Live tool call received: count={funCalls.Count}.");
                     // 工具呼叫需要由上層執行後，再透過 SendToolRespA 回傳結果。
                     yield return new LlmRespDto
                     {
@@ -229,7 +230,16 @@ namespace BaseAI.Services
 
                 //語音
                 var content = respJson["serverContent"];
+                //中斷
                 var isInterrupted = content?["interrupted"]?.Value<bool>() == true;
+                var isTurnComplete = content?["turnComplete"]?.Value<bool>() == true;
+                if (isInterrupted || isTurnComplete)
+                {
+                    _Log.Info(
+                        $"Gemini Live serverContent terminal event: interrupted={isInterrupted}, " +
+                        $"turnComplete={isTurnComplete}, inputTranscription={content?["inputTranscription"] != null}, " +
+                        $"outputTranscription={content?["outputTranscription"] != null}.");
+                }
                 if (isInterrupted)
                     yield return new LlmRespDto { Type = LlmRespTypeEnum.Interrupted };
 
@@ -284,7 +294,7 @@ namespace BaseAI.Services
                     yield return new LlmRespDto { Type = LlmRespTypeEnum.Usage, TotalTokens = totalTokens };
 
                 // turnComplete 可能與音訊、逐字稿同封訊息出現，因此最後才產生。
-                if (content?["turnComplete"]?.Value<bool>() == true)
+                if (isTurnComplete)
                     yield return new LlmRespDto { Type = LlmRespTypeEnum.Completed };
             }
         }

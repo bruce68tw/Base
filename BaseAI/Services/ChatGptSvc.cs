@@ -1,10 +1,17 @@
 ﻿using BaseAI.Interfaces;
+using Newtonsoft.Json.Linq;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using HttpMethod = System.Net.Http.HttpMethod;
 
 namespace BaseAI.Services
 {
-    public class ChatGptSvc(string llmUrl, string embedUrl = "") : AbLlmSvc(llmUrl, embedUrl)
+    public class ChatGptSvc(
+        string llmUrl,
+        string embedUrl = "",
+        string apiKey = "",
+        string transcriptionUrl = "https://api.openai.com/v1/audio/transcriptions",
+        string transcriptionModel = "gpt-4o-mini-transcribe") : AbLlmSvc(llmUrl, embedUrl)
     {
         /*
         const string UrlApi = "https://api.openai.com/v1/responses";
@@ -68,6 +75,46 @@ namespace BaseAI.Services
 
             return await resp.Content.ReadAsStringAsync();
             */
+        }
+
+        public override async Task<string> SpeechToTextA(
+            ReadOnlyMemory<byte> audioData, string mimeType, CancellationToken ct = default)
+        {
+            if (audioData.IsEmpty)
+                throw new ArgumentException("Audio data is empty.", nameof(audioData));
+            if (string.IsNullOrWhiteSpace(apiKey))
+                throw new InvalidOperationException("OpenAI API key is not configured.");
+
+            var extension = mimeType.ToLowerInvariant() switch
+            {
+                "audio/wav" or "audio/wave" => "wav",
+                "audio/mpeg" or "audio/mp3" => "mp3",
+                "audio/mp4" or "audio/m4a" => "m4a",
+                "audio/webm" => "webm",
+                "audio/ogg" => "ogg",
+                _ => throw new NotSupportedException($"OpenAI transcription does not support '{mimeType}'.")
+            };
+
+            using var form = new MultipartFormDataContent();
+            form.Add(new StringContent(transcriptionModel), "model");
+            var fileContent = new ByteArrayContent(audioData.ToArray());
+            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(mimeType);
+            form.Add(fileContent, "file", $"audio.{extension}");
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, transcriptionUrl)
+            {
+                Content = form
+            };
+            request.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+
+            using var response = await _httpClient.SendAsync(request, ct);
+            var responseText = await response.Content.ReadAsStringAsync(ct);
+            if (!response.IsSuccessStatusCode)
+                throw new HttpRequestException(
+                    $"OpenAI speech transcription failed ({(int)response.StatusCode}): {responseText}");
+
+            return JObject.Parse(responseText)["text"]?.Value<string>()?.Trim() ?? string.Empty;
         }
 
         //todo
