@@ -32,6 +32,9 @@ namespace Base.Models
         //default locale code
         public string Locale { get; set; } = "zh-TW";
 
+        //是否啟用多國語系
+        public bool MultiLang { get; set; } = false;
+
         //server Id for new key
         public string ServerId { get; set; } = "";
 
