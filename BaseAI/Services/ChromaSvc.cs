@@ -5,13 +5,20 @@ using Newtonsoft.Json.Linq;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System;
 
 namespace BaseAI.Services
 {
-    //Chroma 使用 http 連線, 無需第3方套件
-    public class ChromaSvc(string embedDbStr, string embedTableName, int embedDim) : 
-        AbEmbedDbSvc(embedDbStr, embedTableName, embedDim)
+    // Chroma 使用 HTTP 協定, 沒有提供官方 C# SDK
+    public class ChromaSvc : AbEmbedDbSvc
     {
+        public ChromaSvc(string embedDbStr, string embedTableName, int embedDim) : 
+            base(embedDbStr, embedTableName, embedDim)
+        {
+        }
+
         private string _nowCollectTable = "";
 
         private async Task<string> GetCollectIdA(string table)
@@ -29,7 +36,7 @@ namespace BaseAI.Services
                         using var createResp = await _httpClient.PostAsJsonAsync(_embedDbStr, createPayload);
                         if (!createResp.IsSuccessStatusCode)
                         {
-                            _Log.Error(preFun + "自動建立 Collection 失敗: " + await createResp.Content.ReadAsStringAsync());
+                            _Log.Error(preFun + "建立 Collection 失敗: " + await createResp.Content.ReadAsStringAsync());
                             return "";
                         }
                         var createJson = await createResp.Content.ReadAsStringAsync();
@@ -47,45 +54,18 @@ namespace BaseAI.Services
             }
             catch (Exception ex)
             {
-                _Log.Error(preFun + "連線Chroma失敗, " + ex.Message);
+                _Log.Error(preFun + "連接 Chroma 失敗, " + ex.Message);
                 return "";
             }
         }
 
         public override async Task<bool> CreateA(string tableName, string id, float[] vector, string fileId)
         {
-            //connect table, 有 using var 所以不使用 goto
+            //connect table, 使用 using var 所以不可以使用 goto
             const string preFun = "ChromaSvc.cs CreateA() failed: ";
             var collectId = await GetCollectIdA(tableName);
             if (string.IsNullOrEmpty(collectId)) return false;
 
-            /*
-            var resp = await _httpClient.GetAsync($"{_embedDbStr}/{_embedTableName}");
-            if (!resp.IsSuccessStatusCode)
-            {
-                _Log.Error(preFun + await resp.Content.ReadAsStringAsync());
-                return false;
-            }
-
-            //check table existed
-            var collect = JObject.Parse(await resp.Content.ReadAsStringAsync());
-            var collectId = collect["id"]?.ToString();
-            if (string.IsNullOrWhiteSpace(collectId))
-            {
-                _Log.Error(preFun + "Chroma collection Id missing.");
-                return false;
-            }
-            */
-
-            //prepare row
-            /*
-            var payload = new JObject
-            {
-                ["ids"] = new JArray(id),
-                ["documents"] = new JArray(title),
-                ["embeddings"] = JArray.FromObject(new[] { vector })
-            };
-            */
             var json = new
             {
                 ids = new[] { id },
@@ -95,12 +75,6 @@ namespace BaseAI.Services
                 }
             };
 
-            //if (metadata != null)
-            //    payload["metadatas"] = JArray.FromObject(new[] { metadata });
-
-            //using var content = new StringContent(payload.ToString(Newtonsoft.Json.Formatting.None),
-            //    Encoding.UTF8, "application/json");
-
             //write row
             using var resp2 = await _httpClient.PostAsJsonAsync($"{_embedDbStr}/{collectId}/add", json);
             if (!resp2.IsSuccessStatusCode)
@@ -109,7 +83,32 @@ namespace BaseAI.Services
                 return false;
             }
 
-            //case of
+            //case of ok
+            return true;
+        }
+
+        public override async Task<bool> UpdateA(string tableName, string id, float[] vector, string fileId)
+        {
+            const string preFun = "ChromaSvc.cs UpdateA() failed: ";
+            var collectId = await GetCollectIdA(tableName);
+            if (string.IsNullOrEmpty(collectId)) return false;
+
+            var json = new
+            {
+                ids = new[] { id },
+                embeddings = new[] { vector },
+                metadatas = new[]{
+                    new Dictionary<string, object>{["FileId"] = fileId}
+                }
+            };
+
+            using var resp2 = await _httpClient.PostAsJsonAsync($"{_embedDbStr}/{collectId}/update", json);
+            if (!resp2.IsSuccessStatusCode)
+            {
+                _Log.Error(preFun + await resp2.Content.ReadAsStringAsync());
+                return false;
+            }
+
             return true;
         }
 
@@ -139,27 +138,10 @@ namespace BaseAI.Services
             var queryPayload = new
             {
                 query_embeddings = new[] { vector },
-                n_results = 4
+                n_results = 5
             };
-
-            var queryJson = JObject.FromObject(queryPayload).ToString(Newtonsoft.Json.Formatting.None);
-            using var queryContent = new StringContent(queryJson, Encoding.UTF8, "application/json");
-
-            var queryResponse = await _httpClient.PostAsync(queryUrl, queryContent);
-            if (!queryResponse.IsSuccessStatusCode)
-                return "Error: Chroma query failed.";
-
-            var resJson = JObject.Parse(await queryResponse.Content.ReadAsStringAsync());
-            var documents = resJson["documents"]?[0] as JArray;
-            if (documents == null || documents.Count == 0)
-                return "查無相關資訊。";
-
-            return string.Join("\n", documents.Select(d => d.ToString()));
-        }
-
-        public override Task ClearA()
-        {
-            throw new NotImplementedException();
+            
+            return "todo";
         }
 
         public override async Task<bool> DeleteByCondA(string tableName, string fid, string value)
@@ -173,19 +155,22 @@ namespace BaseAI.Services
                 where = new Dictionary<string, string> { [fid] = value }
             };
 
-            //using var content = new StringContent(json, Encoding.UTF8, "application/json");
             using var resp = await _httpClient.PostAsJsonAsync(
                 $"{_embedDbStr}/{collectId}/delete", json);
 
             if (!resp.IsSuccessStatusCode)
             {
-                //throw new Exception(await resp.Content.ReadAsStringAsync());
-                _Log.Error(preFun + "delete 失敗。");
+                _Log.Error(preFun + "delete 失敗");
                 return false;
             }
 
             //case ok
             return true;
+        }
+
+        public override Task ClearA()
+        {
+            throw new NotImplementedException();
         }
     }
 }

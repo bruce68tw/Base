@@ -1,4 +1,4 @@
-﻿using BaseAI.Models;
+using BaseAI.Models;
 
 namespace BaseAI.Interfaces
 {
@@ -11,6 +11,7 @@ namespace BaseAI.Interfaces
 
 
         public abstract Task<bool> CreateA(string tableName, string id, float[] vector, string fileId);
+        public abstract Task<bool> UpdateA(string tableName, string id, float[] vector, string fileId);
 
         public abstract Task<EmbedDocuDto?> GetA(string id);
 
@@ -33,3 +34,4 @@ namespace BaseAI.Interfaces
 
     }
 }
+
