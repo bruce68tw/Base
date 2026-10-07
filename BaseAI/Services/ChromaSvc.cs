@@ -1,4 +1,4 @@
-﻿using Base.Services;
+using Base.Services;
 using BaseAI.Interfaces;
 using BaseAI.Models;
 using Newtonsoft.Json.Linq;
@@ -22,6 +22,21 @@ namespace BaseAI.Services
                 using var resp = await _httpClient.GetAsync($"{_embedDbStr}/{table}");
                 if (!resp.IsSuccessStatusCode)
                 {
+                    // 如果找不到 Collection，就自動建立它
+                    if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        var createPayload = new { name = table };
+                        using var createResp = await _httpClient.PostAsJsonAsync(_embedDbStr, createPayload);
+                        if (!createResp.IsSuccessStatusCode)
+                        {
+                            _Log.Error(preFun + "自動建立 Collection 失敗: " + await createResp.Content.ReadAsStringAsync());
+                            return "";
+                        }
+                        var createJson = await createResp.Content.ReadAsStringAsync();
+                        using var createDoc = JsonDocument.Parse(createJson);
+                        return createDoc.RootElement.GetProperty("id").GetString()!;
+                    }
+
                     _Log.Error(preFun + await resp.Content.ReadAsStringAsync());
                     return "";
                 }

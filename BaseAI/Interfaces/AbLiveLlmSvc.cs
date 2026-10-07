@@ -121,7 +121,7 @@ namespace BaseAI.Interfaces
             {
                 while (_uiSocketSvc.IsOpen && !lifeTime.IsCancellationRequested)
                 {
-                    turnBuffer.EnableLiveTranscription();
+                    turnBuffer.EnableLiveTranScript();
                     // 每次連線都用目前歷史重新產生設定，讓重連後的 provider session 延續對話。
                     await ConnectLlmA(fnGetLlmOpt(history.ToArray()), lifeTime.Token);
 
@@ -238,7 +238,7 @@ namespace BaseAI.Interfaces
                     {
                         // 音訊輸入結束時提交回合；沒有前端逐字稿則保留通用備援文字。
                         turnBuffer.SetFallbackUserText("[Audio Input]");
-                        turnBuffer.CompleteInputAudio();
+                        turnBuffer.FinishInputAudio();
                         await WebToLlmAudioEndA(sendCt);
                     }
                 }
@@ -302,14 +302,14 @@ namespace BaseAI.Interfaces
                 //中斷
                 else if (response.Type == LlmRespTypeEnum.Interrupted)
                 {
-                    if (turnBuffer.TryInterrupt(out var interruptedTurn))
+                    if (turnBuffer.TryBreak(out var interruptedTurn))
                         await onTurnCompleted(interruptedTurn, ct);
 
                     await WebToUiDataA(new { type = "interrupted" }, ct);
                 }
                 else if (response.Type == LlmRespTypeEnum.Audio && response.Audio != null)
                 {
-                    turnBuffer.MarkAssistantResponseInProgress();
+                    turnBuffer.MarkLlmResping();
                     // 音訊以 Base64 傳給前端播放。
                     await WebToUiDataA(new
                     {
@@ -320,9 +320,9 @@ namespace BaseAI.Interfaces
                 else if (response.Type == LlmRespTypeEnum.OutputTranScript &&
                     !string.IsNullOrWhiteSpace(response.Text))
                 {
-                    turnBuffer.MarkAssistantResponseInProgress();
+                    turnBuffer.MarkLlmResping();
                     // 逐字稿同時累積到回合緩衝，並即時顯示於前端。
-                    turnBuffer.AppendAssistantText(response.Text);
+                    turnBuffer.AppendLlmText(response.Text);
                     await WebToUiDataA(new { type = "transcription", text = response.Text }, ct);
                 }
                 else if (response.Type == LlmRespTypeEnum.InputTranScript &&
@@ -336,7 +336,7 @@ namespace BaseAI.Interfaces
                 }
                 else if (response.Type == LlmRespTypeEnum.Completed)
                 {
-                    if (turnBuffer.ConsumeInterruptedTail())
+                    if (turnBuffer.ConsumeBreakTail())
                     {
                         await WebToUiDataA(new { type = "turnComplete" }, ct);
                         continue;
