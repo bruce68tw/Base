@@ -64,6 +64,8 @@ namespace BaseAI.Interfaces
         /// <param name="ct">取消關閉操作的權杖。</param>
         public virtual async Task CloseA(CancellationToken ct = default)
         {
+            _Log.Debug("AbLiveLlmSvc CloseA");
+
             if (_llmSocketSvc != null)
                 await _llmSocketSvc.CloseA(WebSocketCloseStatus.NormalClosure, "Live LLM session ended");
         }
@@ -97,8 +99,11 @@ namespace BaseAI.Interfaces
             Func<IReadOnlyCollection<LlmHistoryDto>, LlmOptDto> fnGetLlmOpt,
             Func<LlmTurnResultDto, CancellationToken, Task<bool>> fnTurnEnd,
             int maxHistoryTurns = 10, CancellationToken ct = default,
-            Func<LiveLlmToolCallDto, CancellationToken, Task<object>>? fnToolCall = null)
+            Func<LiveLlmToolCallDto, CancellationToken, Task<object>>? fnToolCall = null,
+            Func<Task>? fnBeforeClose = null)
         {
+            //_Log.Debug("AbLiveLlmSvc BuildBridgeA");
+
             ArgumentNullException.ThrowIfNull(fnGetLlmOpt);
             ArgumentNullException.ThrowIfNull(fnTurnEnd);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxHistoryTurns);
@@ -180,15 +185,24 @@ namespace BaseAI.Interfaces
                 // 結束 client 接收佇列並關閉上游 LLM session；client WebSocket 的所有權仍屬呼叫端。
                 lifeTime.Cancel();
                 messages.Writer.TryComplete();
-                await WatchTaskA(uiToWeb);
-                await CloseA(CancellationToken.None);
+                try
+                {
+                    await WatchTaskA(uiToWeb);
+                    if (fnBeforeClose != null)
+                        await fnBeforeClose();
+                }
+                finally
+                {
+                    await CloseA(CancellationToken.None);
+                }
             }
         }
 
         /// <summary>持續接收 client WebSocket 訊息，依序寫入有界佇列；結束時完成佇列。</summary>
         private async Task OnUiToWebTurnA(ChannelWriter<string> writer, CancellationToken ct)
         {
-            _Log.Info("OnUiToWebTurnA");
+            _Log.Debug("AbLiveLlmSvc Start OnUiToWebTurnA");
+
             try
             {
                 while (_uiSocketSvc.IsOpen && !ct.IsCancellationRequested)
@@ -209,7 +223,7 @@ namespace BaseAI.Interfaces
         private async Task OnWebToLlmTurnA(ChannelReader<string> reader,
             AudioTurnBufferSvc turnBuffer, CancellationToken readCt, CancellationToken sendCt)
         {
-            _Log.Info("OnWebToLlmTurnA");
+            _Log.Debug("AbLiveLlmSvc Start OnWebToLlmTurnA");
 
             await foreach (var msg in reader.ReadAllAsync(readCt))
             {
@@ -265,10 +279,12 @@ namespace BaseAI.Interfaces
             Action pauseSender, CancellationToken ct,
             Func<LiveLlmToolCallDto, CancellationToken, Task<object>>? fnToolCall = null)
         {
-            //_Log.Info("OnLlmToUiTurnA");   //這裡不寫log, 會搞混
+            _Log.Debug("AbLiveLlmSvc Start OnLlmToUiTurnA");   //這裡不寫log, 會搞混
 
-            await foreach (var response in OnLlmToWebTurnA(ct))
+            try
             {
+                await foreach (var response in OnLlmToWebTurnA(ct))
+                {
                 if (!_uiSocketSvc.IsOpen) break;
 
                 if (response.Type == LlmRespTypeEnum.ToolCall && response.ToolCalls != null)
@@ -345,7 +361,7 @@ namespace BaseAI.Interfaces
                     var shouldReconnect = false;
                     if (turnBuffer.TryComplete(out var turn))
                     {
-                        _Log.Info($"Turn tokens={turn.TotalTokens}");
+                        _Log.Debug($"AbLiveLlmSvc Turn tokens={turn.TotalTokens}");
                         // 將完整回合加進重連歷史，並限制歷史只保留最近指定回合數。
                         history.Add(new LlmHistoryDto { Role = "user", Text = turn.UserText });
                         history.Add(new LlmHistoryDto { Role = "assistant", Text = turn.AssistantText });
@@ -368,7 +384,17 @@ namespace BaseAI.Interfaces
                     // 未重連時只通知前端本回合結束，繼續使用同一個 provider session。
                     await WebToUiDataA(new { type = "turnComplete" }, ct);
 
-                    _Log.Info("WebToUiDataA Completed");
+                    _Log.Debug("AbLiveLlmSvc WebToUiDataA Completed");
+                }
+                }
+            }
+            finally
+            {
+                // Provider 關閉或 session 被取消時，保存尚未收到 Completed 的使用者回合。
+                if (turnBuffer.TryBreak(out var pendingTurn))
+                {
+                    _Log.Debug("AbLiveLlmSvc Flushing pending turn after receive loop ended.");
+                    await onTurnCompleted(pendingTurn, CancellationToken.None);
                 }
             }
 
@@ -377,9 +403,9 @@ namespace BaseAI.Interfaces
         }
 
         /// <summary>以標準 error 訊息格式回覆 client。</summary>
-        private Task WebToUiErrorA(string message,
-            CancellationToken ct = default)
+        private Task WebToUiErrorA(string message, CancellationToken ct = default)
         {
+            _Log.Debug("AbLiveLlmSvc WebToUiErrorA");
             return WebToUiDataA(new { type = "error", message }, ct);
         }
 
@@ -405,6 +431,8 @@ namespace BaseAI.Interfaces
         /// <summary>釋放上游 WebSocket 與其傳輸包裝資源。</summary>
         public async ValueTask DisposeAsync()
         {
+            _Log.Debug("AbLiveLlmSvc DisposeAsync");
+
             _llmSocketSvc?.Dispose();
             _llmSocketSvc = null!;
 

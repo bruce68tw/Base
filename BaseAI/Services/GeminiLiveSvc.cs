@@ -20,6 +20,8 @@ namespace BaseAI.Services
         /// </summary>
         public override async Task ConnectLlmA(LlmOptDto optDto, CancellationToken ct = default)
         {
+            _Log.Debug("GeminiLiveSvc ConnectLlmA");
+
             if (string.IsNullOrWhiteSpace(optDto.EndPoint))
                 throw new ArgumentException("Gemini Live endpoint is required.", nameof(optDto));
             //if (string.IsNullOrWhiteSpace(_apiKey))
@@ -127,7 +129,8 @@ namespace BaseAI.Services
         /// <summary>通知 Gemini Live 目前的音訊回合已結束。</summary>
         public override Task WebToLlmAudioEndA(CancellationToken ct = default)
         {
-            _Log.Info("WebToLlmAudioEndA");
+            _Log.Debug("GeminiLiveSvc WebToLlmAudioEndA");
+
             return WebToLlmDataA(new
             {
                 realtimeInput = new { audioStreamEnd = true }
@@ -137,6 +140,8 @@ namespace BaseAI.Services
         /// <summary>以已完成的使用者回合傳送文字訊息。</summary>
         public override async Task WebToLlmTextA(string text, CancellationToken ct = default)
         {
+            _Log.Debug("GeminiLiveSvc WebToLlmTextA: " + text);
+
             await WebToLlmDataA(new
             {
                 clientContent = new
@@ -151,7 +156,8 @@ namespace BaseAI.Services
         /// <summary>回傳 Gemini Live 先前要求執行的工具結果。</summary>
         public override Task WebToLlmToolRespA(IEnumerable<LiveLlmToolRespDto> respDtos, CancellationToken ct = default)
         {
-            _Log.Info("WebToLlmToolRespA");
+            _Log.Debug("GeminiLiveSvc WebToLlmToolRespA");
+
             // id 必須與 toolCall 的 id 相符，Gemini 才能對應結果。
             var functionResponses = respDtos.Select(response => new
             {
@@ -171,7 +177,8 @@ namespace BaseAI.Services
         /// </summary>
         public override async IAsyncEnumerable<LlmRespDto> OnLlmToWebTurnA([EnumeratorCancellation] CancellationToken ct = default)
         {
-            _Log.Info("OnLlmToWebTurnA");
+            _Log.Debug("GeminiLiveSvc Start OnLlmToWebTurnA");
+
             while (IsOpen)
             {
                 var respText = await LlmToWebDataA(256 * 1024, ct);
@@ -213,7 +220,7 @@ namespace BaseAI.Services
                 var funCalls = respJson["toolCall"]?["functionCalls"] as JArray;
                 if (funCalls != null)
                 {
-                    _Log.Info($"Gemini Live tool call received: count={funCalls.Count}.");
+                    _Log.Debug($"GeminiLiveSvc Tool Call received: count={funCalls.Count}.");
                     // 工具呼叫需要由上層執行後，再透過 SendToolRespA 回傳結果。
                     yield return new LlmRespDto
                     {
@@ -235,8 +242,8 @@ namespace BaseAI.Services
                 var isTurnComplete = content?["turnComplete"]?.Value<bool>() == true;
                 if (isInterrupted || isTurnComplete)
                 {
-                    _Log.Info(
-                        $"Gemini Live serverContent terminal event: interrupted={isInterrupted}, " +
+                    _Log.Debug(
+                        $"GeminiLiveSvc serverContent terminal: interrupted={isInterrupted}, " +
                         $"turnComplete={isTurnComplete}, inputTranscription={content?["inputTranscription"] != null}, " +
                         $"outputTranscription={content?["outputTranscription"] != null}.");
                 }

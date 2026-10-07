@@ -128,7 +128,7 @@ namespace Base.Services
                 try
                 {
                     if (msg.Substring(msg.Length - 1, 1) != "\n") msg += "\n";
-                    msg = DateTime.Now.ToString("HH:mm:ss") + "(" + i + "); " + msg;
+                    msg = DateTime.Now.ToString("HH:mm:ss.fff") + "(" + i + "); " + msg;
                     File.AppendAllText(path, msg);
                     break;
                 }

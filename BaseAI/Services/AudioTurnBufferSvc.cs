@@ -235,6 +235,12 @@ namespace BaseAI.Services
                 if (string.IsNullOrWhiteSpace(assistantText))
                     assistantText = "[Interrupted]";
 
+                if (_nowInputAudio.Length > 0)
+                {
+                    _finishInputAudio.Enqueue(_nowInputAudio.ToArray());
+                    _nowInputAudio.SetLength(0);
+                }
+
                 var inputAudio = TakeFinishInputAudio();
                 // 文字與音訊都為空，代表沒有可封存內容。
                 if (inputAudio.Length == 0 &&
