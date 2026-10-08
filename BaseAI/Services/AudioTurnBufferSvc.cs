@@ -4,7 +4,7 @@ using System.Text;
 namespace BaseAI.Services
 {
     /// <summary>
-    /// 管理「單一語音對話回合」的暫存狀態。
+    /// 管理「語音單一對話回合」的暫存狀態。
     /// 主要負責：
     /// 1) 聚合使用者文字（前端直接文字或 Live 轉錄）
     /// 2) 聚合助理輸出逐字稿

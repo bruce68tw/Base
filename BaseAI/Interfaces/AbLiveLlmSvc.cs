@@ -371,7 +371,7 @@ namespace BaseAI.Interfaces
                             _Log.Debug($"AbLiveLlmSvc Turn tokens={turn.TotalTokens}");
                             // 將完整回合加進重連歷史，並限制歷史只保留最近指定回合數。
                             history.Add(new LlmHistoryDto { Role = "user", Text = turn.UserText });
-                            history.Add(new LlmHistoryDto { Role = "assistant", Text = turn.AssistantText });
+                            history.Add(new LlmHistoryDto { Role = "assistant", Text = turn.LlmText });
                             var maxHistoryMessages = maxHistoryTurns * 2;
                             if (history.Count > maxHistoryMessages)
                                 history.RemoveRange(0, history.Count - maxHistoryMessages);

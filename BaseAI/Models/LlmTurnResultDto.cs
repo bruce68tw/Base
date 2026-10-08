@@ -2,9 +2,9 @@ namespace BaseAI.Models
 {
     public sealed record LlmTurnResultDto(
         string UserText,
-        string AssistantText,
+        string LlmText,
         int TotalTokens,
         byte[] InputAudio,
-        bool WasInterrupted,
-        bool RequiresSpeechToText);
+        bool IsBreak,
+        bool NeedSpeechToText);
 }
