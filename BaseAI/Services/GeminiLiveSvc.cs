@@ -153,7 +153,7 @@ namespace BaseAI.Services
             }, ct);
         }
 
-        /// <summary>回傳 Gemini Live 先前要求執行的工具結果。</summary>
+        /// <summary>把 server 上的 Tool response 結果傳給 LLM</summary>
         public override Task WebToLlmToolRespA(IEnumerable<LiveLlmToolRespDto> respDtos, CancellationToken ct = default)
         {
             _Log.Debug("GeminiLiveSvc WebToLlmToolRespA");
@@ -175,7 +175,8 @@ namespace BaseAI.Services
         /// <summary>
         /// 持續接收 Gemini Live 訊息，並依訊息內容產生錯誤、工具呼叫、音訊、逐字稿或回合完成事件。
         /// </summary>
-        public override async IAsyncEnumerable<LlmRespDto> OnLlmToWebTurnA([EnumeratorCancellation] CancellationToken ct = default)
+        public override async IAsyncEnumerable<LlmRespDto> OnLlmToWebTurnA(
+            [EnumeratorCancellation] CancellationToken ct = default)
         {
             _Log.Debug("GeminiLiveSvc Start OnLlmToWebTurnA");
 
@@ -221,6 +222,7 @@ namespace BaseAI.Services
                 if (funCalls != null)
                 {
                     _Log.Debug($"GeminiLiveSvc Tool Call received: count={funCalls.Count}.");
+
                     // 工具呼叫需要由上層執行後，再透過 SendToolRespA 回傳結果。
                     yield return new LlmRespDto
                     {
@@ -235,24 +237,22 @@ namespace BaseAI.Services
                     continue;
                 }
 
-                //語音
+                //中斷 or Turn完成
                 var content = respJson["serverContent"];
-                //中斷
-                var isInterrupted = content?["interrupted"]?.Value<bool>() == true;
-                var isTurnComplete = content?["turnComplete"]?.Value<bool>() == true;
-                if (isInterrupted || isTurnComplete)
-                {
-                    _Log.Debug(
-                        $"GeminiLiveSvc serverContent terminal: interrupted={isInterrupted}, " +
-                        $"turnComplete={isTurnComplete}, inputTranscription={content?["inputTranscription"] != null}, " +
-                        $"outputTranscription={content?["outputTranscription"] != null}.");
-                }
-                if (isInterrupted)
+                var isBreak = content?["interrupted"]?.Value<bool>() == true;
+                var isTurnFinish = content?["turnComplete"]?.Value<bool>() == true;
+                _Log.Debug(
+                    $"GeminiLiveSvc OnLlmToWebTurnA serverContent: interrupted={isBreak}, " +
+                    $"turnComplete={isTurnFinish}, inputTranscription={content?["inputTranscription"] != null}, " +
+                    $"outputTranscription={content?["outputTranscription"] != null}.");
+
+                //case 中斷
+                if (isBreak)
                     yield return new LlmRespDto { Type = LlmRespTypeEnum.Interrupted };
 
                 // 音訊在 modelTurn.parts[].inlineData，預設輸出為 24 kHz PCM。
                 var turnParts = content?["modelTurn"]?["parts"] as JArray;
-                if (!isInterrupted && turnParts != null)
+                if (turnParts != null)
                 {
                     // 一個 modelTurn 可能同時包含多個音訊片段，因此逐一產生事件。
                     foreach (var part in turnParts)
@@ -273,25 +273,25 @@ namespace BaseAI.Services
                 }
 
                 //回答的語音轉譯文字
-                var tranScript = content?["outputTranscription"]?["text"]?.ToString();
-                if (!string.IsNullOrWhiteSpace(tranScript))
+                var outputTS = content?["outputTranscription"]?["text"]?.ToString();
+                if (!string.IsNullOrWhiteSpace(outputTS))
                 {
                     // outputAudioTranscription 會將模型語音轉成文字事件。
                     yield return new LlmRespDto
                     {
                         Type = LlmRespTypeEnum.OutputTranScript,
-                        Text = tranScript
+                        Text = outputTS
                     };
                 }
 
                 //輸入的語音轉譯文字
-                var inputTranScript = content?["inputTranscription"]?["text"]?.ToString();
-                if (!string.IsNullOrWhiteSpace(inputTranScript))
+                var inputTS = content?["inputTranscription"]?["text"]?.ToString();
+                if (!string.IsNullOrWhiteSpace(inputTS))
                 {
                     yield return new LlmRespDto
                     {
                         Type = LlmRespTypeEnum.InputTranScript,
-                        Text = inputTranScript
+                        Text = inputTS
                     };
                 }
 
@@ -301,7 +301,7 @@ namespace BaseAI.Services
                     yield return new LlmRespDto { Type = LlmRespTypeEnum.Usage, TotalTokens = totalTokens };
 
                 // turnComplete 可能與音訊、逐字稿同封訊息出現，因此最後才產生。
-                if (isTurnComplete)
+                if (isTurnFinish)
                     yield return new LlmRespDto { Type = LlmRespTypeEnum.Completed };
             }
         }

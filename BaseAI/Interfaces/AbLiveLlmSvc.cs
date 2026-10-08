@@ -49,7 +49,7 @@ namespace BaseAI.Interfaces
         /// <param name="ct">取消傳送操作的權杖。</param>
         public abstract Task WebToLlmTextA(string text, CancellationToken ct = default);
 
-        /// <summary>將工具執行結果回傳給 provider。</summary>
+        /// <summary>把 server 上的 Tool response 結果傳給 LLM</summary>
         /// <param name="responses">要回傳的工具呼叫結果。</param>
         /// <param name="ct">取消傳送操作的權杖。</param>
         public abstract Task WebToLlmToolRespA(IEnumerable<LiveLlmToolRespDto> responses, CancellationToken ct = default);
@@ -79,12 +79,6 @@ namespace BaseAI.Interfaces
             catch { }
         }
 
-        /// <summary>透過建構時提供的 UI socket 傳送 JSON 訊息。</summary>
-        public Task WebToUiDataA(object payload, CancellationToken ct = default)
-        {
-            return _uiSocketSvc.SendDataA(payload, ct);
-        }
-
         /// <summary>
         /// 使用 UI WebSocketSvc 建立 client 與 Live LLM 的雙向橋接，並在回合 callback 要求時重建 LLM session。
         /// client 音訊訊息使用 <c>type=audio</c>、Base64 <c>audioData</c> 及 <c>frontTurnComplete</c>；
@@ -92,12 +86,12 @@ namespace BaseAI.Interfaces
         /// <c>transcription</c>、<c>turnComplete</c> 或 <c>error</c> 傳回。
         /// </summary>
         /// <param name="fnGetLlmOpt">每次連線或重連時呼叫，依目前對話歷史建立 provider 設定。</param>
-        /// <param name="fnTurnEnd">有效回合完成後呼叫，參數為使用者文字、助理文字、本回合 token 數及取消權杖；回傳 true 會重建 LLM session。</param>
+        /// <param name="fnTurnFinish">有效回合完成後呼叫，參數為使用者文字、助理文字、本回合 token 數及取消權杖；回傳 true 會重建 LLM session。</param>
         /// <param name="maxHistoryTurns">重連時保留的最近對話回合數，每回合包含一筆 user 與一筆 assistant 歷史。</param>
         /// <param name="ct">取消整個橋接工作階段的權杖。</param>
         public async Task BuildBridgeA(
             Func<IReadOnlyCollection<LlmHistoryDto>, LlmOptDto> fnGetLlmOpt,
-            Func<LlmTurnResultDto, CancellationToken, Task<bool>> fnTurnEnd,
+            Func<LlmTurnResultDto, CancellationToken, Task<bool>> fnTurnFinish,
             int maxHistoryTurns = 10, CancellationToken ct = default,
             Func<LiveLlmToolCallDto, CancellationToken, Task<object>>? fnToolCall = null,
             Func<Task>? fnBeforeClose = null)
@@ -105,7 +99,7 @@ namespace BaseAI.Interfaces
             //_Log.Debug("AbLiveLlmSvc BuildBridgeA");
 
             ArgumentNullException.ThrowIfNull(fnGetLlmOpt);
-            ArgumentNullException.ThrowIfNull(fnTurnEnd);
+            ArgumentNullException.ThrowIfNull(fnTurnFinish);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxHistoryTurns);
 
             // 有界佇列在 provider 重連期間暫存 client 訊息；滿載時以等待形成背壓。
@@ -120,7 +114,7 @@ namespace BaseAI.Interfaces
             var turnBuffer = new AudioTurnBufferSvc();
 
             // client 接收工作跨越多次 LLM session，確保重連時仍能接收並暫存訊息。
-            var uiToWeb = OnUiToWebTurnA(messages.Writer, lifeTime.Token);
+            var uiToWebTurn = OnUiToWebTurnA(messages.Writer, lifeTime.Token);
 
             try
             {
@@ -133,35 +127,35 @@ namespace BaseAI.Interfaces
                     // 分別控制 LLM 回應接收及 client 訊息送出，批次重連時可獨立停止兩條工作。
                     using var receiverCts = CancellationTokenSource.CreateLinkedTokenSource(lifeTime.Token);
                     using var senderCts = CancellationTokenSource.CreateLinkedTokenSource(lifeTime.Token);
-                    var webToLlm = OnWebToLlmTurnA(
+                    var webToLlmTurn = OnWebToLlmTurnA(
                         messages.Reader, turnBuffer, senderCts.Token, lifeTime.Token);
-                    var llmToUi = OnLlmToUiTurnA(
+                    var llmToUiTurn = OnLlmToUiTurnA(
                         turnBuffer, history, maxHistoryTurns,
-                        fnTurnEnd, senderCts.Cancel, receiverCts.Token, fnToolCall);
+                        fnTurnFinish, senderCts.Cancel, receiverCts.Token, fnToolCall);
 
                     // 任一端結束便收束目前 session；clientReceive 本身會持續跨越 LLM 重連。
-                    var completedTask = await Task.WhenAny(uiToWeb, webToLlm, llmToUi);
+                    var completedTask = await Task.WhenAny(uiToWebTurn, webToLlmTurn, llmToUiTurn);
                     var shouldReconnect = false;
                     try
                     {
-                        if (completedTask == uiToWeb)
+                        if (completedTask == uiToWebTurn)
                             break;
 
-                        if (completedTask == webToLlm)
+                        if (completedTask == webToLlmTurn)
                         {
-                            await webToLlm;
+                            await webToLlmTurn;
                             break;
                         }
 
-                        shouldReconnect = await llmToUi;
+                        shouldReconnect = await llmToUiTurn;
                     }
                     finally
                     {
                         // 先取消並等待 session 工作結束，再建立下一個 provider socket，避免新舊工作重疊。
                         receiverCts.Cancel();
                         senderCts.Cancel();
-                        await WatchTaskA(webToLlm);
-                        await WatchTaskA(llmToUi);
+                        await WatchTaskA(webToLlmTurn);
+                        await WatchTaskA(llmToUiTurn);
                     }
 
                     if (!shouldReconnect)
@@ -173,6 +167,7 @@ namespace BaseAI.Interfaces
             // 整個工作階段被取消屬正常結束，不回報錯誤。
             catch (OperationCanceledException) when (lifeTime.IsCancellationRequested)
             {
+                _Log.Debug("AbLiveLlmSvc 取消");
             }
             catch (Exception ex)
             {
@@ -187,7 +182,7 @@ namespace BaseAI.Interfaces
                 messages.Writer.TryComplete();
                 try
                 {
-                    await WatchTaskA(uiToWeb);
+                    await WatchTaskA(uiToWebTurn);
                     if (fnBeforeClose != null)
                         await fnBeforeClose();
                 }
@@ -196,6 +191,12 @@ namespace BaseAI.Interfaces
                     await CloseA(CancellationToken.None);
                 }
             }
+        }
+
+        /// <summary>透過建構時提供的 UI socket 傳送 JSON 訊息。</summary>
+        private Task WebToUiDataA(object payload, CancellationToken ct = default)
+        {
+            return _uiSocketSvc.SendDataA(payload, ct);
         }
 
         /// <summary>持續接收 client WebSocket 訊息，依序寫入有界佇列；結束時完成佇列。</summary>
@@ -274,7 +275,7 @@ namespace BaseAI.Interfaces
         /// Turn表回合, Socket傳送語音會分成多個trunk, Turn表示多個trunk
         /// </summary>
         private async Task<bool> OnLlmToUiTurnA(
-            AudioTurnBufferSvc turnBuffer, List<LlmHistoryDto> history, int maxHistoryTurns,
+            AudioTurnBufferSvc turnBufferSvc, List<LlmHistoryDto> history, int maxHistoryTurns,
             Func<LlmTurnResultDto, CancellationToken, Task<bool>> onTurnCompleted,
             Action pauseSender, CancellationToken ct,
             Func<LiveLlmToolCallDto, CancellationToken, Task<object>>? fnToolCall = null)
@@ -283,117 +284,123 @@ namespace BaseAI.Interfaces
 
             try
             {
-                await foreach (var response in OnLlmToWebTurnA(ct))
+                await foreach (var respDto in OnLlmToWebTurnA(ct))
                 {
-                if (!_uiSocketSvc.IsOpen) break;
+                    if (!_uiSocketSvc.IsOpen) break;
 
-                if (response.Type == LlmRespTypeEnum.ToolCall && response.ToolCalls != null)
-                {
-                    // 未回覆工具結果時 provider 會一直等待，因此失敗也要回傳錯誤內容。
-                    var toolResps = new List<LiveLlmToolRespDto>();
-                    foreach (var call in response.ToolCalls)
+                    //case Tool Call
+                    if (respDto.Type == LlmRespTypeEnum.ToolCall && respDto.ToolCalls != null)
                     {
-                        object result;
-                        try
+                        // 未回覆工具結果時 provider 會一直等待，因此失敗也要回傳錯誤內容。
+                        var toolResps = new List<LiveLlmToolRespDto>();
+                        foreach (var call in respDto.ToolCalls)
                         {
+                            object result;
+                            try
+                            {
                             result = fnToolCall == null
                                 ? new { error = "Tool not supported." }
                                 : await fnToolCall(call, ct);
+                            }
+                            catch (Exception ex) when (ex is not OperationCanceledException)
+                            {
+                                result = new { error = ex.Message };
+                            }
+                            toolResps.Add(new LiveLlmToolRespDto { Id = call.Id, Name = call.Name, Response = result });
                         }
-                        catch (Exception ex) when (ex is not OperationCanceledException)
-                        {
-                            result = new { error = ex.Message };
-                        }
-                        toolResps.Add(new LiveLlmToolRespDto { Id = call.Id, Name = call.Name, Response = result });
-                    }
-                    await WebToLlmToolRespA(toolResps, ct);
-                    continue;
-                }
-
-                // 錯誤事件轉成 error 訊息，但不結束接收迴圈。
-                if (response.Type == LlmRespTypeEnum.Error)
-                {
-                    await WebToUiErrorA(response.Text ?? "Live LLM 回傳錯誤。", ct);
-                }
-                //中斷
-                else if (response.Type == LlmRespTypeEnum.Interrupted)
-                {
-                    if (turnBuffer.TryBreak(out var interruptedTurn))
-                        await onTurnCompleted(interruptedTurn, ct);
-
-                    await WebToUiDataA(new { type = "interrupted" }, ct);
-                }
-                else if (response.Type == LlmRespTypeEnum.Audio && response.Audio != null)
-                {
-                    turnBuffer.MarkLlmResping();
-                    // 音訊以 Base64 傳給前端播放。
-                    await WebToUiDataA(new
-                    {
-                        mimeType = response.MimeType,
-                        audioData = Convert.ToBase64String(response.Audio)
-                    }, ct);
-                }
-                else if (response.Type == LlmRespTypeEnum.OutputTranScript &&
-                    !string.IsNullOrWhiteSpace(response.Text))
-                {
-                    turnBuffer.MarkLlmResping();
-                    // 逐字稿同時累積到回合緩衝，並即時顯示於前端。
-                    turnBuffer.AppendLlmText(response.Text);
-                    await WebToUiDataA(new { type = "transcription", text = response.Text }, ct);
-                }
-                else if (response.Type == LlmRespTypeEnum.InputTranScript &&
-                    !string.IsNullOrWhiteSpace(response.Text))
-                {
-                    turnBuffer.AppendInputTranScript(response.Text);
-                }
-                else if (response.Type == LlmRespTypeEnum.Usage)
-                {
-                    turnBuffer.SetTokens(response.TotalTokens);
-                }
-                else if (response.Type == LlmRespTypeEnum.Completed)
-                {
-                    if (turnBuffer.ConsumeBreakTail())
-                    {
-                        await WebToUiDataA(new { type = "turnComplete" }, ct);
+                        await WebToLlmToolRespA(toolResps, ct);
                         continue;
                     }
 
-                    var shouldReconnect = false;
-                    if (turnBuffer.TryComplete(out var turn))
+                    // 錯誤事件轉成 error 訊息，但不結束接收迴圈。
+                    if (respDto.Type == LlmRespTypeEnum.Error)
                     {
-                        _Log.Debug($"AbLiveLlmSvc Turn tokens={turn.TotalTokens}");
-                        // 將完整回合加進重連歷史，並限制歷史只保留最近指定回合數。
-                        history.Add(new LlmHistoryDto { Role = "user", Text = turn.UserText });
-                        history.Add(new LlmHistoryDto { Role = "assistant", Text = turn.AssistantText });
-                        var maxHistoryMessages = maxHistoryTurns * 2;
-                        if (history.Count > maxHistoryMessages)
-                            history.RemoveRange(0, history.Count - maxHistoryMessages);
-
-                        // 保存、計數等應用政策交由呼叫端決定是否重連。
-                        shouldReconnect = await onTurnCompleted(turn, ct);
+                        await WebToUiErrorA(respDto.Text ?? "Live LLM 回傳錯誤。", ct);
                     }
-
-                    if (shouldReconnect)
+                    //中斷
+                    else if (respDto.Type == LlmRespTypeEnum.Interrupted)
                     {
-                        // 暫停 client-to-LLM sender，讓重連期間到達的訊息留在有界佇列中。
-                        pauseSender();
+                        if (turnBufferSvc.TryBreak(out var interruptedTurn))
+                            await onTurnCompleted(interruptedTurn, ct);
+
+                        await WebToUiDataA(new { type = "interrupted" }, ct);
+                    }
+                    //語音
+                    else if (respDto.Type == LlmRespTypeEnum.Audio && respDto.Audio != null)
+                    {
+                        turnBufferSvc.MarkLlmResping();
+                        // 音訊以 Base64 傳給前端播放。
+                        await WebToUiDataA(new
+                        {
+                            mimeType = respDto.MimeType,
+                            audioData = Convert.ToBase64String(respDto.Audio)
+                        }, ct);
+                    }
+                    //輸出轉譯文字
+                    else if (respDto.Type == LlmRespTypeEnum.OutputTranScript &&
+                        !string.IsNullOrWhiteSpace(respDto.Text))
+                    {
+                        turnBufferSvc.MarkLlmResping();
+                        // 逐字稿同時累積到回合緩衝，並即時顯示於前端。
+                        turnBufferSvc.AppendLlmText(respDto.Text);
+                        await WebToUiDataA(new { type = "transcription", text = respDto.Text }, ct);
+                    }
+                    //輸入轉譯文字
+                    else if (respDto.Type == LlmRespTypeEnum.InputTranScript &&
+                        !string.IsNullOrWhiteSpace(respDto.Text))
+                    {
+                        turnBufferSvc.AppendInputTranScript(respDto.Text);
+                    }
+                    //計算token
+                    else if (respDto.Type == LlmRespTypeEnum.Usage)
+                    {
+                        turnBufferSvc.SetTokens(respDto.TotalTokens);
+                    }
+                    //資料傳送完成
+                    else if (respDto.Type == LlmRespTypeEnum.Completed)
+                    {
+                        if (turnBufferSvc.ConsumeBreakTail())
+                        {
+                            await WebToUiDataA(new { type = "turnComplete" }, ct);
+                            continue;
+                        }
+
+                        var shouldReconnect = false;
+                        if (turnBufferSvc.TryComplete(out var turn))
+                        {
+                            _Log.Debug($"AbLiveLlmSvc Turn tokens={turn.TotalTokens}");
+                            // 將完整回合加進重連歷史，並限制歷史只保留最近指定回合數。
+                            history.Add(new LlmHistoryDto { Role = "user", Text = turn.UserText });
+                            history.Add(new LlmHistoryDto { Role = "assistant", Text = turn.AssistantText });
+                            var maxHistoryMessages = maxHistoryTurns * 2;
+                            if (history.Count > maxHistoryMessages)
+                                history.RemoveRange(0, history.Count - maxHistoryMessages);
+
+                            // 保存、計數等應用政策交由呼叫端決定是否重連。
+                            shouldReconnect = await onTurnCompleted(turn, ct);
+                        }
+
+                        if (shouldReconnect)
+                        {
+                            // 暫停 client-to-LLM sender，讓重連期間到達的訊息留在有界佇列中。
+                            pauseSender();
+                            await WebToUiDataA(new { type = "turnComplete" }, ct);
+                            return true;
+                        }
+
+                        // 未重連時只通知前端本回合結束，繼續使用同一個 provider session。
                         await WebToUiDataA(new { type = "turnComplete" }, ct);
-                        return true;
+
+                        _Log.Debug("AbLiveLlmSvc OnLlmToUiTurnA Completed");
                     }
-
-                    // 未重連時只通知前端本回合結束，繼續使用同一個 provider session。
-                    await WebToUiDataA(new { type = "turnComplete" }, ct);
-
-                    _Log.Debug("AbLiveLlmSvc WebToUiDataA Completed");
-                }
                 }
             }
             finally
             {
                 // Provider 關閉或 session 被取消時，保存尚未收到 Completed 的使用者回合。
-                if (turnBuffer.TryBreak(out var pendingTurn))
+                if (turnBufferSvc.TryBreak(out var pendingTurn))
                 {
-                    _Log.Debug("AbLiveLlmSvc Flushing pending turn after receive loop ended.");
+                    _Log.Debug("AbLiveLlmSvc Flush pending turn after receive loop ended.");
                     await onTurnCompleted(pendingTurn, CancellationToken.None);
                 }
             }
@@ -403,7 +410,7 @@ namespace BaseAI.Interfaces
         }
 
         /// <summary>以標準 error 訊息格式回覆 client。</summary>
-        private Task WebToUiErrorA(string message, CancellationToken ct = default)
+        public Task WebToUiErrorA(string message, CancellationToken ct = default)
         {
             _Log.Debug("AbLiveLlmSvc WebToUiErrorA");
             return WebToUiDataA(new { type = "error", message }, ct);

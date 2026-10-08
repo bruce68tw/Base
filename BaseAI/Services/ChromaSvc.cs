@@ -1,4 +1,4 @@
-using Base.Services;
+﻿using Base.Services;
 using BaseAI.Interfaces;
 using BaseAI.Models;
 using Newtonsoft.Json.Linq;
@@ -117,9 +117,24 @@ namespace BaseAI.Services
             throw new NotImplementedException();
         }
 
-        public override Task DeleteA(string id)
+        public override async Task DeleteA(string id)
         {
-            throw new NotImplementedException();
+            const string preFun = "ChromaSvc.cs DeleteA() failed: ";
+            var collectId = await GetCollectIdA(_embedTableName);
+            if (string.IsNullOrEmpty(collectId)) return;
+
+            var json = new
+            {
+                ids = new[] { id }
+            };
+
+            using var resp = await _httpClient.PostAsJsonAsync(
+                $"{_embedDbStr}/{collectId}/delete", json);
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                _Log.Error(preFun + "delete 失敗: " + await resp.Content.ReadAsStringAsync());
+            }
         }
 
         public override async Task<string> VectorToTextA(string tableName, float[] vector  /*, int topK = 5*/)
