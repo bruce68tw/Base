@@ -3,7 +3,7 @@
     /// <summary>
     /// 建立 Live LLM 工作階段時使用的連線、生成與對話設定。
     /// </summary>
-    public class LlmOptDto
+    public class LiveLlmOptDto
     {
         /// <summary>Live LLM provider 的 WebSocket 端點。</summary>
         public string EndPoint { get; set; } = "";
@@ -22,6 +22,12 @@
 
         /// <summary>是否要求模型產生語音回覆；false 時只要求文字回覆。</summary>
         public bool AudioResponse { get; set; } = true;
+
+        /// <summary>傳入語音是否轉譯文字</summary>
+        public bool InputTranScript { get; set; } = true;
+
+        /// <summary>輸出語音是否轉譯文字</summary>
+        public bool OutputTranScript { get; set; } = true;
 
         /// <summary>提供給模型呼叫的工具宣告集合。</summary>
         public IReadOnlyCollection<LlmToolDto> Tools { get; set; } = Array.Empty<LlmToolDto>();

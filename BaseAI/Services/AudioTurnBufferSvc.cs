@@ -16,6 +16,8 @@ namespace BaseAI.Services
     /// </summary>
     public class AudioTurnBufferSvc
     {
+        private string _audioInput = string.Empty;
+
         /// <summary>
         /// 單一同步鎖：所有欄位皆在 lock(_syncRoot) 下讀寫。
         /// </summary>
@@ -63,6 +65,11 @@ namespace BaseAI.Services
         /// </summary>
         private bool _llmResping;
 
+        public AudioTurnBufferSvc(string audioInput)
+        {
+            _audioInput = audioInput;
+        }
+
         /// <summary>
         /// 更新本回合 token 統計。
         /// </summary>
@@ -104,7 +111,7 @@ namespace BaseAI.Services
                 if (_hasUserText) return;
 
                 // 若先前僅有音訊占位符，改為實際轉錄文字。
-                if (_userText == "[Audio Input]") _userText = string.Empty;
+                if (_userText == _audioInput) _userText = string.Empty;
                 _userText += text;
             }
         }
@@ -229,7 +236,7 @@ namespace BaseAI.Services
 
                 var userText = _userText;
                 if (string.IsNullOrWhiteSpace(userText))
-                    userText = "[Audio Input]";
+                    userText = _audioInput;
 
                 var assistantText = _llmText.ToString();
                 if (string.IsNullOrWhiteSpace(assistantText))
@@ -303,7 +310,7 @@ namespace BaseAI.Services
                 _totalTokens,
                 inputAudio,
                 wasInterrupted,
-                _needSpeechToText || userText == "[Audio Input]");
+                _needSpeechToText || userText == _audioInput);
         }
 
         /// <summary>

@@ -11,14 +11,13 @@ namespace BaseAI.Services
     /// Gemini Live API 的 WebSocket 即時語音服務。
     /// 負責將應用程式內部的即時 LLM DTO 轉換為 Gemini Live JSON 訊息，並將回應轉回 DTO。
     /// </summary>
-    public sealed class GeminiLiveSvc(string llmUrl, WebSocketSvc uiSocketSvc)
-        : AbLiveLlmSvc(llmUrl, uiSocketSvc)
+    public sealed class GeminiLiveSvc(string llmUrl, AbLlmSvc llmSvc)
+        : AbLiveLlmSvc(llmUrl, llmSvc)
     {
-
         /// <summary>
         /// 建立 Gemini Live WebSocket，送出模型設定、系統提示詞與工具宣告，並等待 setupComplete。
         /// </summary>
-        public override async Task ConnectLlmA(LlmOptDto optDto, CancellationToken ct = default)
+        public override async Task ConnectLlmA(LiveLlmOptDto optDto, CancellationToken ct = default)
         {
             _Log.Debug("GeminiLiveSvc ConnectLlmA");
 
@@ -28,7 +27,7 @@ namespace BaseAI.Services
             //    throw new InvalidOperationException("Gemini API key is not configured.");
 
             // WebSocketSvc 負責建立及替換 provider 的上游 ClientWebSocket。
-            await _llmSocketSvc.ConnectRemoteA(new Uri(_llmUrl), ct: ct);
+            await _llmSocketSvc.ConnectRemoteA(new Uri(_liveLlmUrl), ct: ct);
 
             // setup 必須是連線建立後送出的第一個 Gemini Live 訊息。
             await WebToLlmDataA(new
@@ -154,7 +153,7 @@ namespace BaseAI.Services
         }
 
         /// <summary>把 server 上的 Tool response 結果傳給 LLM</summary>
-        public override Task WebToLlmToolRespA(IEnumerable<LiveLlmToolRespDto> respDtos, CancellationToken ct = default)
+        public override Task WebToLlmToolRespA(IEnumerable<LlmToolRespDto> respDtos, CancellationToken ct = default)
         {
             _Log.Debug("GeminiLiveSvc WebToLlmToolRespA");
 
@@ -227,7 +226,7 @@ namespace BaseAI.Services
                     yield return new LlmRespDto
                     {
                         Type = LlmRespTypeEnum.ToolCall,
-                        ToolCalls = funCalls.Select(call => new LiveLlmToolCallDto
+                        ToolCalls = funCalls.Select(call => new LlmToolCallDto
                         {
                             Id = call["id"]?.ToString() ?? "",
                             Name = call["name"]?.ToString() ?? "",
@@ -241,10 +240,13 @@ namespace BaseAI.Services
                 var content = respJson["serverContent"];
                 var isBreak = content?["interrupted"]?.Value<bool>() == true;
                 var isTurnFinish = content?["turnComplete"]?.Value<bool>() == true;
-                _Log.Debug(
-                    $"GeminiLiveSvc OnLlmToWebTurnA serverContent: interrupted={isBreak}, " +
-                    $"turnComplete={isTurnFinish}, inputTranscription={content?["inputTranscription"] != null}, " +
-                    $"outputTranscription={content?["outputTranscription"] != null}.");
+                if (isBreak || isTurnFinish)
+                {
+                    _Log.Debug(
+                        $"GeminiLiveSvc OnLlmToWebTurnA serverContent: interrupted={isBreak}, " +
+                        $"turnComplete={isTurnFinish}, inputTranscription={content?["inputTranscription"] != null}, " +
+                        $"outputTranscription={content?["outputTranscription"] != null}.");
+                }
 
                 //case 中斷
                 if (isBreak)

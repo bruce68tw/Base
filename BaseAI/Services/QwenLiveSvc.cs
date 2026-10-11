@@ -14,8 +14,8 @@ namespace BaseAI.Services
     /// Qwen Omni Realtime API 的 WebSocket 即時語音服務。
     /// 負責將共用 Live LLM DTO 轉換為 Qwen Realtime 事件，並將回應事件轉回 DTO。
     /// </summary>
-    public sealed class QwenLiveSvc(string llmUrl, WebSocketSvc uiSocketSvc)
-        : AbLiveLlmSvc(llmUrl, uiSocketSvc)
+    public sealed class QwenLiveSvc(string llmUrl, AbLlmSvc llmSvc)
+        : AbLiveLlmSvc(llmUrl, llmSvc)
     {
         private const int MaxMessageBytes = 256 * 1024;
 
@@ -23,11 +23,11 @@ namespace BaseAI.Services
         /// 建立 Qwen Realtime WebSocket、送出 session 設定，並等待 session.updated。
         /// API key 可放在 endpoint 的 api_key/key query，或由 DASHSCOPE_API_KEY 環境變數提供。
         /// </summary>
-        public override async Task ConnectLlmA(LlmOptDto optDto, CancellationToken ct = default)
+        public override async Task ConnectLlmA(LiveLlmOptDto optDto, CancellationToken ct = default)
         {
             ArgumentNullException.ThrowIfNull(optDto);
 
-            var endpoint = string.IsNullOrWhiteSpace(optDto.EndPoint) ? _llmUrl : optDto.EndPoint;
+            var endpoint = string.IsNullOrWhiteSpace(optDto.EndPoint) ? _liveLlmUrl : optDto.EndPoint;
             if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri) ||
                 (endpointUri.Scheme != "wss" && endpointUri.Scheme != "ws"))
             {
@@ -117,7 +117,7 @@ namespace BaseAI.Services
         }
 
         /// <summary>回傳工具結果並要求 Qwen 繼續產生回應。</summary>
-        public override async Task WebToLlmToolRespA(IEnumerable<LiveLlmToolRespDto> responses,
+        public override async Task WebToLlmToolRespA(IEnumerable<LlmToolRespDto> responses,
             CancellationToken ct = default)
         {
             ArgumentNullException.ThrowIfNull(responses);
@@ -223,7 +223,7 @@ namespace BaseAI.Services
                             Type = LlmRespTypeEnum.ToolCall,
                             ToolCalls =
                             [
-                                new LiveLlmToolCallDto
+                                new LlmToolCallDto
                                 {
                                     Id = json["call_id"]?.Value<string>() ?? "",
                                     Name = json["name"]?.Value<string>() ?? "",

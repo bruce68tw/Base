@@ -7,14 +7,14 @@ namespace BaseAI.Models
         public object Parameters { get; set; } = new { };
     }
 
-    public sealed class LiveLlmToolCallDto
+    public sealed class LlmToolCallDto
     {
         public string Id { get; set; } = "";
         public string Name { get; set; } = "";
         public string ArgumentsJson { get; set; } = "{}";
     }
 
-    public sealed class LiveLlmToolRespDto
+    public sealed class LlmToolRespDto
     {
         public string Id { get; set; } = "";
         public string Name { get; set; } = "";
