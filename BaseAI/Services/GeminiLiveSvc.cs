@@ -14,6 +14,8 @@ namespace BaseAI.Services
     public sealed class GeminiLiveSvc(string llmUrl, AbLlmSvc llmSvc)
         : AbLiveLlmSvc(llmUrl, llmSvc)
     {
+        private bool _audioActivityStarted;
+
         /// <summary>
         /// 建立 Gemini Live WebSocket，送出模型設定、系統提示詞與工具宣告，並等待 setupComplete。
         /// </summary>
@@ -25,6 +27,8 @@ namespace BaseAI.Services
                 throw new ArgumentException("Gemini Live endpoint is required.", nameof(optDto));
             //if (string.IsNullOrWhiteSpace(_apiKey))
             //    throw new InvalidOperationException("Gemini API key is not configured.");
+
+            _audioActivityStarted = false;
 
             // WebSocketSvc 負責建立及替換 provider 的上游 ClientWebSocket。
             await _llmSocketSvc.ConnectRemoteA(new Uri(_liveLlmUrl), ct: ct);
@@ -48,6 +52,10 @@ namespace BaseAI.Services
                     },
                     inputAudioTranscription = new { },
                     outputAudioTranscription = new { },
+                    realtimeInputConfig = new
+                    {
+                        automaticActivityDetection = new { disabled = true }
+                    },
                     // 每個工具各自包成一組 functionDeclarations。
                     tools = optDto.Tools.Select(tool => new
                     {
@@ -110,9 +118,18 @@ namespace BaseAI.Services
         /// <summary>
         /// 傳送 16 kHz PCM 音訊資料。音訊內容會先以 Base64 放入 realtimeInput.audio。
         /// </summary>
-        public override Task WebToLlmAudioA(ReadOnlyMemory<byte> audioMem, CancellationToken ct = default)
+        public override async Task WebToLlmAudioA(ReadOnlyMemory<byte> audioMem, CancellationToken ct = default)
         {
-            return WebToLlmDataA(new
+            if (!_audioActivityStarted)
+            {
+                await WebToLlmDataA(new
+                {
+                    realtimeInput = new { activityStart = new { } }
+                }, ct);
+                _audioActivityStarted = true;
+            }
+
+            await WebToLlmDataA(new
             {
                 realtimeInput = new
                 {
@@ -126,14 +143,17 @@ namespace BaseAI.Services
         }
 
         /// <summary>通知 Gemini Live 目前的音訊回合已結束。</summary>
-        public override Task WebToLlmAudioEndA(CancellationToken ct = default)
+        public override async Task WebToLlmAudioEndA(CancellationToken ct = default)
         {
             _Log.Debug("GeminiLiveSvc WebToLlmAudioEndA");
 
-            return WebToLlmDataA(new
+            if (!_audioActivityStarted) return;
+
+            await WebToLlmDataA(new
             {
-                realtimeInput = new { audioStreamEnd = true }
+                realtimeInput = new { activityEnd = new { } }
             }, ct);
+            _audioActivityStarted = false;
         }
 
         /// <summary>以已完成的使用者回合傳送文字訊息。</summary>

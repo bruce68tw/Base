@@ -16,7 +16,7 @@ namespace BaseAI.Services
     /// </summary>
     public class AudioTurnBufferSvc
     {
-        private string _audioInput = string.Empty;
+        private string _audioText = string.Empty;
 
         /// <summary>
         /// 單一同步鎖：所有欄位皆在 lock(_syncRoot) 下讀寫。
@@ -36,13 +36,13 @@ namespace BaseAI.Services
         private readonly StringBuilder _llmText = new();
 
         /// <summary>正在收集中的一段輸入音訊（尚未結束封包）。</summary>
-        private readonly MemoryStream _nowInputAudio = new();
+        private readonly MemoryStream _nowAudioMem = new();
 
         /// <summary>
         /// 已完成的一段輸入音訊佇列。
         /// 每次 CompleteInputAudio 會把當前 stream 封存成 byte[] 放入佇列。
         /// </summary>
-        private readonly Queue<byte[]> _finishInputAudio = new();
+        private readonly Queue<byte[]> _finishAudioQueue = new();
 
         /// <summary>Provider 回報的本回合 token 累計值（以最後一次回報為準）。</summary>
         private int _totalTokens;
@@ -51,13 +51,13 @@ namespace BaseAI.Services
         /// 是否要求後續改走 Speech-to-Text。
         /// 常見於中斷發生後，避免繼續信任可能錯位的 Live 逐字事件。
         /// </summary>
-        private bool _needSpeechToText;
+        private bool _needSTT;
 
         /// <summary>
         /// 是否要丟棄中斷後殘留的轉錄尾巴。
         /// 用來吸收「上一回合延遲到達」的事件，避免誤拼到下一回合。
         /// </summary>
-        private bool _skipBreakTranScriptTail;
+        private bool _skipTailWhenBreak;
 
         /// <summary>
         /// 助理是否已開始回應。
@@ -65,9 +65,9 @@ namespace BaseAI.Services
         /// </summary>
         private bool _llmResping;
 
-        public AudioTurnBufferSvc(string audioInput)
+        public AudioTurnBufferSvc(string audioText)
         {
-            _audioInput = audioInput;
+            _audioText = audioText;
         }
 
         /// <summary>
@@ -99,20 +99,35 @@ namespace BaseAI.Services
         /// 僅在「未要求 STT、未進入丟尾巴模式、且尚未有前端明確文字」時生效。
         /// </summary>
         /// <param name="text">本次收到的轉錄文字片段。</param>
-        public void AppendInputTranScript(string text)
+        public void AppendUserText(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return;
             lock (_syncRoot)
             {
                 // 中斷後或要求 STT 時，不再信任 Live 轉錄。
-                if (_needSpeechToText || _skipBreakTranScriptTail) return;
+                if (_needSTT || _skipTailWhenBreak) return;
 
                 // 前端明確文字優先，避免雙來源混寫。
                 if (_hasUserText) return;
 
                 // 若先前僅有音訊占位符，改為實際轉錄文字。
-                if (_userText == _audioInput) _userText = string.Empty;
+                if (_userText == _audioText) _userText = string.Empty;
                 _userText += text;
+            }
+        }
+
+        /// <summary>
+        /// 累加 AI 助理逐字稿片段。
+        /// 若目前處於「丟棄中斷尾巴」階段，則忽略該片段，避免回合污染。
+        /// </summary>
+        /// <param name="text">助理文字片段。</param>
+        public void AppendLlmText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return;
+            lock (_syncRoot)
+            {
+                if (!_skipTailWhenBreak)
+                    _llmText.Append(text);
             }
         }
 
@@ -123,7 +138,7 @@ namespace BaseAI.Services
         public void AppendInputAudio(byte[] audioData)
         {
             if (audioData.Length == 0) return;
-            lock (_syncRoot) _nowInputAudio.Write(audioData);
+            lock (_syncRoot) _nowAudioMem.Write(audioData);
         }
 
         /// <summary>
@@ -137,8 +152,8 @@ namespace BaseAI.Services
             lock (_syncRoot)
             {
                 if (!_llmResping) return;
-                _needSpeechToText = true;
-                _skipBreakTranScriptTail = true;
+                _needSTT = true;
+                _skipTailWhenBreak = true;
             }
         }
 
@@ -152,6 +167,23 @@ namespace BaseAI.Services
         }
 
         /// <summary>
+        /// 丟棄被使用者插話中斷的模型回覆，並保留新輸入音訊供後續完整回合使用。
+        /// </summary>
+        public void ResetForInterruptedResponse()
+        {
+            lock (_syncRoot)
+            {
+                _needSTT = true;
+                _skipTailWhenBreak = true;
+                _userText = string.Empty;
+                _hasUserText = false;
+                _llmText.Clear();
+                _totalTokens = 0;
+                _llmResping = false;
+            }
+        }
+
+        /// <summary>
         /// 將目前累積的輸入音訊封存為一段完成片段。
         /// 若目前沒有音訊資料，則不進行任何操作。
         /// </summary>
@@ -159,9 +191,9 @@ namespace BaseAI.Services
         {
             lock (_syncRoot)
             {
-                if (_nowInputAudio.Length == 0) return;
-                _finishInputAudio.Enqueue(_nowInputAudio.ToArray());
-                _nowInputAudio.SetLength(0);
+                if (_nowAudioMem.Length == 0) return;
+                _finishAudioQueue.Enqueue(_nowAudioMem.ToArray());
+                _nowAudioMem.SetLength(0);
             }
         }
 
@@ -180,32 +212,19 @@ namespace BaseAI.Services
         }
 
         /// <summary>
-        /// 累加助理逐字稿片段。
-        /// 若目前處於「丟棄中斷尾巴」階段，則忽略該片段，避免回合污染。
-        /// </summary>
-        /// <param name="text">助理文字片段。</param>
-        public void AppendLlmText(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return;
-            lock (_syncRoot)
-            {
-                if (!_skipBreakTranScriptTail)
-                    _llmText.Append(text);
-            }
-        }
-
-        /// <summary>
         /// 嘗試完成一個「正常結束」的回合。
         /// 需要同時具備 userText 與 assistantText，否則視為資料不足並回傳 false。
         /// 成功時會輸出快照並重置文字相關狀態。
         /// </summary>
         /// <param name="turn">完成的回合資料。</param>
         /// <returns>是否成功產生回合結果。</returns>
-        public bool TryComplete(out LlmTurnResultDto turn)
+        public bool TryComplete(out LlmTurnResultDto turn, string? userTextOverride = null)
         {
             lock (_syncRoot)
             {
-                var userText = _userText;
+                var userText = string.IsNullOrWhiteSpace(userTextOverride)
+                    ? _userText
+                    : userTextOverride;
                 var assistantText = _llmText.ToString();
                 if (string.IsNullOrWhiteSpace(userText) || string.IsNullOrWhiteSpace(assistantText))
                 {
@@ -226,32 +245,34 @@ namespace BaseAI.Services
         /// </summary>
         /// <param name="turn">中斷回合資料。</param>
         /// <returns>是否成功產生可用的中斷回合結果。</returns>
-        public bool TryBreak(out LlmTurnResultDto turn)
+        public bool TryBreak(out LlmTurnResultDto turn, string? userTextOverride = null)
         {
             lock (_syncRoot)
             {
                 // 中斷後立即切換為保守模式，避免殘留事件污染下一回合。
-                _needSpeechToText = true;
-                _skipBreakTranScriptTail = true;
+                _needSTT = true;
+                _skipTailWhenBreak = true;
 
-                var userText = _userText;
+                var userText = string.IsNullOrWhiteSpace(userTextOverride)
+                    ? _userText
+                    : userTextOverride;
                 if (string.IsNullOrWhiteSpace(userText))
-                    userText = _audioInput;
+                    userText = _audioText;
 
                 var assistantText = _llmText.ToString();
                 if (string.IsNullOrWhiteSpace(assistantText))
                     assistantText = "[Interrupted]";
 
-                if (_nowInputAudio.Length > 0)
+                if (_nowAudioMem.Length > 0)
                 {
-                    _finishInputAudio.Enqueue(_nowInputAudio.ToArray());
-                    _nowInputAudio.SetLength(0);
+                    _finishAudioQueue.Enqueue(_nowAudioMem.ToArray());
+                    _nowAudioMem.SetLength(0);
                 }
 
-                var inputAudio = TakeFinishInputAudio();
+                var inputAudio = TakeFinishAudio();
                 // 文字與音訊都為空，代表沒有可封存內容。
                 if (inputAudio.Length == 0 &&
-                    string.IsNullOrWhiteSpace(_userText) &&
+                    string.IsNullOrWhiteSpace(userText) &&
                     string.IsNullOrWhiteSpace(_llmText.ToString()))
                 {
                     turn = default!;
@@ -273,8 +294,8 @@ namespace BaseAI.Services
         {
             lock (_syncRoot)
             {
-                if (!_skipBreakTranScriptTail) return false;
-                _skipBreakTranScriptTail = false;
+                if (!_skipTailWhenBreak) return false;
+                _skipTailWhenBreak = false;
                 return true;
             }
         }
@@ -286,8 +307,8 @@ namespace BaseAI.Services
         {
             lock (_syncRoot)
             {
-                _needSpeechToText = false;
-                _skipBreakTranScriptTail = false;
+                _needSTT = false;
+                _skipTailWhenBreak = false;
             }
         }
 
@@ -303,14 +324,14 @@ namespace BaseAI.Services
         private LlmTurnResultDto CreateTurn(
             string userText, string assistantText, bool wasInterrupted, byte[]? inputAudio = null)
         {
-            inputAudio ??= TakeFinishInputAudio();
+            inputAudio ??= TakeFinishAudio();
             return new LlmTurnResultDto(
                 userText,
                 assistantText,
                 _totalTokens,
                 inputAudio,
                 wasInterrupted,
-                _needSpeechToText || userText == _audioInput);
+                _needSTT || userText == _audioText);
         }
 
         /// <summary>
@@ -318,9 +339,9 @@ namespace BaseAI.Services
         /// 若佇列為空，回傳空陣列。
         /// </summary>
         /// <returns>一段輸入音訊或空陣列。</returns>
-        private byte[] TakeFinishInputAudio()
+        private byte[] TakeFinishAudio()
         {
-            return _finishInputAudio.Count > 0 ? _finishInputAudio.Dequeue() : [];
+            return _finishAudioQueue.Count > 0 ? _finishAudioQueue.Dequeue() : [];
         }
 
         /// <summary>

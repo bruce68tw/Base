@@ -337,6 +337,11 @@ namespace Base.Services
                 ? "" : Regex.Replace(source, @"[" + oldStr + "]", newStr);
         }
 
+        public static string RemoveSpace(string source)
+        {
+            return ReplaceChars(source, " ", "");
+        }
+
         /// <summary>
         /// add pre char
         /// </summary>
@@ -623,7 +628,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// replace json string
+        /// replace json string, 字串中json欄位外面使用中括號, 例如: xxx[user]xxx
         /// </summary>
         /// <param name="source">source json string</param>
         /// <param name="json">for replace</param>
