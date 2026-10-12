@@ -274,10 +274,11 @@ namespace BaseAI.Services
                     }
                 }
 
-                //回答的語音轉譯文字
+                //回答的語音轉譯文字(多次, 片斷)
                 var outputTS = content?["outputTranscription"]?["text"]?.ToString();
                 if (!string.IsNullOrWhiteSpace(outputTS))
                 {
+                    //_Log.Debug("GeminiLiveSvc outputTranscription");
                     // outputAudioTranscription 會將模型語音轉成文字事件。
                     yield return new LlmRespDto
                     {
@@ -286,10 +287,11 @@ namespace BaseAI.Services
                     };
                 }
 
-                //輸入的語音轉譯文字
+                //輸入的語音轉譯文字(多次, 片斷)
                 var inputTS = content?["inputTranscription"]?["text"]?.ToString();
                 if (!string.IsNullOrWhiteSpace(inputTS))
                 {
+                    _Log.Debug("GeminiLiveSvc inputTranscription: " + inputTS);
                     yield return new LlmRespDto
                     {
                         Type = LlmRespTypeEnum.InputTranScript,

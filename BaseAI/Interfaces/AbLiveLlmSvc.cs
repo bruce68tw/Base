@@ -89,27 +89,32 @@ namespace BaseAI.Interfaces
         /// <param name="httpContext">目前的 ASP.NET Core HTTP context。</param>
         /// <param name="model">此工作階段固定的 provider 設定；每次連線會套用目前的對話歷史。</param>
         /// <param name="fnTurnFinishA">整理完成的回合通知上層處理器。</param>
+        /// <param name="fnBeforeReconnectA">回合佇列排空後、重建 provider session 前執行的保存處理器。</param>
         /// <param name="fnToolCallA">模型要求工具時通知上層處理器。</param>
-        /// <param name="maxHistoryTurns">重連時保留的最近對話回合數，每回合包含一筆 user 與一筆 assistant 歷史。</param>
+        /// <param name="maxHistories">重連時保留的最近對話回合數，每回合包含一筆 user 與一筆 assistant 歷史。</param>
+        /// <param name="reconnectTurns">回合處理器完成指定筆數（包含合併後的中斷回合）後重建 provider session。</param>
         /// <param name="ct">取消整個工作階段的權杖。</param>
-        /// <param name="reconnectEveryTurns">每完成幾個非中斷回合後重建 provider session。</param>
         public async Task StartA(
             HttpContext httpContext,
             LiveLlmOptDto model,
             Func<LlmTurnResultDto, CancellationToken, Task> fnTurnFinishA,
+            Func<CancellationToken, Task<bool>> fnBeforeReconnectA,
             Func<LlmToolCallDto, CancellationToken, Task<object>> fnToolCallA,
-            string audioInput, int maxHistoryTurns = 10, 
-            CancellationToken ct = default, int reconnectEveryTurns = 3)
+            string audioInput, int maxHistories = 10, int reconnectTurns = 3,
+            CancellationToken ct = default)
         {
+            // 先檢查所有必要依賴與正整數設定，避免 WebSocket 升級後才發現呼叫參數無效。
             ArgumentNullException.ThrowIfNull(httpContext);
             ArgumentNullException.ThrowIfNull(model);
             ArgumentNullException.ThrowIfNull(fnTurnFinishA);
+            ArgumentNullException.ThrowIfNull(fnBeforeReconnectA);
             ArgumentNullException.ThrowIfNull(fnToolCallA);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxHistoryTurns);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(reconnectEveryTurns);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxHistories);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(reconnectTurns);
 
             _audioInput = audioInput;
 
+            // 非 WebSocket 請求無法進入雙向橋接；在接受連線前以 HTTP 400 結束請求。
             if (!httpContext.WebSockets.IsWebSocketRequest)
             {
                 httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
@@ -124,7 +129,7 @@ namespace BaseAI.Interfaces
                 await _uiSocketSvc.AcceptA(httpContext);
                 _fnTurnFinishA = fnTurnFinishA;
                 _fnToolCallA = fnToolCallA;
-                await RunSessionA(model, maxHistoryTurns, ct, reconnectEveryTurns);
+                await RunSessionA(model, maxHistories, reconnectTurns, fnBeforeReconnectA, ct);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
@@ -167,27 +172,17 @@ namespace BaseAI.Interfaces
         }
 
         /// <summary>
-        /// 等待一個橋接背景工作結束；取消視為正常收束，其他例外在此吸收，避免與外層錯誤回報重複。
-        /// </summary>
-        /// <param name="task">要等待收束的背景工作。</param>
-        private static async Task WatchTaskA(Task task)
-        {
-            try { await task; }
-            // 取消屬正常收束；其他例外已由外層連線錯誤處理回報，此處不重複拋出。
-            catch (OperationCanceledException) { }
-            catch { }
-        }
-
-        /// <summary>
         /// 維持 UI、server 與 LLM 之間的背景橋接：接收並轉送訊息、累積對話歷史，並在指定回合數後重連 provider。
-        /// 結束或取消時，它會收束、完成佇列並關閉上游連線；UI socket 則由外層 StartA 負責釋放。
+        /// provider session 重連或結束時會先收束並排空回合佇列；UI socket 則由外層 StartA 負責釋放。
         /// </summary>
         /// <param name="model">固定的模型與對話設定；每次上游重連時會複製並附加目前歷史。</param>
-        /// <param name="maxHistoryTurns">歷史最多保留的完整 user/assistant 回合數。</param>
+        /// <param name="maxHistories">歷史最多保留的完整 user/assistant 回合數。</param>
+        /// <param name="reconnectTurns">回合 consumer 處理多少筆回合後要求重建上游 provider session。</param>
+        /// <param name="fnBeforeReconnectA">回合佇列排空後、重建 provider session 前執行的保存處理器。</param>
         /// <param name="ct">取消整體瀏覽器與模型橋接工作的權杖。</param>
-        /// <param name="reconnectEveryTurns">累積多少個正常完成回合後要求重建上游 provider session。</param>
         private async Task RunSessionA(
-            LiveLlmOptDto model, int maxHistoryTurns, CancellationToken ct, int reconnectEveryTurns)
+            LiveLlmOptDto model, int maxHistories, int reconnectTurns,
+            Func<CancellationToken, Task<bool>> fnBeforeReconnectA, CancellationToken ct)
         {
             //_Log.Debug("AbLiveLlmSvc InitA");
 
@@ -199,12 +194,6 @@ namespace BaseAI.Interfaces
                 SingleReader = true,
                 SingleWriter = true
             });
-            var turns = Channel.CreateUnbounded<LlmTurnResultDto>(new UnboundedChannelOptions
-            {
-                SingleReader = true,
-                SingleWriter = true
-            });
-
             // 取消來源涵蓋整個 Live session，並連結 HTTP 請求取消；每個 provider session 另有自己的取消來源。
             using var lifeTime = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
@@ -212,70 +201,70 @@ namespace BaseAI.Interfaces
             var history = new List<LlmHistoryDto>();
             var turnBuffer = new AudioTurnBufferSvc(_audioInput);
 
-            // 回合完成與保存在獨立 consumer 中依序處理，不阻塞 provider 事件接收；直到整個 session 結束才關閉佇列。
-            var turnConsumer = ProcessTurnQueueA(turns.Reader);
-            var turnsAfterReconnect = 0;
-
-            // 只統計正常完成的回合；中斷回合不觸發重連，達到門檻後計數歸零開始下一批。
-            bool ShouldReconnectA(LlmTurnResultDto turn)
-            {
-                if (turn.IsBreak) return false;
-
-                turnsAfterReconnect++;
-                if (turnsAfterReconnect < reconnectEveryTurns)
-                    return false;
-
-                turnsAfterReconnect = 0;
-                return true;
-            }
-
             // client 接收工作跨越多次 provider session，避免重連期間停止讀取造成訊息遺失或背壓無法排空。
             var uiToWebTurn = OnUiToWebTurnA(messages.Writer, lifeTime.Token);
 
+            // 呼叫端取消整段工作階段是正常的結束方式，不再轉成錯誤訊息回報。
             try
             {
-                // 每次迴圈代表一個 provider session；UI socket、訊息佇列、對話歷史及回合 consumer 都維持不變。
+                // 每次迴圈代表一個 provider session；UI socket、訊息佇列與對話歷史跨重連保留，回合佇列則每輪排空重建。
                 while (_uiSocketSvc.IsOpen && !lifeTime.IsCancellationRequested)
                 {
                     turnBuffer.EnableLiveTranScript();
 
+                    // WebSocket 已升級時不能再回傳 HTTP status，改透過 WebSocket 傳錯誤並關閉連線。
                     // 用累積至今的歷史建立本次 provider 設定，讓重新連線後仍能延續同一段對話。
                     await ConnectLlmA(new LiveLlmOptDto
                     {
                         EndPoint = model.EndPoint,
                         Model = model.Model,
                         VoiceName = model.VoiceName,
+                                    // 尚未升級且 HTTP response 尚未送出時，仍可用 HTTP 500 回報初始化失敗。
                         SystemPrompt = model.SystemPrompt,
                         Language = model.Language,
                         AudioResponse = model.AudioResponse,
                         Tools = model.Tools,
                         History = history.ToArray()
+                                    // Response 已開始但 WebSocket 尚未開啟時，無法再更改狀態或回傳錯誤本文，只能記錄。
                     }, lifeTime.Token);
+
+                    var turns = Channel.CreateUnbounded<LlmTurnResultDto>(new UnboundedChannelOptions
+                    {
+                        SingleReader = true,
+                        SingleWriter = true
+                    });
+                    var reconnectRequested = new TaskCompletionSource<bool>(
+                        TaskCreationOptions.RunContinuationsAsynchronously);
+                    var turnConsumer = ProcessTurnQueueA(
+                        turns.Reader, reconnectTurns, reconnectRequested);
 
                     // 這兩項工作只屬於目前 provider session：receiver 控制 provider 事件接收，sender 控制 client 訊息轉送。
                     using var receiverCts = CancellationTokenSource.CreateLinkedTokenSource(lifeTime.Token);
                     using var senderCts = CancellationTokenSource.CreateLinkedTokenSource(lifeTime.Token);
+                                // 清除 delegate，避免 session 結束後仍保留呼叫端物件；socket 關閉失敗時仍會進入 Dispose。
                     var webToLlmTurn = OnWebToLlmTurnA(
                         messages.Reader, turnBuffer, senderCts.Token, lifeTime.Token);
                     var llmToUiTurn = OnLlmToUiTurnA(
-                        turnBuffer, history, maxHistoryTurns,
-                        turns.Writer, ShouldReconnectA, senderCts.Cancel, receiverCts.Token);
+                        turnBuffer, history, maxHistories,
+                        turns.Writer, receiverCts.Token);
 
-                    // 任一方向結束都會收束目前 provider session；只有 llmToUiTurn 回傳 true 時才建立下一個 provider session。
-                    var completedTask = await Task.WhenAny(uiToWebTurn, webToLlmTurn, llmToUiTurn);
-                    var shouldReconnect = false;
+                    // queue 處理器達到門檻時提出重連要求；其他工作結束則收束整段 Live session。
+                    var completedTask = await Task.WhenAny(
+                        uiToWebTurn, webToLlmTurn, llmToUiTurn, reconnectRequested.Task);
+                    var shouldReconnect = completedTask == reconnectRequested.Task;
+                    var shouldStop = false;
                     try
                     {
                         if (completedTask == uiToWebTurn)
-                            break;
+                            shouldStop = true;
 
-                        if (completedTask == webToLlmTurn)
+                        else if (completedTask == webToLlmTurn)
                         {
                             await webToLlmTurn;
-                            break;
+                            shouldStop = true;
                         }
-
-                        shouldReconnect = await llmToUiTurn;
+                        else if (completedTask == llmToUiTurn)
+                            await llmToUiTurn;
                     }
                     finally
                     {
@@ -284,13 +273,27 @@ namespace BaseAI.Interfaces
                         senderCts.Cancel();
                         await WatchTaskA(webToLlmTurn);
                         await WatchTaskA(llmToUiTurn);
+
+                        // 確認不會再有新回合後排空 queue，避免 consumer 留在背景或遺失中斷尾段。
+                        turns.Writer.TryComplete();
+                        await WatchTaskA(turnConsumer);
                     }
+
+                    // Queue 排空期間可能剛好處理到門檻回合，讀取最終重連決策。
+                    shouldReconnect |= reconnectRequested.Task.IsCompletedSuccessfully;
 
                     if (!shouldReconnect)
                         break;
 
+                    // 佇列已排空，現在保存包含觸發門檻回合在內的 pending talks；失敗則不重連。
+                    if (!await fnBeforeReconnectA(lifeTime.Token))
+                        break;
+
                     // provider session 已完全收束，才正常關閉舊上游 socket 並回到迴圈頂端重新連線。
                     await CloseA(CancellationToken.None);
+
+                    if (shouldStop)
+                        break;
                 }
             }
             // 整個工作階段被取消屬正常結束，不回報錯誤。
@@ -310,17 +313,29 @@ namespace BaseAI.Interfaces
                 // UI socket 由外層 StartA 擁有並釋放；本方法只負責關閉上游 provider socket。
                 lifeTime.Cancel();
                 messages.Writer.TryComplete();
-                turns.Writer.TryComplete();
                 try
                 {
                     await WatchTaskA(uiToWebTurn);
-                    await WatchTaskA(turnConsumer);
+                    // 工作階段可能在未達重連門檻時結束，仍需保存 queue 已累積的回合。
+                    await fnBeforeReconnectA(CancellationToken.None);
                 }
                 finally
                 {
                     await CloseA(CancellationToken.None);
                 }
             }
+        }
+
+        /// <summary>
+        /// 等待一個橋接背景工作結束；取消視為正常收束，其他例外在此吸收，避免與外層錯誤回報重複。
+        /// </summary>
+        /// <param name="task">要等待收束的背景工作。</param>
+        private static async Task WatchTaskA(Task task)
+        {
+            try { await task; }
+            // 取消屬正常收束；其他例外已由外層連線錯誤處理回報，此處不重複拋出。
+            catch (OperationCanceledException) { }
+            catch { }
         }
 
         /// <summary>以正常關閉狀態送出上游 provider WebSocket close frame；尚未建立上游 socket 時不做事。</summary>
@@ -444,20 +459,16 @@ namespace BaseAI.Interfaces
 
         /// <summary>
         /// 讀取目前 provider session 的事件，將音訊、逐字稿、錯誤及完成狀態轉成瀏覽器訊息，並累積回合歷史。
-        /// 完整回合會排入背景 consumer；達到重連門檻時先通知 sender 暫停，再回傳重連決策。
+        /// 完整或中斷回合會排入背景 consumer；provider session 的重連門檻由 consumer 統一判斷。
         /// </summary>
         /// <param name="turnBufferSvc">累積目前輸入及模型回應內容的回合緩衝。</param>
         /// <param name="history">跨 provider 重連保存的 user/assistant 歷史，會在完成回合時更新。</param>
         /// <param name="maxHistoryTurns">歷史中最多保留的完整對話回合數。</param>
         /// <param name="turnWriter">將完成或中斷回合交給背景 consumer 的佇列 writer。</param>
-        /// <param name="fnShouldReconnect">完成回合後判斷是否已達到 provider 重連門檻。</param>
-        /// <param name="pauseSender">重連前停止目前 client-to-provider sender 的動作。</param>
         /// <param name="ct">取消目前 provider 事件接收工作的權杖。</param>
-        /// <returns><see langword="true"/> 表示本回合完成後應重連；否則 provider session 繼續或正常結束。</returns>
-        private async Task<bool> OnLlmToUiTurnA(
+        private async Task OnLlmToUiTurnA(
             AudioTurnBufferSvc turnBufferSvc, List<LlmHistoryDto> history, int maxHistoryTurns,
-            ChannelWriter<LlmTurnResultDto> turnWriter,
-            Func<LlmTurnResultDto, bool> fnShouldReconnect, Action pauseSender, CancellationToken ct)
+            ChannelWriter<LlmTurnResultDto> turnWriter, CancellationToken ct)
         {
             _Log.Debug("AbLiveLlmSvc Start OnLlmToUiTurnA");   //這裡不寫log, 會搞混
 
@@ -543,7 +554,6 @@ namespace BaseAI.Interfaces
                             continue;
                         }
 
-                        var shouldReconnect = false;
                         if (turnBufferSvc.TryComplete(out var turn))
                         {
                             _Log.Debug($"AbLiveLlmSvc Turn tokens={turn.TotalTokens}");
@@ -555,18 +565,9 @@ namespace BaseAI.Interfaces
                                 history.RemoveRange(0, history.Count - maxHistoryMessages);
 
                             TurnToQueueA(turnWriter, turn);
-                            shouldReconnect = fnShouldReconnect(turn);
                         }
 
-                        if (shouldReconnect)
-                        {
-                            // 暫停 client-to-LLM sender，讓重連期間到達的訊息留在有界佇列中。
-                            pauseSender();
-                            await WebToUiDataA(new { type = "turnComplete" }, ct);
-                            return true;
-                        }
-
-                        // 未重連時只通知前端本回合結束，繼續使用同一個 provider session。
+                        // 是否需重連由背景回合 consumer 決定；此處完成 UI 通知後繼續讀取 provider 事件。
                         await WebToUiDataA(new { type = "turnComplete" }, ct);
 
                         _Log.Debug("AbLiveLlmSvc OnLlmToUiTurnA Completed");
@@ -583,8 +584,6 @@ namespace BaseAI.Interfaces
                 }
             }
 
-            // 接收迴圈自然結束（provider 關閉）時不重連。
-            return false;
         }
 
         /// <summary>以橋接協定的標準 error 事件格式回覆瀏覽器 client。</summary>
@@ -617,33 +616,6 @@ namespace BaseAI.Interfaces
         #endregion
 
         #region Trun, Queue 功能
-        /// <summary>合併相鄰的中斷回合，串接音訊、保留較完整的 user/assistant 文字並加總 token 用量。</summary>
-        /// <param name="previous">佇列中先前累積的中斷回合。</param>
-        /// <param name="next">緊接著到達的中斷回合。</param>
-        /// <returns>合併後仍標記為中斷的單一回合。</returns>
-        private LlmTurnResultDto MergeBreakTurns(
-            LlmTurnResultDto previous, LlmTurnResultDto next)
-        {
-            var audio = new byte[previous.InputAudio.Length + next.InputAudio.Length];
-            previous.InputAudio.CopyTo(audio, 0);
-            next.InputAudio.CopyTo(audio, previous.InputAudio.Length);
-
-            var userText = (!string.IsNullOrWhiteSpace(next.UserText) && next.UserText != _audioInput)
-                ? next.UserText
-                : previous.UserText;
-            var assistantText = next.LlmText != "[Interrupted]"
-                ? next.LlmText
-                : previous.LlmText;
-
-            return new LlmTurnResultDto(
-                userText,
-                assistantText,
-                previous.TotalTokens + next.TotalTokens,
-                audio,
-                IsBreak: true,
-                NeedSpeechToText: previous.NeedSpeechToText || next.NeedSpeechToText);
-        }
-
         /// <summary>將一筆完成或中斷的回合排入背景處理佇列；佇列已關閉時會擲回例外。</summary>
         /// <param name="writer">供回合 consumer 讀取的佇列 writer。</param>
         /// <param name="turn">要交由應用層處理及保存的回合結果。</param>
@@ -654,28 +626,33 @@ namespace BaseAI.Interfaces
         }
 
         /// <summary>
-        /// 以單一 consumer 順序處理回合佇列：必要時對音訊執行語音辨識備援、合併相鄰中斷回合，再呼叫回合完成處理器。
-        /// reader 完成時會處理最後一筆待合併回合，確保已排入的回合不會因 session 收束而遺失。
+        /// 以單一 consumer 順序處理每筆完成或中斷回合，必要時執行語音辨識備援，再呼叫回合完成處理器。
+        /// callback 完成後計數；達到門檻時通知 session loop，並在 queue 排空後保存及重連。
         /// </summary>
         /// <param name="reader">接收 provider 完成或中斷回合的佇列 reader。</param>
+        /// <param name="reconnectTurns">達到此回合數時通知 session loop 準備重連。</param>
+        /// <param name="reconnectRequested">通知 session loop 重連要求的完成來源。</param>
         private async Task ProcessTurnQueueA(
-            ChannelReader<LlmTurnResultDto> reader)
+            ChannelReader<LlmTurnResultDto> reader,
+            int reconnectTurns,
+            TaskCompletionSource<bool> reconnectRequested)
         {
-            LlmTurnResultDto? pendingBreakTurn = null;
-
+            var processedTurns = 0;
             async Task ProcessTurnA(LlmTurnResultDto turn)
             {
                 var userText = turn.UserText;
-                var hasUsableUserText = !string.IsNullOrWhiteSpace(userText) && userText != _audioInput;
+                var hasOkUserText = !string.IsNullOrWhiteSpace(userText) && userText != _audioInput;
 
+                // 中斷或標記需辨識的回合若有音訊，嘗試用 STT 補出使用者文字；既有有效文字優先保留。
                 if ((turn.IsBreak || turn.NeedSpeechToText) && turn.InputAudio.Length > 0)
                 {
                     try
                     {
+                        // STT 設定獨立 20 秒上限，避免辨識服務無限等待而卡住整個回合佇列。
                         using var sttCts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
                         var transcript = await _llmSvc.SpeechToTextA(
                             turn.InputAudio, "audio/pcm;rate=16000", sttCts.Token);
-                        if (!hasUsableUserText && !string.IsNullOrWhiteSpace(transcript))
+                        if (!hasOkUserText && !string.IsNullOrWhiteSpace(transcript))
                             userText = transcript;
                     }
                     catch (Exception ex)
@@ -684,6 +661,7 @@ namespace BaseAI.Interfaces
                     }
                 }
 
+                // 每筆回合依序通知應用層保存；單筆 callback 失敗只記錄，不中斷後續佇列處理。
                 try
                 {
                     await (_fnTurnFinishA
@@ -694,29 +672,17 @@ namespace BaseAI.Interfaces
                 {
                     _Log.Error("AbLiveLlmSvc OnTurnFinishAsync failed: " + ex.Message);
                 }
+
+                // 在回合 callback 完成後計數，讓完整回合與合併後的中斷回合使用同一個重連門檻。
+                if (++processedTurns >= reconnectTurns)
+                    reconnectRequested.TrySetResult(true);
             }
 
+            // 單一 reader 保持回合順序；中斷回合也立即交給 callback 並計入重連門檻。
             await foreach (var turn in reader.ReadAllAsync())
             {
-                if (turn.IsBreak)
-                {
-                    pendingBreakTurn = pendingBreakTurn == null
-                        ? turn
-                        : MergeBreakTurns(pendingBreakTurn, turn);
-                    continue;
-                }
-
-                if (pendingBreakTurn != null)
-                {
-                    await ProcessTurnA(pendingBreakTurn);
-                    pendingBreakTurn = null;
-                }
-
                 await ProcessTurnA(turn);
             }
-
-            if (pendingBreakTurn != null)
-                await ProcessTurnA(pendingBreakTurn);
         }
         #endregion
 
