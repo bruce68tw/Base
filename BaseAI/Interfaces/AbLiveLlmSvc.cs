@@ -30,6 +30,7 @@ namespace BaseAI.Interfaces
 
         /// <summary>模型要求執行工具時，供應用層處理並回傳結果的處理器。</summary>
         private Func<LlmToolCallDto, CancellationToken, Task<object>>? _fnToolCallA;
+        private Func<IReadOnlyCollection<LlmHistoryDto>>? _fnGetHistoryA;
 
         /// <summary>提供共用語音辨識功能，作為音訊回合缺少可用逐字稿時的備援。</summary>
         private readonly AbLlmSvc _llmSvc = llmSvc
@@ -67,6 +68,9 @@ namespace BaseAI.Interfaces
         /// <param name="text">要提交給模型的使用者文字內容。</param>
         /// <param name="ct">取消等待或傳送文字操作的權杖。</param>
         public abstract Task WebToLlmTextA(string text, CancellationToken ct = default);
+        /// <summary>將本回合開始前的對話歷史加入 provider 的即時對話上下文。</summary>
+        public abstract Task WebToLlmHistoryA(
+            IReadOnlyCollection<LlmHistoryDto> history, CancellationToken ct = default);
 
         /// <summary>將應用層完成的工具呼叫結果回送給 provider，讓模型得以繼續產生回應。</summary>
         /// <param name="responses">包含工具呼叫識別碼、名稱及執行結果的回覆集合。</param>
@@ -89,11 +93,11 @@ namespace BaseAI.Interfaces
         /// <c>transcription</c>、<c>turnComplete</c> 或 <c>error</c> 傳回。
         /// </summary>
         /// <param name="httpContext">目前的 ASP.NET Core HTTP context。</param>
-        /// <param name="llmOpt">此工作階段固定的 provider 設定；每次連線會套用目前的對話歷史。</param>
+        /// <param name="llmOpt">此工作階段固定的 provider 設定；逐題歷史由 fnGetHistoryA 提供。</param>
         /// <param name="fnTurnFinishA">整理完成的回合通知上層處理器。</param>
         /// <param name="fnBeforeReconnectA">回合佇列排空後、重建 provider session 前執行的保存處理器。</param>
         /// <param name="fnToolCallA">模型要求工具時通知上層處理器。</param>
-        /// <param name="maxHistories">重連時保留的最近對話回合數，每回合包含一筆 user 與一筆 assistant 歷史。</param>
+        /// <param name="maxHistories">每題最多附加的歷史問答回合數。</param>
         /// <param name="reconnectTurns">回合處理器完成指定筆數（包含合併後的中斷回合）後重建 provider session。</param>
         /// <param name="ct">取消整個工作階段的權杖。</param>
         public async Task StartA(
@@ -103,7 +107,9 @@ namespace BaseAI.Interfaces
             Func<CancellationToken, Task<bool>> fnBeforeReconnectA,
             Func<LlmToolCallDto, CancellationToken, Task<object>> fnToolCallA,
             string audioInput, int maxHistories = 10, int reconnectTurns = 3,
-            CancellationToken ct = default)
+            CancellationToken ct = default,
+            Func<IReadOnlyCollection<LlmHistoryDto>>? fnGetHistoryA = null,
+            Func<LlmTurnResultDto, bool>? fnCountReconnectTurnA = null)
         {
             // 先檢查所有必要依賴與正整數設定，避免 WebSocket 升級後才發現呼叫參數無效。
             ArgumentNullException.ThrowIfNull(httpContext);
@@ -131,7 +137,10 @@ namespace BaseAI.Interfaces
                 await _uiSocketSvc.AcceptA(httpContext);
                 _fnTurnFinishA = fnTurnFinishA;
                 _fnToolCallA = fnToolCallA;
-                await RunSessionA(llmOpt, maxHistories, reconnectTurns, fnBeforeReconnectA, ct);
+                _fnGetHistoryA = fnGetHistoryA;
+                await RunSessionA(
+                    llmOpt, maxHistories, reconnectTurns, fnBeforeReconnectA,
+                    fnCountReconnectTurnA, ct);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
@@ -159,6 +168,7 @@ namespace BaseAI.Interfaces
             {
                 _fnTurnFinishA = null;
                 _fnToolCallA = null;
+                _fnGetHistoryA = null;
                 try
                 {
                     if (_uiSocketSvc.IsOpen)
@@ -184,7 +194,8 @@ namespace BaseAI.Interfaces
         /// <param name="ct">取消整體瀏覽器與模型橋接工作的權杖。</param>
         private async Task RunSessionA(
             LiveLlmOptDto llmOpt, int maxHistories, int reconnectTurns,
-            Func<CancellationToken, Task<bool>> fnBeforeReconnectA, CancellationToken ct)
+            Func<CancellationToken, Task<bool>> fnBeforeReconnectA,
+            Func<LlmTurnResultDto, bool>? fnCountReconnectTurnA, CancellationToken ct)
         {
             //_Log.Debug("AbLiveLlmSvc InitA");
 
@@ -199,8 +210,7 @@ namespace BaseAI.Interfaces
             // 取消來源涵蓋整個 Live session，並連結 HTTP 請求取消；每個 provider session 另有自己的取消來源。
             using var lifeTime = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
-            // history 供每次 provider 重連重建上下文；turnBuffer 則只累積目前正在處理的使用者/模型回合。
-            var history = new List<LlmHistoryDto>();
+            // turnBuffer 只累積目前正在處理的使用者/模型回合；歷史由呼叫端逐題提供。
             var turnBuffer = new AudioTurnBufferSvc(_audioInput);
 
             // client 接收工作跨越多次 provider session，避免重連期間停止讀取造成訊息遺失或背壓無法排空。
@@ -209,13 +219,13 @@ namespace BaseAI.Interfaces
             // 呼叫端取消整段工作階段是正常的結束方式，不再轉成錯誤訊息回報。
             try
             {
-                // 每次迴圈代表一個 provider session；UI socket、訊息佇列與對話歷史跨重連保留，回合佇列則每輪排空重建。
+                // 每次迴圈代表一個 provider session；provider 重連後的歷史由呼叫端 queue 規則重設。
                 while (_uiSocketSvc.IsOpen && !lifeTime.IsCancellationRequested)
                 {
                     turnBuffer.EnableLiveTranScript();
 
                     // WebSocket 已升級時不能再回傳 HTTP status，改透過 WebSocket 傳錯誤並關閉連線。
-                    // 用累積至今的歷史建立本次 provider 設定，讓重新連線後仍能延續同一段對話。
+                    // 每次 provider socket 建立時不載入舊歷史；每一題的歷史由輸入工作即時附加。
                     await ConnectLlmA(new LiveLlmOptDto
                     {
                         EndPoint = llmOpt.EndPoint,
@@ -226,7 +236,7 @@ namespace BaseAI.Interfaces
                         Language = llmOpt.Language,
                         AudioResponse = llmOpt.AudioResponse,
                         Tools = llmOpt.Tools,
-                        History = history.ToArray()
+                        History = Array.Empty<LlmHistoryDto>()
                                     // Response 已開始但 WebSocket 尚未開啟時，無法再更改狀態或回傳錯誤本文，只能記錄。
                     }, lifeTime.Token);
 
@@ -238,17 +248,17 @@ namespace BaseAI.Interfaces
                     var reconnectRequested = new TaskCompletionSource<bool>(
                         TaskCreationOptions.RunContinuationsAsynchronously);
                     var turnConsumer = ProcessTurnQueueA(
-                        turns.Reader, reconnectTurns, reconnectRequested);
+                        turns.Reader, reconnectTurns, reconnectRequested,
+                        fnCountReconnectTurnA);
 
                     // 這兩項工作只屬於目前 provider session：receiver 控制 provider 事件接收，sender 控制 client 訊息轉送。
                     using var receiverCts = CancellationTokenSource.CreateLinkedTokenSource(lifeTime.Token);
                     using var senderCts = CancellationTokenSource.CreateLinkedTokenSource(lifeTime.Token);
                                 // 清除 delegate，避免 session 結束後仍保留呼叫端物件；socket 關閉失敗時仍會進入 Dispose。
                     var webToLlmTurn = OnWebToLlmTurnA(
-                        messages.Reader, turnBuffer, senderCts.Token, lifeTime.Token);
+                        messages.Reader, turnBuffer, maxHistories, senderCts.Token, lifeTime.Token);
                     var llmToUiTurn = OnLlmToUiTurnA(
-                        turnBuffer, history, maxHistories,
-                        turns.Writer, receiverCts.Token);
+                        turnBuffer, turns.Writer, receiverCts.Token);
 
                     // queue 處理器達到門檻時提出重連要求；其他工作結束則收束整段 Live session。
                     var completedTask = await Task.WhenAny(
@@ -411,9 +421,29 @@ namespace BaseAI.Interfaces
         /// <param name="readCt">取消佇列讀取的權杖，通常只涵蓋目前 provider session。</param>
         /// <param name="sendCt">取消將音訊或文字送至 provider 的權杖。</param>
         private async Task OnWebToLlmTurnA(ChannelReader<string> reader,
-            AudioTurnBufferSvc turnBuffer, CancellationToken readCt, CancellationToken sendCt)
+            AudioTurnBufferSvc turnBuffer, int maxHistoryTurns,
+            CancellationToken readCt, CancellationToken sendCt)
         {
             _Log.Debug("AbLiveLlmSvc Start OnWebToLlmTurnA");
+            var historySentOnSocket = false;
+            var audioTurnStarted = false;
+
+            async Task SendHistoryA(bool includeHistory)
+            {
+                if (!includeHistory || historySentOnSocket)
+                {
+                    turnBuffer.SetHistorySnapshot(Array.Empty<LlmHistoryDto>());
+                    return;
+                }
+
+                var history = (_fnGetHistoryA?.Invoke() ?? Array.Empty<LlmHistoryDto>())
+                    .TakeLast(maxHistoryTurns * 2).ToArray();
+                turnBuffer.SetHistorySnapshot(history);
+
+                if (history.Length > 0)
+                    await WebToLlmHistoryA(history, sendCt);
+                historySentOnSocket = true;
+            }
 
             await foreach (var msg in reader.ReadAllAsync(readCt))
             {
@@ -434,6 +464,11 @@ namespace BaseAI.Interfaces
                     if (!string.IsNullOrWhiteSpace(audioData))
                     {
                         var audioBytes = Convert.FromBase64String(audioData);
+                        if (!audioTurnStarted)
+                        {
+                            await SendHistoryA(includeHistory: true);
+                            audioTurnStarted = true;
+                        }
                         turnBuffer.AppendInputAudio(audioBytes);
                         await WebToLlmAudioA(audioBytes, sendCt);
                     }
@@ -441,9 +476,10 @@ namespace BaseAI.Interfaces
                     if (input["frontTurnComplete"]?.Value<bool>() == true)
                     {
                         // 音訊輸入結束時提交回合；沒有前端逐字稿則保留通用備援文字。
-                        turnBuffer.SetFallbackUserText("[Audio Input]");
+                        turnBuffer.SetFallbackUserText(_audioInput);
                         turnBuffer.FinishInputAudio();
                         await WebToLlmAudioEndA(sendCt);
+                        audioTurnStarted = false;
                     }
                 }
                 else if (type == "text")
@@ -453,6 +489,8 @@ namespace BaseAI.Interfaces
                     if (!string.IsNullOrWhiteSpace(text))
                     {
                         turnBuffer.SetUserText(text);
+                        await SendHistoryA(
+                            includeHistory: !text.StartsWith("【系統觸發】", StringComparison.Ordinal));
                         await WebToLlmTextA(text, sendCt);
                     }
                 }
@@ -469,8 +507,8 @@ namespace BaseAI.Interfaces
         /// <param name="turnWriter">將完成或中斷回合交給背景 consumer 的佇列 writer。</param>
         /// <param name="ct">取消目前 provider 事件接收工作的權杖。</param>
         private async Task OnLlmToUiTurnA(
-            AudioTurnBufferSvc turnBufferSvc, List<LlmHistoryDto> history, int maxHistoryTurns,
-            ChannelWriter<LlmTurnResultDto> turnWriter, CancellationToken ct)
+            AudioTurnBufferSvc turnBufferSvc, ChannelWriter<LlmTurnResultDto> turnWriter,
+            CancellationToken ct)
         {
             _Log.Debug("AbLiveLlmSvc Start OnLlmToUiTurnA");   //這裡不寫log, 會搞混
             string? inputTranscriptText = null;
@@ -513,6 +551,10 @@ namespace BaseAI.Interfaces
                     //中斷
                     else if (respDto.Type == LlmRespTypeEnum.Interrupted)
                     {
+                        if (turnBufferSvc.TryGetInterruptedTurn(out var interruptedTurn, inputTranscriptText))
+                            TurnToQueueA(turnWriter, interruptedTurn);
+
+                        inputTranscriptText = null;
                         turnBufferSvc.ResetForInterruptedResponse();
 
                         await WebToUiDataA(new { type = "interrupted" }, ct);
@@ -561,13 +603,6 @@ namespace BaseAI.Interfaces
                         if (turnBufferSvc.TryComplete(out var turn, inputTranscriptText))
                         {
                             _Log.Debug($"AbLiveLlmSvc Turn tokens={turn.TotalTokens}");
-                            // 將完整回合加進重連歷史，並限制歷史只保留最近指定回合數。
-                            history.Add(new LlmHistoryDto { Role = "user", Text = turn.UserText });
-                            history.Add(new LlmHistoryDto { Role = "assistant", Text = turn.LlmText });
-                            var maxHistoryMessages = maxHistoryTurns * 2;
-                            if (history.Count > maxHistoryMessages)
-                                history.RemoveRange(0, history.Count - maxHistoryMessages);
-
                             TurnToQueueA(turnWriter, turn);
                         }
                         inputTranscriptText = null;
@@ -640,11 +675,18 @@ namespace BaseAI.Interfaces
         private async Task ProcessTurnQueueA(
             ChannelReader<LlmTurnResultDto> reader,
             int reconnectTurns,
-            TaskCompletionSource<bool> reconnectRequested)
+            TaskCompletionSource<bool> reconnectRequested,
+            Func<LlmTurnResultDto, bool>? fnCountReconnectTurnA)
         {
             var processedTurns = 0;
             async Task ProcessTurnA(LlmTurnResultDto turn)
             {
+                if (turn.IsBreak && string.Equals(turn.LlmText, "[Interrupted]", StringComparison.Ordinal))
+                {
+                    _Log.Debug("AbLiveLlmSvc Skip interrupted input without an assistant response.");
+                    return;
+                }
+
                 var userText = turn.UserText;
                 var hasOkUserText = !string.IsNullOrWhiteSpace(userText) && userText != _audioInput;
 
@@ -666,20 +708,34 @@ namespace BaseAI.Interfaces
                     }
                 }
 
+                var hasUserTextAfterFallback =
+                    !string.IsNullOrWhiteSpace(userText) && userText != _audioInput;
+                var hasAssistantText =
+                    !string.IsNullOrWhiteSpace(turn.LlmText) &&
+                    !string.Equals(turn.LlmText, "[Interrupted]", StringComparison.Ordinal);
+                if (!hasUserTextAfterFallback && !hasAssistantText)
+                {
+                    _Log.Debug("AbLiveLlmSvc Skip empty interrupted turn.");
+                    return;
+                }
+
+                var completedTurn = turn with { UserText = userText };
+
                 // 每筆回合依序通知應用層保存；單筆 callback 失敗只記錄，不中斷後續佇列處理。
                 try
                 {
                     await (_fnTurnFinishA
                         ?? throw new InvalidOperationException("Live session handlers are not configured."))(
-                        turn with { UserText = userText }, CancellationToken.None);
+                        completedTurn, CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
                     _Log.Error("AbLiveLlmSvc OnTurnFinishA failed: " + ex.Message);
                 }
 
-                // 在回合 callback 完成後計數，讓完整回合與合併後的中斷回合使用同一個重連門檻。
-                if (++processedTurns >= reconnectTurns)
+                // 只計算呼叫端認定的有效使用者問答，避免系統提示或占位中斷回合觸發重連。
+                if ((fnCountReconnectTurnA?.Invoke(completedTurn) ?? true) &&
+                    ++processedTurns >= reconnectTurns)
                     reconnectRequested.TrySetResult(true);
             }
 

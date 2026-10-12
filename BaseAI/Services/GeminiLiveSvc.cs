@@ -89,30 +89,8 @@ namespace BaseAI.Services
 
             // 重連後用 clientContent 求回歷史對話，讓模型延續前文。
             if (optDto.History.Count > 0)
-            {
-                // Gemini 的角色名稱為 model，不是 assistant。
-                var turns = optDto.History
-                    .Where(message => message.Role is "user" or "assistant" && !string.IsNullOrWhiteSpace(message.Text))
-                    .Select(message => new
-                    {
-                        role = message.Role == "assistant" ? "model" : "user",
-                        parts = new[] { new { text = message.Text } }
-                    })
-                    .ToArray();
-
-                if (turns.Length > 0)
-                {
-                    await WebToLlmDataA(new
-                    {
-                        clientContent = new
-                        {
-                            turns,
-                            // false 表示只是載入背景，不要讓模型現在回覆。
-                            turnComplete = false
-                        }
-                    }, ct);
-                }
-            }
+            if (optDto.History.Count > 0)
+                await WebToLlmHistoryA(optDto.History, ct);
         }
 
         /// <summary>
@@ -168,6 +146,30 @@ namespace BaseAI.Services
                     turns = new[] { new { role = "user", parts = new[] { new { text } } } },
                     // true 表示使用者輸入完整，模型可立即回覆。
                     turnComplete = true
+                }
+            }, ct);
+        }
+
+        public override Task WebToLlmHistoryA(
+            IReadOnlyCollection<LlmHistoryDto> history, CancellationToken ct = default)
+        {
+            var turns = history
+                .Where(message => message.Role is "user" or "assistant" && !string.IsNullOrWhiteSpace(message.Text))
+                .Select(message => new
+                {
+                    role = message.Role == "assistant" ? "model" : "user",
+                    parts = new[] { new { text = message.Text } }
+                })
+                .ToArray();
+
+            if (turns.Length == 0) return Task.CompletedTask;
+
+            return WebToLlmDataA(new
+            {
+                clientContent = new
+                {
+                    turns,
+                    turnComplete = false
                 }
             }, ct);
         }

@@ -5,8 +5,6 @@ namespace BaseAI.Services
 {
     /// <summary>
     /// 管理「語音單一對話回合」的暫存狀態。
-    /// 主要負責：
-    /// 1) 聚合使用者文字（前端直接文字或 Live 轉錄）
     /// 2) 聚合助理輸出逐字稿
     /// 3) 暫存本回合輸入音訊（可在中斷時封存）
     /// 4) 控制中斷後的狀態旗標，避免舊事件污染下一回合
@@ -34,6 +32,7 @@ namespace BaseAI.Services
 
         /// <summary>本回合助理輸出文字緩衝。</summary>
         private readonly StringBuilder _llmText = new();
+        private IReadOnlyCollection<LlmHistoryDto> _history = Array.Empty<LlmHistoryDto>();
 
         /// <summary>正在收集中的一段輸入音訊（尚未結束封包）。</summary>
         private readonly MemoryStream _nowAudioMem = new();
@@ -77,6 +76,11 @@ namespace BaseAI.Services
         public void SetTokens(int totalTokens)
         {
             lock (_syncRoot) _totalTokens = totalTokens;
+        }
+        public void SetHistorySnapshot(IReadOnlyCollection<LlmHistoryDto> history)
+        {
+            ArgumentNullException.ThrowIfNull(history);
+            lock (_syncRoot) _history = history.ToArray();
         }
 
         /// <summary>
@@ -164,6 +168,31 @@ namespace BaseAI.Services
         public void MarkLlmResping()
         {
             lock (_syncRoot) _llmResping = true;
+        }
+
+        /// <summary>
+        /// 快照被插話中斷的使用者回合，不取走正在累積的新輸入音訊。
+        /// </summary>
+        public bool TryGetInterruptedTurn(out LlmTurnResultDto turn, string? userTextOverride = null)
+        {
+            lock (_syncRoot)
+            {
+                var userText = string.IsNullOrWhiteSpace(userTextOverride)
+                    ? _userText
+                    : userTextOverride;
+                if (string.IsNullOrWhiteSpace(userText))
+                {
+                    turn = default!;
+                    return false;
+                }
+
+                var assistantText = _llmText.ToString();
+                if (string.IsNullOrWhiteSpace(assistantText))
+                    assistantText = "[Interrupted]";
+
+                turn = CreateTurn(userText, assistantText, wasInterrupted: true, TakeFinishAudio());
+                return true;
+            }
         }
 
         /// <summary>
@@ -256,6 +285,7 @@ namespace BaseAI.Services
                 var userText = string.IsNullOrWhiteSpace(userTextOverride)
                     ? _userText
                     : userTextOverride;
+                var hasUserText = !string.IsNullOrWhiteSpace(userText) && userText != _audioText;
                 if (string.IsNullOrWhiteSpace(userText))
                     userText = _audioText;
 
@@ -272,7 +302,7 @@ namespace BaseAI.Services
                 var inputAudio = TakeFinishAudio();
                 // 文字與音訊都為空，代表沒有可封存內容。
                 if (inputAudio.Length == 0 &&
-                    string.IsNullOrWhiteSpace(userText) &&
+                    !hasUserText &&
                     string.IsNullOrWhiteSpace(_llmText.ToString()))
                 {
                     turn = default!;
@@ -331,7 +361,10 @@ namespace BaseAI.Services
                 _totalTokens,
                 inputAudio,
                 wasInterrupted,
-                _needSTT || userText == _audioText);
+                _needSTT || userText == _audioText)
+            {
+                History = _history.ToArray()
+            };
         }
 
         /// <summary>
@@ -354,6 +387,7 @@ namespace BaseAI.Services
             _userText = string.Empty;
             _hasUserText = false;
             _llmText.Clear();
+            _history = Array.Empty<LlmHistoryDto>();
             _totalTokens = 0;
             _llmResping = false;
         }

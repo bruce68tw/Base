@@ -116,6 +116,12 @@ namespace BaseAI.Services
             await WebToLlmDataA(new { type = "response.create" }, ct);
         }
 
+        public override Task WebToLlmHistoryA(
+            IReadOnlyCollection<LlmHistoryDto> history, CancellationToken ct = default)
+        {
+            return SendHistoryA(history, ct);
+        }
+
         /// <summary>回傳工具結果並要求 Qwen 繼續產生回應。</summary>
         public override async Task WebToLlmToolRespA(IEnumerable<LlmToolRespDto> responses,
             CancellationToken ct = default)

@@ -6,5 +6,8 @@ namespace BaseAI.Models
         int TotalTokens,
         byte[] InputAudio,
         bool IsBreak,
-        bool NeedSpeechToText);
+        bool NeedSpeechToText)
+    {
+        public IReadOnlyCollection<LlmHistoryDto> History { get; init; } = Array.Empty<LlmHistoryDto>();
+    }
 }
