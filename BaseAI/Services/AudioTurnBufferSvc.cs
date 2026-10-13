@@ -32,7 +32,7 @@ namespace BaseAI.Services
 
         /// <summary>本回合助理輸出文字緩衝。</summary>
         private readonly StringBuilder _llmText = new();
-        private IReadOnlyCollection<LlmHistoryDto> _history = Array.Empty<LlmHistoryDto>();
+        private List<LlmHistoryDto> _history = [];
 
         /// <summary>正在收集中的一段輸入音訊（尚未結束封包）。</summary>
         private readonly MemoryStream _nowAudioMem = new();
@@ -80,7 +80,7 @@ namespace BaseAI.Services
         public void SetHistorySnapshot(IReadOnlyCollection<LlmHistoryDto> history)
         {
             ArgumentNullException.ThrowIfNull(history);
-            lock (_syncRoot) _history = history.ToArray();
+            lock (_syncRoot) _history = history.ToList();
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace BaseAI.Services
         /// <summary>
         /// 快照被插話中斷的使用者回合，不取走正在累積的新輸入音訊。
         /// </summary>
-        public bool TryGetInterruptedTurn(out LlmTurnResultDto turn, string? userTextOverride = null)
+        public bool TryGetBreakTurn(out LlmTurnResultDto turn, string? userTextOverride = null)
         {
             lock (_syncRoot)
             {
@@ -198,7 +198,7 @@ namespace BaseAI.Services
         /// <summary>
         /// 丟棄被使用者插話中斷的模型回覆，並保留新輸入音訊供後續完整回合使用。
         /// </summary>
-        public void ResetForInterruptedResponse()
+        public void ResetForBreakResp()
         {
             lock (_syncRoot)
             {
@@ -363,7 +363,7 @@ namespace BaseAI.Services
                 wasInterrupted,
                 _needSTT || userText == _audioText)
             {
-                History = _history.ToArray()
+                History = _history.ToList()
             };
         }
 
@@ -387,7 +387,7 @@ namespace BaseAI.Services
             _userText = string.Empty;
             _hasUserText = false;
             _llmText.Clear();
-            _history = Array.Empty<LlmHistoryDto>();
+            _history = [];
             _totalTokens = 0;
             _llmResping = false;
         }

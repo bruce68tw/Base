@@ -130,7 +130,7 @@ namespace BaseAI.Services
             return true;
         }
 
-        public override async Task<EmbedDocuDto?> GetA(string table, string id)
+        public override async Task<EmbedRowDto?> GetA(string table, string id)
         {
             if (!await SetNowTableA(table)) return null;
 
@@ -152,7 +152,7 @@ namespace BaseAI.Services
             if (!root.TryGetProperty("ids", out var ids) || ids.GetArrayLength() == 0)
                 return null;
 
-            var result = new EmbedDocuDto { Id = ids[0].GetString() ?? id };
+            var result = new EmbedRowDto { Id = ids[0].GetString() ?? id };
             if (root.TryGetProperty("documents", out var documents) &&
                 documents.GetArrayLength() > 0 && documents[0].ValueKind != JsonValueKind.Null)
                 result.Text = documents[0].GetString() ?? "";

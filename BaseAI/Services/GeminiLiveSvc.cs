@@ -88,9 +88,9 @@ namespace BaseAI.Services
                 throw new InvalidOperationException("Gemini Live 未回傳 setupComplete。");
 
             // 重連後用 clientContent 求回歷史對話，讓模型延續前文。
-            if (optDto.History.Count > 0)
-            if (optDto.History.Count > 0)
-                await WebToLlmHistoryA(optDto.History, ct);
+            if (optDto.Histories.Count > 0)
+            if (optDto.Histories.Count > 0)
+                await WebToLlmHistoryA(optDto.Histories.ToList(), ct);
         }
 
         /// <summary>
@@ -151,9 +151,9 @@ namespace BaseAI.Services
         }
 
         public override Task WebToLlmHistoryA(
-            IReadOnlyCollection<LlmHistoryDto> history, CancellationToken ct = default)
+            List<LlmHistoryDto> histories, CancellationToken ct = default)
         {
-            var turns = history
+            var turns = histories
                 .Where(message => message.Role is "user" or "assistant" && !string.IsNullOrWhiteSpace(message.Text))
                 .Select(message => new
                 {
@@ -253,7 +253,7 @@ namespace BaseAI.Services
                             Id = call["id"]?.ToString() ?? "",
                             Name = call["name"]?.ToString() ?? "",
                             ArgumentsJson = call["args"]?.ToString(Newtonsoft.Json.Formatting.None) ?? "{}"
-                        }).ToArray()
+                        }).ToList()
                     };
                     continue;
                 }

@@ -67,7 +67,7 @@ namespace BaseAI.Interfaces
         /// <param name="id">要讀取的向量項目唯一識別碼。</param>
         /// <param name="table">來源 collection/table；空字串表示由實作採用預設名稱。</param>
         /// <returns>找到時回傳文件資料；找不到時回傳 <see langword="null"/>。</returns>
-        public abstract Task<EmbedDocuDto?> GetA(string table, string id);
+        public abstract Task<EmbedRowDto?> GetA(string table, string id);
 
         /// <summary>
         /// 依向量項目識別碼刪除單筆資料。

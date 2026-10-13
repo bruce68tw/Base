@@ -80,7 +80,7 @@ namespace BaseAI.Services
             }, ct);
 
             await WaitForSessionReadyA(ct);
-            await SendHistoryA(optDto.History, ct);
+            await SendHistoryA(optDto.Histories, ct);
         }
 
         /// <summary>傳送一段 16 kHz PCM 音訊。</summary>
@@ -117,7 +117,7 @@ namespace BaseAI.Services
         }
 
         public override Task WebToLlmHistoryA(
-            IReadOnlyCollection<LlmHistoryDto> history, CancellationToken ct = default)
+            List<LlmHistoryDto> history, CancellationToken ct = default)
         {
             return SendHistoryA(history, ct);
         }

@@ -4,7 +4,7 @@
     /// 後端 locale resource for base class
     /// 調用 _Json.CopyModel(), 必須宣告為類別屬性 !!
     /// </summary>
-    public class EmbedDocuDto
+    public class EmbedRowDto
     {
         public string Id { get; set; } = "";
         public string Text { get; set; } = "";

@@ -17,6 +17,9 @@
         /// <summary>控制模型回覆方式與內容的系統提示詞。</summary>
         public string SystemPrompt { get; set; } = "";
 
+        /// <summary>音訊輸入尚無辨識文字時使用的預設文字。</summary>
+        public string DefaultAudioInput { get; set; } = "";
+
         /// <summary>對話使用的語言設定，預設為繁體中文（zh-TW）；目前由呼叫端提供，provider 尚未直接使用此欄位。</summary>
         public string Language { get; set; } = "zh-TW";
 
@@ -30,9 +33,9 @@
         public bool OutputTranScript { get; set; } = true;
 
         /// <summary>提供給模型呼叫的工具宣告集合。</summary>
-        public IReadOnlyCollection<LlmToolDto> Tools { get; set; } = Array.Empty<LlmToolDto>();
+        public List<LlmToolDto> Tools { get; set; } = [];
 
         /// <summary>建立或重連工作階段時載入的既有對話紀錄。</summary>
-        public IReadOnlyCollection<LlmHistoryDto> History { get; set; } = Array.Empty<LlmHistoryDto>();
+        public List<LlmHistoryDto> Histories { get; set; } = [];
     }
 }
