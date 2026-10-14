@@ -536,7 +536,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //if (_Str.NotEmpty(dto.ClsBox))
             //    attr += $" class='{dto.ClsBox}'";
 
-            var html = $"<input{attr} data-type='{InputTypeEstr.Text}' type='hidden' data-init='{dto.Value}'>";
+            var html = $"<input{attr} data-type='{InputTypeEstr.Text}' type='hidden' data-init='{dto.Value}' value='{dto.Value}'>";
             return html;
         }
         public static string XiHideId()
@@ -567,7 +567,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         {
             //attr, both digits/number should be type=number for validate(digits not work !!)
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" type='number' data-type='{InputTypeEstr.Integer}' data-init='{dto.Value}'" +
+                $" type='number' data-type='{InputTypeEstr.Integer}' data-init='{dto.Value}' value='{dto.Value}'" +
             //GetRequired(dto.Required) +
             GetEventAttr("onchange", dto.FnOnChange, dto.EventArgs) +
             GetEventAttr("onblur", dto.FnOnBlur, dto.EventArgs) +
@@ -720,7 +720,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             //base attr: fid,name,readonly,ext attr
             var type = dto.IsPwd ? "password" : "text";
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" type='{type}' data-init='{dto.Value}'" +
+                $" type='{type}' data-init='{dto.Value}' value='{dto.Value}'" +
                 GetEventAttr("onchange", dto.FnOnChange, dto.EventArgs) +
                 GetEventAttr("onblur", dto.FnOnBlur, dto.EventArgs) +
                 GetPlaceHolder(dto.InputTip) +
@@ -763,7 +763,7 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         {
             //attr
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
-                $" data-init='{dto.Value}' rows='{dto.RowsCount}'" +
+                $" data-init='{dto.Value}' value='{dto.Value}' rows='{dto.RowsCount}'" +
                 GetEventAttr("onchange", dto.FnOnChange, dto.EventArgs) +
                 GetEventAttr("onblur", dto.FnOnBlur, dto.EventArgs) +
                 GetPlaceHolder(dto.InputTip) +
