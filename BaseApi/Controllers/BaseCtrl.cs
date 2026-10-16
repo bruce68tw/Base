@@ -32,12 +32,14 @@ namespace BaseApi.Controllers
         /// <param name="json"></param>
         /// <param name="emptyToMsg">空值自動轉系統訊息</param>
         /// <returns></returns>
+        [NonAction]
         public ContentResult JsonToCnt(JObject? json, bool emptyToMsg = true)
         {
             json ??= emptyToMsg ? _Json.GetBrError("FindNone") : [];
             return Content(json.ToString(), ContentTypeEstr.Json);
         }
 
+        [NonAction]
         public ContentResult JsonsToCnt(JArray? rows)
         {
             //如果傳回空字串前端會parser error !!
@@ -45,6 +47,7 @@ namespace BaseApi.Controllers
             return Content(json, ContentTypeEstr.Json);
         }
 
+        [NonAction]
         public IActionResult FileDtoToResult(DownFileDto file)
         {
             return (string.IsNullOrEmpty(file.Error))
@@ -53,6 +56,7 @@ namespace BaseApi.Controllers
         }
 
         //檢視檔案, 由子代呼叫
+        [NonAction]
         public IActionResult FileToResult(FileResult? file)
         {
             return (file == null) ? NotFound() : file;
