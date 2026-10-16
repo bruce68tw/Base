@@ -31,7 +31,7 @@ namespace BaseApi.Services
         /// <returns></returns>
         public static string GetLocale()
 		{
-			return _Fun.MultiLang ? _Fun.GetBaseUser().Locale : _Fun.Config.Locale;
+			return _Fun.MultiLang ? _Str.EmptyToValue(_Fun.GetBaseUser().Locale, _Fun.Config.Locale) : _Fun.Config.Locale;
         }
 
 		/// <summary>
