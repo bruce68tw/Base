@@ -8,10 +8,10 @@ namespace Base.Models
     /// </summary>
     public class ConfigDto
     {
-        //是否加密(使用key.txt)組態檔的重要欄位(Db,Smtp,Redis)
+        //是否加密(使用tempdata.png)組態檔的重要欄位(Db,Smtp,Redis)
         public bool Encode { get; set; } = false;
 
-        //是否加密(使用key.txt)上傳檔案(Encode必須為true才能設定本欄位)
+        //是否加密(使用tempdata.png)上傳檔案(Encode必須為true才能設定本欄位)
         public bool EncodeUpload { get; set; } = false;
 
         //refer LoginTypeEstr

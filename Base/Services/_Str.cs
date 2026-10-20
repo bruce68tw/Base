@@ -820,14 +820,14 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 從key.txt讀取AES key, 以base64編碼(去除字尾=), 解密後存到變數, 供加解密使用, 只讀取一次, 沒有則回傳空字串
+        /// 從tempdata.png讀取AES key, 以base64編碼(去除字尾=), 解密後存到變數, 供加解密使用, 只讀取一次, 沒有則回傳空字串
         /// called by: _Str.cs, _Fun.Init()解密組態欄位
         /// </summary>
         /// <returns></returns>
         public static string ReadFileKey()
         {
-            //固定讀取 key.txt
-            var path = $"{_Fun.DirRoot}key.txt";
+            //固定讀取 tempdata.png文字檔 (old:key.txt) 
+            var path = $"{_Fun.DirRoot}tempdata.png";
             var key = _File.ToStr(path);
             if (string.IsNullOrEmpty(key))
             {
