@@ -1,18 +1,21 @@
 ﻿namespace Base.Models
 {
     /// <summary>
-    /// AdUserDto -> LoginUserDto
-    /// summary data
+    /// LDAP 登入查得的基本使用者資料。
     /// </summary>
     public class LoginUserDto
     {
-        //(SamAccountName)
+        /// <summary>
+        /// 登入帳號，對應 sAMAccountName。
+        /// </summary>
         public string Id { get; set; } = "";
-
-        //(sn)
+        /// <summary>
+        /// LDAP 的 sn 屬性值。
+        /// </summary>
         public string Name { get; set; } = "";
-
-        //(mail)
+        /// <summary>
+        /// LDAP 的 mail 屬性值。
+        /// </summary>
         public string Email { get; set; } = "";
     }
 }

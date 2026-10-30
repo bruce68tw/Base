@@ -4,8 +4,9 @@ using System.Text.RegularExpressions;
 
 namespace Base.Services
 {
-    //以後用到再測試, 先放這裡備用   
-    //(AI生成)處理中文字地址中的數字雙向轉換功能，特別針對巷、弄、段等地址元素進行處理。
+    /// <summary>
+    /// 地址中的段、巷、弄數字轉換工具；現有註記尚未完成實際驗證。
+    /// </summary>
     public static class _Address
     {
         // 中文數字
@@ -26,9 +27,9 @@ namespace Base.Services
 
         static readonly string TwDigits = "零一二三四五六七八九";
 
-        // =========================
-        // 對外入口（雙向）
-        // =========================
+        /// <summary>
+        /// 依序將中文數字轉阿拉伯數字，再將符合位置的數字逐字轉中文；空白輸入原樣回傳。
+        /// </summary>
         public static string Normalize(string address)
         {
             if (string.IsNullOrWhiteSpace(address))

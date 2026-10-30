@@ -119,6 +119,23 @@ namespace BaseWeb.ViewComponents
 <div class='x-work d-none'>
     <div class='x-work-msg'>{baseR.Working}</div>
 </div>
+
+<!-- modal: voice command -->
+<div class='modal fade x-modal x-voice' role='dialog'>
+    <div class='modal-dialog'>
+        <div class='modal-content'>
+            <div class='modal-header'>
+                <div class='modal-title'>{baseR.TitleVoice}</div>
+                <button type='button' class='btn-close' data-bs-dismiss='modal'></button>
+            </div>
+            <div class='modal-body p-4 text-center'>
+                <div class='mb-4 x-timer'>00:00</div>
+                <button class='btn btn-primary x-btn-rec' type='button'>{baseR.BtnStartRec}</button>
+                <p class='mt-3 mb-0 text-secondary x-status'></p>
+            </div>
+        </div>
+    </div>
+</div>
 ";
             return new HtmlString(html);
         }

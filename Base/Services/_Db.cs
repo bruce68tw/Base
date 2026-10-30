@@ -6,17 +6,13 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
-    /// package Db class to static 
+    /// Db 的便利包裝；參數為名稱、值交錯配對，自建 Db 於正常完成後釋放，傳入的 Db 由呼叫端管理。
     /// </summary>
     public class _Db
     {
         /// <summary>
-        /// check and open db
+        /// db 為 null 時只建立 Db 並回傳 true，不會立即開連線。
         /// </summary>
-        /// <param name="db"></param>
-        /// <param name="hasDb"></param>
-        /// <param name="dbStr"></param>
-        /// <returns>true(new open db)</returns>
         public static bool CheckOpenDb(ref Db? db, string dbStr = "")
         {
             var newDb = (db == null);
@@ -25,10 +21,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// check and close db
+        /// 僅在 newDb 為 true 時非同步釋放 Db。
         /// </summary>
-        /// <param name="db"></param>
-        /// <param name="newDb">true(new open db)</param>
         public static async Task CheckCloseDbA(Db db, bool newDb)
         {
             if (newDb) await db.DisposeAsync();
@@ -36,12 +30,8 @@ namespace Base.Services
 
         #region GetRow(s)
         /// <summary>
-        /// get json
+        /// 取得第一列 JSON；無資料或失敗可為 null。
         /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="args">ex: new() { "Id", id }</param>
-        /// <param name="db"></param>
-        /// <returns></returns>
         public static async Task<JObject?> GetRowA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -51,6 +41,9 @@ namespace Base.Services
                 ? null : (JObject)rows[0];
         }
 
+        /// <summary>
+        /// 取得多列 JSON；無資料或失敗可為 null。
+        /// </summary>
         public static async Task<JArray?> GetRowsA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -61,14 +54,23 @@ namespace Base.Services
         #endregion        
 
         #region GetModel(s)
+        /// <summary>
+        /// 取得第一個識別碼與文字配對，無資料可為 null；此方法為實例方法。
+        /// </summary>
         public async Task<IdStrDto?> GetIdStrA(string sql, List<object>? sqlArgs = null, Db? db = null)
         {
             return await GetModelA<IdStrDto>(sql, sqlArgs, db);
         }
+        /// <summary>
+        /// 取得識別碼與文字清單，無資料可為 null；此方法為實例方法。
+        /// </summary>
         public async Task<List<IdStrDto>?> GetIdStrsA(string sql, List<object>? sqlArgs = null, Db? db = null)
         {
             return await GetModelsA<IdStrDto>(sql, sqlArgs, db);
         }
+        /// <summary>
+        /// 以同名屬性讀取首列模型，無資料回傳 default。
+        /// </summary>
         public static async Task<T?> GetModelA<T>(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -77,6 +79,9 @@ namespace Base.Services
             return (rows == null || rows.Count == 0) 
                 ? default : rows[0];
         }
+        /// <summary>
+        /// 以同名屬性讀取模型清單，無資料或失敗可為 null。
+        /// </summary>
         public static async Task<List<T>?> GetModelsA<T>(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -88,12 +93,8 @@ namespace Base.Services
 
         #region get string
         /// <summary>
-        /// get string
+        /// 取得首列首欄字串，無資料可為 null。
         /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="args">ex: new() { "Id", id }</param>
-        /// <param name="db"></param>
-        /// <returns>return null if not found</returns>
         public static async Task<string?> GetStrA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -102,6 +103,9 @@ namespace Base.Services
             return result;
         }
 
+        /// <summary>
+        /// 取得首欄字串清單，無資料可為 null。
+        /// </summary>
         public static async Task<List<string>?> GetStrsA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -113,12 +117,8 @@ namespace Base.Services
 
         #region get int
         /// <summary>
-        /// get string
+        /// 取得首列首欄可空整數。
         /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="args">ex: new() { "Id", id }</param>
-        /// <param name="db"></param>
-        /// <returns>return null if not found</returns>
         public static async Task<int?> GetIntA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -127,6 +127,9 @@ namespace Base.Services
             return result;
         }
 
+        /// <summary>
+        /// 取得首欄可空整數清單。
+        /// </summary>
         public static async Task<List<int?>?> GetIntsA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -244,8 +247,10 @@ order by Type, Sort";
         */
         #endregion
 
-        //update
         //return affected rows, -1 means error
+        /// <summary>
+        /// 執行異動，沿用 Db 的筆數與 0、-1、-2 回傳規則；不自動建立交易。
+        /// </summary>
         public static async Task<int> ExecSqlA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);

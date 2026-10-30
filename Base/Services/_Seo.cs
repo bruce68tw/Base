@@ -4,15 +4,16 @@ using System.Web;
 
 namespace Base
 {
-    //SEO
+    /// <summary>
+    /// 產生 sitemap XML 的 UTF-8 內容。
+    /// </summary>
     public class _Seo
     {
-        //instance variables
         //private static DateTime _start;
         //private const string _newLine = "\r\n";
 
         /// <summary>
-        /// 產生 seo siteMap.xml 檔案
+        /// 以 Loc、LastMod 資料建立 sitemap 位元組；會原地補齊網址與頻率等欄位，rows 為 null 時回傳 null。
         /// </summary>
         /// <param name="domain"></param>
         /// <param name="rows">包含Loc, LastMod 2個欄位</param>

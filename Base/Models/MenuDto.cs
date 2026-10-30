@@ -3,7 +3,7 @@
 namespace Base.Models
 {
     /// <summary>
-    /// menu item
+    /// 可包含子選單的功能表項目。
     /// </summary>
     public class MenuDto
     {
@@ -13,26 +13,33 @@ namespace Base.Models
             Items = new List<MenuDto>();
         }
         */
-
-        //如果功能表有2層, 使用GroupName分群
+        /// <summary>
+        /// 分組顯示的群組名稱。
+        /// </summary>
         public string GroupName { get; set; } = "";
-
-        //program Id
+        /// <summary>
+        /// 作業代碼。
+        /// </summary>
         public string Code { get; set; } = "";
-
-        //program name
+        /// <summary>
+        /// 選單顯示名稱。
+        /// </summary>
         public string Name { get; set; } = "";
-
-        //if emtpy, means has child menu
+        /// <summary>
+        /// 作業連結；空白可表示具有子選單。
+        /// </summary>
         public string Url { get; set; } = "";
-
-        //sort
+        /// <summary>
+        /// 選單排序值。
+        /// </summary>
         public int Sort { get; set; }
-
-        //icon class name
+        /// <summary>
+        /// 圖示的 CSS 類別名稱。
+        /// </summary>
         public string Icon { get; set; } = "";
-
-        //sub menu items
+        /// <summary>
+        /// 子選單清單，預設為空集合。
+        /// </summary>
         public List<MenuDto> Items { get; set; } = [];
     }
 }

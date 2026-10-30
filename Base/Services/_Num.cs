@@ -3,11 +3,13 @@ using System.Collections.Generic;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// 數值解析、CRUD 暫存鍵與版面欄數轉換工具。
+    /// </summary>
     public class _Num
     {
         /// <summary>
-        /// for crud, 從資料key欄位讀取對應上層的rowNo, parse file key
-        /// called by: CrudEditSvc.cs、_HttpFile.cs
+        /// 空鍵回傳 -1，非數字或正數鍵回傳 0；零或負數轉為非負的暫存列號。
         /// </summary>
         /// <param name="key"></param>
         /// <returns>-1(error/not found), 0(正常key值), n(new key)</returns>
@@ -19,7 +21,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get RWD col number
+        /// 依每列項目數換算 12 欄格線寬度；未列出的項目數回傳 12。
         /// </summary>
         /// <param name="itemCount">columns count, 1-12</param>
         /// <returns></returns>
@@ -38,11 +40,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// convert string into List<int>
+        /// 依分隔符轉整數清單；空字串回傳空清單，無法解析的項目略過。
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="seperator"></param>
-        /// <returns></returns>
         public static List<int> StrToList(string text, char sep)
         {
             var result = new List<int>();
@@ -54,6 +53,9 @@ namespace Base.Services
             return result;
         }
 
+        /// <summary>
+        /// 嘗試解析整數；null 或失敗時回傳 value。
+        /// </summary>
         public static int TryParse(object? obj, int value)
         {
             return (obj == null) ? value : 
@@ -61,11 +63,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get random number
-        /// consider Vulnerability "Use of Cryptographically Weak PRNG"
-        /// @param maxNum max number
+        /// 回傳 0 起、未達 maxNum 的一般 Random 整數，非密碼學安全亂數。
         /// </summary>
-        /// <returns></returns>
         public static int GetRandom(int maxNum)
         {
             var random = new Random(Guid.NewGuid().GetHashCode());

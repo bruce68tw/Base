@@ -4,8 +4,14 @@ using System.Collections.Generic;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// SQL 區段、分頁與資料範圍條件組合；不是通用 SQL 解析器。
+    /// </summary>
     public class _Sql
     {
+        /// <summary>
+        /// 依讀取權限產生 u.Id 或 u.DeptId 條件；無權限時產生 and 1=0。
+        /// </summary>
         public static string GetCondByAuth(string ctrl, BaseUserDto? br = null)
         {
             br ??= _Fun.GetBaseUser();
@@ -20,7 +26,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// convert sql string to model 
+        /// 以關鍵字位置拆分 SELECT SQL，可改用方括號區段；不支援任意複雜 SQL 語法。
         /// </summary>
         /// <param name="sql">如果空白會傳回 empty SqlDto</param>
         /// <param name="useSquare"></param>
@@ -97,7 +103,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// SqlDto to Sql string
+        /// 依初始化的 DB 分頁格式組合 SQL；length 不大於 0 時讀取全部且不加排序。
         /// </summary>
         /// <param name="dto"></param>
         /// <param name="start"></param>
@@ -117,7 +123,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// sql string add (sql where) in condition
+        /// 建立參數化 IN 的名稱清單，並將名稱與值追加至 args。
         /// </summary>
         /// <param name="fid">傳入參數欄位id</param>
         /// <param name="keys">in key值array</param>
@@ -144,18 +150,16 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get where condition by list string
+        /// 直接將清單加引號組成 IN 條件，不跳脫值或使用參數。
         /// </summary>
-        /// <param name="fid"></param>
-        /// <param name="list"></param>
-        /// <returns></returns>
         public static string GetCondByListStr(string fid, List<string> list)
         {
             return fid + " in (" + _List.ToStr(list, true) + ")";
         }
 
+        //public static string sqlConcat(string ps_sql, params string[] pas_input)
         /// <summary>
-        /// 如果 sql 中有用到字串相加的功能(concat), 可以呼叫這個函數來轉換, 以適用其他資料庫種類.
+        /// 依資料庫種類組合 SQL 字串串接；少於兩項或種類未支援時回傳空字串。
         /// </summary>
         /// <param name="values">第後一個欄位為 alias 名稱, 可為空白</param>
         /// <returns>string</returns>

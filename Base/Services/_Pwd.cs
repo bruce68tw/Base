@@ -3,14 +3,14 @@ using System.Text.RegularExpressions;
 
 namespace Base
 {
+    /// <summary>
+    /// 依 _Fun.PwdStrongLevel 檢查密碼強度。
+    /// </summary>
     public class _Pwd
     {
         /// <summary>
-        /// 檢查密碼強度
+        /// 符合規則回傳空字串，否則回傳中文原因；0 不限制，1 要求英數，其他層級要求大小寫、數字、符號及至少 10 字元。
         /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="db"></param>
-        /// <returns>error msg if any(無多國語)</returns>
         public static string CheckStrong(string pwd)
         {
             switch (_Fun.PwdStrongLevel)

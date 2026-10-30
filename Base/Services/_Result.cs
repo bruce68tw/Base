@@ -4,14 +4,14 @@ using System.DirectoryServices;
 
 namespace Base.Services
 {
-    //後端執行結果
+    /// <summary>
+    /// 後端操作結果的錯誤判斷。
+    /// </summary>
     public class _Result
     {
         /// <summary>
-        /// 檢查是否有錯誤
+        /// _ErrorMsg 非空或 ErrorRows 有項目時回傳 true。
         /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
         public static bool HasError(ResultDto result)
         {
             return _Str.NotEmpty(result._ErrorMsg) 

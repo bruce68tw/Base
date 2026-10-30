@@ -14,8 +14,7 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
-    /// for Crud Edit Service
-    /// 讀取單筆資料時(Update/View), 傳回row、_childs
+    /// 依 EditDto 驗證並異動 _rows、_childs 主從資料；自動交易僅在 AutoTrans 且有子表時啟用。
     /// </summary>
     public class CrudEditSvc : CrudEditGetSvc
     {
@@ -40,11 +39,8 @@ namespace Base.Services
         private JObject _newKeyJson = [];
 
 		/// <summary>
-		/// constructor
+		/// 設定異動服務的作業名稱與連線字串。
 		/// </summary>
-		/// <param name="ctrl"></param>
-		/// <param name="editDto"></param>
-		/// <param name="dbStr"></param>
 		public CrudEditSvc(string ctrl, string dbStr = "")
             : base(ctrl, dbStr)
         {
@@ -59,9 +55,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 外部需要寫入的時間
+        /// 取得此次儲存或刪除流程設定的時間；流程開始前為預設值。
         /// </summary>
-        /// <returns></returns>
         public DateTime GetNow()
         {
             return _now;
@@ -132,9 +127,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get master table key for new/update
+        /// 取得目前流程的主表鍵。
         /// </summary>
-        /// <returns></returns>
         public string GetMainKey()
         {
             return _key;
@@ -664,10 +658,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// save new rows, use transaction
+        /// 將 _rows 首列標成新增後驗證與儲存；輸入必須包含首列，結果以 ResultDto 表示。
         /// </summary>
-        /// <param name="json"></param>
-        /// <returns>ResultDto</returns>
         public async Task<ResultDto> CreateA(JObject json, EditDto editDto)
         {
             //todo: 如果有草稿模式, 刪除草稿 if any
@@ -679,11 +671,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// save updated rows(including delete rows), use transaction
+        /// 以非空主鍵修改資料，必要時檢查既有列範圍，錯誤以 ResultDto 回傳。
         /// </summary>
-        /// <param name="key">key of master table</param>
-        /// <param name="json"></param>
-        /// <returns>ResultDto</returns>
         public async Task<ResultDto> UpdateA(string key, JObject json, EditDto editDto, CrudEnum fun = CrudEnum.Update)
         {
             //return error if empty key
@@ -715,6 +704,9 @@ namespace Base.Services
             return await SaveJsonA(json, editDto);
         }
 
+        /// <summary>
+        /// 將 JSON 寫入使用者草稿檔；目前忽略寫檔布林結果並回傳空白結果物件。
+        /// </summary>
         public async Task<ResultDto> DraftA(string key, JObject json)
         {
             var path = GetDraftPath(key);
@@ -910,6 +902,9 @@ namespace Base.Services
             return true;
         }
 
+        /// <summary>
+        /// 取得本次流程累積的新主鍵 JSON 對照。
+        /// </summary>
         public JObject GetNewKeyJson()
         {
             return _newKeyJson;
@@ -922,23 +917,19 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// set new key & _newKeyJson variables
+        /// 產生並原地填入新增主從鍵及對照 JSON，錯誤回傳字串，成功為空字串。
         /// </summary>
-        /// <param name="inputJson"></param>
-        /// <param name="editDto"></param>
-        /// <returns>return error msg if any</returns>
         public async Task<string> SetNewKeyJsonA(JObject inputJson, EditDto editDto)
         {
             return await SetNewKeyJsonLoopA("0", null, inputJson, editDto);
         }
 
         /// <summary>
-        /// (recursive)set new pkey & fkey (寫入inputJson), called by SetNewKeyJson()
-        /// 前端會將所有空白pkey填入數字(上層資料序號, base 1)
+        /// 遞迴產生主外鍵並更新輸入 JSON；暫存鍵對應從 1 起算的上層列號。
         /// </summary>
-        /// <param name="levelStr">level concat string, 包含多層, ex:0,00,012</param>
-        /// <param name="upKeyJson">null for level0, JObject for after level1(f+idx(base 1)=value)
-        /// <param name="inputJson">不可null, JObject 包含rows、childs欄位</param>
+        /// <param name="levelStr">串接的層級路徑，例如 0、00、012。</param>
+        /// <param name="upKeyJson">主表為 null，子層為上層新鍵對照。</param>
+        /// <param name="inputJson">包含 _rows 與 _childs 的非空 JSON。</param>
         /// <param name="editDto"></param>
         /// <returns>error msg if any</returns>
         private async Task<string> SetNewKeyJsonLoopA(string levelStr, JObject? upKeyJson, JObject inputJson, EditDto editDto)
@@ -1077,11 +1068,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// set child foreign key value
-        /// called by FnSetNewKey()
+        /// 依來源層級的新鍵對照取代子列暫存外鍵，原地修改 JSON，失敗回傳錯誤字串。
         /// </summary>
-        /// <param name="levelStr"></param>
-        /// <returns>error msg if any</returns>
         public string SetChildFkey(JObject inputJson, int childIdx, string fid, string fromLevelStr)
         {
             //get child rows
@@ -1122,10 +1110,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// delete row for single table
+        /// 檢查單筆資料範圍後刪除主從資料。
         /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
         public async Task<ResultDto> DeleteA(string key, EditDto editDto)
         {
             //check for AuthType=Row if need
@@ -1141,10 +1127,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// delete rows of table
+        /// 依鍵清單刪除主從資料；此入口不逐筆執行 DeleteA 的範圍檢查。
         /// </summary>
-        /// <param name="keys">row key list</param>
-        /// <returns></returns>
         public async Task<ResultDto> DeleteByKeysA(List<string> keys, EditDto editDto)
         {
             //check input

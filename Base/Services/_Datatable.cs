@@ -2,9 +2,14 @@
 
 namespace Base.Services
 {
+    /// <summary>
+    /// DataTables 查詢輸入的欄位取值工具。
+    /// </summary>
     public static class _Datatable
     {
-        //get value in findJson
+        /// <summary>
+        /// 從 findJson 取得欄位字串；JSON 無效、為空或欄位缺失時回傳空字串。
+        /// </summary>
         public static string GetFindValue(DtDto dt, string fid)
         {
             if (dt.findJson == null) return "";

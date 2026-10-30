@@ -13,6 +13,9 @@ using System.Threading;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// 字串、識別碼與既有 AES 格式轉換；加解密依賴本機金鑰，並非通用安全編碼。
+    /// </summary>
     public class _Str
     {
 
@@ -32,10 +35,8 @@ namespace Base.Services
 
 
         /// <summary>
-        /// 加密多個欄位, 以ColSep分隔, 先組成字串再加密
+        /// 以 _Fun.ColSep 連接多值後加密；空參數回傳空字串。
         /// </summary>
-        /// <param name="items"></param>
-        /// <returns></returns>
         public static string EncodeCols(params object[] items)
         {
             if (items == null || items.Length == 0)
@@ -50,17 +51,15 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 將加密欄位解碼成欄位陣列, 以ColSep分隔
+        /// 解密後依 _Fun.ColSep 拆回欄位，不支援分隔符跳脫。
         /// </summary>
-        /// <param name="col"></param>
-        /// <returns></returns>
         public static string[] DecodeToCols(string col)
         {
             return Decode(col).Split(_Fun.ColSep);
         }
 
         /// <summary>
-        /// 日期字串加1
+        /// 產生今日 yyyyMMdd 加流水號；日期不同從 1 起，解析或序號上限錯誤回傳空字串。
         /// </summary>
         /// <param name="dateStr">yyyyMMdd + 序號, 如果不是今天則使用今天</param>
         /// <param name="tailLen2"></param>
@@ -187,11 +186,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 重複字串
+        /// 重複字串，次數不正或輸入為空時回傳空字串。
         /// </summary>
-        /// <param name="times"></param>
-        /// <param name="input"></param>
-        /// <returns></returns>
         public static string Repeat(int times, string input)
         {
             return (times <= 0 || string.IsNullOrEmpty(input))
@@ -200,21 +196,16 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 保留字串中間一個空白
+        /// 去除首尾空白並將每對連續空格替換一次，未必將任意連續空白壓成一格。
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
         public static string KeepOneSpace(string value)
         {
             return value.Trim().Replace("  ", " ");
         }
 
         /// <summary>
-        /// get random string, no upper alpha O,I
+        /// 依字元集合產生一般 Random 字串，非密碼學安全亂數。
         /// </summary>
-        /// <param name="len"></param>
-        /// <param name="type">int -> RandomTypeEnum</param>
-        /// <returns></returns>
         public static string RandomStr(int len, RandomTypeEnum type)
         {
             var chars = type switch
@@ -230,21 +221,25 @@ namespace Base.Services
               .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
+        /// <summary>
+        /// 加上 E: 前綴；空訊息改用系統錯誤文字。
+        /// </summary>
         public static string GetError(string error = "")
         {
             return _Fun.PreError + EmptyToValue(error, _Fun.SystemError);
         }
 
         /// <summary>
-        /// get error msg of _BR.js code
+        /// 以 B: 前綴包裝語系錯誤鍵。
         /// </summary>
-        /// <param name="errCode"></param>
-        /// <returns></returns>
         public static string GetBrError(string errCode)
         {
             return _Fun.PreBrError + errCode;
         }
 
+        /// <summary>
+        /// 非空錯誤轉成統一系統錯誤文字，空字串原樣回傳。
+        /// </summary>
         public static string ToSystemError(string error)
         {
             return string.IsNullOrEmpty(error)
@@ -253,7 +248,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// check object is empty or not
+        /// 僅判斷 null 或空字串，不含空白字串。
         /// </summary>
         /// <param name="data">input string</param>
         /// <returns></returns>
@@ -262,6 +257,9 @@ namespace Base.Services
             return (data == null || data == "");
         }
 
+        /// <summary>
+        /// 判斷字串非 null 且非空。
+        /// </summary>
         public static bool NotEmpty(string? data)
         {
             return !IsEmpty(data);
@@ -274,13 +272,16 @@ namespace Base.Services
         }
         */
 
+        /// <summary>
+        /// 空值時回傳替代字串，否則原樣回傳。
+        /// </summary>
         public static string EmptyToValue(string? data, string value)
         {
             return IsEmpty(data) ? value : data!;
         }
 
         /// <summary>
-        /// add directory seperator for path if need
+        /// 補上平台目錄分隔符；空字串會變成單一分隔符。
         /// </summary>
         /// <param name="dir">now path</param>
         /// <returns></returns>
@@ -293,11 +294,9 @@ namespace Base.Services
         }
 
         /// <summary>
+        /// 補上尾端斜線；空字串回傳 /
         /// AddSlash -> AddWebSlash
-        /// add right slash for url
         /// </summary>
-        /// <param name="url"></param>
-        /// <returns></returns>
         public static string AddWebSlash(string url)
         {
             if (IsEmpty(url)) return "/";
@@ -307,15 +306,16 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// add like % for sql
+        /// 非空值加上尾端 %，不跳脫 SQL LIKE 萬用字元。
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
         public static string AddLike(string? value)
         {
             return IsEmpty(value) ? "" : value + "%";
         }
 
+        /// <summary>
+        /// 移除尾端一個斜線或反斜線，輸入須非空。
+        /// </summary>
         public static string RemoveRightSlash(string dir)
         {
             if (dir.Substring(dir.Length - 1, 1) == "/" || dir.Substring(dir.Length - 1, 1) == "\\")
@@ -325,7 +325,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// replace multiple char to another string
+        /// 以 oldStr 組成正規表示式字元集合後替換，不是字面子字串替換。
         /// </summary>
         /// <param name="source">source string</param>
         /// <param name="oldStr">old char list(string)</param>
@@ -337,13 +337,16 @@ namespace Base.Services
                 ? "" : Regex.Replace(source, @"[" + oldStr + "]", newStr);
         }
 
+        /// <summary>
+        /// 移除一般空格字元，不涵蓋所有空白字元。
+        /// </summary>
         public static string RemoveSpace(string source)
         {
             return ReplaceChars(source, " ", "");
         }
 
         /// <summary>
-        /// add pre char
+        /// 左側補字元至指定長度；matchLen 為 true 時也截斷過長值。
         /// </summary>
         /// <param name="len">total string length</param>
         /// <param name="obj">now string</param>
@@ -359,7 +362,9 @@ namespace Base.Services
                 matchLen ? str[..len] : str;
         }
 
-        //add pre zero
+        /// <summary>
+        /// 左側補零，matchLen 為 true 時截斷過長值。
+        /// </summary>
         public static string PreZero(int len, object obj, bool matchLen = false)
         {
             return PreChar(len, obj, '0', matchLen);
@@ -370,7 +375,9 @@ namespace Base.Services
             */
         }
 
-        //字串後面補字元
+        /// <summary>
+        /// 右側補字元至指定長度；matchLen 為 true 時也截斷過長值。
+        /// </summary>
         public static string TailChar(int len, object obj, char c1, bool matchLen = false)
         {
             var str = obj.ToString();
@@ -379,7 +386,9 @@ namespace Base.Services
             //return (str!.Length >= len) ? str : str + new string(c1, len - str.Length);
         }
 
-        //字串後面補'0'
+        /// <summary>
+        /// 右側補零，matchLen 為 true 時截斷過長值。
+        /// </summary>
         public static string TailZero(int len, object obj, bool matchLen = false)
         {
             return TailChar(len, obj, '0', matchLen);
@@ -394,10 +403,8 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// get \t string times
+        /// 產生指定數量的定位字元，非正數回傳空字串。
         /// </summary>
-        /// <param name="times"></param>
-        /// <returns></returns>
         public static string Tab(int times)
         {
             var result = "";
@@ -406,7 +413,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get JObject string
+        /// 建立單一字串欄位的 JSON 文字。
         /// </summary>
         /// <param name="fid">JObject field name</param>
         /// <param name="value">value</param>
@@ -431,20 +438,24 @@ namespace Base.Services
         }    
         */
 
-        //Base64 字串編碼
+        /// <summary>
+        /// 將 UTF-8 字串轉為 Base64，不進行加密。
+        /// </summary>
         public static string Base64Encode(string str)
         {
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(str));
         }
 
-        //Base64 字串解碼
+        /// <summary>
+        /// 解碼 Base64 為 UTF-8 字串，格式錯誤會拋出。
+        /// </summary>
         public static string Base64Decode(string str)
         {
             return Encoding.UTF8.GetString(Convert.FromBase64String(str));
         }
 
         /// <summary>
-        /// convert json string to json object
+        /// 解析 JObject，空字串或解析失敗回傳 null。
         /// </summary>
         /// <param name="str">json string</param>
         /// <returns>JObject</returns>
@@ -464,12 +475,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// ??
-        /// get variables name
+        /// 取得成員存取運算式的名稱，非成員運算式會轉型失敗。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="expr"></param>
-        /// <returns></returns>
         public static string GetVarName<T>(Expression<Func<T>> expr)
         {
             var body = (MemberExpression)expr.Body;
@@ -477,7 +484,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// to List<string>
+        /// 依分隔字元拆成字串清單，保留空項目。
         /// </summary>
         /// <param name="str">如果''則傳回[]</param>
         /// <param name="sep">seperator</param>
@@ -488,7 +495,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// convert string to list int
+        /// 依分隔字元解析整數清單；空值回傳空集合，無效數字會拋出。
         /// </summary>
         /// <param name="str">如果''則傳回[]</param>
         /// <param name="sep"></param>
@@ -499,7 +506,9 @@ namespace Base.Services
                 ? [] : str!.Split(sep).Select(Int32.Parse).ToList();
 		}
 
-        //get hash key(base64, 25 char) for cache key
+        /// <summary>
+        /// 組合 Md5 結果及其 GetHashCode 尾碼，不保證跨執行環境穩定。
+        /// </summary>
         public static string GetHashKey(string data)
         {
             var md5 = Md5(data);
@@ -507,10 +516,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get Md5 string(22 chars, base64)
+        /// 取得 MD5 的 22 字元 URL 友善 Base64 表示；空值回傳空字串，非安全密碼雜湊。
         /// </summary>
-        /// <param name="str"></param>
-        /// <returns>22 char</returns>
         public static string Md5(string? str)
         {
             if (string.IsNullOrEmpty(str)) return "";
@@ -519,7 +526,9 @@ namespace Base.Services
                 .Replace('+', '-').Replace('/', '_');
         }
 
-        //md5 hex string, 32char lowercase
+        /// <summary>
+        /// 取得小寫十六進位 MD5；空值回傳空字串，非安全密碼雜湊。
+        /// </summary>
         public static string Md5Hex(string? str)
         {
             if (string.IsNullOrEmpty(str)) return "";
@@ -534,12 +543,10 @@ namespace Base.Services
             */
         }
 
-        /// <summary>
-        /// get new Id for db key, 10 char
-        /// max date is 2300/1/1(A+9char, from 2000/1/1)
-        /// </summary>
-        /// <returns></returns>
         //public static string NewId(DateTime? dt = null)
+        /// <summary>
+        /// 由目前時間雜湊產生英數鍵並加上 ServerId；會暫停執行緒一毫秒，不保證全域唯一。
+        /// </summary>
         public static string NewId(int len = _Fun.AutoIdMid)
         {
             //1.stop 1 milli second for avoid repeat(sync way here !!)
@@ -599,8 +606,7 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// 包含商業規則, 特殊用途, 從newKeyJson讀取new key string
-        /// get new key from newKeyJson(CrudEdit.cs)
+        /// 以 t加表序號、f加列號讀取新鍵；rowIndex 從 0 起算，找不到回傳空字串。
         /// </summary>
         /// <param name="newKeyJson">CrudEdit._newKeyJson</param>
         /// <param name="tableSn">table sn</param>
@@ -617,10 +623,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// string to boolean
+        /// 以不分大小寫的 true 或 1 判斷布林值，輸入不接受 null。
         /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
         public static bool ToBool(object obj)
         {
             var str = obj.ToString()!.ToLower();
@@ -628,7 +632,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// replace json string, 字串中json欄位外面使用中括號, 例如: xxx[user]xxx
+        /// 以 JSON 欄位值取代來源中的 [欄位名]，不進行內容跳脫。
         /// </summary>
         /// <param name="source">source json string</param>
         /// <param name="json">for replace</param>
@@ -643,7 +647,9 @@ namespace Base.Services
             return source;
         }
 
-        //convert string to hex string
+        /// <summary>
+        /// 將各 UTF-16 字元數值連接成十六進位文字，不保證每字元固定長度。
+        /// </summary>
         public static string ToHex(string str)
         {
             var data = "";
@@ -652,7 +658,9 @@ namespace Base.Services
             return data;
         }
 
-        //convert hex string to normal string
+        /// <summary>
+        /// 解析十六進位為 byte[] 後呼叫 Convert.ToString；目前不會還原為原始文字。
+        /// </summary>
         public static string HexToStr(string hex)
         {
             return Convert.ToString(Convert.FromHexString(hex)) ?? "";
@@ -670,17 +678,15 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// list string add single quota(')
+        /// 為逗號分隔清單各項加單引號，不跳脫內容。
         /// </summary>
-        /// <param name="list"></param>
-        /// <returns></returns>
         public static string ListAddQuote(string list)
         {
             return "'" + list.Replace(",", "','") + "'";
         }
 
         /// <summary>
-        /// check key rule for db: alphbetic、numeric、comma(,)
+        /// 檢查英數、底線與逗號組成的鍵；空值通過，可記錄不符情況。
         /// </summary>
         /// <param name="str"></param>
         /// <param name="logTail">optional, when wrong add log tail</param>
@@ -698,10 +704,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// convert string array to IdStrDto list
+        /// 將偶數項的逗號清單依 Id、文字交錯轉成選項。
         /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
         public static List<IdStrDto> ToIdStrs(string list)
         {
             var ary = list.Split(',');
@@ -718,7 +722,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get mid part string, 找第一次發現的 left 及 right 之間字串
+        /// 取左標記後至右標記前的片段，可包含標記；找不到左標記回傳空字串。
         /// </summary>
         /// <param name="source"></param>
         /// <param name="left"></param>
@@ -738,11 +742,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get left part string(first find), not include found string
+        /// 取第一個指定片段之前的字串，找不到則原樣回傳。
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="find">find string</param>
-        /// <returns></returns>
         public static string GetLeft(string source, string find)
         {
             var pos = source.IndexOf(find);
@@ -750,11 +751,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get left part string(last find), not include found string
+        /// 取最後一個指定片段之前的字串，找不到則原樣回傳。
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="find"></param>
-        /// <returns></returns>
         public static string GetLeft2(string source, string find)
         {
             var pos = source.LastIndexOf(find);
@@ -762,11 +760,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get left part string, not include found string
+        /// 取第一個指定片段位置後一字元起的文字；多字元標記不會完整移除。
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="find">find string</param>
-        /// <returns></returns>
         public static string GetRight(string source, string find)
         {
             var pos = source.IndexOf(find);
@@ -813,17 +808,17 @@ namespace Base.Services
         }
         */
 
-        //外部可能需要
+        /// <summary>
+        /// 取得目前快取的檔案金鑰，不主動載入。
+        /// </summary>
         public static string GetKey()
         {
             return _fileKey;
         }
 
         /// <summary>
-        /// 從tempdata.png讀取AES key, 以base64編碼(去除字尾=), 解密後存到變數, 供加解密使用, 只讀取一次, 沒有則回傳空字串
-        /// called by: _Str.cs, _Fun.Init()解密組態欄位
+        /// 讀取根目錄 tempdata.png 的 Base64 金鑰並快取；檔案缺失回傳空字串。
         /// </summary>
-        /// <returns></returns>
         public static string ReadFileKey()
         {
             //固定讀取 tempdata.png文字檔 (old:key.txt) 
@@ -841,9 +836,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 使用 AES 加解密
-        /// AES 加/解密重要資料(組態欄位), 加解密後以base64編碼/解碼
-        /// 先判斷是否需要加密, 再從目前目錄讀取key.xxx.txt
+        /// 以快取或檔案金鑰加密，讀不到金鑰回傳空字串。
         /// </summary>
         /// <param name="isEncode">true(加密), false(解密)</param>
         /// <param name="data"></param>
@@ -858,6 +851,9 @@ namespace Base.Services
                 ? "" : EncodeByKey(data, _fileKey!);
         }
 
+        /// <summary>
+        /// 以快取或檔案金鑰解密；無金鑰或無效 Base64 可回傳空字串，其他解密錯誤仍可能拋出。
+        /// </summary>
         public static string Decode(string data)
         {
             //if (!_Fun.Config.Encode) return data;
@@ -902,12 +898,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 資料加密, 使用 AES ECB mode, padding PKCS7, iv 使用key
+        /// 以既有 AES-ECB、PKCS7 規則加密並輸出 Base64；金鑰使用 ASCII 並依長度截取或補零。
         /// </summary>
-        /// <param name="data">source data</param>
-        /// <param name="key"></param>
-        /// <param name="iv"></param>
-        /// <returns>encoded base64 string</returns>
         public static string EncodeByKey(string data, string key)
         {
             byte[] bytes;
@@ -939,12 +931,8 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// Decode -> DecodeByKey
-        /// 資料解密, 使用 AES ECB mode, padding PKCS7, iv 使用key
+        /// 依既有 AES 規則解密；Base64 格式錯誤回傳空字串，金鑰或填補錯誤可能拋出。
         /// </summary>
-        /// <param name="data">encoded base64 string</param>
-        /// <param name="key"></param>
-        /// <returns>decoded plain text</returns>
         public static string DecodeByKey(string data, string key)
         {
             //key ??= _Fun.AesKey;

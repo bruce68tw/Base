@@ -1,8 +1,13 @@
 ﻿namespace Base.Models
 {
+    /// <summary>
+    /// 將驗證錯誤定位至編輯區、資料列與欄位。
+    /// </summary>
     public class ErrorRowDto
     {
-        //constructor
+        /// <summary>
+        /// 建立空白錯誤資料，編輯區索引預設為 0。
+        /// </summary>
         public ErrorRowDto()
         {
             Fid = "";
@@ -10,25 +15,23 @@
             EditNo = 0;
             RowId = "";
         }
-
-        public string Fid { get; set; }
-        public string Msg { get; set; }
-
         /// <summary>
-        /// FormId(string) -> EditNo(int)
-        /// EditOne/EditMany, 不是 FormId 要修正
-        /// default _me.edit0
+        /// 發生錯誤的欄位識別名稱。
+        /// </summary>
+        public string Fid { get; set; }
+        /// <summary>
+        /// 欄位錯誤訊息。
+        /// </summary>
+        public string Msg { get; set; }
+        /// <summary>
+        /// 編輯區索引，預設 0 對應主編輯區。
         /// </summary>
         public int EditNo { get; set; }
-
         /// <summary>
-        /// 用這個欄位來判別錯誤欄位是在那一個資料群組, for update多筆資料時
+        /// 發生錯誤的資料列識別，用於多列編輯。
         /// </summary>
         public string RowId { get; set; }
 
-        /// <summary>
-        /// 輸入錯誤的欄位id清單, type為Key(id), Value(錯誤訊息)
-        /// </summary>
         //public List<IdStrDto> ErrorFields { get; set; } = null!;
 
     }

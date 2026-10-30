@@ -3,10 +3,8 @@
 namespace Base.Models
 {
     /// <summary>
-    /// for RWD pagin output(jquery simple pagination)
-    /// refer CrudRead.cs GetPageA() return json
+    /// 簡易分頁結果容器；資料列可為 null。
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     public class PageOut<T>
     {
         /*
@@ -15,8 +13,9 @@ namespace Base.Models
             Rows = new List<T>();
         }
         */
-
-        //json string has: pageNo, pageRows, filterRows
+        /// <summary>
+        /// 分頁資訊的 JSON 字串，具體鍵名由產生端決定。
+        /// </summary>
         public string PageArg { get; set; } = "";
         /*
         //public int draw { get; set; }
@@ -25,12 +24,12 @@ namespace Base.Models
         //condition rows count
         public int recordsFiltered { get; set; }
         */
-
-        public List<T>? Rows { get; set; }
-
         /// <summary>
-        /// error msg if any (necessary field for resultXXX dto)
-        /// refer ResultDto.cs
+        /// 本頁資料列，預設 null。
+        /// </summary>
+        public List<T>? Rows { get; set; }
+        /// <summary>
+        /// 錯誤訊息，空字串表示未設定錯誤。
         /// </summary>
         public string _ErrorMsg { get; set; } = "";
     }

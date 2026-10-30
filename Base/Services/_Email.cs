@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// SMTP 郵件組合與寄送工具，預設採 _Fun.Smtp；寄送例外會記錄而不回報送達狀態。
+    /// </summary>
     public class _Email
     {
         //get from _Fun.Config.EmailImagePairs
@@ -17,9 +20,8 @@ namespace Base.Services
         private static List<IdStrDto>? _emailImagePairs;
 
         /// <summary>
-        /// email to Root(web.config RootEmail field)
+        /// 管理者信箱非空時寄送系統通知，不套用測試收件者替換。
         /// </summary>
-        /// <param name="msg"></param>
         public static async Task SendRootA(string msg)
         {
             //check
@@ -46,21 +48,16 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// send one mail by emailDto
+        /// 以 DTO 非同步寄送單封 HTML 郵件，套用 TesterEmail 規則。
         /// </summary>
-        /// <param name="email">email model</param>
-        /// <param name="smtp">smtp model</param>
-        /// <param name="sync">sync send or not, false(web ap), console(true)</param>
         public static async Task SendByDtoA(EmailDto email, SmtpDto? smtp = null)
         {
             await SendByDtosA([email], smtp);
         }
 
         /// <summary>
-        /// send mails by emailDtos asynchronus
+        /// 寄送 DTO 清單；TesterEmail 非空時只保留首封並改收件者、清副本，會修改輸入 DTO。
         /// </summary>
-        /// <param name="emails"></param>
-        /// <param name="smtp"></param>
         public static async Task SendByDtosA(List<EmailDto> emails, SmtpDto? smtp = null)
         {
             //change receiver to tester if need !!
@@ -108,11 +105,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// convert emailDto & smtp to mailMessage object
+        /// 建立 HTML MailMessage；目前只保留 ToUsers 最後一位，未加入 CcUsers，呼叫端須釋放訊息。
         /// </summary>
-        /// <param name="email"></param>
-        /// <param name="smtp"></param>
-        /// <returns></returns>
         public static MailMessage DtoToMsg(EmailDto email, SmtpDto? smtp = null)
         {
             smtp ??= _Fun.Smtp;
@@ -124,7 +118,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// convert emailDto & args to mailMessage
+        /// 以 DTO 與寄件者資料組成 HTML 郵件；附件依實體路徑載入。
         /// </summary>
         /// <param name="email"></param>
         /// <param name="utf8"></param>
@@ -182,11 +176,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// convert emailDtos to mailMessages
+        /// 將 DTO 清單轉為 MailMessage 清單，沿用單封轉換的收件者限制。
         /// </summary>
-        /// <param name="emails"></param>
-        /// <param name="smtp"></param>
-        /// <returns></returns>
         public static List<MailMessage> DtosToMsgs(List<EmailDto> emails, SmtpDto? smtp = null)
         {
             smtp ??= _Fun.Smtp;
@@ -228,22 +219,16 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// send email
+        /// 寄送單封訊息，可附加設定圖片；此入口不替換測試收件者。
         /// </summary>
-        /// <param name="msg"></param>
-        /// <param name="smtp"></param>
-        /// <param name="sendImage"></param>
-        /// <returns></returns>
         public static async Task SendByMsgA(MailMessage msg, SmtpDto? smtp = null, bool sendImage = true)
         {
             await SendByMsgsA([msg], smtp, sendImage);
         }
 
         /// <summary>
-        /// send mails, send one by one for security reason
+        /// 依序寄送訊息並可加圖片；捕捉到的寄送錯誤只寫記錄，不回傳成功狀態或釋放訊息。
         /// </summary>
-        /// <param name="msgs"></param>
-        /// <param name="smtp"></param>
         public static async Task SendByMsgsA(List<MailMessage> msgs, SmtpDto? smtp = null, bool sendImage = true)
         {
             //check

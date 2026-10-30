@@ -1,23 +1,20 @@
 ﻿namespace Base.Models
 {
-    //for 檔案上傳
+    /// <summary>
+    /// 上傳檔案的實體儲存位置與回傳網址前綴。
+    /// </summary>
     public class UploadDto
     {
         /// <summary>
-        /// 主機實體路徑 for save檔案, 如果空白則表示目前程式路徑
-        /// Path表示實際路徑, url表示連結路徑
+        /// 實體根路徑；空白時使用 AppDomain.CurrentDomain.BaseDirectory。
         /// </summary>
         public string ServerPath = "";
-
         /// <summary>
-        /// 儲存目錄, 不可空白
-        /// ServerPath + SaveDir + 檔案名稱 = 儲存路徑
+        /// 相對儲存目錄，與根路徑及檔名組成實體位置。
         /// </summary>
         public string SaveDir = "";
-
         /// <summary>
-        /// 檔案連結前面的字串
-        /// PreUrl + SaveDir + 檔案名稱 = 檔案在網頁上的 url
+        /// 網址前綴，與儲存目錄及檔名組成回傳連結。
         /// </summary>
         public string PreUrl = "";
         

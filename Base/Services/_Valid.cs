@@ -6,17 +6,13 @@ using System.Collections.Generic;
 namespace Base.Services
 {
     /// <summary>
-    /// backend validation
+    /// 欄位檢查與驗證結果工具；現有字元檢查多為開頭比對，不等同完整內容驗證。
     /// </summary>
     public class _Valid
     {
         /// <summary>
-        /// 簡化回傳validate error list
+        /// 將欄位訊息轉成單項錯誤清單，預設編輯區為 0。
         /// </summary>
-        /// <param name="fid"></param>
-        /// <param name="msg"></param>
-        /// <param name="editNo"></param>
-        /// <returns></returns>
         public static List<ErrorRowDto> MsgToErrors(string fid, string msg, int editNo = 0)
         {
             return
@@ -31,7 +27,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// check email
+        /// 以現有正規表示式檢查電子郵件格式，不驗證信箱存在。
         /// </summary>
         /// <param name="data">input email string</param>
         /// <return>true/false</return>
@@ -42,25 +38,34 @@ namespace Base.Services
                 @"(?(\[)(\[(\d{1,3}\.){3}\d{1,3}\])|(([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,6}))$");
         }
 
-        //check float
+        /// <summary>
+        /// 僅檢查字串開頭是否為數字或句點，非完整數值解析。
+        /// </summary>
         public static bool IsNumber(object data)
         {
             return Regex.IsMatch(data.ToString()!, @"^[0-9.]");
         }
 
-        //check integer
+        /// <summary>
+        /// 僅檢查開頭是否為數字，非全字串純數字檢查。
+        /// </summary>
         public static bool IsDigits(object data)
         {
             return Regex.IsMatch(data.ToString()!, @"^[0-9]");
         }
 
-		//check text, allow "," for string list
+        /// <summary>
+        /// 檢查空值或開頭是否符合文字字元集合，不檢查全字串。
+        /// </summary>
         public static bool IsText(object data)
         {
             return _Object.IsEmpty(data) 
                 ? true : Regex.IsMatch(data.ToString()!, @"^[\w-,./]");
         }
 
+        /// <summary>
+        /// 檢查空值或開頭是否符合指定字元集合，不清理或驗證 HTML 安全性。
+        /// </summary>
         public static bool IsHtml(object data)
         {
             return _Object.IsEmpty(data) 
@@ -68,10 +73,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// check json for normal text
+        /// 以 IsText 檢查 JSON 各欄位的字串表示。
         /// </summary>
-        /// <param name="row"></param>
-        /// <returns></returns>
         public static bool IsJsonText(JObject row)
         {
             //if (row == null) return true;
@@ -81,10 +84,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// check text for form input
+        /// 以 IsText 檢查各欄位；目前不填入傳入的 errorModel。
         /// </summary>
-        /// <param name="errorModel"></param>
-        /// <param name="row"></param>
         public static bool CheckFormInput(ResultDto errorModel, JObject row)
         {
             var result = true;
@@ -101,6 +102,9 @@ namespace Base.Services
             return result;
         }
 
+        /// <summary>
+        /// 僅在 _ErrorMsg 為空時回傳 true，不檢查 ErrorRows。
+        /// </summary>
         public static bool ResultStatus(ResultDto result)
         {
             return _Str.IsEmpty(result._ErrorMsg);
@@ -141,13 +145,13 @@ namespace Base.Services
         }
         */
 
-        ///// <summary>
-        ///// 傳回內空白值的欄位list, fields放在最後面寫code比較方便
-        ///// 無法用 reflection方式傳回變數名稱, 改用比較簡單的做法, 傳入欄位名稱 list
-        ///// </summary>
-        ///// <param name="result"></param>
-        ///// <param name="fields"></param>
-        ///// <returns></returns>
+        // <summary>
+        // 傳回內空白值的欄位list, fields放在最後面寫code比較方便
+        // 無法用 reflection方式傳回變數名稱, 改用比較簡單的做法, 傳入欄位名稱 list
+        // </summary>
+        // <param name="result"></param>
+        // <param name="fields"></param>
+        // <returns></returns>
         //public static List<ErrorFieldModel> GetEmptyFields(string errorMsg, object model, List<string> fields)
         //{
         //    var result = new List<ErrorFieldModel>();
@@ -161,13 +165,13 @@ namespace Base.Services
         //    return result.Count > 0 ? result : null; 
         //}
 
-        ///// <summary>
-        ///// 把 List<string>的錯誤欄位清單寫入 ErrorModel變數
-        ///// </summary>
-        ///// <param name="errorModel"></param>
-        ///// <param name="rowNo"></param>
-        ///// <param name="fields"></param>
-        ///// <param name="errorMsg"></param>
+        // <summary>
+        // 把 List<string>的錯誤欄位清單寫入 ErrorModel變數
+        // </summary>
+        // <param name="errorModel"></param>
+        // <param name="rowNo"></param>
+        // <param name="fields"></param>
+        // <param name="errorMsg"></param>
         ///*
         //public static void FillErrorFields(ErrorModel errorModel, int rowNo, List<string> fields, string errorMsg)
         //{
@@ -194,12 +198,12 @@ namespace Base.Services
         //}
         //*/
 
-        ///// <summary>
-        ///// 增加一個錯誤欄位
-        ///// </summary>
-        ///// <param name="rows"></param>
-        ///// <param name="field"></param>
-        ///// <param name="errorMsg"></param>
+        // <summary>
+        // 增加一個錯誤欄位
+        // </summary>
+        // <param name="rows"></param>
+        // <param name="field"></param>
+        // <param name="errorMsg"></param>
         //public static void AddError(ErrorModel errorModel, string field, string errorMsg)
         //{
         //    if (errorModel.ErrorFields == null)

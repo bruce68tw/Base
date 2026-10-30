@@ -3,13 +3,25 @@
 namespace Base.Models
 {
     /// <summary>
-    /// 用於自訂功能下載檔案的資料傳輸物件，與較單純的 XiFile 不同!!
+    /// 自訂檔案下載的結果，包含錯誤或檔案串流。
     /// </summary>
     public class DownFileDto
     {
-        public string Error { get; set; } = "";         //錯誤訊息, 會先判斷
-        public Stream? Stream { get; set; } = null;     //file stream
-        public string ContentType { get; set; } = "";   //MIME
-        public string FileName { get; set; } = "";      //檔名
+        /// <summary>
+        /// 下載錯誤訊息；使用端先判斷此值。
+        /// </summary>
+        public string Error { get; set; } = "";
+        /// <summary>
+        /// 供下載的檔案串流，預設 null。
+        /// </summary>
+        public Stream? Stream { get; set; } = null;
+        /// <summary>
+        /// HTTP 回應的 MIME 類型。
+        /// </summary>
+        public string ContentType { get; set; } = "";
+        /// <summary>
+        /// 下載顯示的檔名。
+        /// </summary>
+        public string FileName { get; set; } = "";
     }
 }

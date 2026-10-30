@@ -1,12 +1,21 @@
 ﻿namespace Base.Enums
 {
     /// <summary>
-    /// mapping to XpCode xfFlowStatus
+    /// 簽核流程整體的狀態代碼。
     /// </summary>
     public class FlowStatusEstr
     {
-        public const string Work = "1";     //簽核中
-        public const string Agree = "Y";    //同意
-        public const string Back = "N";     //退回
+        /// <summary>
+        /// 簽核進行中。
+        /// </summary>
+        public const string Work = "1";
+        /// <summary>
+        /// 流程同意完成。
+        /// </summary>
+        public const string Agree = "Y";
+        /// <summary>
+        /// 流程退回。
+        /// </summary>
+        public const string Back = "N";
     }
 }

@@ -2,25 +2,22 @@
 
 namespace Base.Interfaces
 {
+    /// <summary>
+    /// 提供 Word 轉 PDF 與 PDF 圖片疊加功能；授權與處理細節由實作決定。
+    /// </summary>
     public interface IPdfSvc
     {
-
+        /// <summary>
+        /// 從 keyPath 指定的檔案設定授權；現有 Spire 實作遇空路徑時略過。
+        /// </summary>
         void SetKey(string keyPath);
-
         /// <summary>
-        /// convert word(docx) to pdf
+        /// 將 Word 位元組轉為 PDF 位元組；可另提供授權檔路徑，轉換錯誤可能拋出例外。
         /// </summary>
-        /// <param name="wordBytes"></param>
-        /// <returns></returns>
         byte[] WordToPdf(byte[] wordBytes, string keyPath = "");
-
         /// <summary>
-        /// pdf 增加多個圖檔
+        /// 讀取 fromPath 並將圖片加入後寫至 toPath；現有 Spire 實作只處理第一頁，失敗可能拋出例外。
         /// </summary>
-        /// <param name="fromPath"></param>
-        /// <param name="toPath">新pdf檔案</param>
-        /// <param name="imageDtos"></param>
-        /// <returns></returns>
         bool AddImages(string fromPath, string toPath, PdfImageDto[] imageDtos);
     }
 }

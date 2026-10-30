@@ -8,31 +8,27 @@ using System.IO;
 namespace Base.Models
 {
     /// <summary>
-    /// TODO 驗證碼類別
+    /// 產生數字驗證碼與圖片尺寸資訊；目前未啟用圖片產生方法。
     /// </summary>
     public class ValidateCodeDto
     {
         /// <summary>
-        /// 驗證碼的最大長度
+        /// 宣告的最大長度 10；產生方法不會自動依此檢查輸入。
         /// </summary>
         public int MaxLength
         {
             get { return 10; }
         }
-
         /// <summary>
-        /// 驗證碼的最小長度
+        /// 宣告的最小長度 1；產生方法不會自動依此檢查輸入。
         /// </summary>
         public int MinLength
         {
             get { return 1; }
         }
-
         /// <summary>
-        /// 產生驗證碼
+        /// 依 length 產生數字字串，使用一般 Random；極端長度可能造成例外。
         /// </summary>
-        /// <param name="length">指定驗證碼的長度</param>
-        /// <returns></returns>
         public string CreateValidateCode(int length)
         {
             int[] randMembers = new int[length];
@@ -72,10 +68,6 @@ namespace Base.Models
             return validateNumberStr;
         }
 
-        /// <summary>
-        /// 建立驗證的圖片
-        /// </summary>
-        /// <param name="validateCode">驗證碼</param>
         /*
         public byte[] CreateValidateGraphic(string validateCode)
         {
@@ -122,21 +114,16 @@ namespace Base.Models
             }
         }
         */
-
         /// <summary>
-        /// 得到驗證碼圖片的長度
+        /// 依字數回傳預估圖片寬度：字數乘以 12。
         /// </summary>
-        /// <param name="validateNumLength">驗證碼的長度</param>
-        /// <returns></returns>
         public static int GetImageWidth(int validateNumLength)
         {
             return (int)(validateNumLength * 12.0);
         }
-
         /// <summary>
-        /// 得到驗證碼的高度
+        /// 回傳固定圖片高度 22.5。
         /// </summary>
-        /// <returns></returns>
         public static double GetImageHeight()
         {
             return 22.5;

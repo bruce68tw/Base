@@ -2,24 +2,30 @@
 
 namespace Base.Models
 {
-    //query fields
+    /// <summary>
+    /// 單一查詢輸入與資料欄位的對應及條件設定。
+    /// </summary>
     public class QitemDto
     {
-        //client field id
-        public string Fid = "";
-
-        //column id, has table alias
-        public string Col = "";
-
         /// <summary>
-        /// where compare operator, default ItemOpEstr.Equal
+        /// 前端查詢欄位識別名稱。
+        /// </summary>
+        public string Fid = "";
+        /// <summary>
+        /// SQL 欄位或運算片段，可含表別名；空白時由 TableAs 與 Fid 組成。
+        /// </summary>
+        public string Col = "";
+        /// <summary>
+        /// 查詢運算代碼，預設等值比對。
         /// </summary>
         public string Op = QitemOpEstr.Equal;
-
-        //query field data type
+        /// <summary>
+        /// 日期等特殊查詢型別，預設 None 依 Op 處理。
+        /// </summary>
         public QitemTypeEnum Type = QitemTypeEnum.None;        
-
-        //other info, when Type=Date2, Other=another Date Col, ex: ShowEnd/u.ShowEnd
+        /// <summary>
+        /// 額外查詢資訊；Date2 時指定另一個日期資料欄位。
+        /// </summary>
         public string Other = "";
     }
 }

@@ -5,19 +5,22 @@ using System.Xml;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// XML 節點序列化與 XPath 屬性讀取。
+    /// </summary>
     public class _Xml
     {
+        /// <summary>
+        /// 將 XML 節點序列化為 JSON 字串。
+        /// </summary>
         public static string ToStr(XmlNode node)
         {
             return JsonConvert.SerializeXmlNode(node);
         }
 
         /// <summary>
-        /// get key property(attriibute)
+        /// 依 XPath 讀取屬性；檔案或節點缺失回傳 null，XML 格式錯誤仍可能拋出。
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="keyPath"></param>
-        /// <returns></returns>
         public static string? GetKeyProp(string filePath, string keyPath, string propName)
         {
             //check

@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 
 namespace Base.Services
 {
-    //write log text file, use sync !!
+    /// <summary>
+    /// 將訊息同步追加至 _log 日期分類檔；寫入失敗重試後不再拋出。
+    /// </summary>
     public static class _Log
     {
 
@@ -36,9 +38,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// log info only when _Fun.LogInfo flag is true !!
+        /// 寫入一般訊息，不受除錯記錄旗標限制。
         /// </summary>
-        /// <param name="msg">log msg</param>
         public static void Info(string msg)
         {
             //temp add
@@ -48,9 +49,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// log debug when _Fun.LogDebug true !!
+        /// 僅在 Config.LogDebug 啟用時寫入除錯訊息。
         /// </summary>
-        /// <param name="msg">log msg</param>
         public static void Debug(string msg)
         {
             if (_Fun.Config.LogDebug)
@@ -58,9 +58,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// log sql only when _Fun.LogSql true !!
+        /// 僅在 Config.LogSql 啟用時寫入 SQL 訊息。
         /// </summary>
-        /// <param name="msg">log msg</param>
         public static void Sql(string msg)
         {
             if (_Fun.Config.LogSql)
@@ -68,18 +67,16 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// log error
+        /// 寫入錯誤記錄。
         /// </summary>
-        /// <param name="msg">log message</param>
         public static void Error(string msg)
         {
             LogFile(GetFilePath("error"), msg);
         }
 
         /// <summary>
-        /// log error & send email to root
+        /// 寫入錯誤記錄，再非同步嘗試寄送管理者通知。
         /// </summary>
-        /// <param name="msg">log message</param>
         public static async Task ErrorA(string msg)
         {
             LogFile(GetFilePath("error"), msg);
@@ -101,10 +98,8 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// log error and mail root
+        /// 寫入錯誤記錄，再非同步嘗試寄送管理者通知。
         /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
         public static async Task ErrorRootA(string msg)
         {
             LogFile(GetFilePath("error"), msg);

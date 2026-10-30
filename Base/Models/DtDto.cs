@@ -4,60 +4,74 @@ using System.Collections.Generic;
 namespace Base.Models
 {
     /// <summary>
-    /// for jQuery datatables input argument, use low camel
+    /// DataTables 列表查詢輸入；屬性名稱保留前端格式。
     /// </summary>
     public class DtDto
     {
-        //Draw counter, jQuery Datatables need for control async ajax sequence
-        public int draw { get; set; } = 0;
-
-        //start row position, base 0
-        public int start { get; set; } = 0;
-
-        //rows count to display
-        public int length { get; set; } = 0;
-
-        //-1: re-count filtered rows count(means change jquery condition)
-        public int recordsFiltered { get; set; } = 0;
-
-        //query condition json in string type
-        public string findJson { get; set; } = "";
-
-        //優先考慮 sort 欄位, 內容為: A/D + fid, ex:Au.Account
-        public string sort { get; set; } = "";
-
-        //search word
-        public DtSearchDto? search { get; set; } = null;
-
         /// <summary>
-        /// sorting, get from jQuery DataTables, then get OrderBy, OrderDir
+        /// 前端請求序號。
+        /// </summary>
+        public int draw { get; set; } = 0;
+        /// <summary>
+        /// 起始資料列位置，從 0 起算。
+        /// </summary>
+        public int start { get; set; } = 0;
+        /// <summary>
+        /// 本頁筆數，初值為 0，需由呼叫端指定。
+        /// </summary>
+        public int length { get; set; } = 0;
+        /// <summary>
+        /// 篩選後總筆數；-1 表示重新計算，初值為 0。
+        /// </summary>
+        public int recordsFiltered { get; set; } = 0;
+        /// <summary>
+        /// 欄位查詢條件的 JSON 字串。
+        /// </summary>
+        public string findJson { get; set; } = "";
+        /// <summary>
+        /// 優先排序設定：A 或 D 加上欄位名稱，直接參與 SQL 組合。
+        /// </summary>
+        public string sort { get; set; } = "";
+        /// <summary>
+        /// 全域快速搜尋條件，可為 null。
+        /// </summary>
+        public DtSearchDto? search { get; set; } = null;
+        /// <summary>
+        /// 前端排序條件，sort 為空時採用首項，可為 null。
         /// </summary>
         public List<DtOrderDto>? order { get; set; } = null;
 
     }
-
-
-    //for jQuery datatables 
+    /// <summary>
+    /// DataTables 的單項排序設定。
+    /// </summary>
     public class DtOrderDto
     {
-        //sorting column index, base 0
+        /// <summary>
+        /// 前端欄位索引，從 0 起算。
+        /// </summary>
         public int column { get; set; } = 0;
-
-        //sorting column name
+        /// <summary>
+        /// 排序欄位名稱；現行查詢轉換使用此值。
+        /// </summary>
         public string fid { get; set; } = "";
-
-        //sorting type: ASC(default), DESC
+        /// <summary>
+        /// 排序方向，預設升冪。
+        /// </summary>
         public OrderTypeEnum dir { get; set; } = OrderTypeEnum.Asc;
     }
-
-
-    //for jQuery datatables 
+    /// <summary>
+    /// DataTables 的快速搜尋設定。
+    /// </summary>
     public class DtSearchDto
     {
-        //search value
+        /// <summary>
+        /// 快速搜尋文字。
+        /// </summary>
         public string value { get; set; } = "";
-
-        //no used now
+        /// <summary>
+        /// 正規表示式旗標；現行查詢未依此旗標處理。
+        /// </summary>
         public bool regex { get; set; } = false;
     }
 }

@@ -1,21 +1,20 @@
-﻿
-namespace Base.Models
+﻿namespace Base.Models
 {
-    //for edit form
+    /// <summary>
+    /// 編輯資料的異動前後值。
+    /// </summary>
     public class ChangeValueDto
     {
         /// <summary>
-        /// key
+        /// 異動項目的識別鍵。
         /// </summary>
         public string Key { get; set; } = "";
-
         /// <summary>
-        /// old value
+        /// 異動前的字串值。
         /// </summary>
         public string OldValue { get; set; } = "";
-
         /// <summary>
-        /// new value
+        /// 異動後的字串值。
         /// </summary>
         public string NewValue { get; set; } = "";
     }

@@ -4,13 +4,14 @@ using System.Reflection;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// 物件空值判斷與公開屬性的反射存取。
+    /// </summary>
     public static class _Object
     {
         /// <summary>
-        /// 判斷是否為JObject
+        /// 判斷動態物件是否為 JObject；判斷發生例外時回傳 false。
         /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
         public static bool IsJObject(dynamic item)
         {
             try
@@ -25,16 +26,25 @@ namespace Base.Services
             }
         }
 
+        /// <summary>
+        /// 判斷物件為 null 或字串表示為空字串，不將空白視為空值。
+        /// </summary>
         public static bool IsEmpty(object? data)
         {
             return (data == null || data.ToString() == "");
         }
 
+        /// <summary>
+        /// 判斷物件非 null 且字串表示非空。
+        /// </summary>
         public static bool NotEmpty(object? data)
         {
             return !IsEmpty(data);
         }
 
+        /// <summary>
+        /// 將 null 轉空字串，否則使用物件的字串表示。
+        /// </summary>
         public static string NullToEmpty(object? data)
         {
             return (data == null) ? "" : data.ToString()!;
@@ -58,7 +68,7 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// get property value by  name
+        /// 依屬性名稱讀值；屬性不存在時可能拋出例外。
         /// </summary>
         /// <param name="data">前需要加 this ??</param>
         /// <param name="fid">property name</param>
@@ -69,18 +79,15 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// set propery 
+        /// 依屬性名稱寫值，不自動轉型或處理不存在的屬性。
         /// </summary>
-        /// <param name="data"></param>
-        /// <param name="fid">property name</param>
-        /// <returns></returns>
         public static void SetValueByName(this object data, string fid, object value)
         {
             data.GetType().GetProperty(fid)!.SetValue(data, value, null);
         }
 
         /// <summary>
-        /// ?? get Type name 
+        /// 組合屬性型別名稱；Nullable 型別另加上其底層型別名稱。
         /// </summary>
         public static string GetTypeFullName(this PropertyInfo inputObject)
         {

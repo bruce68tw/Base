@@ -5,8 +5,14 @@ using System.Threading.Tasks;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// 清單組合、空值判斷與選項查找工具。
+    /// </summary>
     public class _List
     {
+        /// <summary>
+        /// 取得 1 到 12 月的識別碼與中文顯示文字。
+        /// </summary>
         public static List<IdStrDto> GetMonths()
         {
             return Enumerable.Range(1, 12)
@@ -58,7 +64,7 @@ order by Id)
         */
 
         /// <summary>
-        /// convert list<string> to string
+        /// 以分隔符連接清單，可加單引號；不進行 SQL 跳脫。
         /// </summary>
         /// <param name="list"></param>
         /// <param name="quote">是否加上單引號</param>
@@ -73,7 +79,9 @@ order by Id)
                 : result;
         }
 
-        //overloading
+        /// <summary>
+        /// 以分隔符連接清單，可加單引號；不進行 SQL 跳脫。
+        /// </summary>
         public static string ToStr(List<int> list, bool quote, string sep = ",")
         {
             var result = (list == null || list.Count == 0)
@@ -84,16 +92,16 @@ order by Id)
         }
 
         /// <summary>
-        /// check key with rules
+        /// 以英數、底線與逗號規則檢查鍵清單，可記錄失敗原因。
         /// </summary>
-        /// <param name="list"></param>
-        /// <param name="logError"></param>
-        /// <returns></returns>
         public static bool CheckKey(List<string> list, bool logError = true)
         {
             return _Str.CheckKey(ToStr(list), logError);
         }
 
+        /// <summary>
+        /// 合併兩個可空清單，不去重；結果無項目時回傳 null。
+        /// </summary>
         public static List<string>? Concat(List<string?>? list1, List<string>? list2)
         {
             var list = new List<string>();
@@ -117,6 +125,9 @@ order by Id)
         }
         */
 
+        /// <summary>
+        /// 依顯示文字找第一個識別碼，找不到時回傳 null。
+        /// </summary>
         public static string? StrToId(List<IdStrDto>? codes, string str)
         {
             if (codes == null || codes.Count == 0)
@@ -127,10 +138,16 @@ order by Id)
                 .FirstOrDefault();
         }
 
+        /// <summary>
+        /// 判斷清單為 null 或沒有項目。
+        /// </summary>
         public static bool IsEmpty<T>(List<T>? rows) where T : class
         {
             return rows == null || rows.Count == 0;
         }
+        /// <summary>
+        /// 判斷清單非 null 且含有項目。
+        /// </summary>
         public static bool NotEmpty<T>(List<T>? rows) where T : class
         {
             return !IsEmpty(rows);

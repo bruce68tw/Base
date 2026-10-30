@@ -4,164 +4,159 @@ using System.Collections.Generic;
 namespace Base.Models
 {
     /// <summary>
-    /// get from appSettings.json Config section
+    /// 應用載入後指派給 _Fun.Config 的共用設定；此模型不會自行讀取組態檔。
     /// </summary>
     public class ConfigDto
     {
-        //是否加密(使用tempdata.png)組態檔的重要欄位(Db,Smtp,Redis)
+        /// <summary>
+        /// 是否在初始化時解密敏感組態欄位，預設 false。
+        /// </summary>
         public bool Encode { get; set; } = false;
-
-        //是否加密(使用tempdata.png)上傳檔案(Encode必須為true才能設定本欄位)
+        /// <summary>
+        /// 上傳檔案加密的設定旗標；本身不執行加密。
+        /// </summary>
         public bool EncodeUpload { get; set; } = false;
-
-        //refer LoginTypeEstr
+        /// <summary>
+        /// 登入方式代碼，預設為帳號密碼登入。
+        /// </summary>
         public string LoginType { get; set; } = LoginTypeEstr.Pwd;
-
-        //包含2/3個欄位, 逗號分隔, format: 0(server),1(domain),3(port default 389), ex:ldap2012,aa.bb.cc,389
+        /// <summary>
+        /// LDAP 伺服器、網域與選用連接埠，以逗號分隔；預設連接埠為 389。
+        /// </summary>
         public string AdServer { get; set; } = "";
-
-        //(加密)db connect string
+        /// <summary>
+        /// 預設資料庫連線字串；Encode 啟用時由初始化流程解密。
+        /// </summary>
         public string Db { get; set; } = "";
-
-        //system name
+        /// <summary>
+        /// 系統顯示名稱。
+        /// </summary>
         public string SystemName { get; set; } = "MIS System";
-
-        //可做為 Issuer
+        /// <summary>
+        /// 系統英文名稱，可供應用作為識別名稱。
+        /// </summary>
         public string SystemEngName { get; set; } = "MIS System";
-
-        //default locale code
+        /// <summary>
+        /// 預設語系代碼，初值為 zh-TW。
+        /// </summary>
         public string Locale { get; set; } = "zh-TW";
-
-        //server Id for new key
+        /// <summary>
+        /// 產生識別碼時使用的主機代碼。
+        /// </summary>
         public string ServerId { get; set; } = "";
-
-        //log error for slow sql(mini secode)
+        /// <summary>
+        /// 慢 SQL 記錄門檻，單位毫秒；大於 0 時啟用，預設 1000。
+        /// </summary>
         public int SlowSql { get; set; } = 1000;
-
-        //log debug
+        /// <summary>
+        /// 是否輸出除錯記錄。
+        /// </summary>
         public bool LogDebug { get; set; }
-
-        //log sql
+        /// <summary>
+        /// 是否輸出 SQL 記錄。
+        /// </summary>
         public bool LogSql { get; set; }
-
-        //root email address for send error
+        /// <summary>
+        /// 系統錯誤通知的管理者信箱。
+        /// </summary>
         public string RootEmail { get; set; } = "";
-
-        //tester email address
+        /// <summary>
+        /// 測試收件者信箱；非空時 _Email 會改用此收件者。
+        /// </summary>
         public string TesterEmail { get; set; } = "";
-
-        //upload file max size(MB)
+        /// <summary>
+        /// 上傳檔案大小上限設定，單位 MB，預設 5；是否套用依上傳端。
+        /// </summary>
         public int UploadFileMax { get; set; } = 5;
 
         //cache time(second)
         //public int CacheSecond = "";
-
-        //SSL or not
-        public bool SSL { get; set; }
-
-        //(加密)smtp, format: 0(Host),1(Port),2(Ssl),3(Id),4(Pwd),5(FromEmail),6(FromName) 
-        public string Smtp { get; set; } = "";
-
-        //email image path list: Id,Path.., ex: _TopImage, c:/xx/xx.png
-        public string EmailImagePairs { get; set; } = "";
-
         /// <summary>
-        /// html image root url for sublime, ex: http://xxx.xx/image, auto add right slash
+        /// SSL 設定旗標；與 SMTP 字串內的 Ssl 欄位分開。
+        /// </summary>
+        public bool SSL { get; set; }
+        /// <summary>
+        /// 逗號分隔 Host、Port、Ssl、Id、Pwd、FromEmail、FromName，共七欄。
+        /// </summary>
+        public string Smtp { get; set; } = "";
+        /// <summary>
+        /// 郵件圖片的 Id 與路徑交錯清單，以逗號分隔。
+        /// </summary>
+        public string EmailImagePairs { get; set; } = "";
+        /// <summary>
+        /// HTML 圖片根網址，Init 會補上尾端斜線。
         /// </summary>
         public string HtmlImageUrl { get; set; } = "";
-
         /// <summary>
-        /// (加密)redis server for session, ex: "127.0.0.1:6379,ssl=true,password=xxx,defaultDatabase=x", 
-        /// empty for memory cache
+        /// Redis 連線設定字串；不會自行註冊快取服務。
         /// </summary>
         public string Redis { get; set; } = "";
-
         /// <summary>
-        /// for CORS, 逗號分隔
-        /// empty for memory cache
+        /// 允許的 CORS 來源設定，以逗號分隔。
         /// </summary>
         public string AllowOrigins { get; set; } = "";
-
         /// <summary>
-        /// google client Id for oAuth2
+        /// Google OAuth 用戶端識別碼。
         /// </summary>
         public string GoogleClientId { get; set; } = "";
-
         /// <summary>
-        /// google client Secret for oAuth2
+        /// Google OAuth 用戶端密鑰。
         /// </summary>
         public string GoogleClientSecret { get; set; } = "";
-
         /// <summary>
-        /// google oAuth2 redirect url
+        /// Google OAuth 重新導向網址。
         /// </summary>
         public string GoogleRedirect { get; set; } = "";
-
         /// <summary>
-        /// facebook client Id for oAuth2
+        /// Facebook OAuth 用戶端識別碼。
         /// </summary>
         public string FbClientId { get; set; } = "";
-
         /// <summary>
-        /// facebook client Secret for oAuth2
+        /// Facebook OAuth 用戶端密鑰。
         /// </summary>
         public string FbClientSecret { get; set; } = "";
-
         /// <summary>
-        /// facebook oAuth2 redirect url
+        /// Facebook OAuth 重新導向網址。
         /// </summary>
         public string FbRedirect { get; set; } = "";
-
         /// <summary>
-        /// otp email 有效時間(分)
+        /// 電子郵件驗證碼有效分鐘數，預設 3。
         /// </summary>
         public int OtpEmailMin { get; set; } = 3;
-
         /// <summary>
-        /// otp email link 有效時間(分)
+        /// 電子郵件驗證連結有效分鐘數設定，預設 5。
         /// </summary>
         public int OtpEmailLinkMin { get; set; } = 5;
-
         /// <summary>
-        /// otp sms 有效時間(分)
+        /// 簡訊驗證碼有效分鐘數，預設 3。
         /// </summary>
         public int OtpSmsMin { get; set; } = 3;
-
         /// <summary>
-        /// otp Authenticator 有效時間(秒)
+        /// 驗證器時間設定，單位秒，預設 60。
         /// </summary>
         public int OtpAuthSec { get; set; } = 60;
-
         /// <summary>
-        /// otp Authenticator secret key, base32
+        /// 驗證器使用的 Base32 密鑰。
         /// </summary>
         public string OtpAuthKey { get; set; } = "";
-
         /// <summary>
-        /// OTP 簡訊範本
+        /// 簡訊驗證碼訊息範本。
         /// </summary>
         public string OtpSmsTpl { get; set; } = "";
-
         /// <summary>
-        /// 簡訊帳號
+        /// 簡訊服務帳號。
         /// </summary>
         public string SmsAccount { get; set; } = "";
-
         /// <summary>
-        /// 簡訊密碼
+        /// 簡訊服務密碼。
         /// </summary>
         public string SmsPwd { get; set; } = "";
-
         /// <summary>
-        /// 簡訊來源門號, 由廠商提供
+        /// 簡訊服務提供的來源門號。
         /// </summary>
         public string SmsFromPhone { get; set; } = "";
         /// <summary>
-        /// 簡訊來源門號, 由廠商提供
-        /// </summary>
-
-        /// <summary>
-        /// 允許使用服務的來源主機IP清單, DNS容易被偽造, 以IP為主
+        /// 允許呼叫服務的來源 IP 清單，初值為空清單。
         /// </summary>
         public List<string> ClientIps { get; set; } = [];
     }

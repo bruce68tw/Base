@@ -11,13 +11,14 @@ using System.Threading.Tasks;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// 檔案讀寫、壓縮、路徑與副檔名處理；未捕捉的檔案系統錯誤仍會拋出。
+    /// </summary>
     public class _File
     {
         /// <summary>
-        /// 讀取 LLM 問題
+        /// 讀取 JSON 提問檔；讀取或反序列化失敗時記錄並回傳 null。
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
         public static LlmAskDto? ReadLlmAsk(string path)
         {
             try
@@ -33,11 +34,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// rename path ext to upload style
+        /// 將路徑副檔名改成上傳用變形名稱，不移動或加密檔案內容。
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="oldExt">如果有值則直接轉換成新的副檔名, 不必重新讀取path的ext</param>
-        /// <returns></returns>
         public static string PathExtToUp(string path, string oldExt = "")
         {
             if (string.IsNullOrEmpty(oldExt))
@@ -46,10 +44,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 將上傳檔案副檔名rename for 資安考慮
+        /// 對副檔名部分字元作既有位移轉換；輸入須非空，並非加密。
         /// </summary>
-        /// <param name="ext">是否前面有'.'皆可</param>
-        /// <returns></returns>
         public static string UpExtRename(string ext)
         {
             var chars = ext.ToCharArray();
@@ -63,10 +59,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 將上傳檔案副檔名restore
+        /// 依既有位移規則還原副檔名，輸入須非空。
         /// </summary>
-        /// <param name="ext"></param>
-        /// <returns></returns>
         public static string UpExtRestore(string ext)
         {
             var chars = ext.ToCharArray();
@@ -80,11 +74,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 壓縮多個檔案成zip檔
+        /// 建立 ZIP 並先刪除既有目的檔；名稱數量不符或來源缺失回傳 false，可能留下部分結果。
         /// </summary>
-        /// <param name="fromPaths"></param>
-        /// <param name="toPath"></param>
-        /// <param name="entryNames">如果要改變zip裡面的每個檔名則必須填此欄位, 長度與fromPaths相同</param>
         public static bool ZipFiles(List<string> fromPaths, string toPath, List<string>? entryNames = null)
         {
             if (entryNames != null && entryNames.Count != fromPaths.Count)
@@ -116,6 +107,9 @@ namespace Base.Services
             return true;
         }
 
+        /// <summary>
+        /// 建立位置歸零的 ZIP MemoryStream，由呼叫端釋放；名稱不符或來源缺失回傳 null。
+        /// </summary>
         public static MemoryStream? ZipToStream(List<string> fromPaths, List<string>? entryNames = null)
         {
             if (entryNames != null && entryNames.Count != fromPaths.Count)
@@ -153,10 +147,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 讀取檔案清單, 傳回字串不含路徑
+        /// 列出目錄直屬且尾碼符合 ext 的檔名，忽略大小寫；目錄缺失回傳 null。
         /// </summary>
-        /// <param name="dir"></param>
-        /// <param name="ext">副檔名</param>
         public static List<string>? GetFiles(string dir, string ext)
         {
             dir = _Str.RemoveRightSlash(dir);
@@ -174,10 +166,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 讀取檔案數量
+        /// 計算目錄直屬且尾碼符合 ext 的檔案數，目錄缺失回傳 0。
         /// </summary>
-        /// <param name="dir"></param>
-        /// <param name="ext">副檔名</param>
         public static int GetFileCount(string dir, string ext)
         {
             dir = _Str.RemoveRightSlash(dir);
@@ -194,9 +184,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// make folder
+        /// 目錄不存在時建立，目錄字串須非空。
         /// </summary>
-        /// <param name="dir">folder path, can has right slash or not</param>
         public static void MakeDir(string dir)
         {
             dir = _Str.RemoveRightSlash(dir);
@@ -205,20 +194,16 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get file name(and .ext) with path
+        /// 取得路徑最後的檔名，含副檔名。
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
         public static string GetFileName(string path)
         {
             return Path.GetFileName(path);
         }
 
         /// <summary>
-        /// get file ext, lowercase no dot, ex: docx
+        /// 取得小寫且不含句點的副檔名。
         /// </summary>
-        /// <param name="path">file path</param>
-        /// <returns></returns>
         public static string GetFileExt(string path)
         {
             //return Path.GetExtension(path).Replace(".", "").ToLower();
@@ -227,12 +212,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// DirHasImage -> DirHasUpImage
-        /// 目錄下是否存在符合檔名的"上傳"圖檔
+        /// 尋找固定變形圖片尾碼；目錄缺失回傳空字串，無符合檔案回傳 null。
         /// </summary>
-        /// <param name="dir"></param>
-        /// <param name="fileName">不含副檔名</param>
-        /// <returns>傳回第一個符合的圖檔名稱, 不含路徑</returns>
         public static string? DirHasUpImage(string dir, string fileName)
         {
             if (!Directory.Exists(dir))
@@ -251,7 +232,9 @@ namespace Base.Services
             return null;
         }
 
-        //rename file name, 檔名後面加上字串, 副檔名不變
+        /// <summary>
+        /// 在副檔名前插入指定尾碼，不改動實體檔案。
+        /// </summary>
         public static string FnameAddTail(string fname, string tail)
         {
             var ext = Path.GetExtension(fname);  //has dot(.)
@@ -291,10 +274,8 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// read utf8 text file to string, synchronous for big file size
+        /// 以 UTF-8 讀取檔案，檔案不存在回傳 null。
         /// </summary>
-        /// <param name="path">file path</param>
-        /// <returns>file string, return null if no file</returns>
         public static string? ToStr(string path)
         {
             if (!File.Exists(path)) return null;
@@ -305,10 +286,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// read utf8 text file to string, asynchronous for big file size
+        /// 非同步以 UTF-8 讀檔，檔案不存在回傳 null。
         /// </summary>
-        /// <param name="path">file path</param>
-        /// <returns>file string, return null if no file</returns>
         public static async Task<string?> ToStrA(string path)
         {
             if (!File.Exists(path)) return null;
@@ -319,11 +298,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// write string into text file
+        /// 以 UTF-8 覆寫檔案，成功回傳 true；捕捉寫入例外後記錄並回傳 false。
         /// </summary>
-        /// <param name="str">content</param>
-        /// <param name="path">file full path</param>
-        /// <returns></returns>        
         public static async Task<bool> StrToFileA(string str, string path)
         {
             try
@@ -355,11 +331,8 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// get next not repeat file name
+        /// 尋找未存在的加序號路徑，不建立檔案；tailPos 控制序號在副檔名前或後。
         /// </summary>
-        /// <param name="filePath">current file path</param>
-        /// <param name="tailPos">true:add sn at end, false:add sn before ext</param>
-        /// <returns></returns>
         public static string GetNextFileName(string filePath, bool tailPos)
         {
             //split the path into parts
@@ -378,7 +351,9 @@ namespace Base.Services
             return filePath;
         }
 
-        //get upload file exts by type
+        /// <summary>
+        /// 依上傳分類取得副檔名清單，全部類型為 *，未知類型為 ??。
+        /// </summary>
         public static string TypeToExts(UpFileTypeEnum type, string fileTypeExts)
         {
             return type switch
@@ -394,10 +369,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get first match file path
+        /// 取得目錄中符合檔名前綴的第一個路徑，無結果回傳預設圖片路徑。
         /// </summary>
-        /// <param name="fileNoExt">file path without ext</param>
-        /// <returns></returns>
         public static string GetFirstPath(string dir, string preName, string noImagePath)
         {
             var files = Directory.GetFiles(dir, preName + "*");
@@ -420,10 +393,8 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// file path to dir, no right slash
+        /// 以字串分割取得目錄，優先採最後一個斜線，不進行路徑正規化。
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
         public static string PathToDir(string path)
         {
             var dir = _Str.GetLeft2(path, "/");
@@ -432,6 +403,9 @@ namespace Base.Services
             return dir;
         }
 
+        /// <summary>
+        /// 以識別碼與原檔副檔名組成檔名；原檔名為空時回傳空字串。
+        /// </summary>
         public static string IdToFileName(string id, string fileName)
         {
             return (string.IsNullOrEmpty(fileName))

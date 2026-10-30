@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
-    /// database read/write, DB 使用非同步!! 
+    /// 以 DI 提供的 DbConnection、DbCommand 執行資料存取，須先初始化 _Fun；使用後應非同步釋放。
     /// </summary>
     public class Db : IAsyncDisposable
     {
@@ -33,10 +33,8 @@ namespace Base.Services
         private const int _dbSec = 600; //command second, can not too short
 
         /// <summary>
-        /// constructor, new db, 
-        /// note: if db server live but not access right, it still connect ok !!
+        /// 保存連線字串但尚不開連線；空字串使用 _Fun.Config.Db。
         /// </summary>
-        /// <param name="dbStr">db connection string, default to _Fun.Config.Db</param>
         public Db(string dbStr = "")
         {
             //_dbStr: db field name at config, if length > 30, it will be connection string !!
@@ -46,16 +44,17 @@ namespace Base.Services
             //InitDb(); //here !!
         }
 
+        /// <summary>
+        /// 取得目前連線，尚未初始化時為 null。
+        /// </summary>
         public DbConnection? GetConnection()
         {
             return _conn;
         }
 
         /// <summary>
-        /// initial db, when set command, it will initial Db auto
-        /// if you need to operate reader(not by command), call this method by yourself !!
+        /// 從 DI 取得連線並開啟；已就緒直接回傳 true，連線失敗記錄並回傳 false。
         /// </summary>
-        /// <returns>error msg if any</returns>
         public async Task<bool> InitDbA()
         {
             if (_status) return true;
@@ -87,9 +86,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// must use ValueTask, 函數名稱必須是DisposeAsync (繼承 IAsyncDisposable)
+        /// 非同步釋放命令及連線，不代表交易已提交。
         /// </summary>
-        /// <returns></returns>
         public async ValueTask DisposeAsync()
         {
             if (_cmd != null) await _cmd.DisposeAsync();
@@ -124,14 +122,13 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// initial command and add parameters, array: field name, value...
-        /// OleDb does not support named parameters !!
-        /// sqlClient ExecuteReader will call sp_executesql & reused execute plan, increase performance
+        /// 初始化命令；參數為名稱、值交錯配對，名稱自動加 @，非日期與 null 的值會轉字串。
+        /// 此具名參數方式不適用 OleDb。
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="sqlArgs"></param>
         /// <param name="dbSec"></param>
-        /// <returns>error msg if any</returns>
+        /// <returns>初始化成功為 true，連線初始化失敗為 false。</returns>
         private async Task<bool> InitCmdA(string sql, List<object>? sqlArgs = null, int dbSec = _dbSec)
         {
             if (!await InitDbA()) return false;
@@ -182,12 +179,8 @@ namespace Base.Services
 
 
         /// <summary>
-        /// when use bulk copy, need to handle reader directly !!
+        /// 執行查詢並回傳讀取器，失敗可為 null；呼叫端須關閉讀取器，dbSec 單位秒。
         /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="sqlArgs"></param>
-        /// <param name="dbSec"></param>
-        /// <returns></returns>
         public async Task<IDataReader?> GetReaderA(string sql, List<object>? sqlArgs = null, int dbSec = _dbSec)
         {
             //init command
@@ -215,11 +208,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get sql text of args part
-        /// also called by CrudEdit.cs
+        /// 將名稱、值交錯清單中的值串成記錄文字，不用於 SQL 參數綁定。
         /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
         public string GetArgsText(List<object> args)
         {
             if (args.Count == 0) return "";
@@ -249,6 +239,9 @@ namespace Base.Services
         }        
 
         #region GetRow(s)
+        /// <summary>
+        /// 取得第一列 JObject；無資料或讀取失敗可回傳 null。
+        /// </summary>
         public async Task<JObject?> GetRowA(string sql, List<object>? sqlArgs = null)
         {
             var rows = await GetRowsA(sql, sqlArgs);
@@ -256,6 +249,9 @@ namespace Base.Services
                 ? null : (JObject)rows[0];
         }
 
+        /// <summary>
+        /// 取得 JArray 並在正常讀取後關閉讀取器；無資料或捕捉到的錯誤回傳 null。
+        /// </summary>
         public async Task<JArray?> GetRowsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderA(sql, sqlArgs);
@@ -281,13 +277,18 @@ namespace Base.Services
         #endregion
 
         #region GetInt(s)/GetStr(s)
+        /// <summary>
+        /// 取得第一列首欄的可空整數；無資料或讀取失敗可回傳 null。
+        /// </summary>
         public async Task<int?> GetIntA(string sql, List<object>? sqlArgs = null)
         {
             var list = await GetIntsA(sql, sqlArgs);
             return (list == null) ? null : list?[0];
         }
 
-        //也可傳回bit(0/1)
+        /// <summary>
+        /// 讀取首欄整數清單，DB NULL 保留為 null；無資料或查詢失敗回傳 null。
+        /// </summary>
         public async Task<List<int?>?> GetIntsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
@@ -303,20 +304,17 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get Db string column value, return null if not found row !!
-        /// return '' if column value is null !!
-        /// string is nullable type !!
+        /// 取得第一列首欄字串；DB NULL 為空字串，無資料時可為 null。
         /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="sqlArgs"></param>
-        /// <returns></returns>
         public async Task<string?> GetStrA(string sql, List<object>? sqlArgs = null)
         {
             var list = await GetStrsA(sql, sqlArgs);
             return list?[0];
         }
 
-        //sql欄位可以不是string, 在這裡轉成字串
+        /// <summary>
+        /// 讀取首欄字串清單，DB NULL 轉空字串；無資料時回傳 null。
+        /// </summary>
         public async Task<List<string>?> GetStrsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
@@ -332,21 +330,33 @@ namespace Base.Services
         #endregion
 
         #region GetModel(s)      
+        /// <summary>
+        /// 將第一列映射為 IdStrDto，無資料或映射失敗回傳 null。
+        /// </summary>
         public async Task<IdStrDto?> GetIdStrA(string sql, List<object>? sqlArgs = null)
         {
             var rows = await GetModelsA<IdStrDto>(sql, sqlArgs);
             return (rows == null || rows.Count == 0) ? default : rows[0];
         }
+        /// <summary>
+        /// 將查詢結果映射為 IdStrDto 清單，無資料或映射失敗回傳 null。
+        /// </summary>
         public async Task<List<IdStrDto>?> GetIdStrsA(string sql, List<object>? sqlArgs = null)
         {
             return await GetModelsA<IdStrDto>(sql, sqlArgs);
         }
+        /// <summary>
+        /// 以同名公開屬性映射第一列；無資料或失敗回傳 default。
+        /// </summary>
         public async Task<T?> GetModelA<T>(string sql, List<object>? sqlArgs = null)
         {
             var rows = await GetModelsA<T>(sql, sqlArgs);
             return (rows == null || rows.Count == 0) ? default : rows[0];
         }
         
+        /// <summary>
+        /// 以同名公開屬性與資料庫原始型別映射新模型；需可無參數建構，無資料或映射失敗回傳 null。
+        /// </summary>
         public async Task<List<T>?> GetModelsA<T>(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
@@ -394,10 +404,8 @@ namespace Base.Services
         #endregion
 
         /// <summary>
-        /// called outside
+        /// 依先前欄位對照轉換目前列；DB NULL 轉空字串，日期轉共用格式。
         /// </summary>
-        /// <param name="reader"></param>
-        /// <returns></returns>
         public JObject GetRowByReader(IDataReader reader)
         {
             //var dtFormat = _Fun.DbDtFormat;
@@ -469,10 +477,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// update db
+        /// 執行異動並回傳筆數；初始化失敗為 0、一般 DB 錯誤為 -1、辨識出的唯一鍵錯誤為 -2。
         /// </summary>
-        /// <param name="sql"></param>
-        /// <returns>affected rows count, -1(一般error), -2(唯一鍵重複)</returns>
         public async Task<int> ExecSqlA(string sql, List<object>? sqlArgs = null)
         {
             if (!await InitCmdA(sql, sqlArgs)) return 0;
@@ -506,15 +512,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// set row Status column, copy it when different rule !!
+        /// 依參數化主鍵更新狀態為 1 或 0，異動筆數大於 0 才回傳 true；結構片段直接組合。
         /// </summary>
-        /// <param name="table">table name, has dbo if need !!</param>
-        /// <param name="kid">key field id</param>
-        /// <param name="kvalue">client side key value, by sql args, avoid injection !!</param>
-        /// <param name="status">true/false</param>
-        /// <param name="statusId">status column id, default Status</param>
-        /// <param name="where">other condition, default empty</param>
-        /// <returns></returns>
         public async Task<bool> SetRowStatus(string table, string kid, object kvalue, 
             bool status, string statusId = "Status", string where = "")
         {
@@ -527,6 +526,9 @@ namespace Base.Services
 
         #region transation (3 functions)
         //return error msg if any
+        /// <summary>
+        /// 在同一命令與連線啟動交易；初始化失敗回傳 false，交易錯誤可能拋出。
+        /// </summary>
         public async Task<bool> BeginTranA()
         {
             if (!await InitCmdA("")) return false;
@@ -536,11 +538,17 @@ namespace Base.Services
             return true;
         }
 
+        /// <summary>
+        /// 提交已啟動的交易；沒有交易或提交失敗會拋出例外。
+        /// </summary>
         public async Task CommitA()
         {
             await _tran!.CommitAsync();
         }
 
+        /// <summary>
+        /// 回復已啟動的交易；沒有交易或回復失敗會拋出例外。
+        /// </summary>
         public async Task RollbackA()
         {
             await _tran!.RollbackAsync();
@@ -690,4 +698,3 @@ namespace Base.Services
 
     } //class
 }
- 

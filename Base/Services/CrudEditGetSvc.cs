@@ -11,8 +11,7 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
-    /// 利用 EditDto 來讀取資料庫資料
-    /// base class of CrudEditSvc, CrudGetSvc
+    /// CRUD 單筆及主從資料讀取基底，依 EditDto 組成 _rows 與 _childs JSON。
     /// </summary>
     public class CrudEditGetSvc
     {
@@ -35,7 +34,9 @@ namespace Base.Services
 		//sql args pair(fid,value), 日期欄位為空時寫入null, 否則會變1900/1/1 !!
 		protected List<object?> _sqlArgs = [];
 
-        //constructor
+        /// <summary>
+        /// 保存作業名稱與連線字串，尚不建立資料庫連線。
+        /// </summary>
         public CrudEditGetSvc(string ctrl, string dbStr = "")
         {
             _ctrl = ctrl;
@@ -51,11 +52,8 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// 傳回Db, 外面可呼叫, 建立CRUD Edit/Get 服務時直到存取DB才建立資料庫連線
-        /// 如果要自行控制DB關閉, 可傳入 outside=true
+        /// 取得或延遲建立 Db；outside 旗標只在建立時設定，釋放行為依實際流程。
         /// </summary>
-        /// <param name="outside">外部開啟</param>
-        /// <returns></returns>
         public Db GetDb(bool outside = false)
         {
             if (_db == null)
@@ -76,14 +74,18 @@ namespace Base.Services
             await _Db.CheckCloseDbA(db, _dbByOut);
         }
 
-        //get draft file path by key
-        //called CrudGetSvc、CrudEditSvc、others
+        /// <summary>
+        /// 組成作業、使用者及資料鍵的草稿 JSON 路徑；空鍵改用 -1。
+        /// </summary>
         public string GetDraftPath(string key)
         {
             key = _Str.EmptyToValue(key, "-1");     //-1表示新增
             return $"{_Fun.DirDraft}{_ctrl}_{_Fun.UserId()}_{key}.json";
         }
 
+        /// <summary>
+        /// 依指定功能讀取主從資料與資料範圍檢查；結果可為 null、空物件或錯誤 JSON。
+        /// </summary>
         public async Task<JObject?> GetJsonByFunA(CrudEnum fun, string key, EditDto editDto)
         {
             return await GetJsonA(fun, key, editDto);
@@ -142,11 +144,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// has _hideKey for CSRF issue, check this field before update row
+        /// 讀取主表首列；自訂 ReadSql 使用 @Id，僅釋放此方法自行建立的 Db。
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="db"></param>
-        /// <returns></returns>
         public async Task<JObject?> GetDbRowA(EditDto edit, string key, Db? db = null)
         {
             //reset sqlArgs first

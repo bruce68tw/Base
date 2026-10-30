@@ -6,9 +6,14 @@ using System.Threading.Tasks;
 
 namespace Base.Services
 {
-    //_Ad(windows only) 改成 _Ldap(跨平台), 使用 Novell.Directory.Ldap 套件
+    /// <summary>
+    /// 以 Novell LDAP 查詢 AD 登入資料。
+    /// </summary>
     public class _Ldap
     {
+        /// <summary>
+        /// 以帳密驗證並讀取 sn、mail；server 為主機、網域及選用埠的逗號清單，失敗可回傳 null。
+        /// </summary>
         public static async Task<LoginUserDto?> LoginA(string server, string id, string pwd)
         {
             var cols = server.Split(',');

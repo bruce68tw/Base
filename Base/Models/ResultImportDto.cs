@@ -2,32 +2,28 @@
 namespace Base.Models
 {
     /// <summary>
-    /// import result dto, namig for file sorting
+    /// 檔案匯入的統計及錯誤結果。
     /// </summary>
     public class ResultImportDto
     {
         /// <summary>
-        /// row id
+        /// 此次匯入記錄的識別碼。
         /// </summary>
         public string LogRowId = "";
-
         /// <summary>
-        /// ok rows count
+        /// 成功匯入筆數。
         /// </summary>
         public int OkCount;
-
         /// <summary>
-        /// fail rows count
+        /// 失敗筆數。
         /// </summary>
         public int FailCount;
-
         /// <summary>
-        /// total rows count
+        /// 總處理筆數。
         /// </summary>
         public int TotalCount;
-
         /// <summary>
-        /// error msg if any (necessary field for resultXXX dto)
+        /// 整體匯入錯誤訊息。
         /// </summary>
         public string _ErrorMsg = "";
 

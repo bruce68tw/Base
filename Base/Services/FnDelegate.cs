@@ -8,82 +8,49 @@ using System.Threading.Tasks;
 //屬性名稱和實作函數都使用相同名稱(不會有衝突)
 namespace Base.Services
 {
-    /// <summary>
-    /// FnValidate -> FnValidateA
-    /// 檢查輸入欄位, 無誤傳回null
-    /// 參考 DbAdm IssueEdit.cs
-    /// </summary>
-    /// <param name="isNew">isNew fun or not</param>
-    /// <param name="inputJson">input json</param>
-    /// <returns>validate error list</returns>
     //public delegate List<ErrorRowDto>? FnValidate(bool isNew, JObject inputJson);
+    /// <summary>
+    /// 非同步檢查輸入 JSON，isNew 表示新增；無欄位錯誤可回傳 null 或空清單。
+    /// </summary>
     public delegate Task<List<ErrorRowDto>?> FnValidateA(bool isNew, JObject inputJson);
 
     /// <summary>
-    /// crud edit WhenSave before transaction
-    /// 參考 DbAdm UiEdit.cs
+    /// 儲存前且交易啟動前回呼；isNew 表示新增，空字串代表無錯誤。
     /// </summary>
-    /// <param name="isNew">isNew fun or not</param>
-    /// <param name="crudEditSvc">CrudEdit service</param>
-    /// <param name="inputJson">input json</param>
-    /// <param name="keyJson"></param>
-    /// <returns>error msg if any</returns>
     public delegate Task<string> FnWhenSaveA(bool isNew, CrudEditSvc crudEditSvc, JObject inputJson, JObject keyJson);
 
     /// <summary>
-    /// crud edit AfterSave, inside transaction
-    /// 參考 HrAdm LeaveEdit.cs CreateA()、BaoAdm BaoEdit.cs
+    /// 儲存後、可能的交易提交前回呼；使用傳入 Db，空字串代表無錯誤。
     /// </summary>
-    /// <param name="isNew">isNew fun or not</param>
-    /// <param name="crudEditSvc">CrudEdit service</param>
-    /// <param name="db"></param>
-    /// <param name="keyJson"></param>
-    /// <returns>error msg if any</returns>
     public delegate Task<string> FnAfterSaveA(bool isNew, CrudEditSvc crudEditSvc, Db db, JObject keyJson);
 
     /// <summary>
-    /// get new master key string
+    /// 非同步產生新主鍵字串。
     /// </summary>
-    /// <returns>new key string</returns>
     public delegate Task<string> FnGetNewKeyA();
 
     /// <summary>
-    /// set new keyJson
-    /// 參考 HrAdm XgFlowE.cs
+    /// 自訂主鍵與 JSON 設定流程，成功回傳空字串。
     /// </summary>
-    /// <param name="isNew">isNew fun or not</param>
-    /// <param name="crudEditSvc">CrudEdit service</param>
-    /// <param name="inputJson">input json</param>
-    /// <param name="editDto">edit dto</param>
-    /// <returns>error msg if any</returns>
     public delegate Task<string> FnSetNewKeyJsonA(bool isNew, CrudEditSvc crudEditSvc, JObject inputJson, EditDto editDto);
 
     /// <summary>
-    /// check import row, return error msg if any
+    /// 檢查單筆匯入資料，回傳錯誤文字或空字串。
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="row"></param>
-    /// <returns></returns>
     public delegate string FnCheckImportRow<T>(T row) where T : class, new();
 
     /// <summary>
-    /// save import rows
+    /// 儲存通過檢查的匯入列，回傳各筆錯誤文字，空字串項目表示成功。
     /// </summary>
-    /// <param name="okRows"></param>
-    /// <returns>list error string, '' for success</returns>
     public delegate List<string> FnSaveImportRows<T>(List<T> okRows) where T : class, new();
 
     /// <summary>
-    /// save import rows
+    /// 非同步儲存匯入列，回傳各筆錯誤文字，空字串項目表示成功。
     /// </summary>
-    /// <param name="okRows"></param>
-    /// <returns>list error string, '' for success</returns>
     public delegate Task<List<string>> FnSaveImportRowsA<T>(List<T> okRows) where T : class, new();
 
     /// <summary>
-    /// 簽核完成後的處理, 包含退回
+    /// 簽核完成或退回後，以流程狀態與共用 Db 執行回呼，成功回傳空字串。
     /// </summary>
-    /// <param name="okRows"></param>
-    /// <returns>error msg if any</returns>
     public delegate Task<string> FnAfterSignRowA(string flowStatus, Db db);
 }

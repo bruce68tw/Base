@@ -8,12 +8,14 @@ using System.Reflection;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// Newtonsoft JSON 與公開屬性反射的模型轉換工具。
+    /// </summary>
     public class _Model
     {
         /// <summary>
-        /// convert model to form string, seperate with "," for show model content only, can not decode !!
+        /// 將公開屬性串成名稱與值的顯示文字，非可還原的表單編碼。
         /// </summary>
-        /// <returns></returns>
         public static string ToFormStr<T>(T model)
         {
             //if (model == null) return "";
@@ -24,9 +26,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// convert model variables to json string
+        /// 以 JsonConvert 序列化模型，包含其預設支援的公開欄位。
         /// </summary>
-        /// <returns></returns>
         public static string ToJsonStr<T>(T model)
         {
             //if (model == null) return "";
@@ -43,11 +44,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// model to json
+        /// 僅列舉公開屬性，將值轉成字串或空字串；不保留原始 JSON 型別。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="model"></param>
-        /// <returns></returns>
         public static JObject ToJson<T>(T model)
         {
             //if (model == null) return null;
@@ -60,6 +58,9 @@ namespace Base.Services
             return result;
         }
 
+        /// <summary>
+        /// 將同名公開屬性淺拷貝至新模型，不複製欄位或自動轉型。
+        /// </summary>
         public static TTo Copy<TFrom, TTo>(TFrom from) where TTo : new()
         {
             //if (from == null) return default;
@@ -84,28 +85,24 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// JsonStrToModel -> StrToModel
-        /// decode string into model 
+        /// 反序列化 JSON 為模型，格式錯誤可拋出例外。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="str"></param>
-        /// <returns></returns>
         public static T? StrToModel<T>(string str)
         {
             return JsonConvert.DeserializeObject<T>(str);
         }
 
+        /// <summary>
+        /// 反序列化 JSON 陣列為模型清單。
+        /// </summary>
         public static List<T>? StrToModels<T>(string str)
         {
             return JsonConvert.DeserializeObject<List<T>>(str);
         }
 
         /// <summary>
-        /// get property value of model
+        /// 取得公開屬性值，屬性不存在時回傳 null。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="fid"></param>
-        /// <returns></returns>
         public static object? GetValue<T>(T model, string fid)
         {
             //if model hasn't this property, log error
@@ -114,12 +111,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// model set property
+        /// 寫入公開實例屬性；屬性不存在回傳 false，型別不符仍可能拋出。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="fid"></param>
-        /// <param name="value">property new value</param>
-        /// <returns></returns>
         public static bool SetValue<T>(T model, string fid, object value)
         {
             //if model hasn't this property, log error
@@ -131,22 +124,16 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// check model if has property
+        /// 判斷模型是否具有指定名稱的公開屬性。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="fid">property name</param>
-        /// <returns></returns>
         public static bool HasProp<T>(T model, string fid)
         {
             return (model!.GetType().GetProperty(fid) != null);
         }
 
         /// <summary>
-        /// convert hashtable to model, must add where T : new() !!
+        /// 以 Hashtable 填入同名屬性；Int32 特別轉換，其餘值轉字串。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="hash"></param>
-        /// <returns></returns>
         public static T HashToModel<T>(Hashtable hash) where T : new()
         {
             T model = new();
@@ -163,36 +150,32 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// convert list model to json string(for javascript)
+        /// 以 JsonConvert 序列化模型清單。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="rows"></param>
-        /// <returns></returns>
         public static string ListToJsonStr<T>(List<T> rows)
         {
             return JsonConvert.SerializeObject(rows);
         }
 
         /// <summary>
-        /// get error model 
+        /// 建立錯誤結果，空訊息改用系統錯誤文字。
         /// </summary>
-        /// <param name="error">default to system error msg</param>
-        /// <returns></returns>
         public static ResultDto GetError(string error = "")
         {
             return new ResultDto() { _ErrorMsg = _Str.EmptyToValue(error, _Fun.SystemError) };
         }
 
+        /// <summary>
+        /// 建立帶有欄位驗證錯誤清單的結果。
+        /// </summary>
         public static ResultDto GetValidError(List<ErrorRowDto> errors)
         {
             return new ResultDto() { ErrorRows = errors };
         }
 
         /// <summary>
-        /// get js _BR error
+        /// 建立以 B: 前綴表示語系錯誤鍵的結果。
         /// </summary>
-        /// <param name="fid">_BR fid</param>
-        /// <returns></returns>
         public static ResultDto GetBrError(string fid)
         {
             return new ResultDto() { _ErrorMsg = _Fun.PreBrError + fid };

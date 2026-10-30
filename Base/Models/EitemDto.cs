@@ -3,59 +3,48 @@
 namespace Base.Models
 {
     /// <summary>
-    /// 用來設定一個CRUD編輯欄位
+    /// 單一 CRUD 編輯欄位的讀寫及驗證設定。
     /// </summary>
     public class EitemDto
     {
         /// <summary>
-        /// 前端UI的欄位Id
+        /// 輸入 JSON 的欄位識別名稱。
         /// </summary>
         public string Fid = "";
-
         /// <summary>
-        /// 要存取的資料表欄位名稱，包含 table alias，如果空白表示同 Fid 欄位
+        /// 資料表欄位對應名稱；空白時沿用 Fid。
         /// </summary>
         public string Col = "";
-
         /// <summary>
-        /// 資料驗證方式，參考 CheckTypeEstr.cs
+        /// 驗證種類，預設 CheckTypeEstr.None。
         /// </summary>
         public string CheckType = CheckTypeEstr.None;
-
-        //check data for CheckType, ex:
-        //
         /// <summary>
-        /// 資料驗證的資料內容，配合 CheckType 欄位，例如: CheckType="Min", CheckData="1"，則表示最小值必須大於等於1
+        /// 搭配 CheckType 的驗證參數；數值比較依目前檢查分支實作。
         /// </summary>
         public string CheckData = "";
-
         /// <summary>
-        /// 新增一筆資料時這個Fid欄位的預設值
+        /// 新增欄位的預設值。
         /// </summary>
         public object? Value;
-
         /// <summary>
-        /// required or not
+        /// 是否必填，預設 false。
         /// </summary>
         public bool Required = false;
-
         /// <summary>
-        /// if true, Create/Update will skip
+        /// 唯讀旗標，為 true 時略過新增與修改。
         /// </summary>
         public bool Read = false;
-
         /// <summary>
-        /// Fid欄位是否允許新增
+        /// 是否允許新增時寫入，預設 true。
         /// </summary>
         public bool Create = true;
-
         /// <summary>
-        /// Fid欄位是否允許修改
+        /// 是否允許修改時寫入，預設 true。
         /// </summary>
         public bool Update = true;
-
         /// <summary>
-        /// Fid欄位是否為HTML, 如果是則系統會自動編碼/解碼
+        /// 是否以 HTML 內容處理；儲存時使用 HtmlSanitizer 清理。
         /// </summary>
         public bool IsHtml = false;
     }

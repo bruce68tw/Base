@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// 將資料庫整數統計值轉成 Chart.js 資料；僅釋放自行建立的 Db。
+    /// </summary>
     public static class _Chart
     {
         //彩虹顏色
@@ -20,12 +23,8 @@ namespace Base.Services
         };
 
         /// <summary>
-        /// for 一般統計圖
+        /// 查詢 Id、Num 欄位並建立單一資料集；無資料時 labels 可能未初始化。
         /// </summary>
-        /// <param name="title"></param>
-        /// <param name="sql"></param>
-        /// <param name="db"></param>
-        /// <returns></returns>
         public static async Task<ChartDto> GetDataA(string title, string sql, Db? db = null)
         {
             //read db rows & close
@@ -53,13 +52,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get data for group bar chart
+        /// 查詢 Row、Col、Num 並轉成分組資料；colFids 須與 labels 對齊，組數受顏色清單限制。
         /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="labels">x座標label清單</param>
-        /// <param name="colFids">欄位Id清單,空白表示同labels</param>
-        /// <param name="db"></param>
-        /// <returns></returns>
         public static async Task<ChartGroupDto> GetGroupDataA(string title, string sql, List<string> labels, List<string>? colFids = null, Db? db = null)
         {
             //read db rows & close

@@ -4,13 +4,12 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
-    /// URM(user role mode), 未來會有多種mode, 所以mode在前
-    /// role的部分為多筆, 以checkbox輸入
+    /// 讀取使用者與角色等關聯資料的選項值。
     /// </summary>
     public class _ModeUR
     {
         /// <summary>
-        /// (URM) get child rows
+        /// 依 key 查詢 Id 與 Str；表名、資料欄與條件欄直接組入 SQL，須由可信設定提供。
         /// </summary>
         /// <param name="table1">master table name(主檔)</param>
         /// <param name="table2">slave table name(資料檔)</param>

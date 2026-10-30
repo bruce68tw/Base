@@ -8,29 +8,21 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
-    /// _XgProg -> _Auth
-    /// program function, 適用於其他專案, 所以使用 _XgProg, 字首_Xg表示內含商業規則
-    /// _Excel.cs >> CrudReadSvc.cs >> this, 所以此檔放在 Base Project !!
+    /// 作業權限字串、個人範圍與功能表組合；依賴目前使用者、設定與 Xp 系列表格。
     /// </summary>
     public static class _Auth
     {
         /// <summary>
-        /// 檢查來源IP是否在組態檔允許的清單內
+        /// 以完全相等比對允許的 IP 清單，不解析 DNS 或 CIDR。
         /// </summary>
-        /// <param name="clientIp"></param>
-        /// <returns></returns>
         public static bool CheckClientIp(string clientIp)
         {
             return (_Fun.Config.ClientIps.IndexOf(clientIp) >= 0);
         }
 
         /// <summary>
-        /// check program access right
+        /// 依授權模式檢查作業或子功能；未傳權限字串時取目前使用者，並非所有模式自動放行。
         /// </summary>
-        /// <param name="authStr">program auth string list, has ',' at begin/end</param>
-        /// <param name="prog">program id</param>
-        /// <param name="fun">crud function, see CrudFunEstr, empty for controller, value for action</param>
-        /// <returns>bool</returns>
         public static bool CheckAuth(string prog, CrudEnum fun, string authStr = "")
         {
             if (string.IsNullOrEmpty(authStr))
@@ -51,16 +43,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 檢查個人資料權限是否符合目前登入者
+        /// 依 Id 查使用者欄位並比對目前使用者；All 通過，None 失敗，其餘一律按個人範圍檢查。
         /// </summary>
-        /// <param name="ctrl"></param>
-        /// <param name="fun"></param>
-        /// <param name="table"></param>
-        /// <param name="userFid"></param>
-        /// <param name="key"></param>
-        /// <param name="userValue"></param>
-        /// <param name="db"></param>
-        /// <returns>BR error code if any</returns>
         public static async Task<string> CheckAuthUserA(string ctrl, CrudEnum fun, string table, 
             string userFid, string key, Db? db = null)
         {
@@ -76,10 +60,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// check Create Auth for CRUD Create button
+        /// Action 或 Row 模式檢查新增功能，其餘模式直接回傳 true。
         /// </summary>
-        /// <param name="prog"></param>
-        /// <returns></returns>
         public static bool CheckCreate(string prog)
         {
             return (_Fun.AuthType != AuthTypeEnum.Action && _Fun.AuthType != AuthTypeEnum.Row)
@@ -88,12 +70,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get auth range of one crud fun
+        /// 依 CrudEnum 位置解析單一權限數字；位置缺失為 None，非資料列模式的非零值轉成 All。
         /// </summary>
-        /// <param name="prog"></param>
-        /// <param name="fun"></param>
-        /// <param name="authStr"></param>
-        /// <returns></returns>
         public static AuthRangeEnum GetAuthRange(string prog, CrudEnum fun, string authStr = "")
         {
             if (string.IsNullOrEmpty(authStr))
@@ -115,12 +93,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// GetAuthStrsA -> GetAuthStrA
-        /// get program auth list
+        /// 依使用者角色查詢權限並組成逗號包圍字串；只釋放自行建立的 Db。
         /// </summary>
-        /// <param name="roleAll">所有人都具備的角色</param>
-        /// <param name="userId">user Id</param>
-        /// <returns>has ','(if not empty) at start/end for easy coding</returns>
         public static async Task<string> GetAuthStrA(string userId, Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
@@ -261,12 +235,8 @@ join XpProg p on a.ProgId=p.Id
         }
 
         /// <summary>
-        /// GetMenuA -> GetMenu1A (表示1階)
-        /// get 1階menu from session, called by _Layout.cshtml for show menu
+        /// 讀取單層功能表；非 superMode 且 fnSetPwd 非空時才依使用者權限過濾。
         /// </summary>
-        /// <param name="superMode"></param>
-        /// <param name="fnSetPwd">無密碼時開啟SetPwd</param>
-        /// <returns>return [] if null</returns>
         public static async Task<List<MenuDto>> GetMenu1A(string fnSetPwd = "", bool superMode = false)
         {
             //get Program name from XpProg
@@ -283,9 +253,8 @@ order by Sort
         }
 
         /// <summary>
-        /// 加上menu群組
+        /// 依 MenuGroup 組合啟用中的兩層選單；非 superMode 時原地過濾無權限項目。
         /// </summary>
-        /// <returns></returns>
         public static async Task<List<MenuDto>> GetMenu2A(string fnSetPwd, bool superMode = false)
         {
             var sql = @"
@@ -324,11 +293,8 @@ order by c.Sort, p.Sort
         }
 
         /// <summary>
-        /// 過濾掉無權限的 menu, 同時移除空白的 items, 改public for外部呼叫
+        /// 原地移除無權限項目與空群組；無密碼使用者依 fnSetPwd 限制可見作業。
         /// </summary>
-        /// <param name="fid"></param>
-        /// <param name="authRow"></param>
-        /// <returns></returns>
         public static void RemoveEmptyMenu(List<MenuDto>? menus, string fnSetPwd, bool has2Level)
         {
             if (menus == null) return;

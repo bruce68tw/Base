@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Base.Services
 {
     /// <summary>
-    /// for Crud Read Service
+    /// 依 ReadDto 組合條件、分頁與資料範圍查詢；SQL 結構及排序欄位須由可信設定提供。
     /// </summary>
     public class CrudReadSvc
     {
@@ -32,18 +32,25 @@ namespace Base.Services
         //方便2次加工
         private SqlDto _sqlDto = null!;
 
-        //constructor
+        /// <summary>
+        /// 使用連線字串或傳入的 Db 建立查詢服務；傳入 Db 本身不會設定外部管理旗標。
+        /// </summary>
         public CrudReadSvc(string dbStr = "")
         {
 			_dbStr = dbStr;
 		}
 
-		//constructor, db can not be null
+        /// <summary>
+        /// 使用連線字串或傳入的 Db 建立查詢服務；傳入 Db 本身不會設定外部管理旗標。
+        /// </summary>
         public CrudReadSvc(Db db)
         {
 			_db = db;
         }
 
+		/// <summary>
+		/// 取得或延遲建立 Db；outside 只在新建時設定，控制部分查詢流程是否釋放連線。
+		/// </summary>
 		public Db GetDb(bool outside = false)
         {
             if (_db == null)
@@ -55,12 +62,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get page rows for dataTables
+        /// 讀取分頁 JSON，含 data 與 recordsFiltered；空 SQL 回傳 null，條件錯誤回傳錯誤 JSON，負筆數才重新計數。
         /// </summary>
-        /// <param name="readDto"></param>
-        /// <param name="dtDto"></param>
-        /// <param name="ctrl"></param>
-        /// <returns></returns>
         public async Task<JObject?> GetPageA(ReadDto readDto, DtDto dtDto, string ctrl = "")
         {
             var easyDto = _Model.Copy<DtDto, EasyDtDto>(dtDto);
@@ -83,12 +86,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get page rows for normal case
+        /// 讀取分頁 JSON，含 data 與 recordsFiltered；空 SQL 回傳 null，條件錯誤回傳錯誤 JSON，負筆數才重新計數。
         /// </summary>
-        /// <param name="readDto"></param>
-        /// <param name="dtDto"></param>
-        /// <param name="ctrl">controller name for authorize</param>
-        /// <returns>jquery dataTables object</returns>
         public async Task<JObject?> GetPageA(ReadDto readDto, EasyDtDto dtDto, string ctrl = "")
         {
             #region 1.check input
@@ -173,6 +172,9 @@ namespace Base.Services
             });
         }
 
+        /// <summary>
+        /// 取得上次分頁查詢組合後的 SQL 設定，首次查詢前尚未初始化。
+        /// </summary>
         public SqlDto GetSqlDto()
         {
             return _sqlDto;
@@ -279,24 +281,16 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// 讀取資料 for 匯出 excel
+        /// 依匯出權限與條件取資料，上限為 MaxExportCount；此路徑不自動釋放服務內 Db。
         /// </summary>
-        /// <param name="ctrl"></param>
-        /// <param name="readDto"></param>
-        /// <param name="findJson"></param>
-        /// <returns></returns>
         public async Task<JArray?> GetExportRowsA(string ctrl, ReadDto readDto, JObject findJson)
         {
             return await GetRowsByAuthA(ctrl, CrudEnum.Export, readDto, findJson, _Fun.MaxExportCount, readDto.ExportSql);
         }
 
         /// <summary>
-        /// 讀取資料(考慮權限)
+        /// 依讀取權限與條件取資料；readPage 控制 MaxExportCount 限制，非頁碼，此路徑不自動釋放 Db。
         /// </summary>
-        /// <param name="readDto"></param>
-        /// <param name="findJson"></param>
-        /// <param name="readRows"></param>
-        /// <returns></returns>
         public async Task<JArray?> GetRowsA(string ctrl, ReadDto readDto, JObject findJson, bool readPage = true)
         {
             var rows = readPage ? _Fun.MaxExportCount : 0;  //0表示不分頁
@@ -304,13 +298,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// GetRowsA -> GetRowsNoAuthA
-        /// 讀取資料(不考慮權限), ex:KeyModal資料
+        /// 略過資料範圍授權查詢；readRows 為筆數上限，此路徑不自動釋放 Db。
         /// </summary>
-        /// <param name="readDto"></param>
-        /// <param name="findJson"></param>
-        /// <param name="readRows"></param>
-        /// <returns></returns>
         public async Task<JArray?> GetRowsNoAuthA(ReadDto readDto, JObject findJson, int readRows)
         {
             return await GetRowsByAuthA("", CrudEnum.Empty, readDto, findJson, readRows);
@@ -356,9 +345,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// get sql args
+        /// 取得目前累積的 SQL 名稱、值交錯參數清單。
         /// </summary>
-        /// <returns></returns>
         public List<object> GetArgs()
         {
             return _sqlArgs;
@@ -373,13 +361,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// can directly call(no need to set Crud.Sql !!), return where string
-        /// set sql args same time
-        /// date field must change format
+        /// 組合不含 WHERE 的條件並累積參數；錯誤回傳 -1，資料權限需要使用者但 Id 為空時回傳 -2。
         /// </summary>
-        /// <param name="findJson">query condition</param>
-        /// <param name="inputSearch">quick search string</param>
-        /// <returns>where string, -1(input error), -2(timeout or none BaseUser for Auth)</returns>
         public string GetWhere(string ctrl, ReadDto readDto, JObject? findJson, 
             CrudEnum crudEnum, string inputSearch = "")
         {

@@ -11,8 +11,7 @@ using Microsoft.AspNetCore.Http;
 namespace Base.Services
 {
     /// <summary>
-    /// WebSocket 連線的共用收送及生命週期服務。
-    /// 可綁定外部建立的 WebSocket，或自行建立並管理 ClientWebSocket。
+    /// 管理單一伺服端或用戶端 WebSocket，提供完整訊息接收及序列化傳送；使用後需釋放。
     /// </summary>
     public sealed class WebSocketSvc : IDisposable
     {
@@ -32,9 +31,8 @@ namespace Base.Services
         */
 
         /// <summary>
-        /// 直接透過 HTTP context 接受 WebSocket upgrade，並由此服務管理連線。
+        /// 接受 HTTP WebSocket 升級；請求不符或已有連線時拋出例外。
         /// </summary>
-        /// <param name="httpContext">目前的 ASP.NET Core HTTP context。</param>
         public async Task AcceptA(HttpContext httpContext)
         {
             ArgumentNullException.ThrowIfNull(httpContext);
@@ -46,10 +44,9 @@ namespace Base.Services
             _socket = await httpContext.WebSockets.AcceptWebSocketAsync();
         }
 
-        /// <summary>建立並連線至遠端 WebSocket；此服務負責釋放建立出的 ClientWebSocket。</summary>
-        /// <param name="uri">遠端 WebSocket endpoint。</param>
-        /// <param name="requestHeaders">連線時要設定的 HTTP request headers。</param>
-        /// <param name="ct">取消連線操作的權杖。</param>
+        /// <summary>
+        /// 先釋放舊連線再連至遠端，可設定請求標頭與取消權杖；連線失敗會拋出。
+        /// </summary>
         public async Task ConnectRemoteA(Uri uri, 
             IEnumerable<KeyValuePair<string, string>>? requestHeaders = null,
             CancellationToken ct = default)
@@ -82,20 +79,19 @@ namespace Base.Services
             _socket = socket;
         }
 
-        /// <summary>取得目前 WebSocket 的連線狀態；尚未綁定連線時回傳 None。</summary>
+        /// <summary>
+        /// 目前連線狀態，沒有連線時為 None。
+        /// </summary>
         public WebSocketState State => _socket?.State ?? WebSocketState.None;
 
-        /// <summary>判斷目前 WebSocket 是否處於可傳輸資料的開啟狀態。</summary>
+        /// <summary>
+        /// 判斷目前狀態是否為 Open。
+        /// </summary>
         public bool IsOpen => State == WebSocketState.Open;
 
         /// <summary>
-        /// client -> server
-        /// 接收一個完整 WebSocket 訊息並合併其分段 frame，再以 UTF-8 解碼回傳。
-        /// 接受 Text 與 Binary 訊息類型；對端要求關閉連線時回傳 <see langword="null"/>。
+        /// 接收完整文字或二進位訊息並以 UTF-8 解碼；關閉回傳 null，超過位元組上限會拋出。
         /// </summary>
-        /// <param name="maxMsgBytes">單一訊息允許的最大位元組數，超過時擲回 <see cref="WebSocketException"/>。</param>
-        /// <param name="cancelToken">取消接收操作的權杖。</param>
-        /// <returns>完整訊息的 UTF-8 文字；對端關閉連線時為 <see langword="null"/>。</returns>
         public async Task<string?> GetDataA(int maxMsgBytes = 256 * 1024, CancellationToken cancelToken = default)
         {
             var socket = _socket ?? throw new InvalidOperationException("WebSocket is not attached or connected.");
@@ -125,12 +121,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// server -> client
-        /// 將物件序列化為 JSON，並以 UTF-8 文字訊息送出。
-        /// 同一連線上的傳送會序列化執行；連線未開啟時不執行傳送。
+        /// 將物件序列化為 JSON 文字後以鎖序列化傳送；未開啟時略過。
         /// </summary>
-        /// <param name="payload">要序列化並傳送的物件。</param>
-        /// <param name="cancelToken">取消等待傳送鎖或傳送操作的權杖。</param>
         public async Task SendDataA(object payload, CancellationToken cancelToken = default)
         {
             var socket = _socket;
@@ -155,11 +147,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 若連線仍為開啟狀態，則送出 Close frame 並嘗試關閉連線。
-        /// 此方法不會釋放 WebSocket；連線的最終釋放仍由建立它的呼叫端負責。
+        /// 僅在 Open 狀態執行正常關閉握手，不使用取消權杖。
         /// </summary>
-        /// <param name="status">送出的 WebSocket 關閉狀態。</param>
-        /// <param name="description">提供給對端的關閉原因。</param>
         public async Task CloseA(WebSocketCloseStatus status = WebSocketCloseStatus.NormalClosure,
             string? description = null)
         {
@@ -171,7 +160,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 釋放服務持有的 WebSocket 與內部傳送鎖。
+        /// 釋放傳送鎖與 socket，並清除連線參考。
         /// </summary>
         public void Dispose()
         {

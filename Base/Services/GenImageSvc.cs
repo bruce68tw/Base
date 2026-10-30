@@ -3,7 +3,9 @@ using System.IO;
 
 namespace Base.Services
 {
-    //generate image
+    /// <summary>
+    /// 使用 SkiaSharp 在記憶體繪圖並輸出 PNG；尺寸以像素表示。
+    /// </summary>
     public class GenImageSvc
     {
         private string _toFile;
@@ -11,8 +13,10 @@ namespace Base.Services
         private SKCanvas _canvas;
         private int _width;
         private string _fontName;
-        //int Height;
 
+        /// <summary>
+        /// 建立指定尺寸的畫布，保存輸出路徑與預設字型。
+        /// </summary>
         public GenImageSvc(string toFile, int width, int height, string fontName)
         {
             _toFile = toFile;
@@ -23,6 +27,9 @@ namespace Base.Services
             _canvas = new SKCanvas(_bitmap);
         }
 
+        /// <summary>
+        /// 在指定基線位置繪字；posX 為 -1 時水平置中。
+        /// </summary>
         public void AddText(int posX, int posY, string text, int fontSize, string? fontName = null, 
             SKFontStyle? style = null, SKColor? color = null)
         {
@@ -46,6 +53,9 @@ namespace Base.Services
             _canvas.DrawText(text, posX, posY, font, paint);
         }
 
+        /// <summary>
+        /// 逐字繪製文字，超過指定寬度時換行，非完整文字排版。
+        /// </summary>
         public void AddTextBlob(float posX, float posY, int width, string text, int fontSize, 
             string? fontName = null, SKFontStyle? style = null, SKColor? color = null)
         {
@@ -76,6 +86,9 @@ namespace Base.Services
             }
         }
 
+        /// <summary>
+        /// 讀取圖片並縮放到指定矩形，可加外框；解碼失敗時略過。
+        /// </summary>
         public void AddImage(int posX, int posY, string filePath, int width, 
             int height, SKColor? borderColor = null)
         {
@@ -111,6 +124,9 @@ namespace Base.Services
             }
         }
 
+        /// <summary>
+        /// 以 PNG 覆寫輸出檔案，不建立父目錄。
+        /// </summary>
         public void Save()
         {
             //string outputPath = "path_to_save_image.png";

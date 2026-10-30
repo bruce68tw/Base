@@ -5,13 +5,17 @@ using System.Threading.Tasks;
 
 namespace Base.Services
 {
-    //memory cache server
+    /// <summary>
+    /// 以 userId_鍵 存取 IMemoryCache 的實作。
+    /// </summary>
     public class CacheMemSvc : ICacheSvc
     {
         private readonly IMemoryCache _cache;
         //private string _preKey;
 
-        //constructor
+        /// <summary>
+        /// 使用傳入的記憶體快取，保留其生命週期管理。
+        /// </summary>
         public CacheMemSvc(IMemoryCache cache)
         {
             _cache = cache;
@@ -23,6 +27,9 @@ namespace Base.Services
             return userId + "_" + key;
         }
 
+        /// <summary>
+        /// 讀取字串，找不到時回傳 null。
+        /// </summary>
         public string? GetStr(string userId, string key)
         {
             _cache.TryGetValue(GetKey(userId, key), out string? result);
@@ -30,12 +37,8 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 設定內容, 同時指定有效期限
+        /// 寫入字串，滑動期限為 _Fun.TimeOut 分鐘；完成時回傳 true。
         /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
         public bool SetStr(string userId, string key, string value)
         {
             _cache.Set(GetKey(userId, key), value, new MemoryCacheEntryOptions()
@@ -43,6 +46,9 @@ namespace Base.Services
             return true;
         }
 
+        /// <summary>
+        /// 移除指定鍵；即使鍵不存在也回傳 true。
+        /// </summary>
         public bool DeleteKey(string userId, string key)
         {
             _cache.Remove(GetKey(userId, key));
@@ -51,10 +57,10 @@ namespace Base.Services
 
         /*
         */
-        /// <summary>
-        /// delete all keys in current database index
-        /// </summary>
 #pragma warning disable CS1998 // Async 方法缺乏 'await' 運算子，將同步執行
+        /// <summary>
+        /// 清除整個 MemoryCache；實作同步執行，要求底層可轉成 MemoryCache。
+        /// </summary>
         public async Task ResetDbA()
 #pragma warning restore CS1998 // Async 方法缺乏 'await' 運算子，將同步執行
         {

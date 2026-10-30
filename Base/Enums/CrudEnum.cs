@@ -1,22 +1,49 @@
-﻿
-namespace Base.Enums
+﻿namespace Base.Enums
 {
     /// <summary>
-    /// crud fun type, 順序同為權限的子功能順序
-    /// 邏輯判斷使用正向表列
+    /// CRUD 功能及權限字串的位置索引；AuthRow 到 Other 的數值對應字串位置。
     /// </summary>
     public enum CrudEnum
     {
-        AuthRow,    //pos 0, fun is auth row or not(0/1)
-        Create,     //0/1
+        /// <summary>
+        /// 位置 0，表示是否啟用資料列權限，並非一般 CRUD 操作。
+        /// </summary>
+        AuthRow,
+        /// <summary>
+        /// 新增。
+        /// </summary>
+        Create,
+        /// <summary>
+        /// 列表查詢。
+        /// </summary>
         Read,
+        /// <summary>
+        /// 修改。
+        /// </summary>
         Update,
+        /// <summary>
+        /// 刪除。
+        /// </summary>
         Delete,
+        /// <summary>
+        /// 列印。
+        /// </summary>
         Print,
+        /// <summary>
+        /// 匯出。
+        /// </summary>
         Export,
+        /// <summary>
+        /// 檢視單筆資料。
+        /// </summary>
         View,
+        /// <summary>
+        /// 其他功能。
+        /// </summary>
         Other,
-        //Sign,       //簽核(在other後面，不出現在權限設定畫面), 必須要有新增權限!!
+        /// <summary>
+        /// 未指定子功能的標記值 99；CheckAuth 以作業是否存在判斷。
+        /// </summary>
         Empty = 99
     }
 }

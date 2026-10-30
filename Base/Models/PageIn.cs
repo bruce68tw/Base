@@ -1,13 +1,15 @@
 ﻿namespace Base.Models
 {
     /// <summary>
-    /// for RWD pagin input, use lower camel(jquery/app/vue simple pagination)
+    /// 以頁碼描述的簡易分頁輸入；不代表現行 CRUD 已提供對應查詢入口。
     /// </summary>
     public class PageIn
     {
+        /// <summary>
+        /// 初始化為第 1 頁、每頁 10 筆，篩選筆數為 -1。
+        /// </summary>
         public PageIn()
         {
-            //start = 0;
             page = 1;
             length = 10;
             filterRows = -1;
@@ -19,24 +21,26 @@
 
         //start row position, base 0
         //public int start { get; set; }
-        //page no
+        /// <summary>
+        /// 頁碼，從 1 起算。
+        /// </summary>
         public int page { get; set; }
-
-        //rows count to display
+        /// <summary>
+        /// 每頁筆數，建構時預設 10。
+        /// </summary>
         public int length { get; set; }
-
-        //-1: re-count filtered rows count(means change jquery condition)
+        /// <summary>
+        /// 篩選後筆數，-1 表示需重新計算。
+        /// </summary>
         public int filterRows { get; set; }
-
-        //query condition json in string type
+        /// <summary>
+        /// 欄位查詢條件的 JSON 字串，建構時為空字串。
+        /// </summary>
         public string findJson { get; set; }
 
         //search word
         //public DtSearchDto search { get; set; }
 
-        /// <summary>
-        /// sorting, get from jQuery DataTables, then get OrderBy, OrderDir
-        /// </summary>
         //public List<DtOrderDto> order { get; set; }
 
     }

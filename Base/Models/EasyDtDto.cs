@@ -1,8 +1,7 @@
 ﻿namespace Base.Models
 {
     /// <summary>
-    /// easy datatable input argument, use lower camel
-    /// refer DtDto.cs
+    /// 簡化列表查詢輸入，供 CrudReadSvc 內部條件處理使用。
     /// </summary>
     public class EasyDtDto
     {
@@ -19,23 +18,29 @@
 
         //Draw counter, jQuery Datatables need for control async ajax sequence
         //public int draw { get; set; }
-
-        //start row position, base 0
+        /// <summary>
+        /// 起始資料列位置，從 0 起算。
+        /// </summary>
         public int start { get; set; } = 0;
-
-        //rows count to display
+        /// <summary>
+        /// 本頁筆數，預設 10。
+        /// </summary>
         public int length { get; set; } = 10;
-
-        //-1: re-count filtered rows count(means change jquery condition)
+        /// <summary>
+        /// 篩選後總筆數，預設 -1 表示重新計算。
+        /// </summary>
         public int recordsFiltered { get; set; } = -1;
-
-        //query condition json in string type
+        /// <summary>
+        /// 欄位查詢條件的 JSON 字串。
+        /// </summary>
         public string findJson { get; set; } = "";
-
-        //A/D + fid, ex:Au.Account
+        /// <summary>
+        /// A 或 D 加上排序欄位名稱。
+        /// </summary>
         public string sort { get; set; } = "";
-
-        //與DtDto.search的資料結構不同, 所以使用不同欄位名稱
+        /// <summary>
+        /// 快速搜尋文字，對應 DtDto.search.value。
+        /// </summary>
         public string search2 { get; set; } = "";
 
         //search word

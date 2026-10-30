@@ -2,7 +2,9 @@
 using System;
 using System.Runtime.InteropServices;
 
-//網路連線
+/// <summary>
+/// 透過 Windows mpr.dll 管理需帳密的網路共用連線。
+/// </summary>
 public static class _Net
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -31,7 +33,7 @@ public static class _Net
     private static extern int WNetCancelConnection2(string lpName, int dwFlags, bool bForce);
 
     /// <summary>
-    /// 嘗試連線至需要帳號密碼的網路共用目錄
+    /// 先取消同一路徑連線再以帳密連接；原生回傳碼為 0 時回傳 true。
     /// </summary>
     public static bool Connect(string netPath, string userId, string pwd)
     {
@@ -54,7 +56,7 @@ public static class _Net
     }
 
     /// <summary>
-    /// 取消網路共用目錄連線
+    /// 強制取消指定路徑的共用連線，忽略原生回傳碼。
     /// </summary>
     public static void Disconnect(string netPath)
     {

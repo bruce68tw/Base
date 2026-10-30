@@ -3,6 +3,9 @@ using Base.Models;
 
 namespace Base.Services
 {
+    /// <summary>
+    /// IBaseUserSvc 的空白使用者實作，不處理登入或請求身分。
+    /// </summary>
     public class BaseUserSvc : IBaseUserSvc
     {
         //private BaseUserDto _baseUser;
@@ -21,7 +24,9 @@ namespace Base.Services
         }
         */
 
-        //get base user info
+        /// <summary>
+        /// 每次建立新的空白 BaseUserDto。
+        /// </summary>
         public BaseUserDto GetData()
         {
             return new BaseUserDto()
