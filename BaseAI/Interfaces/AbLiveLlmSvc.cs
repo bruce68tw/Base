@@ -737,7 +737,7 @@ namespace BaseAI.Interfaces
                 {
                     // STT 設定獨立 20 秒上限，避免辨識服務無限等待而卡住整個回合佇列。
                     using var sttCts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-                    var transcript = await _llmSvc.SpeechToTextA(turn.InputAudio, "audio/pcm;rate=16000", sttCts.Token);
+                    var transcript = await _llmSvc.SttA(turn.InputAudio, "audio/pcm;rate=16000", sttCts.Token);
                     if (!hasOkUserText && !string.IsNullOrWhiteSpace(transcript))
                         userText = transcript;
                 }

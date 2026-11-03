@@ -65,7 +65,8 @@ namespace BaseAI.Services
             }
         }
 
-        public override async Task<string> SpeechToTextA(
+        //speech to text
+        public override async Task<string> SttA(
             ReadOnlyMemory<byte> audioData, string mimeType, CancellationToken ct = default)
         {
             if (audioData.IsEmpty)

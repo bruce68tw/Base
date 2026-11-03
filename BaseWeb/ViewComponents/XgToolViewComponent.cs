@@ -120,7 +120,7 @@ namespace BaseWeb.ViewComponents
     <div class='x-work-msg'>{baseR.Working}</div>
 </div>
 
-<!-- modal: voice command -->
+<!-- modal: voice input -->
 <div class='modal fade x-modal x-voice' role='dialog'>
     <div class='modal-dialog'>
         <div class='modal-content'>

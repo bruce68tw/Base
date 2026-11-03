@@ -1,0 +1,4 @@
+interface:
+  display_name: "BaseAI 程式庫整合"
+  short_description: "依據現行 C# 原始碼整合 BaseAI 問答、即時語音、向量與上下文服務"
+  default_prompt: "使用 $baseai-library-usage，依應用端需求核對 BaseAI 原始碼並完成整合。"

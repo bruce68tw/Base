@@ -92,10 +92,6 @@ namespace Base.Models
         /// </summary>
         public string Redis { get; set; } = "";
         /// <summary>
-        /// 允許的 CORS 來源設定，以逗號分隔。
-        /// </summary>
-        public string AllowOrigins { get; set; } = "";
-        /// <summary>
         /// Google OAuth 用戶端識別碼。
         /// </summary>
         public string GoogleClientId { get; set; } = "";
@@ -155,9 +151,20 @@ namespace Base.Models
         /// 簡訊服務提供的來源門號。
         /// </summary>
         public string SmsFromPhone { get; set; } = "";
+
+        #region 限制IP/Url
         /// <summary>
-        /// 允許呼叫服務的來源 IP 清單，初值為空清單。
+        /// 允許的 CORS 來源設定(前端網站)，以逗號分隔。
+        /// </summary>
+        public string AllowOrigins { get; set; } = "";
+        /// <summary>
+        /// 允許呼叫服務的來源 IP 清單，初值為空清單。用在 XgServer Attribute, 所以做成陣列!!
         /// </summary>
         public List<string> ClientIps { get; set; } = [];
+        /// <summary>
+        /// 反向代理主機 IP 清單，初值為空清單。
+        /// </summary>
+        public List<string> ProxyIps { get; set; } = [];
+        #endregion
     }
 }

@@ -21,7 +21,7 @@
         /// <param name="audioData">音訊檔案或原始音訊資料。</param>
         /// <param name="mimeType">音訊 MIME 類型，必須符合 provider 支援的格式。</param>
         /// <param name="ct">取消轉錄要求的權杖。</param>
-        public abstract Task<string> SpeechToTextA(
+        public abstract Task<string> SttA(
             ReadOnlyMemory<byte> audioData, string mimeType, CancellationToken ct = default);
 
         //文字轉嵌入向量
