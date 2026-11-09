@@ -1,5 +1,6 @@
 ﻿using Base.Enums;
 using Base.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -475,6 +476,39 @@ namespace Base.Services
         }
 
         /// <summary>
+        /// 反序列化 JSON 為模型，格式錯誤可拋出例外。
+        /// </summary>
+        public static T? ToModel<T>(string str)
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(str);
+            }
+            catch(Exception ex)
+            {
+                _Log.Error("_Str.ToModel failed: " + ex.Message);
+                return default;
+            }
+        }
+
+        /// <summary>
+        /// 反序列化 JSON 陣列為模型清單。
+        /// </summary>
+        public static List<T>? ToModels<T>(string str)
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<List<T>>(str);
+            }
+            catch (Exception ex)
+            {
+                _Log.Error("_Str.ToModel failed: " + ex.Message);
+                return default;
+            }
+        }
+
+
+        /// <summary>
         /// 取得成員存取運算式的名稱，非成員運算式會轉型失敗。
         /// </summary>
         public static string GetVarName<T>(Expression<Func<T>> expr)
@@ -491,7 +525,8 @@ namespace Base.Services
         /// <returns></returns>
         public static List<string> ToList(string str, char sep = ',')
         {
-            return new List<string>(str.Split(sep));
+            return string.IsNullOrEmpty(str)
+                ? [] : [.. str.Split(sep)];
         }
 
         /// <summary>

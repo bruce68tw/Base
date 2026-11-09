@@ -7,12 +7,14 @@ description: 整合或維護 BaseAI C# 類別庫時使用，涵蓋 LLM 問答與
 
 ## 定位與來源
 
-本 skill 位於 `BaseAI/.agents/skills/baseai-library-usage/`；下列原始碼路徑均相對於 `BaseAI/`，可由本目錄向上三層找到。搬移 skill 時仍需取得對應原始碼。
+本 skill 位於 `BaseAI/.agents/skills/library-usage/`；下列原始碼路徑均相對於 `BaseAI/`，可由本目錄向上三層找到。搬移 skill 時仍需取得對應原始碼。
 
-- 先核對 `BaseAI.csproj`：目前為 `net8.0` 類別庫，參照 `../Base/Base.csproj`，沒有應用程式啟動入口。
+- 先核對 `BaseAI.csproj`：目前為 `net8.0` 類別庫，參照 `../BaseApi/BaseApi.csproj` 與 `../Base/Base.csproj`，沒有應用程式啟動入口。
 - `Interfaces/AbLlmSvc.cs`、`AbLiveLlmSvc.cs`、`AbEmbedDbSvc.cs` 是目前抽象契約；三個 `zz_I*.cs` 與 `Services/zz_RagSvc.cs` 被排除編譯，不能當成現行 API。
 - 不推定本庫取代獨立 LlmChatGpt 或 LlmGemini。先查應用端 ProjectReference、using 與實際建立的服務。
 - 使用 Base 的設定或日誌時，核對應用啟動流程與 `../Base/Services/_Fun.cs`，不要杜撰 BaseAI 專用 Init 或 DI 註冊擴充方法。
+
+架構與音訊分工入口：[architecture.md](../../../docs/architecture.md)。
 
 ## 按任務讀取
 

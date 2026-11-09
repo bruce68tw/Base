@@ -37,7 +37,7 @@ namespace Base.Services
         {
             var str = GetService().GetStr(userId, key);
             return _Str.IsEmpty(str)
-                ? default : _Model.StrToModel<T>(str!);
+                ? default : _Str.ToModel<T>(str!);
         }
 
         /// <summary>

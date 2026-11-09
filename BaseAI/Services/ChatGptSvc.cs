@@ -78,28 +78,26 @@ namespace BaseAI.Services
         }
 
         public override async Task<string> SttA(
-            ReadOnlyMemory<byte> audioData, string mimeType, CancellationToken ct = default)
+            ReadOnlyMemory<byte> audioData, string mimeType, string prompt, List<string> keywords, CancellationToken ct = default)
         {
-            if (audioData.IsEmpty)
-                throw new ArgumentException("Audio data is empty.", nameof(audioData));
+            ct.ThrowIfCancellationRequested();
+            ArgumentNullException.ThrowIfNull(prompt);
+            ArgumentNullException.ThrowIfNull(keywords);
+            ArgumentException.ThrowIfNullOrWhiteSpace(mimeType);
+            if (mimeType.Split(';', 2)[0].Trim().ToLowerInvariant() is not ("audio/wav" or "audio/x-wav" or "audio/wave"))
+                throw new NotSupportedException("OpenAI STT currently accepts WAV files only; convert the audio first.");
+            _Voice.Validate(audioData.Span);
             if (string.IsNullOrWhiteSpace(apiKey))
                 throw new InvalidOperationException("OpenAI API key is not configured.");
 
-            var extension = mimeType.ToLowerInvariant() switch
-            {
-                "audio/wav" or "audio/wave" => "wav",
-                "audio/mpeg" or "audio/mp3" => "mp3",
-                "audio/mp4" or "audio/m4a" => "m4a",
-                "audio/webm" => "webm",
-                "audio/ogg" => "ogg",
-                _ => throw new NotSupportedException($"OpenAI transcription does not support '{mimeType}'.")
-            };
-
             using var form = new MultipartFormDataContent();
             form.Add(new StringContent(transcriptionModel), "model");
+            // OpenAI 的 prompt 欄位用於轉錄背景與詞彙提示。
+            var context = string.Join("\n", new[] { prompt, string.Join(", ", keywords) }.Where(x => !string.IsNullOrWhiteSpace(x)));
+            if (context.Length > 0) form.Add(new StringContent(context), "prompt");
             var fileContent = new ByteArrayContent(audioData.ToArray());
-            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(mimeType);
-            form.Add(fileContent, "file", $"audio.{extension}");
+            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
+            form.Add(fileContent, "file", "audio.wav");
 
             using var request = new HttpRequestMessage(HttpMethod.Post, transcriptionUrl)
             {
@@ -112,7 +110,7 @@ namespace BaseAI.Services
             var responseText = await response.Content.ReadAsStringAsync(ct);
             if (!response.IsSuccessStatusCode)
                 throw new HttpRequestException(
-                    $"OpenAI speech transcription failed ({(int)response.StatusCode}): {responseText}");
+                    "OpenAI speech transcription failed.", null, response.StatusCode);
 
             return JObject.Parse(responseText)["text"]?.Value<string>()?.Trim() ?? string.Empty;
         }

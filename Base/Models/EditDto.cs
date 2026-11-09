@@ -22,7 +22,9 @@ namespace Base.Models
         /// </summary>
         public string Table = "";
         /// <summary>
-        /// 自訂讀取 SQL；主表與第一層子表使用 @Id，更深層子表以 {0} 帶入鍵清單。
+        /// 選填的單筆讀取 SQL；需 Join 其他資料表時設定，無 Join 且未啟用資料權限的單表讀取可省略，由系統依 Items 組出欄位清單。
+        /// 啟用操作者資料權限時必須自訂 SQL 並關聯 XpUser，以 _Fun.FidUser、_Fun.FidDept 作為使用者 Id 與部門 Id 的回傳欄位別名。
+        /// 主表與第一層子表使用 @Id，更深層子表以 {0} 帶入鍵清單。
         /// </summary>
         public string ReadSql = "";
         /// <summary>

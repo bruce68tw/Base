@@ -36,6 +36,9 @@
 - 判斷有效程式以 `.csproj` 為準；多處有 `Compile Remove`，不能將所有 `.cs` 都視為編譯來源。`*_old`、`*_bak`、`*_npoi`、`*_op` 等版本先核對用途，不直接視為現行入口，也不順手清理。
 - 遵循 [.gitignore](.gitignore)，避免納入建置產物；勿把實際金鑰、密碼或連線資訊寫入指引。
 
+- 實作前先查相關模組的使用 skill 與來源，優先呼叫符合需求的既有共用函式，避免重寫相同邏輯；完成時交代關鍵重用結果或自行實作的原因。
+- 跨模組與應用的前端／後端開發慣例見 [shared-coding-rules](.agents/skills/shared-coding-rules/SKILL.md)，按任務讀取對應規則；各模組 API 用法仍留在原有模組 skill。
+
 ## 知識整理原則
 
 - Base 根目錄下名稱前綴為 `zz_` 的子目錄目前未使用，本次專案知識整理先略過，不納入模組介紹或知識索引；不刪除或修改這些目錄。
@@ -43,4 +46,9 @@
 - 詳細模組知識優先引用現有文件與原始碼，避免在此複製大量內容；文件與實作不一致時，記錄差異再核對。
 - 穩定、可重複的流程可整理為 skills；臨時進度、猜測與單次操作紀錄不當作長期規則。
 - 各獨立 `.csproj` 子專案在自己的 `.agents/skills/` 維護 skills 原始檔；從大 Base 儲存庫工作時，依需要讀取子專案 skill，不假設根目錄會自動遞迴探索。跨應用的發現與使用留待未來插件封裝處理，本次不安裝或發佈。
-- 使用 `Base/Base.csproj` 的應用端整合，參考 [base-library-usage](Base/.agents/skills/base-library-usage/SKILL.md)；只涵蓋 Base 程式庫，詳細 API 按需載入其 references。程式參照不代表應用端已載入此 skill。
+- 使用 `Base/Base.csproj` 的應用端整合，參考 [base-library-usage](Base/.agents/skills/library-usage/SKILL.md)；只涵蓋 Base 程式庫，詳細 API 按需載入其 references。程式參照不代表應用端已載入此 skill。
+
+## 子專案架構入口
+
+- [Base](Base/docs/architecture.md)、[BaseAI](BaseAI/docs/architecture.md)、[BaseApi](BaseApi/docs/architecture.md) 各自維護職責與公共契約；先讀子專案 AGENTS，再按任務載入既有 skill references。
+- 應用提示檔、路由白名單與實際啟動流程由應用文件維護，不在共用專案複製；文件中的工作區核對結果不代表發布保證。

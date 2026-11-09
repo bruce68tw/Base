@@ -17,7 +17,8 @@ namespace Base.Models
         /// </summary>
         public bool UseSquare = false;
         /// <summary>
-        /// 列表查詢 SQL；選取欄位順序應與前端排序對應。
+        /// 必填的列表查詢 SQL，單表或 Join 查詢皆須設定；結果資料欄位由 SELECT 及 alias 決定。
+        /// 回傳名稱應對應前端列表；前端自行 render 的虛擬欄位不必輸出同名欄位，但須提供其依賴資料。
         /// </summary>
         public string ReadSql = "";
         /// <summary>
@@ -45,7 +46,8 @@ namespace Base.Models
         /// </summary>
         public List<List<string>>? OrGroups;
         /// <summary>
-        /// 各輸入欄位的查詢規則，可為 null。
+        /// 畫面查詢條件欄位的規則；可為 null 或空陣列，表示畫面沒有查詢條件。
+        /// 僅用於條件設定，不是 SQL 來源或結果欄位清單。
         /// </summary>
         public QitemDto[]? Items;
 

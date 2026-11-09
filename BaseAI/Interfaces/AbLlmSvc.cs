@@ -17,12 +17,14 @@
 
         public abstract Task<string> AskA(string prompt, string question);
 
-        /// <summary>將指定格式的語音資料轉錄為文字；無法辨識語音時回傳空字串。</summary>
-        /// <param name="audioData">音訊檔案或原始音訊資料。</param>
-        /// <param name="mimeType">音訊 MIME 類型，必須符合 provider 支援的格式。</param>
-        /// <param name="ct">取消轉錄要求的權杖。</param>
+        /// <summary>將完整音檔依 prompt 產生回應文字；輸出格式與無人聲約定由呼叫端決定，失敗拋例外。</summary>
+        /// <param name="audioData">完整音檔；支援格式由 provider 決定。裸 PCM 請先用 _Voice.ToWavA 明示規格轉成 WAV。</param>
+        /// <param name="mimeType">實際音檔 MIME，不可僅改標籤冒充 WAV。</param>
+        /// <param name="prompt">回應任務與輸出指示；必填，可為空白。</param>
+        /// <param name="keywords">辨識術語；必填，可為空清單。</param>
+        /// <param name="ct">取消轉換、傳送與讀取回應。</param>
         public abstract Task<string> SttA(
-            ReadOnlyMemory<byte> audioData, string mimeType, CancellationToken ct = default);
+            ReadOnlyMemory<byte> audioData, string mimeType, string prompt, List<string> keywords, CancellationToken ct = default);
 
         //文字轉嵌入向量
         public abstract Task<float[]?> TextToVectorA(string text);

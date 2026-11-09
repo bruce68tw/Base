@@ -18,11 +18,11 @@ namespace BaseApi.Services
         /// 使用 View Object 登入
         /// </summary>
         /// <param name="vo">login view object</param>
-        /// <param name="sql">sql for 查詢用戶，如果空白則使用default</param>
+        /// <param name="sqlFindUser">sql for 查詢用戶，如果空白則使用default</param>
         /// <param name="encodePwd">是否加密密碼欄位(only for 密碼驗証</param>
         /// <param name="extCol">要寫入session的一個額外欄位, 必須加上正確的 table 別名</param>
         /// <returns></returns>
-        public static async Task<bool> LoginByVoA(LoginVo vo, string sql = "", bool encodePwd = true, 
+        public static async Task<bool> LoginByVoA(LoginVo vo, string sqlFindUser = "", bool encodePwd = true, 
             string extCol = "", string extCol2 = "", string extCol3 = "")
         {
             //reset UI msg first
@@ -59,17 +59,16 @@ namespace BaseApi.Services
             if (hasExtCol3)
                 extColSql += $", ExtCol2={AddQuote(extCol3)}";
 
-            if (_Str.IsEmpty(sql))
-                sql = $@"
+            if (string.IsNullOrEmpty(sqlFindUser))
+                sqlFindUser = $@"
 select u.Id as UserId, u.Name as UserName, u.Pwd,
     u.DeptId, d.Name as DeptName{extColSql}
 from dbo.XpUser u
 left join dbo.XpDept d on u.DeptId=d.Id
 where u.Account=@Account
 ";
-
             var status = false;
-            var row = await _Db.GetRowA(sql, ["Account", vo.Account]);
+            var row = await _Db.GetRowA(sqlFindUser, ["Account", vo.Account]);
             if (row != null)
             {
                 #region case AD

@@ -276,9 +276,14 @@ namespace Base.Services
         /// <summary>
         /// 以 UTF-8 讀取檔案，檔案不存在回傳 null。
         /// </summary>
-        public static string? ToStr(string path)
+        public static string? ToStr(string path, bool logError = false)
         {
-            if (!File.Exists(path)) return null;
+            if (!File.Exists(path))
+            {
+                if (logError)
+                    _Log.Error("_File.cs ToStr no file: " + path);
+                return null;
+            }
 
             //utf8 file only !!
             using var file = new StreamReader(path, Encoding.UTF8);

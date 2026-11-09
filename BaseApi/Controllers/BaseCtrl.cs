@@ -26,6 +26,19 @@ namespace BaseApi.Controllers
         }
         */
 
+        [NonAction]
+        public ContentResult CntError(string error)
+        {
+            return JsonToCnt(_Json.GetError(error));
+        }
+
+        [NonAction]
+        public ContentResult JsonStrToCnt(string str, bool emptyToMsg = true)
+        {
+            str ??= emptyToMsg ? _Str.GetBrError("FindNone") : "";
+            return Content(str, ContentTypeEstr.Json);
+        }
+
         /// <summary>
         /// json to content result
         /// </summary>
@@ -51,7 +64,7 @@ namespace BaseApi.Controllers
         public IActionResult FileDtoToResult(DownFileDto file)
         {
             return (string.IsNullOrEmpty(file.Error))
-                ? File(file.Stream, file.ContentType, file.FileName)
+                ? File(file.Stream!, file.ContentType, file.FileName)
                 : BadRequest(file.Error);
         }
 

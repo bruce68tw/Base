@@ -85,20 +85,26 @@ namespace Base.Services
         */
 
         /// <summary>
+        /// move to _Str.ToModel()
         /// 反序列化 JSON 為模型，格式錯誤可拋出例外。
         /// </summary>
+        /*
         public static T? StrToModel<T>(string str)
         {
             return JsonConvert.DeserializeObject<T>(str);
         }
+        */
 
         /// <summary>
+        /// move to _Str.ToModels()
         /// 反序列化 JSON 陣列為模型清單。
         /// </summary>
+        /*
         public static List<T>? StrToModels<T>(string str)
         {
             return JsonConvert.DeserializeObject<List<T>>(str);
         }
+        */
 
         /// <summary>
         /// 取得公開屬性值，屬性不存在時回傳 null。

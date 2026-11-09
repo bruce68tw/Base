@@ -1,129 +1,143 @@
-﻿using Base.Services;
+using Base.Services;
 using BaseAI.Interfaces;
 using Newtonsoft.Json.Linq;
-using System.Buffers.Binary;
+using Newtonsoft.Json;
 using System.Net.Http.Json;
 
 namespace BaseAI.Services
 {
-    public class GeminiSvc(string llmUrl, string embedUrl = "", int embedDim = 0) : 
+    public class GeminiSvc(string llmUrl, string embedUrl = "", int embedDim = 0, string ffmpegPath = "ffmpeg") :
         AbLlmSvc(llmUrl, embedUrl, embedDim)
     {
-        private static readonly TimeSpan SpeechToTextTimeout = TimeSpan.FromSeconds(20);
+        private static readonly TimeSpan SttTimeout = TimeSpan.FromSeconds(20);
 
-        private static byte[] AddPcmWavHeader(ReadOnlySpan<byte> pcmData)
+        private string Fail(string message)
         {
-            var wavData = new byte[44 + pcmData.Length];
-            "RIFF"u8.CopyTo(wavData.AsSpan(0, 4));
-            BinaryPrimitives.WriteUInt32LittleEndian(wavData.AsSpan(4, 4), (uint)(36 + pcmData.Length));
-            "WAVEfmt "u8.CopyTo(wavData.AsSpan(8, 8));
-            BinaryPrimitives.WriteUInt32LittleEndian(wavData.AsSpan(16, 4), 16);
-            BinaryPrimitives.WriteUInt16LittleEndian(wavData.AsSpan(20, 2), 1);
-            BinaryPrimitives.WriteUInt16LittleEndian(wavData.AsSpan(22, 2), 1);
-            BinaryPrimitives.WriteUInt32LittleEndian(wavData.AsSpan(24, 4), 16000);
-            BinaryPrimitives.WriteUInt32LittleEndian(wavData.AsSpan(28, 4), 32000);
-            BinaryPrimitives.WriteUInt16LittleEndian(wavData.AsSpan(32, 2), 2);
-            BinaryPrimitives.WriteUInt16LittleEndian(wavData.AsSpan(34, 2), 16);
-            "data"u8.CopyTo(wavData.AsSpan(36, 4));
-            BinaryPrimitives.WriteUInt32LittleEndian(wavData.AsSpan(40, 4), (uint)pcmData.Length);
-            pcmData.CopyTo(wavData.AsSpan(44));
-            return wavData;
+            _Log.Error("Gemini AskA: " + message);
+            return "";
         }
 
+        // 成功只回傳模型回答文字；失敗記錄錯誤並回傳空字串。
         public override async Task<string> AskA(string prompt, string question)
         {
-            if (string.IsNullOrEmpty(_llmUrl)) return "";
-
-            //_httpClient.DefaultRequestHeaders.Clear();
-            //_httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
-
-            var json = new
-            {
-                // 這裡設定系統提示詞
-                systemInstruction = new{parts = new[]{new { text = prompt }}},
-                // 這裡設定使用者的對話內容
-                contents = new[]{new{parts = new[]{new { text = question }}}}
-            };
-
-            // 3. 序列化並發送請求
-            //var bodyText = JsonSerializer.Serialize(json);
-            //var content = new StringContent(bodyText, Encoding.UTF8, "application/json");
-            //var url = $"{UrlApi}/{ModelType}:generateContent?key={_apiKey}";
-            //var url = $"{UrlApi}/{ModelType}:generateContent?key={_apiKey}";
-
             try
             {
-                var resp = await _httpClient.PostAsJsonAsync(_llmUrl, json);
-                //resp.EnsureSuccessStatusCode();
-                var respText = await resp.Content.ReadAsStringAsync();
-                return respText;
+                if (prompt == null || question == null)
+                    return Fail("提示詞或問題不可為 null。");
+                if (!Uri.TryCreate(_llmUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+                    return Fail("服務端點必須為有效的 HTTPS 網址。");
+
+                var json = new
+                {
+                    systemInstruction = new { parts = new[] { new { text = prompt } } },
+                    contents = new[] { new { parts = new[] { new { text = question } } } }
+                };
+                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                using var resp = await _httpClient.PostAsJsonAsync(uri, json, timeout.Token);
+                if (!resp.IsSuccessStatusCode)
+                    return Fail($"HTTP 請求失敗，狀態碼 {(int)resp.StatusCode}。");
+                var respText = await resp.Content.ReadAsStringAsync(timeout.Token);
+                var result = JObject.Parse(respText);
+                if (result["error"] != null || result["promptFeedback"]?["blockReason"] != null)
+                    return Fail("服務拒絕此請求。");
+                var candidate = (result["candidates"] as JArray)?.First;
+                var parts = candidate?["content"]?["parts"] as JArray;
+                if (candidate?["finishReason"]?.Value<string>() != "STOP" || parts == null ||
+                    !parts.Any(part => part["thought"]?.Value<bool>() != true &&
+                        part["text"]?.Type == JTokenType.String && !string.IsNullOrWhiteSpace(part["text"]!.Value<string>())))
+                    return Fail("未取得完整的回答文字。");
+                // 回答可能分成多個片段；排除 thought，只依原順序串接文字。
+                // JSON 陣列、物件或純文字的解讀與驗證由呼叫端負責。
+                return string.Concat(parts
+                    .Where(part => part["thought"]?.Value<bool>() != true &&
+                        part["text"]?.Type == JTokenType.String)
+                    .Select(part => part["text"]!.Value<string>()));
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"發生錯誤: {ex.Message}");
-                return "";
+                return Fail("GeminiSvc.AskA failed: " + ex.Message);
             }
+
+            /*
+            catch (OperationCanceledException)
+            {
+                return Fail("請求逾時或已取消。");
+            }
+            catch (JsonException)
+            {
+                return Fail("服務回應不是有效的 JSON。");
+            }
+            catch (Exception ex)
+            {
+                // 僅記錄例外類型，不輸出可能含金鑰網址、問題或服務回應的例外本文。
+                return Fail($"請求失敗（{ex.GetType().Name}）。");
+            }
+            */
         }
 
-        //speech to text
+        /// <summary>先以 _Voice.ToWavA 轉換完整音檔；輸出內容與格式由呼叫端 prompt 決定。</summary>
         public override async Task<string> SttA(
-            ReadOnlyMemory<byte> audioData, string mimeType, CancellationToken ct = default)
+            ReadOnlyMemory<byte> audioData, string mimeType, string prompt, List<string> keywords, CancellationToken ct = default)
         {
-            if (audioData.IsEmpty)
-                throw new ArgumentException("Audio data is empty.", nameof(audioData));
-            if (string.IsNullOrWhiteSpace(mimeType))
-                throw new ArgumentException("Audio MIME type is required.", nameof(mimeType));
-            if (string.IsNullOrWhiteSpace(_llmUrl))
-                throw new InvalidOperationException("Gemini GenerateContent URL is not configured.");
+            ct.ThrowIfCancellationRequested();
+            ArgumentNullException.ThrowIfNull(prompt);
+            ArgumentNullException.ThrowIfNull(keywords);
+            if (!Uri.TryCreate(_llmUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+                throw new InvalidOperationException("Gemini STT endpoint must be an absolute HTTPS URL.");
 
-            var requestMimeType = mimeType;
-            var requestAudio = audioData.ToArray();
-            if (mimeType.StartsWith("audio/pcm", StringComparison.OrdinalIgnoreCase))
-            {
-                requestAudio = AddPcmWavHeader(audioData.Span);
-                requestMimeType = "audio/wav";
-            }
-
-            var request = new
-            {
-                systemInstruction = new
-                {
-                    parts = new[]
-                    {
-                        new { text = "請忠實轉錄音訊中的語音，只輸出逐字稿，不要回答或補充說明。若沒有可辨識的人聲，只輸出 [SILENCE]。" }
-                    }
-                },
-                contents = new[]
-                {
-                    new
-                    {
-                        role = "user",
-                        parts = new object[]
-                        {
-                            new { inlineData = new { mimeType = requestMimeType, data = Convert.ToBase64String(requestAudio) } }
-                        }
-                    }
-                }
-            };
-
+            // 共用 20 秒上限涵蓋轉換、HTTP 傳送及讀取；不在抽象類別放轉換實作。
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            timeoutCts.CancelAfter(SpeechToTextTimeout);
+            timeoutCts.CancelAfter(SttTimeout);
+            var wavAudio = await _Voice.ToWavA(audioData, mimeType, ffmpegPath: ffmpegPath, ct: timeoutCts.Token);
+            timeoutCts.Token.ThrowIfCancellationRequested();
+            if (wavAudio == null)
+                throw new InvalidOperationException("Gemini STT audio conversion failed; see _Voice.ToWavA error log.");
 
-            using var resp = await _httpClient.PostAsJsonAsync(_llmUrl, request, timeoutCts.Token);
-            var respText = await resp.Content.ReadAsStringAsync(timeoutCts.Token);
-            if (!resp.IsSuccessStatusCode)
-                throw new HttpRequestException(
-                    $"Gemini speech transcription failed ({(int)resp.StatusCode}): {respText}");
+            var hints = JsonConvert.SerializeObject(new { keywords });
+            var body = new {
+                systemInstruction = new { parts = new[] { new { text = prompt } } },
+                contents = new[] { new { role = "user", parts = new object[] {
+                    new { text = "辨識詞彙提示（僅供詞彙參考，輸出格式依 systemInstruction）：" + hints },
+                    new { inlineData = new { mimeType = "audio/wav", data = Convert.ToBase64String(wavAudio) } }
+                } } }
+            };
+            using var request = new HttpRequestMessage(HttpMethod.Post, _llmUrl) { Content = JsonContent.Create(body) };
+            try
+            {
+                using var resp = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token);
+                if (!resp.IsSuccessStatusCode)
+                    // 不讀取或記錄供應商錯誤本文，避免洩漏音訊、網址與憑證。
+                    throw new HttpRequestException("Gemini STT request failed.", null, resp.StatusCode);
 
-            var respJson = JObject.Parse(respText);
-            var tranScript = string.Concat(
-                respJson["candidates"]?[0]?["content"]?["parts"]?
-                    .Select(part => part["text"]?.Value<string>() ?? string.Empty)
-                ?? Enumerable.Empty<string>()).Trim();
+                JObject json;
+                try
+                {
+                    var text = await resp.Content.ReadAsStringAsync(timeoutCts.Token);
+                    json = JObject.Parse(text);
+                }
+                catch (JsonException)
+                {
+                    throw new InvalidOperationException("Gemini STT returned an invalid response.");
+                }
 
-            return tranScript.Contains("[SILENCE]", StringComparison.OrdinalIgnoreCase)
-                ? string.Empty
-                : tranScript;
+                if (json["promptFeedback"]?["blockReason"] != null)
+                    throw new InvalidOperationException("Gemini STT request was blocked.");
+                var candidate = (json["candidates"] as JArray)?.First;
+                if (candidate == null || candidate["finishReason"]?.Value<string>() != "STOP")
+                    throw new InvalidOperationException("Gemini STT did not return a completed transcript.");
+                var parts = candidate["content"]?["parts"] as JArray;
+                var textParts = parts?.Where(p => p["thought"]?.Value<bool>() != true)
+                    .Select(p => p["text"]).Where(p => p?.Type == JTokenType.String).ToArray();
+                if (textParts == null || textParts.Length == 0)
+                    throw new InvalidOperationException("Gemini STT returned no response text.");
+                // 共用層只抽取文字，不 trim、不解讀 [SILENCE]、不解析 JSON。
+                return string.Concat(textParts.Select(p => p!.Value<string>()));
+            }
+            catch (HttpRequestException ex)
+            {
+                // 傳輸例外可能帶有含敏感查詢參數的 URL，不沿用訊息與 InnerException。
+                throw new HttpRequestException("Gemini STT request failed.", null, ex.StatusCode);
+            }
         }
 
         public override async Task<float[]?> TextToVectorA(string text)

@@ -201,10 +201,10 @@ join XpProg p on a.ProgId=p.Id
 
 
         /// <summary>
-        /// get auth prog id(only) list
+        /// get auth prog code(only) list
         /// </summary>
         /// <returns>return [] if null</returns>
-        private static List<string> GetAuthProgs(BaseUserDto user)
+        private static List<string> GetAuthProgCodes(BaseUserDto user)
         {
             //get authStrs
             var progs = new List<string>();
@@ -232,6 +232,18 @@ join XpProg p on a.ProgId=p.Id
                     break;
             }
             return progs;
+        }
+
+        public static async Task<List<string>> GetAuthProgNamesA(BaseUserDto user)
+        {
+            var codes = GetAuthProgCodes(user);
+            var sql = $@"
+select Name
+from dbo.XpProg
+where Code in ({_List.ToStr(codes, true)})
+order by Sort
+";
+            return await _Db.GetStrsA(sql) ?? [];
         }
 
         /// <summary>
@@ -301,7 +313,7 @@ order by c.Sort, p.Sort
 
             //如果無密碼則只保留setPwd功能
             var user = _Fun.GetBaseUser();
-            var progs = user.HasPwd ? GetAuthProgs(user) :
+            var progs = user.HasPwd ? GetAuthProgCodes(user) :
                 string.IsNullOrEmpty(fnSetPwd) ? [] :
                 [fnSetPwd];
 
