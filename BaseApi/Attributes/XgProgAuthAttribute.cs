@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 namespace BaseApi.Attributes
 {
     /// <summary>
-    /// constructor
+    /// 在 MVC Action 執行前檢查目前使用者是否具有指定作業與 CRUD 操作的權限。拒絕時依 Action 回傳型別選擇回應。
     /// </summary>
-    /// <param name="crudEnum"></param>
-    /// <param name="ctrl">get controller name if empty</param>
+    /// <param name="crudEnum">要檢查的 CRUD 操作。預設值為 CrudEnum.Empty。</param>
+    /// <param name="ctrl">要檢查的作業名稱，空字串時取路由的 Controller 名稱。</param>
     public class XgProgAuthAttribute(CrudEnum crudEnum = CrudEnum.Empty, string ctrl = "") : ActionFilterAttribute
     {
         /// <summary>
@@ -24,6 +24,10 @@ namespace BaseApi.Attributes
         private readonly CrudEnum _crudEnum = crudEnum;
         private readonly string _ctrl = ctrl;
 
+        /// <summary>
+        /// 檢查目前使用者的作業權限。未指定作業名稱時使用路由的 Controller 值，拒絕時設定 Action 結果。
+        /// </summary>
+        /// <param name="context">目前 MVC Action 的執行內容，提供路由、回傳型別及結果。</param>
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             //1.check program right

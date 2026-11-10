@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace BaseApi.Services
 {
+    /// <summary>
+    /// 依流程節點與連線建立簽核資料，並提供簽核紀錄查詢、刪除及簽核處理。
+    /// </summary>
     public class _XgFlow
     {
         //match to XpCode.Type="xfAndOr" && XpFlow.js??
@@ -16,22 +19,40 @@ namespace BaseApi.Services
         private const string AndSep = "{A}";
         private const string ColSep = ",";
 
-        //get user's dept manager
+        /// <summary>
+        /// 以使用者 ID 查詢其所屬部門主管 ID 的 SQL 範本。
+        /// </summary>
         public static string SqlUserMgr = @"
 select d.MgrId 
 from dbo.XpDept d
 inner join dbo.XpUser u on d.Id=u.DeptId
 where u.Id='{0}'
 ";
-        //get userId by account
+        /// <summary>
+        /// SQL 範本以帳號查詢使用者 ID。目前指定使用者的簽核分支傳入資料擁有者 ID。
+        /// todo:待確認 指定使用者分支傳入使用者 ID，待確認 SQL 應比對的欄位。
+        /// </summary>
         public static string SqlUser = "select UserId from dbo.XpUser where Account='{0}'";
-        //get user name
+        
+        /// <summary>
+        /// 以使用者 ID 查詢姓名的 SQL 範本。
+        /// </summary>
         public static string SqlUserName = "select Name from dbo.XpUser where Id='{0}'";
-        //get dept manager Id
+        
+        /// <summary>
+        /// 以部門 ID 查詢部門主管 ID 的 SQL 範本。
+        /// </summary>
         public static string SqlDeptMgr = "select MgrId from dbo.XpDept where Id='{0}'";
-        //get first role member
+        
+        /// <summary>
+        /// 以角色 ID 查詢成員 ID 的 SQL 範本。角色簽核分支會讀取多筆結果。
+        /// </summary>
         public static string SqlRole = "select UserId from dbo.XpUserRole where RoleId='{0}'";
-        //get first role member, 因為有 '{0}', 使用+號串接
+        
+        /// <summary>
+        /// 依角色 ID 查詢指定部門按使用者 ID 排序的第一位成員。部門 ID 在靜態欄位初始化時取得。
+        /// 因為有 '{0}', 使用+號串接
+        /// </summary>
         public static string SqlDeptRole = @"
 select top 1 u.Id
 from dbo.XpUserRole ur
@@ -44,10 +65,9 @@ order by u.Id
         /// <summary>
         /// 刪除 XpFlowSign、XpFlowMap 簽核記錄
         /// </summary>
-        /// <param name="progCode"></param>
-        /// <param name="sourceId"></param>
-        /// <param name="db"></param>
-        /// <returns></returns>
+        /// <param name="progCode">來源作業的代碼，對應 XpProg.Code。</param>
+        /// <param name="sourceId">來源資料列的主鍵。</param>
+        /// <param name="db">可沿用的資料庫物件，省略時由方法開啟。</param>
         public static async Task DeleteSignA(string progCode, string sourceId, Db? db = null)
         {
             var sql = $@"
@@ -67,9 +87,9 @@ and m.SourceId=@SourceId;
         /// <summary>
         /// 讀取簽核記錄
         /// </summary>
-        /// <param name="progCode"></param>
-        /// <param name="sourceId"></param>
-        /// <param name="db"></param>
+        /// <param name="progCode">來源作業的代碼，對應 XpProg.Code。</param>
+        /// <param name="sourceId">來源資料列的主鍵。</param>
+        /// <param name="db">可沿用的資料庫物件，省略時由方法開啟。</param>
         /// <returns>如果無記錄則傳回[]</returns>
         public static async Task<JArray> GetSignRowsA(string progCode, string sourceId, Db? db = null)
         {
@@ -88,12 +108,10 @@ order by s.FlowLevel
         }
 
         /// <summary>
-        /// ReadSetViewBagA -> SetViewBagA
         /// 讀取全部簽核相關的 XpCode 資料，供 controller 設定 viewBag
         /// </summary>
-        /// <param name="viewBag"></param>
-        /// <param name="db"></param>
-        /// <returns></returns>
+        /// <param name="viewBag">要填入簽核選項資料的 MVC ViewBag。</param>
+        /// <param name="db">可沿用的資料庫物件，省略時由方法開啟。</param>
         public static async Task SetViewBagA(dynamic viewBag, Db? db = null)
         {
             var locale = _Fun.MultiLang ? _Locale.GetLocaleNoDash() : "";
@@ -116,18 +134,20 @@ order by Type, Sort";
         }
 
         /// <summary>
-        /// CreateSignRowsA -> CreateSignA
-        /// create workflow signing rows: XpFlowMap, XpFlowSign(or test)
+        /// 建立簽核主檔與明細，測試模式使用對應的測試資料表。
         /// 修改時不會建立XpFlowMap
         /// </summary>
         /// <param name="isNew">是否新增, false表示申請者退回後重新送單</param>
-        /// <param name="row">flow data</param>
-        /// <param name="ownerId">資料擁有者</param>
-        /// <param name="flowCode">XpFlow.Code</param>
-        /// <param name="progCode">XpProg.Code</param>
-        /// <param name="sourceId">source row Id(key)</param>
-        /// <param name="db"></param>
-        /// <returns>error msg if any</returns>
+        /// <param name="row">用於比對流程條件及讀取欄位型簽核者的來源資料。</param>
+        /// <param name="ownerId">來源資料擁有者的使用者 ID。</param>
+        /// <param name="flowCode">簽核流程代碼，對應 XpFlow.Code。</param>
+        /// <param name="progCode">來源作業代碼，對應 XpProg.Code。</param>
+        /// <param name="sourceId">來源資料列的主鍵。</param>
+        /// <param name="db">呼叫端提供的資料庫物件。</param>
+        /// <param name="now">寫入簽核紀錄的作業時間。</param>
+        /// <param name="startNodeName">寫入第零關簽核明細的節點名稱。</param>
+        /// <param name="isTest">是否使用測試模式的簽核資料表。</param>
+        /// <returns>成功時為空字串，失敗時回傳錯誤訊息。</returns>
         public static async Task<string> CreateSignA(bool isNew, JObject row, DateTime now, string ownerId, string flowCode,
             string progCode, string sourceId, string startNodeName, bool isTest, Db db)
         {
@@ -388,10 +408,18 @@ insert into dbo.{signTable}(
                 : $"_XgFlow.cs CreateSignA() failed(XpFlow.Code={flowCode}): {error}";
         }
 
+        /// <summary>
+        /// 依測試模式選擇簽核主檔資料表名稱。
+        /// </summary>
+        /// <param name="isTest">是否使用測試模式的簽核資料表。</param>
         public static string GetMapTable(bool isTest)
         {
             return isTest ? "XpTestFlowMap" : "XpFlowMap";
         }
+        /// <summary>
+        /// 依測試模式選擇簽核明細資料表名稱。
+        /// </summary>
+        /// <param name="isTest">是否使用測試模式的簽核資料表。</param>
         public static string GetSignTable(bool isTest)
         {
             return isTest ? "XpTestFlowSign" : "XpFlowSign";
@@ -510,12 +538,14 @@ insert into dbo.{signTable}(
         }
 
         /// <summary>
-        /// sign one row
+        /// 處理指定簽核明細的同意或退回，並更新簽核流程狀態。
         /// </summary>
-        /// <param name="flowSignId">XpFlowSign.Id</param>
-        /// <param name="signYes">agree or not</param>
-        /// <param name="signNote">sign note</param>
-        /// <returns>ResultDto for called by controller</returns>
+        /// <param name="flowSignId">要處理的簽核明細 ID。</param>
+        /// <param name="signYes">是否同意。為 false 時執行退回處理。</param>
+        /// <param name="signNote">寫入簽核明細的意見。</param>
+        /// <param name="isTest">是否使用測試模式的簽核資料表。</param>
+        /// <param name="FnAfterSignRowA">可選的簽核後續回呼，接收流程狀態及資料庫物件。</param>
+        /// <returns>供控制器處理的簽核結果。</returns>
         public static async Task<ResultDto> SignRowA(string flowSignId, bool signYes,
             string signNote, bool isTest, FnAfterSignRowA? FnAfterSignRowA = null)
         {

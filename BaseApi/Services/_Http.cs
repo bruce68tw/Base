@@ -14,6 +14,9 @@ using System.Web;
 
 namespace BaseApi.Services
 {
+    /// <summary>
+    /// 提供目前 HTTP 請求與回應的存取、對外 HTTP 呼叫及使用者資料讀取。JWT 讀取方法只解析權杖內容。
+    /// </summary>
     public static class _Http
     {
         /*
@@ -26,6 +29,9 @@ namespace BaseApi.Services
         }
         */
 
+        /// <summary>
+        /// 請求帶有非空的 X-PJAX 標頭時回傳 null，否則回傳共用版面路徑。
+        /// </summary>
         public static string? PjaxToLayout()
         {
             var isPjax = _Str.NotEmpty(GetRequest().Headers["X-PJAX"]);
@@ -34,22 +40,37 @@ namespace BaseApi.Services
             : "~/Views/Shared/_Layout.cshtml";
         }
 
+        /// <summary>
+        /// 將字串轉成 URL 編碼。
+        /// </summary>
+        /// <param name="data">要進行 URL 編碼的字串。</param>
         public static string UrlEncode(string data)
         {
             return HttpUtility.UrlEncode(data);
         }
+        /// <summary>
+        /// 將 URL 編碼還原為字串。
+        /// </summary>
+        /// <param name="data">要還原的 URL 編碼字串。</param>
         public static string UrlDecode(string data)
         {
             return HttpUtility.UrlDecode(data);
         }
 
 
+        /// <summary>
+        /// 透過應用 DI 註冊的 IHttpContextAccessor 取得目前 HTTP 請求的內容。
+        /// </summary>
         public static HttpContext GetHttp()
         {
             var service = (IHttpContextAccessor)_Fun.DiBox!.GetService(typeof(IHttpContextAccessor))!;
             return service.HttpContext!;
         }
 
+        /// <summary>
+        /// 取得目前連線的 RemoteIpAddress。hasDot 為 false 時移除字串中的句點。
+        /// </summary>
+        /// <param name="hasDot">是否保留 IP 字串中的句點。</param>
         public static string GetIp(bool hasDot = true)
         {
             var ip = GetHttp().Connection.RemoteIpAddress!.ToString();
@@ -59,11 +80,11 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// GetContentTypeByExt -> ExtToContentType
+        /// 依副檔名取得 HTTP 內容類型。
+        /// 依內建清單對應副檔名，允許前置句點並忽略英文字母大小寫。
         /// </summary>
-        /// <param name="ext"></param>
-        /// <param name="defaultText">true表示副檔名不在清單時, 使用text開啟, false表示此時傳回空白</param>
-        /// <returns></returns>
+        /// <param name="ext">要對應內容類型的副檔名，可帶前置句點。</param>
+        /// <param name="defaultText">副檔名不在清單時，是否回傳 text/plain。否則回傳空字串。</param>
         public static string ExtToContentType(string ext, bool defaultText)
         {
             ext = ext.ToLower().TrimStart('.');
@@ -104,12 +125,19 @@ namespace BaseApi.Services
             };
         }
 
-        //get http request
+        //讀取目前請求。
+        /// <summary>
+        /// 取得目前 HTTP 請求。
+        /// </summary>
         public static HttpRequest GetRequest()
         {
             return GetHttp().Request;
         }
 
+        /// <summary>
+        /// 讀取請求 Cookie 的值。鍵不存在時回傳空字串。
+        /// </summary>
+        /// <param name="key">要從請求讀取的 Cookie 名稱。</param>
         public static string GetCookie(string key)
         {
             return GetHttp().Request.Cookies.TryGetValue(key, out string value)
@@ -117,10 +145,10 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// set cookie 考慮資安, Program.cs 也會設定
+        /// 在目前回應設定 Secure、HttpOnly 與 SameSite Strict 的 Cookie，期限依應用的逾時設定。
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
+        /// <param name="key">要寫入的 Cookie 名稱。</param>
+        /// <param name="value">要寫入的 Cookie 值。</param>
         public static void SetCookie(string key, string value)
         {
             GetHttp().Response.Cookies.Append(key, value, new CookieOptions
@@ -133,21 +161,27 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// remove cookie
+        /// 在目前 HTTP 回應加入指定 Cookie 的刪除指示。
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="key">要在回應中要求刪除的 Cookie 名稱。</param>
         public static void DeleteCookie(string key)
         {
             GetHttp().Response.Cookies.Delete(key);
         }
 
-        //get http response
+        //讀取目前回應。
+        /// <summary>
+        /// 取得目前 HTTP 回應。
+        /// </summary>
         public static HttpResponse GetResponse()
         {
             return GetHttp().Response;
         }
 
         //program.cs必須啟用Session
+        /// <summary>
+        /// 取得目前請求的 Session，需要應用已啟用 Session middleware。
+        /// </summary>
         public static ISession GetSession()
         {
             return GetHttp().Session;
@@ -162,13 +196,19 @@ namespace BaseApi.Services
         }
         */
 
-        //get web root path
+        //組合目前請求的完整網址。
+        /// <summary>
+        /// 組合目前請求的通訊協定、主機、路徑及查詢字串。
+        /// </summary>
         public static string GetWebUrl()
         {
             var req = GetRequest();
             return $"{req.Scheme}://{req.Host}{req.Path}{req.QueryString}";
         }
 
+        /// <summary>
+        /// 回傳目前請求的路徑及查詢字串。
+        /// </summary>
         public static string GetWebPath()
         {
             var req = GetRequest();
@@ -201,12 +241,11 @@ namespace BaseApi.Services
         */
 
         /// <summary>
-        /// call url and get result
+        /// GET 使用原網址。POST 以 ASCII 表單內容傳送 args。HTTP 非成功狀態會擲出例外。
         /// </summary>
-        /// <param name="url"></param>
-        /// <param name="args"></param>
-        /// <param name="isGet"></param>
-        /// <returns></returns>
+        /// <param name="url">對外請求的網址。GET 的查詢字串需已包含在網址中。</param>
+        /// <param name="args">POST 的表單編碼內容，GET 時不使用。</param>
+        /// <param name="isGet">為 true 時送出 GET，為 false 時送出 POST。</param>
         public static async Task<string> GetUrlResultA(string url, string args = "", bool isGet = true)
         {
             HttpResponseMessage response;
@@ -231,11 +270,10 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// get JWT and read BR
-        /// ajax呼叫時從http header讀取jwt
-        /// form submit時(模擬form submit)從hidden欄位_jwtToken讀取jwt
+        /// 依 JWT 的使用者識別值取得目前使用者資料。
+        /// 現行來源為傳入的權杖或 Authorization 標頭。表單欄位讀取目前停用。只解析權杖並以使用者 ID 查詢資料，簽章和期限由驗證流程處理。
         /// </summary>
-        /// <returns></returns>
+        /// <param name="token">要解析的 JWT 原始字串。空字串時從目前請求的 Authorization 標頭取得。</param>
         public static BaseUserDto JwtToBr(string token = "")
         {
             //for get userId, get jwt from http header first
@@ -285,10 +323,8 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// 前端(ex:手機)使用JWT
-        /// get userId from JWT string
+        /// 從 Authorization 標頭解析使用者 ID，權杖缺少時回傳空字串。簽章和期限由驗證流程處理。
         /// </summary>
-        /// <returns></returns>
         public static string JwtToUserId()
         {
             //for get userId, get jwt from http header first
@@ -304,10 +340,9 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// 前端(ex:browser)使用cookie, cookie to BR
-        /// 因為網頁重整無法重送JWT, 所以網頁必須使用cookie !!
+        /// 從 Cookie 取得目前使用者資料。
+        /// 以用戶端鍵查詢目前使用者資料。Cookie 缺少時回傳新建的空白使用者資料物件。
         /// </summary>
-        /// <returns></returns>
         public static BaseUserDto CookieToBr()
         {
             var clientKey = GetCookie(_Fun.FidClientKey);
@@ -318,32 +353,30 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// user key + IP for session(and cache)
+        /// 直接串接用戶端鍵與移除句點後的連線 IP。
         /// </summary>
-        /// <param name="clientKey"></param>
-        /// <returns></returns>
+        /// <param name="clientKey">要和目前連線 IP 串接的用戶端鍵。</param>
         public static string UserKeyIp(string clientKey)
         {
             return clientKey + GetIp(false);
         }
 
         /// <summary>
-        /// is post or not
+        /// 判斷目前 HTTP 請求是否使用 POST。
         /// </summary>
-        /// <returns></returns>
         public static bool IsPost()
         {
             return _Http.GetRequest().Method.Equals("POST", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
-        /// convert string to image for front captcha
-        /// width=90 is for 6 char
+        /// 產生供前端驗證碼使用的圖片。
+        /// 將文字繪製為 PNG 並回傳記憶體串流。
         /// </summary>
-        /// <param name="code"></param>
-        /// <param name="width">about code.Length * 16</param>
-        /// <param name="height"></param>
-        /// <param name="fontSize"></param>
+        /// <param name="code">要繪製在圖片上的文字。</param>
+        /// <param name="width">圖片寬度，單位為像素。為零時使用文字長度乘以 16。</param>
+        /// <param name="height">圖片高度，單位為像素。</param>
+        /// <param name="fontSize">繪製文字使用的字型大小。</param>
         public static MemoryStream OutputStrImage(string code, int width = 0, int height = 32, int fontSize = 20)
         {
             if (string.IsNullOrEmpty(code)) code = "??";

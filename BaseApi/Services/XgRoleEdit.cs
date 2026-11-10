@@ -3,8 +3,15 @@ using Base.Services;
 
 namespace BaseApi.Services
 {
+    /// <summary>
+    /// 定義角色、角色成員與作業權限關聯的 CRUD 維護設定。
+    /// </summary>
+    /// <param name="ctrl">傳給基底維護服務的控制器名稱。</param>
     public class XgRoleEdit(string ctrl) : BaseEditSvc(ctrl)
     {
+        /// <summary>
+        /// 取得角色的共用 CRUD 維護設定。
+        /// </summary>
         override public EditDto GetDto()
         {
             return new EditDto

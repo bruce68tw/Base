@@ -9,18 +9,21 @@ using System;
 using System.Threading.Tasks;
 namespace BaseApi.Services
 {
+    /// <summary>
+    /// 處理電子郵件與簡訊的一次性驗證碼、驗證器註冊 QR Code 及驗證器代碼檢查。
+    /// </summary>
     public class XgOtpSvc
     {
         //驗証碼長度
         const int CodeLen = 6;
 
         /// <summary>
-        /// send email, 如果有error 應為系統錯誤, 所以log error and return false
+        /// 使用指定範本寄送一次性驗證碼，並回傳驗證碼紀錄的儲存結果。
         /// </summary>
-        /// <param name="server"></param>
-        /// <param name="email"></param>
-        /// <param name="tplPath">email template file path</param>
-        /// <returns>callback url, 'E'(error)</returns>
+        /// <param name="server">在 XpServer 登錄的來源主機識別值。</param>
+        /// <param name="email">接收驗證碼的電子郵件地址。</param>
+        /// <param name="tplPath">包含驗證碼與有效時間佔位欄位的郵件範本路徑。</param>
+        /// <returns>驗證碼紀錄的儲存結果。主機未登錄或範本為空時回傳 false。</returns>
         public async Task<bool> SendEmailA(string server, string email, string tplPath)
         {
             //client主機是否被授權使用本服務
@@ -55,6 +58,12 @@ namespace BaseApi.Services
             return await SaveOtpLogA(server, email, OtpTypeEstr.Email, otpCode, _Fun.Config.OtpEmailMin);
         }
 
+        /// <summary>
+        /// 使用傳入的簡訊服務發送一次性驗證碼。主機未登錄或發送失敗時回傳 false，發送成功後儲存驗證碼。
+        /// </summary>
+        /// <param name="smsSvc">用來發送簡訊的服務實作。</param>
+        /// <param name="server">在 XpServer 登錄的來源主機識別值。</param>
+        /// <param name="phone">接收驗證碼的電話號碼。</param>
         public async Task<bool> SendSmsA(ISmsSvc smsSvc, string server, string phone)
         {
             //client主機是否被授權使用本服務
@@ -75,11 +84,11 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// 寄送 Authenticator 驗証碼 for Microsoft & Google, 使用系統函數產生驗証碼
+        /// 現行方法產生 TOTP 註冊用的 Base64 PNG，供畫面顯示。主機未登錄時回傳空字串。
         /// </summary>
-        /// <param name="server"></param>
-        /// <param name="email"></param>
-        /// <returns>return 註冊 image base64 string for 顯示在輸入畫面</returns>
+        /// <param name="server">在 XpServer 登錄的來源主機識別值。</param>
+        /// <param name="email">用於 TOTP 註冊 QR Code 的帳號標籤。</param>
+        /// <returns>供畫面顯示的 Base64 PNG，主機未登錄時為空字串。</returns>
         public async Task<string> SendAuthA(string server, string email)
         {
             //因為要傳回QrCode, 所以error時傳回空字串
@@ -121,9 +130,11 @@ namespace BaseApi.Services
 
         /// <summary>
         /// 檢查Authenticator驗証碼
+        /// 允許前後各一個 TOTP 時間區間。驗證成功後讀取指定主機的回呼網址，查無網址也回傳空字串。
         /// </summary>
         /// <param name="input">用戶輸入的驗証碼</param>
-        /// <returns>callback url, 空白表示輸入錯誤</returns>
+        /// <param name="server">驗證成功後，用來查詢回呼網址的 XpServer 識別值。</param>
+        /// <returns>驗證成功且找到主機設定時回傳回呼網址，否則為空字串。</returns>
         public async Task<string> CheckAuthA(string server, string input)
         {
             //var codeLen = 6; //驗証碼為6個字元

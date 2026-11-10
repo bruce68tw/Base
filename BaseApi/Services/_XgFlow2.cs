@@ -17,16 +17,18 @@ namespace BaseApi.Services
     public class _XgFlow2
     {
         /// <summary>
-        /// create workflow signing rows: XpFlowMap, XpFlowSign(or test)
+        /// 建立簽核主檔與明細，測試模式使用對應的測試資料表。
         /// 修改時不會建立XpFlowMap
         /// </summary>
         /// <param name="isNew">是否新增, false表示申請者退回後重新送單</param>
-        /// <param name="row">flow data</param>
-        /// <param name="ownerId">資料擁有者</param>
-        /// <param name="progCode">XpProg.Code</param>
-        /// <param name="sourceId">source row Id(key)</param>
-        /// <param name="db"></param>
-        /// <returns>error msg if any</returns>
+        /// <param name="row">todo:待確認 現行方法未讀取此來源資料參數。</param>
+        /// <param name="ownerId">todo:待確認 現行方法使用目前登入者，未讀取此資料擁有者 ID。</param>
+        /// <param name="progCode">來源作業代碼，對應 XpProg.Code。</param>
+        /// <param name="sourceId">來源資料列的主鍵。</param>
+        /// <param name="db">呼叫端提供的資料庫物件。</param>
+        /// <param name="now">寫入簽核紀錄的作業時間。</param>
+        /// <param name="isTest">是否使用測試模式的簽核資料表。</param>
+        /// <returns>成功時為空字串，失敗時回傳錯誤訊息。</returns>
         public static async Task<string> CreateSignA(bool isNew, JObject row, DateTime now, string ownerId, 
             string progCode, string sourceId, bool isTest, Db db)
         {
@@ -120,12 +122,11 @@ insert into dbo.{signTable}(
         }
 
         /// <summary>
-        /// get 下個關卡簽核者, 由 XpUser.NextSignerId 決定
+        /// 依 XpUser.NextSignerId 查找下一關簽核者。
         /// 使用inner join, 如果NextSignerId不存在則回傳null, 由呼叫端決定是否要回傳錯誤訊息
         /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="db"></param>
-        /// <returns></returns>
+        /// <param name="userId">要依其 NextSignerId 查詢下一位簽核者的使用者 ID。</param>
+        /// <param name="db">呼叫端提供的資料庫物件。</param>
         public static async Task<IdStrDto?> GetNextSignerA(string userId, Db db)
         {
             var sql = $@"

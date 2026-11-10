@@ -8,14 +8,21 @@ using System.Web;
 namespace BaseApi.Services
 {
 #pragma warning disable CA2211 // 非常數欄位不應可見
+    /// <summary>
+    /// 提供網站目錄、CRUD 上傳欄位名稱及將串流直接寫入目前 HTTP 回應的下載工具。
+    /// </summary>
     public static class _Fun2
     {
-        //server side fid for file input collection, must pre '_'
-        //key-value of file serverFid vs row key
+        //伺服器端附件對應欄位，名稱以底線開頭。
+        //記錄上傳欄位與資料列鍵值的對應。
+        /// <summary>
+        /// CRUD 上傳資料中的附件對應欄位，記錄上傳欄位與資料列鍵值的對應。
+        /// </summary>
         public const string FileJson = "_fileJson";
 
         /// <summary>
-        /// dir web, has right slash
+        /// 網站目錄路徑，尾端含目錄分隔符號。
+        /// 初始化時優先使用存在的 wwwroot 目錄，否則沿用應用根目錄。
         /// </summary>        
         public static string DirWeb = "";
 
@@ -44,10 +51,10 @@ namespace BaseApi.Services
         */
 
         /// <summary>
-        /// export/response file by stream
+        /// 需要可定位的串流及有效的 HTTP 請求。將串流位置重設為零，並以附件直接寫入目前回應。
         /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="fileName"></param>
+        /// <param name="stream">要下載的可定位串流，複製前會移回開頭。</param>
+        /// <param name="fileName">寫入 Content-Disposition 的下載名稱。</param>
         public static async Task ExportByStreamA(Stream stream, string fileName)
         {
             //response to client, must close docx first, 

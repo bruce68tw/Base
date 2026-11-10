@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BaseApi.Attributes
 {
+    /// <summary>
+    /// 沿用 RequiredAttribute 驗證必填值，並在驗證時依現有錯誤訊息設定調整成員名稱提示。
+    /// </summary>
     public class XgReqAttribute : RequiredAttribute
     {
         /*

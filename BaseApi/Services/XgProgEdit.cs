@@ -4,10 +4,20 @@ using Base.Services;
 
 namespace BaseApi.Services
 {
+    /// <summary>
+    /// 定義系統作業及其角色權限關聯的 CRUD 維護設定。
+    /// </summary>
     public class XgProgEdit : BaseEditSvc
     {
+        /// <summary>
+        /// 以指定的控制器名稱初始化共用維護服務。
+        /// </summary>
+        /// <param name="ctrl">傳給基底維護服務的控制器名稱。</param>
         public XgProgEdit(string ctrl) : base(ctrl) { }
 
+        /// <summary>
+        /// 取得系統作業的共用 CRUD 維護設定。
+        /// </summary>
         override public EditDto GetDto()
         {
             return new EditDto

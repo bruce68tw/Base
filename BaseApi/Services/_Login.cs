@@ -12,16 +12,20 @@ using System.Threading.Tasks;
 namespace BaseApi.Services
 {
 
+    /// <summary>
+    /// 處理帳密登入與登入紀錄，並提供 JWT 簽發及驗證參數。
+    /// </summary>
     public static class _Login
     {
         /// <summary>
         /// 使用 View Object 登入
         /// </summary>
-        /// <param name="vo">login view object</param>
-        /// <param name="sqlFindUser">sql for 查詢用戶，如果空白則使用default</param>
-        /// <param name="encodePwd">是否加密密碼欄位(only for 密碼驗証</param>
-        /// <param name="extCol">要寫入session的一個額外欄位, 必須加上正確的 table 別名</param>
-        /// <returns></returns>
+        /// <param name="vo">登入輸入，方法會清除並依結果更新其中的訊息欄位。</param>
+        /// <param name="sqlFindUser">查詢使用者的 SQL，接收 Account 參數。空字串時使用內建查詢。</param>
+        /// <param name="encodePwd">密碼模式下，是否先以 MD5 處理輸入密碼再與資料庫值比對。</param>
+        /// <param name="extCol">第一個額外值，非空時寫入使用者資料的 ExtCol，並加入預設 SQL 的 ExtCol 選取項。</param>
+        /// <param name="extCol2">第二個額外值，非空時寫入使用者資料的 ExtCol2，並加入預設 SQL 的 ExtCol2 選取項。</param>
+        /// <param name="extCol3">todo:待確認 預設 SQL 目前仍使用 ExtCol2 別名。非空時會寫入使用者資料的 ExtCol3。</param>
         public static async Task<bool> LoginByVoA(LoginVo vo, string sqlFindUser = "", bool encodePwd = true, 
             string extCol = "", string extCol2 = "", string extCol3 = "")
         {
@@ -159,7 +163,8 @@ where u.Account=@Account
         /// <summary>
         /// 使用 UserId 登入(用在手機 app), 如果IP不同則進行2FA
         /// </summary>
-        /// <param name="userId">user Id</param>
+        /// <param name="userId">要在 UserApp 查詢並比對來源 IP 的使用者 ID。</param>
+        /// <param name="db">可沿用的資料庫物件，省略時由方法開啟。</param>
         /// <returns>1(成功),0(IP不同),-1(失敗, 帳號不存在)</returns>
         public static async Task<int> LoginByUidA(string userId, Db? db = null)
         {
@@ -187,9 +192,8 @@ where u.Account=@Account
         }
 
         /// <summary>
-        /// get JWT key(256), 使用 IP
+        /// 使用共用設定的 JwtKey 建立對稱簽章金鑰。
         /// </summary>
-        /// <returns></returns>
         public static SymmetricSecurityKey GetJwtKey()
         {
             return new(Encoding.UTF8.GetBytes(_Str.PreZero(32, _Fun.JwtKey, true)));
@@ -197,9 +201,9 @@ where u.Account=@Account
 
         /// <summary>
         /// 傳回 JWT 授權字串
+        /// 簽發以使用者 ID 作為 Name 宣告的 JWT，期限依應用的逾時設定。
         /// </summary>
-        /// <param name="userId"></param>
-        /// <returns></returns>
+        /// <param name="userId">寫入 JWT Name 宣告的使用者 ID。</param>
         public static string GetJwtAuthStr(string userId)
         {
             var token = new JwtSecurityToken(
@@ -216,6 +220,9 @@ where u.Account=@Account
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        /// <summary>
+        /// 建立驗證 JWT 簽章金鑰與有效期限的參數。現行設定停用發行者和受眾驗證。
+        /// </summary>
         public static TokenValidationParameters GetJwtArg()
         {
             return new TokenValidationParameters
@@ -236,11 +243,10 @@ where u.Account=@Account
         }
 
         /// <summary>
-        /// 記錄登入成功 (Login table)
+        /// 記錄登入成功，更新 Login 資料表並重設失敗次數。
         /// </summary>
-        /// <param name="account"></param>
-        /// <param name="db"></param>
-        /// <returns></returns>
+        /// <param name="account">要記錄登入成功的帳號。</param>
+        /// <param name="db">可沿用的資料庫物件，省略時由方法開啟。</param>
         public static async Task LogOkA(string account, Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
@@ -262,8 +268,8 @@ insert into dbo.Login(Account, LoginStatus, LoginTime, FailCount) values (
         /// <summary>
         /// 記錄登入失敗
         /// </summary>
-        /// <param name="account"></param>
-        /// <param name="db"></param>
+        /// <param name="account">要記錄登入失敗的帳號。</param>
+        /// <param name="db">可沿用的資料庫物件，省略時由方法開啟。</param>
         /// <returns>false表示失敗次數超過 _Fun.MaxLoginFail</returns>
         public static async Task<bool> LogFailA(string account, Db? db = null)
         {

@@ -9,7 +9,10 @@ using System.Threading.Tasks;
 //BaseWeb -> BaseApi
 namespace BaseApi.Services
 {
-    //for web system only
+    //供 Web 應用使用。
+    /// <summary>
+    /// 取得 Web 語系、設定 UI 文化特性，並載入 Base 共用語系資源。
+    /// </summary>
     public static class _Locale
     {
         //public static string CookieName = CookieRequestCultureProvider.DefaultCookieName;     //cookie field id for locale
@@ -28,26 +31,24 @@ namespace BaseApi.Services
         /// 傳回語系代碼包含"-", 例如: zh-TW
         /// 如果非多國語則不必讀取BaseUser
         /// </summary>
-        /// <returns></returns>
         public static string GetLocale()
 		{
 			return _Fun.MultiLang ? _Fun.GetBaseUser().Locale : _Fun.Config.Locale;
         }
 
 		/// <summary>
-		/// 傳回語系代碼不含"-", 例如: zhTW, 用在讀取XpCode table的多國語欄位
+		/// 回傳不含連字號的語系代碼，例如 zhTW，供查找 XpCode 的多語欄位。
 		/// </summary>
-		/// <returns></returns>
 		public static string GetLocaleNoDash()
 		{
             return GetLocale().Replace("-", "");
 		}
 
 		/// <summary>
-		/// change culture
+		/// 依指定語系載入 BR.json，並依多語設定更新執行緒或預設執行緒的 UI 文化特性。載入失敗時回傳 false。
 		/// </summary>
-		/// <param name="locale"></param>
-		/// <returns>error msg if any</returns>
+		/// <param name="locale">語系代碼，例如 zh-TW，用於定位語系目錄及設定 UI 文化特性。</param>
+		/// <returns>設定成功時為 true，資源載入失敗時為 false。</returns>
 		public static async Task<bool> SetCultureA(string locale)
         {
             //add _brList if need
@@ -124,10 +125,8 @@ namespace BaseApi.Services
         */
 
         /// <summary>
-        /// get base resource
+        /// 依目前語系取用已載入的共用資源。查無對應語系時，現行實作會回傳 null。
         /// </summary>
-        /// <param name="locale">default to user locale</param>
-        /// <returns></returns>
         public static BaseResDto GetBaseRes()
         {
             var locale = GetLocale();

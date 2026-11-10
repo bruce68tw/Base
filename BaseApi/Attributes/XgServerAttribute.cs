@@ -9,8 +9,15 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 namespace BaseApi.Attributes
 {
     //檢查來源IP是否符合組態檔設定
+    /// <summary>
+    /// 在 MVC Action 執行前依設定檢查用戶端 IP。拒絕時記錄來源並依 Action 回傳型別選擇錯誤回應。
+    /// </summary>
     public class XgServerAttribute : ActionFilterAttribute
     {
+        /// <summary>
+        /// 檢查目前請求的來源 IP。拒絕時記錄來源並設定 Action 的錯誤結果。
+        /// </summary>
+        /// <param name="context">目前 MVC Action 的執行內容，用於判斷回傳型別並設定拒絕回應。</param>
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             //check client ip
