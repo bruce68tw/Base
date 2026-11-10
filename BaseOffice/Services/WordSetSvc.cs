@@ -53,6 +53,7 @@ namespace BaseOffice.Services
             _isOk = true;
         }
 
+        // 只有範本成功開啟並取得本文後，才會標記為可套表。
         public bool IsOk()
         {
             return _isOk;
@@ -105,6 +106,7 @@ namespace BaseOffice.Services
                 //移除 SectionProperties ??
                 //newPage.RemoveAllChildren<SectionProperties>();
 
+                // 目前從第二筆開始，在該筆本文追加完成後才加入分頁符號。
                 //add page break
                 if (hasPage)
                 {
@@ -142,6 +144,7 @@ namespace BaseOffice.Services
             if (childs == null && child != null)
                 childs = [child];
 
+            // 欄位標記必須完整位於單一 Text 節點，跨節點的標記會保留原樣。
             //fill main table
             var texts = page
                 .Descendants<Text>()
@@ -205,6 +208,7 @@ namespace BaseOffice.Services
             var cellIdxs = oldTplRow.Elements<TableCell>()
                 .Select((cell, idx) => new { cell, idx })
                 .ToList();
+            // 只用第一筆子資料建立欄位與儲存格的對應，後續各列沿用。
             foreach (var item in (JObject)jsons[0])
             {
                 var findData = cellIdxs
@@ -281,6 +285,7 @@ namespace BaseOffice.Services
             foreach (var image in images)
             {
                 // 找到指定名稱的圖片 (非視覺屬性 name = imageDto.Code)
+                // Code 實際比對行內圖片的描述屬性，取第一張符合的圖片。
                 var pic = mainPart.Document!
                     .Descendants<DW.Inline>()
                     .FirstOrDefault(inl => inl.DocProperties?.Description == image.Code);

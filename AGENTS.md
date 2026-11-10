@@ -8,9 +8,7 @@
 - `BaseApi/`：Controller 基底、驗證與授權、HTTP、使用者與簽核等服務；入口為 [BaseCtrl.cs](BaseApi/Controllers/BaseCtrl.cs) 及 `Services/`、`Attributes/`，參照 `Base`。
 - `BaseWeb/`：MVC 輸入欄位與工具 ViewComponents，參照 `BaseApi`、`Base`；雖採 Web SDK，[專案設定](BaseWeb/BaseWeb.csproj) 明確指定 `OutputType=Library`，亦見 [readme.txt](BaseWeb/readme.txt)。
 - `BaseFlow/`：參照 `BaseWeb` 的 Razor 類別庫，包含 `Areas/XpFlow/` 簽核畫面。
-- `BaseAI/`：LLM、即時語音、嵌入向量與上下文處理；從 [AbLlmSvc.cs](BaseAI/Interfaces/AbLlmSvc.cs)、`Interfaces/` 和 `Services/` 查找。與獨立 LLM 模組的分工及取代關係尚未確認。
-- `LlmChatGpt/`：獨立的 ChatGPT 整合模組；與 `BaseAI` 的分工及取代關係尚未確認。
-- `LlmGemini/`：獨立的 Gemini 整合模組；與 `BaseAI` 的分工及取代關係尚未確認。
+- `BaseAI/`：LLM、即時語音、嵌入向量與上下文處理；從 [AbLlmSvc.cs](BaseAI/Interfaces/AbLlmSvc.cs)、`Interfaces/` 和 `Services/` 查找。
 - `BaseEther/`：Ethereum 與 IPFS 整合。
 - `BaseOffice/`：Word 與 Excel 處理。
 - `Mongo/`：MongoDB 資料存取服務。
@@ -46,9 +44,12 @@
 - 詳細模組知識優先引用現有文件與原始碼，避免在此複製大量內容；文件與實作不一致時，記錄差異再核對。
 - 穩定、可重複的流程可整理為 skills；臨時進度、猜測與單次操作紀錄不當作長期規則。
 - 各獨立 `.csproj` 子專案在自己的 `.agents/skills/` 維護 skills 原始檔；從大 Base 儲存庫工作時，依需要讀取子專案 skill，不假設根目錄會自動遞迴探索。跨應用的發現與使用留待未來插件封裝處理，本次不安裝或發佈。
-- 使用 `Base/Base.csproj` 的應用端整合，參考 [base-library-usage](Base/.agents/skills/library-usage/SKILL.md)；只涵蓋 Base 程式庫，詳細 API 按需載入其 references。程式參照不代表應用端已載入此 skill。
+- 新增、搬移或刪除子專案的專用 skill 時，同步更新該子專案的 `.agents/skills/00-overview/SKILL.md`，確保清單中的每項都有有效連結與一句適用情境。大 Base 根總覽只在模組清單或用途變動時同步更新。
+- 使用 `Base/Base.csproj` 的應用端整合，參考 [base-overview](Base/.agents/skills/00-overview/SKILL.md)；只涵蓋 Base 程式庫，詳細 API 按需載入其 references。程式參照不代表應用端已載入此 skill。
 
 ## 子專案架構入口
+
+- [大 Base 總覽](.agents/skills/00-overview/SKILL.md)提供各現用子專案的入口。各子專案使用相同的總覽相對路徑，依任務選讀。
 
 - [Base](Base/docs/architecture.md)、[BaseAI](BaseAI/docs/architecture.md)、[BaseApi](BaseApi/docs/architecture.md) 各自維護職責與公共契約；先讀子專案 AGENTS，再按任務載入既有 skill references。
 - 應用提示檔、路由白名單與實際啟動流程由應用文件維護，不在共用專案複製；文件中的工作區核對結果不代表發布保證。

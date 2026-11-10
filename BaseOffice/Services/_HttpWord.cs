@@ -17,6 +17,7 @@ namespace BaseOffice.Services
     /// </summary>
     public static class _HttpWord
     {
+        // 現行套表由 WordSetSvc 使用 Open XML 完成。此類別將產生的 DOCX 串流寫入目前的 HTTP 回應。
         /// <summary>
         /// ExportByTplRowA -> OutputTplA ->OutputTplRowsA
         /// export file by template and row
@@ -32,6 +33,7 @@ namespace BaseOffice.Services
             var ms = _Word.TplRowToMs(tplPath, row, images);
             if (ms == null) return false;
 
+            // 匯出時文件已儲存並關閉，ExportByStreamA 會從串流開頭寫入回應。
             await _Fun2.ExportByStreamA(ms, fileName);
             return true;
         }
@@ -48,6 +50,7 @@ namespace BaseOffice.Services
         /// <returns>error msg if any</returns>
         public static async Task<bool> OutputTplRowsA(string tplPath, string fileName, List<dynamic> rows, List<WordImageDto>? images = null)
         {
+            // 多筆資料共用同一份範本，組成單一 DOCX 後下載。
             var ms = _Word.TplRowsToMs(tplPath, rows, images);
             if (ms == null) return false;
 

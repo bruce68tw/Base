@@ -1,6 +1,6 @@
 ---
 name: model-edit-dto
-description: 在 Base 系列 MVC 功能涉及編輯時，閱讀 EditDto 及直接相關來源與註解，理解維護設定與型別關係。提供跨功能 Model 說明入口；詳細屬性規則待逐項討論，不取代模組 library-usage 或 CRUD 開發流程。
+description: 在 Base 系列 MVC 功能涉及編輯時，閱讀 EditDto 及直接相關來源與註解，理解維護設定與型別關係。提供跨功能 Model 說明入口；詳細屬性規則待逐項討論，不取代模組總覽 或 CRUD 開發流程。
 ---
 
 # Model 說明—EditDto
@@ -9,7 +9,7 @@ description: 在 Base 系列 MVC 功能涉及編輯時，閱讀 EditDto 及直�
 
 ## 撰寫前閱讀
 
-涉及編輯時，先讀 [Base library-usage](../library-usage/SKILL.md) 的資料存取與 CRUD 導引，再閱讀以下來源與既有註解。來源路徑相對於 `Base/Base.csproj` 所在目錄；具體契約由模組維護。
+涉及編輯時，先讀 [base-overview](../00-overview/SKILL.md) 的資料存取與 CRUD 導引，再閱讀以下來源與既有註解。來源路徑相對於 `Base/Base.csproj` 所在目錄；具體契約由模組維護。
 
 ## Model 責任與關係（目前來源觀察）
 
@@ -47,4 +47,4 @@ description: 在 Base 系列 MVC 功能涉及編輯時，閱讀 EditDto 及直�
 
 DbAdm 的 `Services/ColumnEdit.cs` 是 EditDto／EitemDto 設定的參考，目前本機位置為 `C:/_project/DbAdm`；搬移後重新定位。其資料表、主鍵、joins、欄位及其他設定屬於個案，不直接複製為通用規則。
 
-查詢 Model 見 [ReadDto](../model-ReadDto/SKILL.md)；同名 `ReadSql` 等欄位仍須依所屬 Model 註解理解，不將查詢 Model 的設定原則直接套用至 EditDto。開發慣例沿用 [shared-coding-rules](../../../../.agents/skills/shared-coding-rules/SKILL.md)。各子模組 library-usage 保留原位置與職責。
+查詢 Model 見 [ReadDto](../model-ReadDto/SKILL.md)；同名 `ReadSql` 等欄位仍須依所屬 Model 註解理解，不將查詢 Model 的設定原則直接套用至 EditDto。開發慣例沿用 [shared-coding-rules](../../../../.agents/skills/shared-coding-rules/SKILL.md)。各子模組總覽 保留原位置與職責。

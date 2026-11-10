@@ -1,5 +1,5 @@
 ---
-name: baseweb-library-usage
+name: baseweb-overview
 description: 在 ASP.NET Core MVC 應用整合 BaseWeb 類別庫，使用或調整 Xi 輸入欄位、Xg 工具 ViewComponents、_Input HTML 與 _WebExt 啟動擴充時使用。依目前 C# 實作確認參數及前端契約；不涵蓋 Base 的資料庫 CRUD 或 BaseApi 的授權實作。
 ---
 
@@ -12,6 +12,7 @@ description: 在 ASP.NET Core MVC 應用整合 BaseWeb 類別庫，使用或調�
 - 建立或調整表單欄位：讀取 [Xi 欄位](references/xi-inputs.md)，並核對 `Models/Xi…Dto.cs`、`ViewComponents/Xi…ViewComponent.cs` 與 `Services/_Input.cs` 對應方法。
 - 查詢、儲存、列表操作與選單：讀取 [Xg 工具](references/xg-components.md)，直接以元件的 `Invoke` 簽章確認參數。
 - MVC 服務、middleware、CSP 或腳本載入：讀取 [應用整合](references/web-integration.md)，核對 `Services/_WebExt.cs`、`Services/_Fun3.cs`。
+- 依需求選用 MVC 欄位、頁面腳本或啟動設定的共用方法，可查閱 [靜態服務索引](../01-service-static/SKILL.md)。
 
 ## 工作邊界
 

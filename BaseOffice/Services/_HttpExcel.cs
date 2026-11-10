@@ -28,6 +28,7 @@ namespace BaseOffice.Services
                     _ErrorMsg = "Upload file is empty.",
                 };
 
+            // 每個上傳檔建立獨立的匯入服務，讓成功列與失敗列的紀錄只屬於這次匯入。
             return await new ExcelImportSvc<T>().ImportByStreamA(file.OpenReadStream(), importDto, dirUpload, file.FileName, uiDtFormat, writeLog);
         }
 
@@ -87,6 +88,7 @@ namespace BaseOffice.Services
             _Excel.DocxByRows(rows, docx, srcRowNo);
             docx.Dispose(); //must dispose, or get empty excel !!
             //ms.Position = 0;
+            // 匯出工具會將串流移回開頭，再寫入目前的 HTTP 回應。
             await _Fun2.ExportByStreamA(ms, fileName);
         }
 

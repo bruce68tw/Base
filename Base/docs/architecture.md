@@ -1,6 +1,6 @@
 # Base 架構入口
 
-依 2026-11-03 工作區來源核對；詳細整合契約沿用既有 [base-library-usage](../.agents/skills/library-usage/SKILL.md)，不複製另一套 API 文件。
+依 2026-11-03 工作區來源核對；詳細整合契約沿用既有 [base-overview](../.agents/skills/00-overview/SKILL.md)，不複製另一套 API 文件。
 
 ## 責任與邊界
 
@@ -8,10 +8,10 @@
 
 | 來源入口 | 責任／應讀文件 |
 | --- | --- |
-| [_Fun.cs](../Services/_Fun.cs)、[ConfigDto.cs](../Models/ConfigDto.cs) | 全域設定、DI provider 與初始化；[初始化與相依](../.agents/skills/library-usage/references/integration.md) |
-| [Db.cs](../Services/Db.cs)、[CrudReadSvc.cs](../Services/CrudReadSvc.cs)、[CrudEditSvc.cs](../Services/CrudEditSvc.cs) | DB 操作與 CRUD；[資料存取](../.agents/skills/library-usage/references/data-access.md) |
+| [_Fun.cs](../Services/_Fun.cs)、[ConfigDto.cs](../Models/ConfigDto.cs) | 全域設定、DI provider 與初始化；[初始化與相依](../.agents/skills/00-overview/references/integration.md) |
+| [Db.cs](../Services/Db.cs)、[CrudReadSvc.cs](../Services/CrudReadSvc.cs)、[CrudEditSvc.cs](../Services/CrudEditSvc.cs) | DB 操作與 CRUD；[資料存取](../.agents/skills/00-overview/references/data-access.md) |
 | [_Cache.cs](../Services/_Cache.cs)、[CacheMemSvc.cs](../Services/CacheMemSvc.cs)、[IBaseUserSvc.cs](../Interfaces/IBaseUserSvc.cs) | 快取與目前使用者介面，實作與生命週期由應用接線 |
-| [_Str.cs](../Services/_Str.cs)、[_Model.cs](../Services/_Model.cs)、[_File.cs](../Services/_File.cs)、[_Log.cs](../Services/_Log.cs) | 字串、模型、檔案與日誌；[工具與驗證](../.agents/skills/library-usage/references/api-and-validation.md) |
+| [_Str.cs](../Services/_Str.cs)、[_Model.cs](../Services/_Model.cs)、[_File.cs](../Services/_File.cs)、[_Log.cs](../Services/_Log.cs) | 字串、模型、檔案與日誌；[工具與驗證](../.agents/skills/00-overview/references/api-and-validation.md) |
 
 應用先指派 `_Fun.Config`，註冊所需 DI，再呼叫 `_Fun.Init`；它是處理程序共用狀態，不在每次請求重設。依實際 Init 回傳契約處理錯誤；初始化不等同 DB 可連線或權限已驗證。不要把空白使用者實作當成完成登入。
 

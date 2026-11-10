@@ -1,5 +1,5 @@
 ---
-name: baseai-library-usage
+name: baseai-overview
 description: 整合或維護 BaseAI C# 類別庫時使用，涵蓋 LLM 問答與語音辨識、Gemini/Qwen 即時 WebSocket、Chroma 向量與上下文處理。適用於明確參照 BaseAI.csproj 的工作；獨立 LlmChatGpt、LlmGemini 模組須另行確認。
 ---
 
@@ -7,7 +7,7 @@ description: 整合或維護 BaseAI C# 類別庫時使用，涵蓋 LLM 問答與
 
 ## 定位與來源
 
-本 skill 位於 `BaseAI/.agents/skills/library-usage/`；下列原始碼路徑均相對於 `BaseAI/`，可由本目錄向上三層找到。搬移 skill 時仍需取得對應原始碼。
+本 skill 位於 `BaseAI/.agents/skills/00-overview/`；下列原始碼路徑均相對於 `BaseAI/`，可由本目錄向上三層找到。搬移 skill 時仍需取得對應原始碼。
 
 - 先核對 `BaseAI.csproj`：目前為 `net8.0` 類別庫，參照 `../BaseApi/BaseApi.csproj` 與 `../Base/Base.csproj`，沒有應用程式啟動入口。
 - `Interfaces/AbLlmSvc.cs`、`AbLiveLlmSvc.cs`、`AbEmbedDbSvc.cs` 是目前抽象契約；三個 `zz_I*.cs` 與 `Services/zz_RagSvc.cs` 被排除編譯，不能當成現行 API。
@@ -23,6 +23,7 @@ description: 整合或維護 BaseAI C# 類別庫時使用，涵蓋 LLM 問答與
 | 問答、STT、文字嵌入、provider 選擇 | [llm.md](references/llm.md) |
 | 即時語音、前端協定、工具、歷史與重連 | [live.md](references/live.md) |
 | Chroma CRUD、相似查詢、上下文組裝 | [vectors-context.md](references/vectors-context.md) |
+| 選用音訊處理或語音指令提示詞服務 | [靜態服務索引](../01-service-static/SKILL.md) |
 
 只載入當前任務需要的文件，再核對其中指向的方法實作。這些文件記錄本庫行為；不代表外部服務目前的模型清單或協定保證。
 

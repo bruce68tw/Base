@@ -1,6 +1,6 @@
 # BaseAI 架構入口
 
-依 2026-11-03 工作區來源核對，包含未提交的新契約；詳細整合入口是 [baseai-library-usage](../.agents/skills/library-usage/SKILL.md)。
+依 2026-11-03 工作區來源核對，包含未提交的新契約；詳細整合入口是 [baseai-overview](../.agents/skills/00-overview/SKILL.md)。
 
 ## 責任與相依
 
@@ -8,10 +8,10 @@
 
 | 入口 | 責任與詳細文件 |
 | --- | --- |
-| [AbLlmSvc.cs](../Interfaces/AbLlmSvc.cs)、[GeminiSvc.cs](../Services/GeminiSvc.cs)、[ChatGptSvc.cs](../Services/ChatGptSvc.cs) | Ask／STT／embedding；[llm.md](../.agents/skills/library-usage/references/llm.md) |
+| [AbLlmSvc.cs](../Interfaces/AbLlmSvc.cs)、[GeminiSvc.cs](../Services/GeminiSvc.cs)、[ChatGptSvc.cs](../Services/ChatGptSvc.cs) | Ask／STT／embedding；[llm.md](../.agents/skills/00-overview/references/llm.md) |
 | [_Voice.cs](../Services/_Voice.cs) | 完整 WAV 驗證、明確 PCM 規格封裝與壓縮音訊轉換 |
 | [VoiceProgDto.cs](../Models/VoiceProgDto.cs) | `Ctrl`／`Action` 可空字串或 null，`Args` 為 JArray；DTO 本身不驗證 Name／Value 或授權、不執行路由 |
-| [Interfaces](../Interfaces) | Live LLM 與嵌入資料庫抽象契約；[live.md](../.agents/skills/library-usage/references/live.md)、[vectors-context.md](../.agents/skills/library-usage/references/vectors-context.md) |
+| [Interfaces](../Interfaces) | Live LLM 與嵌入資料庫抽象契約；[live.md](../.agents/skills/00-overview/references/live.md)、[vectors-context.md](../.agents/skills/00-overview/references/vectors-context.md) |
 
 ## 語音分工
 

@@ -21,6 +21,7 @@ namespace BaseOffice.Services
         //constant
         const string RowSep = "\r\n";  //row seperator for import error
         
+        // 列索引以轉成模型後的資料清單為準，從 0 起算。每次匯入使用新的服務實例。
         //ok excel row no
         private List<int> _okRowNos = [];
 
@@ -81,6 +82,7 @@ namespace BaseOffice.Services
             #region set importDto.ExcelFids, excelFidLen
             int no;
             var colNameNos = new Dictionary<string, int>();     //excel位置字母,位置對應, ex:(A,0)
+            // FidRowNo 從 1 起算，定位的是過濾空白列後的清單位置。
             var tplCells = excelRows.ElementAt(importDto.FidRowNo - 1).Elements<Cell>();
             _excelFields = new List<ExcelImportFieldDto>();
             if (importDto.ExcelFids == null || importDto.ExcelFids.Count == 0)
@@ -238,6 +240,7 @@ namespace BaseOffice.Services
                     okRows.Add(fileRows[okRowNo]);
 
                 //call FnSaveImportRows
+                // 同步與非同步委派同時設定時，優先使用同步版本。回傳訊息順序須與 okRows 一致。
                 List<string>? saveResults = null;
                 if (importDto.FnSaveImportRows != null)
                     saveResults = importDto.FnSaveImportRows(okRows);
@@ -264,6 +267,7 @@ namespace BaseOffice.Services
             var fileStem = _Str.AddDirSep(dirUpload) + importDto.LogRowId;
             var fileExt = _File.UpExtRename("xlsx");
 
+            // 這份留存檔是來源活頁簿的副本，包含匯入失敗的資料列。
             // 新版 SpreadsheetDocument 移除 SaveAs 代碼，改為使用 Clone 方法
             using (var newDocx = docx.Clone(fileStem + "." + fileExt))
             {
@@ -277,6 +281,7 @@ namespace BaseOffice.Services
             {
                 //get docx
                 var failFilePath = fileStem + "_fail." + fileExt;
+                // 失敗檔以範本為底稿，填入失敗資料與錯誤訊息，供修正後重匯。
                 File.Copy(importDto.TplPath, failFilePath, true);
 
                 var docx2 = SpreadsheetDocument.Open(failFilePath, true);

@@ -40,11 +40,14 @@ namespace BaseOffice.Services
         public static MemoryStream? TplRowsToMs(string tplPath, IEnumerable<dynamic> rows,
             List<WordImageDto>? images = null)
         {
+            // 每筆資料各自從完整的範本本文複製一份，再將填好的內容組成同一份 DOCX。
             return new WordSetSvc(tplPath).RowsToMs(rows, images);
         }
 
+        // WordSetSvc 在記憶體中的範本副本填值，儲存並關閉 DOCX 後才回傳可從開頭讀取的串流。
         public static MemoryStream? TplRowToMs(string tplPath, dynamic row, List<WordImageDto>? images = null)
         {
+            // 主資料的 [欄位名] 須完整落在同一個 Open XML Text 節點。子資料則依 [!0] 等標記定位範本列。
             return new WordSetSvc(tplPath).RowToMs(row, images);
         }
 

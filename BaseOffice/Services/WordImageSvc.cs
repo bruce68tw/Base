@@ -14,6 +14,7 @@ namespace BaseOffice.Services
         public string FileName = string.Empty;
         //public byte[] BinaryData;
         //public Stream DataStream => new MemoryStream(BinaryData);
+        // 串流保留來源檔案的原始位元組，使用完畢後由呼叫端釋放。
         public Stream? DataStream;
 
         //public int SourceWidth;
@@ -31,6 +32,7 @@ namespace BaseOffice.Services
         //public WordImageModel(string fileName, byte[] data, int dpi = 300)
         public WordImageSvc(string fileName, double width, double height, int dpi = 300)
         {
+            // 檔案不存在時直接結束建構，DataStream 會維持 null。
             if (!File.Exists(fileName))
                 return;
 
@@ -51,6 +53,7 @@ namespace BaseOffice.Services
             // 使用 ImageSharp 讀取圖片
             using var image = Image.Load<Rgba32>(DataStream);
 
+            // 顯示尺寸由傳入的公分值決定。目前未使用圖片像素尺寸或 dpi 換算。
             // 轉換為 EMU 單位
             WidthInEMU = Convert.ToInt64((decimal)width * CM_TO_EMU);
             HeightInEMU = Convert.ToInt64((decimal)height * CM_TO_EMU);

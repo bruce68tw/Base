@@ -129,9 +129,9 @@ radio 同樣經 `_XpCode` 提供來源是使用者確認的約定；上述 Colum
 
 2. **備份同名目標檔。** 在產生程式前執行上節的改名備份與排除檢查。若需調整共用的 `_XpCode.cs`，依選項來源規則精準修改，保留其他功能。需要新建或補寫顯示名稱時，依[欄位顯示名稱對照](#欄位顯示名稱對照使用者已確認)在目標應用更新對應 JSON。已有對照檔時，按確認的欄位逐項更新。
 
-3. **產生查詢後端。** 必讀 [ReadDto](../../../Base/.agents/skills/model-ReadDto/SKILL.md) 與 [QitemDto](../../../Base/.agents/skills/model-QitemDto/SKILL.md)，再依其導引閱讀類別與註解。依摘要實作 `ReadSql` 與查詢條件，重用目標應用採用的分頁服務。DbAdm Column 由 `ColumnController.GetPage` 接收 `DtDto`，經 `ColumnRead` 呼叫 `CrudReadSvc.GetPageA`。實際 action 名稱、HTTP 方法、輸入、回傳與授權，須對照目標前端的請求及既有 Controller，並參照 [BaseApi 指引](../../../BaseApi/.agents/skills/library-usage/SKILL.md)。需要資料權限時，另核對列表服務實際套用的限制。使用 `CrudReadSvc` 時須核對應用的列權限設定、傳入的 `ctrl` 及 `ReadDto` 權限條件。
+3. **產生查詢後端。** 必讀 [ReadDto](../../../Base/.agents/skills/model-ReadDto/SKILL.md) 與 [QitemDto](../../../Base/.agents/skills/model-QitemDto/SKILL.md)，再依其導引閱讀類別與註解。依摘要實作 `ReadSql` 與查詢條件，重用目標應用採用的分頁服務。DbAdm Column 由 `ColumnController.GetPage` 接收 `DtDto`，經 `ColumnRead` 呼叫 `CrudReadSvc.GetPageA`。實際 action 名稱、HTTP 方法、輸入、回傳與授權，須對照目標前端的請求及既有 Controller，並參照 [BaseApi 指引](../../../BaseApi/.agents/skills/00-overview/SKILL.md)。需要資料權限時，另核對列表服務實際套用的限制。使用 `CrudReadSvc` 時須核對應用的列權限設定、傳入的 `ctrl` 及 `ReadDto` 權限條件。
 
-4. **產生查詢畫面與列表。** 依已確認的查詢欄位編排產生 Read View，按 [BaseWeb 指引](../../../BaseWeb/.agents/skills/library-usage/SKILL.md)核對元件及實際輸出的欄位識別。下拉式／radio 依上節接好 `_XpCode`、Controller 與 View。沿用目標應用的表單、列表及腳本載入入口，建立 TypeScript 的查詢與欄位設定。核對表單送出的名稱與型態、`QitemDto` 的欄位及比對、SQL 回傳名稱與列表欄位順序。虛擬欄依 ReadDto 指引處理，SQL 須提供 renderer 所需的資料與列識別值。操作欄依下節及摘要設定。
+4. **產生查詢畫面與列表。** 依已確認的查詢欄位編排產生 Read View，按 [BaseWeb 指引](../../../BaseWeb/.agents/skills/00-overview/SKILL.md)核對元件及實際輸出的欄位識別。下拉式／radio 依上節接好 `_XpCode`、Controller 與 View。沿用目標應用的表單、列表及腳本載入入口，建立 TypeScript 的查詢與欄位設定。核對表單送出的名稱與型態、`QitemDto` 的欄位及比對、SQL 回傳名稱與列表欄位順序。虛擬欄依 ReadDto 指引處理，SQL 須提供 renderer 所需的資料與列識別值。操作欄依下節及摘要設定。
 
 5. **串接已確認的維護操作。** 純查詢直接進入驗證。涉及編輯時，必讀 [EditDto](../../../Base/.agents/skills/model-EditDto/SKILL.md) 與 [EitemDto](../../../Base/.agents/skills/model-EitemDto/SKILL.md)，再核對類別與註解。DbAdm Column 由 `ColumnEdit.GetDto()` 提供設定，透過 `BaseEditSvc` 串接單筆讀取與異動。依摘要設定資料表、主鍵、讀寫欄位及驗證，單筆 SQL 與資料權限依 EditDto 指引處理。按已確認的編排產生同一份 Edit View，並依操作串接按鈕或圖示、表單與 Controller。修改須核對取回資料及儲存兩條路徑，單筆檢視須核對取回資料及唯讀狀態，新增須核對初始值及提交。對照目標應用的 Controller 和前端 CRUD 來源，核對主鍵傳遞、資料填入、提交格式、後端驗證及成功／錯誤回應。若需刪除，先核對目標應用既有刪除事件、action、服務與權限，再確認適用的刪除語意。找不到可沿用的契約時，先釐清該操作再實作。
 
@@ -177,4 +177,4 @@ radio 同樣經 `_XpCode` 提供來源是使用者確認的約定；上述 Colum
 
 - 專案種類與環境：[第一主題](../project-types-and-environments/SKILL.md)。
 - 命名、分工、風格與重用原則：[第二主題](../shared-coding-rules/SKILL.md)。
-- 共用模組選用與使用 skill 入口：[第三主題](../shared-projects-overview/SKILL.md)；依實際相依按需載入各模組的 `.agents/skills/library-usage/SKILL.md`，詳細 API 仍以模組文件與來源為準。
+- 共用模組選用與使用 skill 入口：[第三主題](../00-overview/SKILL.md)；依實際相依按需載入各模組的 `.agents/skills/00-overview/SKILL.md`，詳細 API 仍以模組文件與來源為準。

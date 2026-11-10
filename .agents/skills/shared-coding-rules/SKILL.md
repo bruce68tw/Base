@@ -55,7 +55,7 @@ description: 開發或修改使用者 Base 系列共用模組及其應用的 C# 
 - 模組使用 skill 以「需求 → 類別／函式 → 來源與範例」建立查找入口，詳細用法留在模組內維護，不在此複製函式清單。前端封裝到應用的實際 TypeScript 共用來源查證，不假設 C# 模組 skill 涵蓋瀏覽器 API。
 - 完成回報簡述本次重用的關鍵共用類別／函式；若相關需求改採自行實作，交代現有封裝不適用的原因。依變更範圍驗證，不把既有封裝曾測試過當成本次整合已驗證。
 
-模組查找入口（依實際相依選讀）：[Base](../../../Base/.agents/skills/library-usage/SKILL.md)、[BaseApi](../../../BaseApi/.agents/skills/library-usage/SKILL.md)、[BaseAI](../../../BaseAI/.agents/skills/library-usage/SKILL.md)、[BaseWeb](../../../BaseWeb/.agents/skills/library-usage/SKILL.md)。移動 checkout 後以專案實際參照重新定位。
+模組查找入口（依實際相依選讀）：[Base](../../../Base/.agents/skills/00-overview/SKILL.md)、[BaseApi](../../../BaseApi/.agents/skills/00-overview/SKILL.md)、[BaseAI](../../../BaseAI/.agents/skills/00-overview/SKILL.md)、[BaseWeb](../../../BaseWeb/.agents/skills/00-overview/SKILL.md)。移動 checkout 後以專案實際參照重新定位。
 
 ## 暫緩整理事項
 

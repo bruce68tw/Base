@@ -1,17 +1,17 @@
 ---
 name: model-read-dto
-description: 在 Base 系列 MVC 查詢功能撰寫 Read Service 時，閱讀 ReadDto 及其註解，套用使用者確認的 ReadSql 選用、SQL 與 DataTable 欄位對應及虛擬欄位規則。提供跨功能 Model 說明入口，不取代模組 library-usage 或 CRUD 開發流程。
+description: 在 Base 系列 MVC 查詢功能撰寫 Read Service 時，閱讀 ReadDto 及其註解，套用使用者確認的 ReadSql 選用、SQL 與 DataTable 欄位對應及虛擬欄位規則。提供跨功能 Model 說明入口，不取代模組總覽 或 CRUD 開發流程。
 ---
 
 # Model 說明—ReadDto
 
-本 skill 是大 Base 跨功能的查詢 Model 說明入口。開發流程由使用者設計，AI 閱讀類別與既有註解理解設定；屬性不清楚時先討論確認，再補來源註解，不在此複製整份屬性文件。CRUD 查詢的需求確認、生成與備份流程見 [mvc-crud-query](../../../../.agents/skills/mvc-crud-query/SKILL.md)。各子模組的 library-usage 仍維持原位置與職責。
+本 skill 是大 Base 跨功能的查詢 Model 說明入口。開發流程由使用者設計，AI 閱讀類別與既有註解理解設定；屬性不清楚時先討論確認，再補來源註解，不在此複製整份屬性文件。CRUD 查詢的需求確認、生成與備份流程見 [mvc-crud-query](../../../../.agents/skills/mvc-crud-query/SKILL.md)。各子模組的總覽依任務選讀。
 
 本指引聚焦 `ReadDto`。`Items` 的元素型別與條件閱讀入口見 [QitemDto](../model-QitemDto/SKILL.md)，產生 Read Service 前須一併閱讀。完整屬性留待逐欄討論。
 
 ## Read Service 撰寫前閱讀（使用者已確認）
 
-產生 Read Service 前，先依 [Base library-usage](../library-usage/SKILL.md) 的資料存取導引，閱讀 Base 的 `Models/ReadDto.cs` 及既有註解；來源路徑相對於 `Base/Base.csproj` 所在目錄。由類別與註解理解設定，不在本 skill 複製整份屬性文件；不清楚的屬性先討論，再補充來源註解。
+產生 Read Service 前，先依 [base-overview](../00-overview/SKILL.md) 的資料存取導引，閱讀 Base 的 `Models/ReadDto.cs` 及既有註解；來源路徑相對於 `Base/Base.csproj` 所在目錄。由類別與註解理解設定，不在本 skill 複製整份屬性文件；不清楚的屬性先討論，再補充來源註解。
 
 ## Read Service 設定（使用者指定撰寫原則）
 

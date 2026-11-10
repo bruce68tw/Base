@@ -1,5 +1,5 @@
 ---
-name: base-library-usage
+name: base-overview
 description: 協助 C# 應用專案使用此 Base 儲存庫中 Base/Base.csproj 共用程式庫，處理初始化、DI、資料存取、CRUD 與既有工具 API 整合。適用於已引用或準備引用此特定程式庫的應用；不涵蓋其他同名 Base 套件或 BaseApi、BaseWeb 的專屬功能。
 ---
 
@@ -7,7 +7,7 @@ description: 協助 C# 應用專案使用此 Base 儲存庫中 Base/Base.csproj 
 
 目標是讓應用端正確使用 `Base` 類別庫，不重寫程式庫，也不將整個 Base 儲存庫當成單一應用。溝通與新增文件使用繁體中文，程式識別名稱維持原樣。
 
-本 skill 原始檔由小 Base 子專案維護，位置為儲存庫根目錄下的 `Base/.agents/skills/library-usage/`。文件連結相對於各文件位置；以反引號標示的來源路徑則相對於大 Base 儲存庫根目錄，不相對於 skill 目錄。從大 Base 工作時按需讀取本檔，不假設會自動遞迴探索子目錄 skills；跨應用的發現與使用留待未來插件封裝處理。
+本 skill 原始檔由小 Base 子專案維護，位置為儲存庫根目錄下的 `Base/.agents/skills/00-overview/`。文件連結相對於各文件位置；以反引號標示的來源路徑則相對於大 Base 儲存庫根目錄，不相對於 skill 目錄。從大 Base 工作時按需讀取本檔，不假設會自動遞迴探索子目錄 skills；跨應用的發現與使用留待未來插件封裝處理。
 
 ## 先確認引用與版本
 
@@ -21,6 +21,7 @@ description: 協助 C# 應用專案使用此 Base 儲存庫中 Base/Base.csproj 
 - 新接入、啟動錯誤、DI 缺漏、使用者或快取問題：讀取 [初始化與相依](references/integration.md)。
 - SQL 查詢、交易、CRUD 列表或主從表編輯：讀取 [資料存取與 CRUD](references/data-access.md)。
 - 既有工具 API 選擇、JSON／結果判讀及查證入口：讀取 [工具與驗證](references/api-and-validation.md)。
+- 依開發需求選用小 Base 的靜態服務並查找原始碼，可查閱 [靜態服務索引](../01-service-static/SKILL.md)。
 
 - 撰寫列表查詢設定：按需讀 [ReadDto](../model-ReadDto/SKILL.md) 與 [QitemDto](../model-QitemDto/SKILL.md)。
 - 撰寫維護設定：按需讀 [EditDto](../model-EditDto/SKILL.md) 與 [EitemDto](../model-EitemDto/SKILL.md)。

@@ -1,6 +1,6 @@
 # BaseApi 架構入口
 
-依 2026-11-03 工作區來源核對。既有 [baseapi-library-usage](../.agents/skills/library-usage/SKILL.md) 與 references 是詳細整合入口。
+依 2026-11-03 工作區來源核對。既有 [baseapi-overview](../.agents/skills/00-overview/SKILL.md) 與 references 是詳細整合入口。
 
 ## 責任與相依
 
@@ -8,10 +8,10 @@
 
 | 來源入口 | 說明 |
 | --- | --- |
-| [BaseCtrl.cs](../Controllers/BaseCtrl.cs) | 回應與檔案 helper；繼承它不會自動套用登入或授權；[控制器與驗證授權](../.agents/skills/library-usage/references/controllers-and-auth.md) |
+| [BaseCtrl.cs](../Controllers/BaseCtrl.cs) | 回應與檔案 helper；繼承它不會自動套用登入或授權；[控制器與驗證授權](../.agents/skills/00-overview/references/controllers-and-auth.md) |
 | [XgLoginAttribute.cs](../Attributes/XgLoginAttribute.cs)、[Attributes](../Attributes) | 登入與權限 filters；XgLogin 未登入時導向 Home/Login，不是指令路由白名單 |
-| [_Http.cs](../Services/_Http.cs)、[_Fun2.cs](../Services/_Fun2.cs) | HttpContext、Cookie／使用者資料與 Web 路徑；[初始化與目前使用者](../.agents/skills/library-usage/references/integration.md) |
-| [Services](../Services) | 上下載、語系與 Xp 等應用 schema 服務；[服務與整合檢查](../.agents/skills/library-usage/references/services-and-validation.md) |
+| [_Http.cs](../Services/_Http.cs)、[_Fun2.cs](../Services/_Fun2.cs) | HttpContext、Cookie／使用者資料與 Web 路徑；[初始化與目前使用者](../.agents/skills/00-overview/references/integration.md) |
+| [Services](../Services) | 上下載、語系與 Xp 等應用 schema 服務；[服務與整合檢查](../.agents/skills/00-overview/references/services-and-validation.md) |
 
 使用端依需求接上 IHttpContextAccessor、IBaseUserSvc、ICacheSvc 及 DB provider；不要全面啟用無需的 Session／JWT。HTTP 工具需要有效請求 context，不可把某次請求快取到 singleton。JWT 讀取不等於驗證，登入通過也不等於允許執行任意模型產生的 Ctrl／Action。
 

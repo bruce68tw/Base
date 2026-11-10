@@ -66,6 +66,7 @@ namespace BaseOffice.Services
             //open excel
             var newDb = _Db.CheckOpenDb(ref db);
             var wbPart = docx.WorkbookPart;
+            // 此匯入路徑要求活頁簿含共用字串表，即使選取的欄位都是數值。
             var ssPart = wbPart!.GetPartsOfType<SharedStringTablePart>().First();
             var ssTable = ssPart.SharedStringTable!;
 
@@ -86,6 +87,7 @@ namespace BaseOffice.Services
                 Cell cell;
                 for (int j = 0; j < colLen; j++)
                 {
+                    // 欄號依該列現有的 Cell 元素順序計算。若省略空白格，後續欄位的位置可能偏移。
                     colNo = excelCols[j];
                     cell = cells.ElementAt(colNo);
                     var value = "";
@@ -112,6 +114,7 @@ namespace BaseOffice.Services
                         rowHasCol = true;
                 }
 
+                // 只要有一個選取欄位含有效值，就會嘗試寫入這一列。
                 //insert into only when all columns has value
                 //transfer emtpy datetime to null, or it will be 1900/1/1
                 var sql2 = string.Format(insertSql, cols).Replace("'null'", "null");
@@ -229,6 +232,7 @@ namespace BaseOffice.Services
                     });
                 }
 
+                // srcRowNo 實際作為 SheetData 子元素的零起算插入位置。
                 //insert row into sheet
                 sheetData!.InsertAt(newRow, rowNo + srcRowNo);
             }
@@ -266,6 +270,7 @@ namespace BaseOffice.Services
         {
             //if (_Str.IsEmpty(colStr)) throw new ArgumentNullException("columnName");
 
+            // 現行回傳值從 1 開始，例如 A 為 1，AA 為 27。
             colName = colName.ToUpperInvariant();
             var idx = 0;
             for (var i = 0; i < colName.Length; i++)
