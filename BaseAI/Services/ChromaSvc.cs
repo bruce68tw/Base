@@ -6,9 +6,15 @@ using System.Text.Json;
 
 namespace BaseAI.Services
 {
-    /// <summary>透過 Chroma HTTP API 操作 embedding collection。</summary>
+    /// <summary>透過 Chroma HTTP API 讀寫向量集合。</summary>
     public class ChromaSvc : AbEmbedDbSvc
     {
+        /// <summary>建立 Chroma HTTP 向量資料庫服務。</summary>
+        /// <param name="embedDbStr">Chroma 集合 API 的根位址。</param>
+        /// <param name="embedTable">未指定集合時採用的名稱。</param>
+        /// <param name="embedDim">向量預期維度。</param>
+        /// <param name="maxDistance">相似度查詢的預設最大距離。</param>
+        /// <param name="queryRows">相似度查詢的預設候選筆數。</param>
         public ChromaSvc(string embedDbStr, string embedTable, int embedDim,
             double maxDistance, int queryRows) :
             base(embedDbStr, embedTable, embedDim, maxDistance, queryRows)
@@ -84,6 +90,11 @@ namespace BaseAI.Services
             return false;
         }
         */
+        /// <summary>將向量與來源文件 ID 新增至指定集合。</summary>
+        /// <param name="table">目標集合名稱，空字串時使用預設集合。</param>
+        /// <param name="id">要新增的項目 ID。</param>
+        /// <param name="vector">要保存的嵌入向量。</param>
+        /// <param name="fileId">寫入中繼資料的來源文件 ID。</param>
         public override async Task<bool> CreateA(string table, string id, float[] vector, string fileId)
         {
             //if (!HasExpectedDimension(vector)) return false;
@@ -107,6 +118,11 @@ namespace BaseAI.Services
             return true;
         }
 
+        /// <summary>更新指定集合中的向量與來源文件 ID。</summary>
+        /// <param name="table">目標集合名稱，空字串時使用預設集合。</param>
+        /// <param name="id">要更新的項目 ID。</param>
+        /// <param name="vector">用來更新項目的嵌入向量。</param>
+        /// <param name="fileId">寫入中繼資料的來源文件 ID。</param>
         public override async Task<bool> UpdateA(string table, string id, float[] vector, string fileId)
         {
             //if (!HasExpectedDimension(vector)) return false;
@@ -130,6 +146,9 @@ namespace BaseAI.Services
             return true;
         }
 
+        /// <summary>依 ID 讀回向量項目，查無資料時回傳 null。</summary>
+        /// <param name="table">來源集合名稱，空字串時使用預設集合。</param>
+        /// <param name="id">要查詢的項目 ID。</param>
         public override async Task<EmbedRowDto?> GetA(string table, string id)
         {
             if (!await SetNowTableA(table)) return null;
@@ -170,6 +189,9 @@ namespace BaseAI.Services
             return result;
         }
 
+        /// <summary>從指定集合刪除單一向量項目。</summary>
+        /// <param name="table">目標集合名稱，空字串時使用預設集合。</param>
+        /// <param name="id">要刪除的項目 ID。</param>
         public override async Task<bool> DeleteA(string table, string id)
         {
             if (!await SetNowTableA(table)) return false;
@@ -244,6 +266,11 @@ namespace BaseAI.Services
         }
         */
 
+        /// <summary>查詢相似向量並回傳通過距離門檻的項目 ID。</summary>
+        /// <param name="table">查詢的集合名稱，空字串時使用預設集合。</param>
+        /// <param name="vector">查詢用的嵌入向量。</param>
+        /// <param name="maxDistance">允許的最大距離，為零時採用服務預設值。</param>
+        /// <param name="queryRows">向 Chroma 要求的候選筆數，非正數時採用服務預設值。</param>
         public override async Task<List<string>> VectorToIdsA(string table, float[] vector, 
             double maxDistance = 0, int queryRows = 0)
         {
@@ -298,6 +325,9 @@ namespace BaseAI.Services
         }
         */
 
+        /// <summary>依中繼資料中的 FileId 刪除屬於同一來源文件的向量。</summary>
+        /// <param name="table">目標集合名稱，空字串時使用預設集合。</param>
+        /// <param name="fileId">要比對的來源文件 ID。</param>
         public override async Task<bool> DeleteByFileIdA(string table, string fileId)
         {
             if (!await SetNowTableA(table)) return false;

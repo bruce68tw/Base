@@ -146,6 +146,7 @@ namespace BaseAI.Services
         }
 
         /// <summary>封裝 16 kHz、單聲道、16-bit little-endian PCM，不做重採樣。</summary>
+        /// <param name="pcmData">16 kHz 單聲道、16 位元小端序 PCM 取樣資料。</param>
         public static byte[] FromPcm16Mono16Khz(ReadOnlySpan<byte> pcmData) => WrapPcm(pcmData, 16000, 1, 16);
 
         private static byte[] WrapPcm(ReadOnlySpan<byte> pcmData, int sampleRate, int channels, int bitsPerSample)
@@ -176,6 +177,7 @@ namespace BaseAI.Services
         }
 
         /// <summary>檢查完整 RIFF/WAVE、fmt 與非空 data 區塊，拒絕裸 PCM 與截斷資料。</summary>
+        /// <param name="audioData">要驗證的完整 WAV 位元組。</param>
         public static void Validate(ReadOnlySpan<byte> audioData)
         {
             if (audioData.Length < 12 || audioData.Length > MaxAudioBytes ||

@@ -64,6 +64,8 @@ namespace BaseAI.Services
         /// </summary>
         private bool _llmResping;
 
+        /// <summary>建立單一即時語音工作階段使用的回合緩衝。</summary>
+        /// <param name="audioText">純音訊回合的備援文字，也用來辨識尚待語音辨識的內容。</param>
         public AudioTurnBufferSvc(string audioText)
         {
             _audioText = audioText;
@@ -77,6 +79,8 @@ namespace BaseAI.Services
         {
             lock (_syncRoot) _totalTokens = totalTokens;
         }
+        /// <summary>複製目前的歷史清單，供後續回合結果附帶。</summary>
+        /// <param name="history">要擷取的歷史集合，不可為 null。</param>
         public void SetHistorySnapshot(IReadOnlyCollection<LlmHistoryDto> history)
         {
             ArgumentNullException.ThrowIfNull(history);
@@ -173,6 +177,8 @@ namespace BaseAI.Services
         /// <summary>
         /// 快照被插話中斷的使用者回合，不取走正在累積的新輸入音訊。
         /// </summary>
+        /// <param name="turn">有可用內容時輸出的中斷回合快照。</param>
+        /// <param name="userTextOverride">非空白時取代緩衝中的使用者文字。</param>
         public bool TryGetBreakTurn(out LlmTurnResultDto turn, string? userTextOverride = null)
         {
             lock (_syncRoot)
@@ -246,6 +252,7 @@ namespace BaseAI.Services
         /// 成功時會輸出快照並重置文字相關狀態。
         /// </summary>
         /// <param name="turn">完成的回合資料。</param>
+        /// <param name="userTextOverride">非空白時取代緩衝中的使用者文字。</param>
         /// <returns>是否成功產生回合結果。</returns>
         public bool TryComplete(out LlmTurnResultDto turn, string? userTextOverride = null)
         {
@@ -273,6 +280,7 @@ namespace BaseAI.Services
         /// 並盡量產生可追蹤的回合紀錄，即使文字片段不完整。
         /// </summary>
         /// <param name="turn">中斷回合資料。</param>
+        /// <param name="userTextOverride">非空白時取代緩衝中的使用者文字。</param>
         /// <returns>是否成功產生可用的中斷回合結果。</returns>
         public bool TryBreak(out LlmTurnResultDto turn, string? userTextOverride = null)
         {

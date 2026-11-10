@@ -26,10 +26,10 @@
         /// <summary>是否要求模型產生語音回覆；false 時只要求文字回覆。</summary>
         public bool AudioResponse { get; set; } = true;
 
-        /// <summary>傳入語音是否轉譯文字</summary>
+        /// <summary>輸入音訊逐字稿設定。現行 Gemini 與 Qwen 實作未讀取此欄位。</summary>
         public bool InputTranScript { get; set; } = true;
 
-        /// <summary>輸出語音是否轉譯文字</summary>
+        /// <summary>輸出音訊逐字稿設定。現行 Gemini 與 Qwen 實作未讀取此欄位。</summary>
         public bool OutputTranScript { get; set; } = true;
 
         /// <summary>提供給模型呼叫的工具宣告集合。</summary>

@@ -7,6 +7,11 @@ namespace BaseAI.Interfaces
     /// 定義向量文件的新增、更新、讀取、刪除、相似度查詢與清除操作；
     /// 提供共用的 collection/table 名稱解析與 URL 組合工具。
     /// </summary>
+    /// <param name="embedDbStr">向量資料庫的 API 根位址。</param>
+    /// <param name="embedTable">未指定集合時使用的預設名稱。</param>
+    /// <param name="embedDim">資料庫向量的預期維度。</param>
+    /// <param name="maxDistance">相似度查詢的預設最大距離。</param>
+    /// <param name="queryRows">相似度查詢的預設候選筆數。</param>
     public abstract class AbEmbedDbSvc(string embedDbStr, string embedTable, int embedDim,
         double maxDistance, int queryRows) : IAsyncDisposable
     {
@@ -85,9 +90,7 @@ namespace BaseAI.Interfaces
         /// <returns>刪除成功時回傳 <see langword="true"/>，否則回傳 <see langword="false"/>。</returns>
         public abstract Task<bool> DeleteByFileIdA(string table, string fileId);
 
-        /// <summary>
-        /// 以輸入向量執行相似度查詢，回傳符合查詢條件的向量項目識別資訊。
-        /// </summary>
+        /// <summary>依輸入向量查詢相似項目，回傳符合距離條件的項目 ID 清單。</summary>
         /// <param name="vector">查詢用 embedding 向量，其維度應符合資料庫 collection 的設定。</param>
         /// <param name="maxDistance">本次查詢採用的最大距離；為 0 時是否改用服務預設值由實作決定。</param>
         /// <param name="queryRows">本次查詢要求的候選筆數；為 0 時是否改用服務預設值由實作決定。</param>

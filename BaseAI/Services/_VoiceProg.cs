@@ -1,8 +1,10 @@
 namespace BaseAI.Services
 {
     //處理: 語音操作系統功能(帶有商業規則)
+    /// <summary>提供兩階段語音指令辨識與查詢條件對應的提示詞。</summary>
     public static class _VoiceProg
     {
+        /// <summary>取得第一階段提示詞，要求模型轉錄音訊並辨識動作與功能名稱。</summary>
         public static string ProgPrompt()
         {
             return """
@@ -62,6 +64,7 @@ IsQuery 與 ProgName 各自判斷；其中一項無法確定時，該項使用�
         }
 
         // 第二階段：question 提供 VoiceProgArgVo JSON，回傳 Fid／Values 物件陣列。
+        /// <summary>取得第二階段提示詞，要求模型將逐字稿中的查詢條件對應到畫面欄位及選項。</summary>
         public static string ProgArgPrompt()
         {
             return """

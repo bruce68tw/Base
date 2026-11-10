@@ -14,6 +14,8 @@ namespace BaseAI.Services
     /// Qwen Omni Realtime API 的 WebSocket 即時語音服務。
     /// 負責將共用 Live LLM DTO 轉換為 Qwen Realtime 事件，並將回應事件轉回 DTO。
     /// </summary>
+    /// <param name="llmUrl">即時模型 WebSocket 的備援端點。</param>
+    /// <param name="llmSvc">用於缺少可用逐字稿時補做語音辨識的服務。</param>
     public sealed class QwenLiveSvc(string llmUrl, AbLlmSvc llmSvc)
         : AbLiveLlmSvc(llmUrl, llmSvc)
     {
@@ -23,6 +25,8 @@ namespace BaseAI.Services
         /// 建立 Qwen Realtime WebSocket、送出 session 設定，並等待 session.updated。
         /// API key 可放在 endpoint 的 api_key/key query，或由 DASHSCOPE_API_KEY 環境變數提供。
         /// </summary>
+        /// <param name="optDto">供本次上游連線套用的端點、模型及對話設定。</param>
+        /// <param name="ct">取消連線和工作階段初始化的權杖。</param>
         public override async Task ConnectLlmA(LiveLlmOptDto optDto, CancellationToken ct = default)
         {
             ArgumentNullException.ThrowIfNull(optDto);
@@ -84,6 +88,8 @@ namespace BaseAI.Services
         }
 
         /// <summary>傳送一段 16 kHz PCM 音訊。</summary>
+        /// <param name="audioMem">要傳送的 16 kHz PCM 音訊片段。</param>
+        /// <param name="ct">取消音訊傳送的權杖。</param>
         public override Task WebToLlmAudioA(ReadOnlyMemory<byte> audioMem, CancellationToken ct = default)
         {
             return WebToLlmDataA(new
@@ -94,6 +100,7 @@ namespace BaseAI.Services
         }
 
         /// <summary>提交目前音訊回合並要求 Qwen 產生回應。</summary>
+        /// <param name="ct">取消送出音訊回合結束訊息的權杖。</param>
         public override async Task WebToLlmAudioEndA(CancellationToken ct = default)
         {
             await WebToLlmDataA(new { type = "input_audio_buffer.commit" }, ct);
@@ -101,6 +108,8 @@ namespace BaseAI.Services
         }
 
         /// <summary>以文字訊息建立使用者回合並要求 Qwen 產生回應。</summary>
+        /// <param name="text">要交給模型的使用者文字。</param>
+        /// <param name="ct">取消傳送文字的權杖。</param>
         public override async Task WebToLlmTextA(string text, CancellationToken ct = default)
         {
             await WebToLlmDataA(new
@@ -116,13 +125,18 @@ namespace BaseAI.Services
             await WebToLlmDataA(new { type = "response.create" }, ct);
         }
 
+        /// <summary>將既有對話紀錄轉換為Qwen即時協定並送至上游。</summary>
+        /// <param name="history">要提供給上游模型的對話歷史。</param>
+        /// <param name="ct">取消傳送對話歷史的權杖。</param>
         public override Task WebToLlmHistoryA(
             List<LlmHistoryDto> history, CancellationToken ct = default)
         {
             return SendHistoryA(history, ct);
         }
 
-        /// <summary>回傳工具結果並要求 Qwen 繼續產生回應。</summary>
+        /// <summary>將工具執行結果回送Qwen即時模型。</summary>
+        /// <param name="responses">要回送的工具呼叫 ID、名稱及執行結果集合。</param>
+        /// <param name="ct">取消傳送工具結果的權杖。</param>
         public override async Task WebToLlmToolRespA(IEnumerable<LlmToolRespDto> responses,
             CancellationToken ct = default)
         {
@@ -146,6 +160,7 @@ namespace BaseAI.Services
         }
 
         /// <summary>接收 Qwen Realtime 事件並轉為共用 Live LLM 回應 DTO。</summary>
+        /// <param name="ct">取消接收上游事件及列舉結果的權杖。</param>
         public override async IAsyncEnumerable<LlmRespDto> OnLlmToWebTurnA(
             [EnumeratorCancellation] CancellationToken ct = default)
         {

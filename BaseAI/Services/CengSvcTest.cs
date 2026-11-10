@@ -1,7 +1,9 @@
 ﻿namespace BaseAI.Services
 {
+    /// <summary>示範上下文處理流程的範例類別。</summary>
     public class CengSvcTest
     {
+        /// <summary>以範例資料執行上下文處理流程，並輸出結果。</summary>
         public async Task RunA()
         {
             // 1. 準備模擬資料庫

@@ -14,11 +14,11 @@ namespace BaseAI.Interfaces
         /// </summary>
         /// <param name="audioData">完整且帶容器標頭的音檔，不是任意切割片段或原始 PCM。</param>
         /// <param name="mimeType">與音檔內容相符的 MIME；支援範圍由 provider 決定。</param>
-        /// <param name="options">語言、背景、術語及逾時選項；null 使用預設。</param>
         /// <param name="ct">取消本次轉錄，包括傳送與讀取回應。</param>
         public abstract Task<string> SttA(ReadOnlyMemory<byte> audioData,
             string mimeType, CancellationToken ct = default);
 
+        /// <summary>非同步釋放語音轉文字服務持有的資源。</summary>
         public abstract ValueTask DisposeAsync();
     }
 }

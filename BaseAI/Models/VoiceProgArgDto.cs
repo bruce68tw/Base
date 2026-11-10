@@ -1,6 +1,6 @@
 namespace BaseAI.Models
 {
-    /// <summary>一筆參數，包含語音原文與對應的查詢條件。</summary>
+    /// <summary>舊版語音查詢條件模型，保留原始文字和值，供分階段對應畫面欄位。</summary>
     /// <remarks>
     /// 第一步：AI 填入 VoiceName、VoiceValues，能轉換的值（如日期）先填 Values。
     /// 第二步：畫面載入後，前端提供欄位與下拉選項對照表，AI 填入 Name 並補齊 Values，已填的值保留。

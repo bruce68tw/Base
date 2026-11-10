@@ -6,6 +6,12 @@ using HttpMethod = System.Net.Http.HttpMethod;
 
 namespace BaseAI.Services
 {
+    /// <summary>透過 OpenAI HTTP API 處理文字請求與 WAV 轉錄。</summary>
+    /// <param name="llmUrl">文字請求的 HTTP 端點。</param>
+    /// <param name="embedUrl">傳給基底服務的文字嵌入端點，可為空字串。</param>
+    /// <param name="apiKey">語音轉錄請求使用的 API 金鑰。</param>
+    /// <param name="transcriptionUrl">音訊轉錄的 HTTP 端點。</param>
+    /// <param name="transcriptionModel">音訊轉錄使用的模型名稱。</param>
     public class ChatGptSvc(
         string llmUrl,
         string embedUrl = "",
@@ -27,6 +33,9 @@ namespace BaseAI.Services
         }
         */
 
+        /// <summary>送出文字請求，成功時回傳原始 HTTP 回應本文。</summary>
+        /// <param name="prompt">傳給模型的系統提示詞。</param>
+        /// <param name="question">傳給模型的使用者輸入。</param>
         public override async Task<string> AskA(string prompt, string question)
         {
             //_httpClient.DefaultRequestHeaders.Clear();
@@ -77,6 +86,12 @@ namespace BaseAI.Services
             */
         }
 
+        /// <summary>驗證完整 WAV 後送出轉錄請求，回傳去除首尾空白的文字。</summary>
+        /// <param name="audioData">要轉錄的完整 WAV 位元組。</param>
+        /// <param name="mimeType">與音訊內容相符的 MIME 類型。</param>
+        /// <param name="prompt">供模型處理音訊的任務或背景提示，可為空白。</param>
+        /// <param name="keywords">供模型辨識的術語清單，可為空清單。</param>
+        /// <param name="ct">取消音訊處理或 HTTP 請求的權杖。</param>
         public override async Task<string> SttA(
             ReadOnlyMemory<byte> audioData, string mimeType, string prompt, List<string> keywords, CancellationToken ct = default)
         {
@@ -116,6 +131,8 @@ namespace BaseAI.Services
         }
 
         //todo
+        /// <summary>目前尚未實作文字嵌入，一律回傳 null。</summary>
+        /// <param name="text">預留的文字輸入，現行實作未讀取。</param>
         public override async Task<float[]?> TextToVectorA(string text)
         {
             return null;

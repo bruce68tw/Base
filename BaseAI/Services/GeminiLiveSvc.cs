@@ -11,6 +11,8 @@ namespace BaseAI.Services
     /// Gemini Live API 的 WebSocket 即時語音服務。
     /// 負責將應用程式內部的即時 LLM DTO 轉換為 Gemini Live JSON 訊息，並將回應轉回 DTO。
     /// </summary>
+    /// <param name="llmUrl">建構時傳入的 WebSocket 端點，現行實作以此值連線。</param>
+    /// <param name="llmSvc">用於缺少可用逐字稿時補做語音辨識的服務。</param>
     public sealed class GeminiLiveSvc(string llmUrl, AbLlmSvc llmSvc)
         : AbLiveLlmSvc(llmUrl, llmSvc)
     {
@@ -19,6 +21,8 @@ namespace BaseAI.Services
         /// <summary>
         /// 建立 Gemini Live WebSocket，送出模型設定、系統提示詞與工具宣告，並等待 setupComplete。
         /// </summary>
+        /// <param name="optDto">todo:待確認 端點來源的預期契約。現行方法從此設定讀取模型及對話設定，檢查 EndPoint 是否空白，但實際使用建構時傳入的端點連線。</param>
+        /// <param name="ct">取消連線和工作階段初始化的權杖。</param>
         public override async Task ConnectLlmA(LiveLlmOptDto optDto, CancellationToken ct = default)
         {
             _Log.Debug("GeminiLiveSvc ConnectLlmA");
@@ -96,6 +100,8 @@ namespace BaseAI.Services
         /// <summary>
         /// 傳送 16 kHz PCM 音訊資料。音訊內容會先以 Base64 放入 realtimeInput.audio。
         /// </summary>
+        /// <param name="audioMem">要傳送的 16 kHz PCM 音訊片段。</param>
+        /// <param name="ct">取消音訊傳送的權杖。</param>
         public override async Task WebToLlmAudioA(ReadOnlyMemory<byte> audioMem, CancellationToken ct = default)
         {
             if (!_audioActivityStarted)
@@ -121,6 +127,7 @@ namespace BaseAI.Services
         }
 
         /// <summary>通知 Gemini Live 目前的音訊回合已結束。</summary>
+        /// <param name="ct">取消送出音訊回合結束訊息的權杖。</param>
         public override async Task WebToLlmAudioEndA(CancellationToken ct = default)
         {
             _Log.Debug("GeminiLiveSvc WebToLlmAudioEndA");
@@ -135,6 +142,8 @@ namespace BaseAI.Services
         }
 
         /// <summary>以已完成的使用者回合傳送文字訊息。</summary>
+        /// <param name="text">要交給模型的使用者文字。</param>
+        /// <param name="ct">取消傳送文字的權杖。</param>
         public override async Task WebToLlmTextA(string text, CancellationToken ct = default)
         {
             _Log.Debug("GeminiLiveSvc WebToLlmTextA: " + text);
@@ -150,6 +159,9 @@ namespace BaseAI.Services
             }, ct);
         }
 
+        /// <summary>將既有對話紀錄轉換為Gemini即時協定並送至上游。</summary>
+        /// <param name="histories">要提供給上游模型的對話歷史。</param>
+        /// <param name="ct">取消傳送對話歷史的權杖。</param>
         public override Task WebToLlmHistoryA(
             List<LlmHistoryDto> histories, CancellationToken ct = default)
         {
@@ -174,7 +186,9 @@ namespace BaseAI.Services
             }, ct);
         }
 
-        /// <summary>把 server 上的 Tool response 結果傳給 LLM</summary>
+        /// <summary>將工具執行結果回送Gemini即時模型。</summary>
+        /// <param name="respDtos">要回送的工具呼叫 ID、名稱及執行結果集合。</param>
+        /// <param name="ct">取消傳送工具結果的權杖。</param>
         public override Task WebToLlmToolRespA(IEnumerable<LlmToolRespDto> respDtos, CancellationToken ct = default)
         {
             _Log.Debug("GeminiLiveSvc WebToLlmToolRespA");
@@ -196,6 +210,7 @@ namespace BaseAI.Services
         /// <summary>
         /// 持續接收 Gemini Live 訊息，並依訊息內容產生錯誤、工具呼叫、音訊、逐字稿或回合完成事件。
         /// </summary>
+        /// <param name="ct">取消接收上游事件及列舉結果的權杖。</param>
         public override async IAsyncEnumerable<LlmRespDto> OnLlmToWebTurnA(
             [EnumeratorCancellation] CancellationToken ct = default)
         {

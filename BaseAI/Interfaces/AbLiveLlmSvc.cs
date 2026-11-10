@@ -68,6 +68,8 @@ namespace BaseAI.Interfaces
         /// <param name="ct">取消等待或傳送文字操作的權杖。</param>
         public abstract Task WebToLlmTextA(string text, CancellationToken ct = default);
         /// <summary>將本回合開始前的對話歷史加入 provider 的即時對話上下文。</summary>
+        /// <param name="histories">要提供給即時模型的既有對話紀錄。</param>
+        /// <param name="ct">取消傳送對話歷史的權杖。</param>
         public abstract Task WebToLlmHistoryA(
             List<LlmHistoryDto> histories, CancellationToken ct = default);
 

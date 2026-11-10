@@ -6,6 +6,11 @@ using System.Net.Http.Json;
 
 namespace BaseAI.Services
 {
+    /// <summary>透過 Gemini HTTP API 處理文字問答、音訊轉錄與文字嵌入。</summary>
+    /// <param name="llmUrl">文字請求的 HTTP 端點。</param>
+    /// <param name="embedUrl">傳給基底服務的文字嵌入端點，可為空字串。</param>
+    /// <param name="embedDim">傳給基底服務的預期向量維度。</param>
+    /// <param name="ffmpegPath">轉換壓縮音訊時使用的 FFmpeg 路徑或命令名稱。</param>
     public class GeminiSvc(string llmUrl, string embedUrl = "", int embedDim = 0, string ffmpegPath = "ffmpeg") :
         AbLlmSvc(llmUrl, embedUrl, embedDim)
     {
@@ -18,6 +23,9 @@ namespace BaseAI.Services
         }
 
         // 成功只回傳模型回答文字；失敗記錄錯誤並回傳空字串。
+        /// <summary>送出 Gemini 文字問答請求並擷取回覆文字。</summary>
+        /// <param name="prompt">傳給模型的系統提示詞。</param>
+        /// <param name="question">傳給模型的使用者輸入。</param>
         public override async Task<string> AskA(string prompt, string question)
         {
             try
@@ -75,7 +83,12 @@ namespace BaseAI.Services
             */
         }
 
-        /// <summary>先以 _Voice.ToWavA 轉換完整音檔；輸出內容與格式由呼叫端 prompt 決定。</summary>
+        /// <summary>先轉換音訊為 WAV，再依提示詞要求模型產生文字。</summary>
+        /// <param name="audioData">要轉換並處理的完整音檔。</param>
+        /// <param name="mimeType">與音訊內容相符的 MIME 類型。</param>
+        /// <param name="prompt">供模型處理音訊的任務或背景提示，可為空白。</param>
+        /// <param name="keywords">供模型辨識的術語清單，可為空清單。</param>
+        /// <param name="ct">取消音訊處理或 HTTP 請求的權杖。</param>
         public override async Task<string> SttA(
             ReadOnlyMemory<byte> audioData, string mimeType, string prompt, List<string> keywords, CancellationToken ct = default)
         {
@@ -140,6 +153,8 @@ namespace BaseAI.Services
             }
         }
 
+        /// <summary>透過嵌入端點將文字轉為向量，未設定端點時回傳 null。</summary>
+        /// <param name="text">要向量化的輸入文字。</param>
         public override async Task<float[]?> TextToVectorA(string text)
         {
             if (string.IsNullOrEmpty(_embedUrl)) return null;
