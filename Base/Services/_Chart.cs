@@ -25,6 +25,9 @@ namespace Base.Services
         /// <summary>
         /// 查詢 Id、Num 欄位並建立單一資料集；無資料時 labels 可能未初始化。
         /// </summary>
+        /// <param name="title">圖表資料集的顯示名稱</param>
+        /// <param name="sql">須回傳 Id、Num 欄位的查詢 SQL。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<ChartDto> GetDataA(string title, string sql, Db? db = null)
         {
             //read db rows & close
@@ -54,6 +57,11 @@ namespace Base.Services
         /// <summary>
         /// 查詢 Row、Col、Num 並轉成分組資料；colFids 須與 labels 對齊，組數受顏色清單限制。
         /// </summary>
+        /// <param name="title">圖表資料集的顯示名稱</param>
+        /// <param name="sql">須回傳 Row、Col、Num 欄位的查詢 SQL。</param>
+        /// <param name="labels">圖表顯示的標籤清單</param>
+        /// <param name="colFids">與圖表標籤逐項對應的資料欄位識別值</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<ChartGroupDto> GetGroupDataA(string title, string sql, List<string> labels, List<string>? colFids = null, Db? db = null)
         {
             //read db rows & close

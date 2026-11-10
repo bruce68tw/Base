@@ -17,6 +17,10 @@ namespace Base.Services
         /// <summary>
         /// 建立指定尺寸的畫布，保存輸出路徑與預設字型。
         /// </summary>
+        /// <param name="toFile">產生圖片的輸出檔案路徑</param>
+        /// <param name="width">輸出或繪製區域的寬度，單位為像素</param>
+        /// <param name="height">輸出或繪製區域的高度，單位為像素</param>
+        /// <param name="fontName">繪製文字使用的字型名稱</param>
         public GenImageSvc(string toFile, int width, int height, string fontName)
         {
             _toFile = toFile;
@@ -30,6 +34,13 @@ namespace Base.Services
         /// <summary>
         /// 在指定基線位置繪字；posX 為 -1 時水平置中。
         /// </summary>
+        /// <param name="posX">文字基線的水平位置，為 -1 時水平置中。</param>
+        /// <param name="posY">文字基線的垂直位置。</param>
+        /// <param name="text">要處理的文字</param>
+        /// <param name="fontSize">繪製文字使用的字型大小</param>
+        /// <param name="fontName">繪製文字使用的字型名稱</param>
+        /// <param name="style">繪製文字時使用的字型樣式</param>
+        /// <param name="color">繪製文字使用的顏色</param>
         public void AddText(int posX, int posY, string text, int fontSize, string? fontName = null, 
             SKFontStyle? style = null, SKColor? color = null)
         {
@@ -56,6 +67,14 @@ namespace Base.Services
         /// <summary>
         /// 逐字繪製文字，超過指定寬度時換行，非完整文字排版。
         /// </summary>
+        /// <param name="posX">繪製位置的水平座標</param>
+        /// <param name="posY">繪製位置的垂直座標</param>
+        /// <param name="width">輸出或繪製區域的寬度，單位為像素</param>
+        /// <param name="text">要處理的文字</param>
+        /// <param name="fontSize">繪製文字使用的字型大小</param>
+        /// <param name="fontName">繪製文字使用的字型名稱</param>
+        /// <param name="style">繪製文字時使用的字型樣式</param>
+        /// <param name="color">繪製文字使用的顏色</param>
         public void AddTextBlob(float posX, float posY, int width, string text, int fontSize, 
             string? fontName = null, SKFontStyle? style = null, SKColor? color = null)
         {
@@ -89,6 +108,12 @@ namespace Base.Services
         /// <summary>
         /// 讀取圖片並縮放到指定矩形，可加外框；解碼失敗時略過。
         /// </summary>
+        /// <param name="posX">繪製位置的水平座標</param>
+        /// <param name="posY">繪製位置的垂直座標</param>
+        /// <param name="filePath">要讀取或寫入的完整檔案路徑</param>
+        /// <param name="width">輸出或繪製區域的寬度，單位為像素</param>
+        /// <param name="height">輸出或繪製區域的高度，單位為像素</param>
+        /// <param name="borderColor">圖片外框顏色</param>
         public void AddImage(int posX, int posY, string filePath, int width, 
             int height, SKColor? borderColor = null)
         {

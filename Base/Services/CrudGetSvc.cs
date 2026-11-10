@@ -22,6 +22,9 @@ namespace Base.Services
         /// <summary>
         /// 設定作業名稱、草稿選項與連線字串。
         /// </summary>
+        /// <param name="ctrl">對應作業的控制器名稱</param>
+        /// <param name="hasDraft">是否啟用草稿處理</param>
+        /// <param name="dbStr">資料庫連線字串</param>
         public CrudGetSvc(string ctrl, bool hasDraft = false, string dbStr = "")
             : base(ctrl, dbStr)
         {
@@ -33,6 +36,8 @@ namespace Base.Services
         /// <summary>
         /// 啟用草稿時優先讀草稿，否則依修改功能讀取正式資料。
         /// </summary>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="editDto">主從表、主鍵及欄位的 CRUD 維護設定</param>
         public async Task<JObject?> GetUpdJsonA(string key, EditDto editDto)
         {
             //檢查權限
@@ -45,6 +50,8 @@ namespace Base.Services
         /// <summary>
         /// 依檢視功能讀取主從資料及資料範圍結果。
         /// </summary>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="editDto">主從表、主鍵及欄位的 CRUD 維護設定</param>
         public async Task<JObject?> GetViewJsonA(string key, EditDto editDto)
         {
             return await GetJsonByFunA(CrudEnum.View, key, editDto);
@@ -53,6 +60,8 @@ namespace Base.Services
         /// <summary>
         /// 依新增功能讀取資料；基底讀取流程因此不套用既有列的範圍檢查。
         /// </summary>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="editDto">主從表、主鍵及欄位的 CRUD 維護設定</param>
         public async Task<JObject?> GetSignJsonA(string key, EditDto editDto)
         {
             return await GetJsonByFunA(CrudEnum.Create, key, editDto);
@@ -61,6 +70,7 @@ namespace Base.Services
         /// <summary>
         /// 讀取使用者草稿 JSON；不存在、內容為空或格式無效時回傳 null。
         /// </summary>
+        /// <param name="key">用來定位資料的鍵值</param>
         public async Task<JObject?> GetDraftJsonA(string key)
         {
             //使用: 程式Id_userId_rowId 當 key 去找草稿資料(檔案)，沒有再找正式資料

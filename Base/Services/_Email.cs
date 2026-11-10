@@ -22,6 +22,7 @@ namespace Base.Services
         /// <summary>
         /// 管理者信箱非空時寄送系統通知，不套用測試收件者替換。
         /// </summary>
+        /// <param name="msg">要傳送或記錄的訊息</param>
         public static async Task SendRootA(string msg)
         {
             //check
@@ -50,6 +51,8 @@ namespace Base.Services
         /// <summary>
         /// 以 DTO 非同步寄送單封 HTML 郵件，套用 TesterEmail 規則。
         /// </summary>
+        /// <param name="email">單封郵件的內容及收件者設定</param>
+        /// <param name="smtp">寄信伺服器及寄件者設定</param>
         public static async Task SendByDtoA(EmailDto email, SmtpDto? smtp = null)
         {
             await SendByDtosA([email], smtp);
@@ -58,6 +61,8 @@ namespace Base.Services
         /// <summary>
         /// 寄送 DTO 清單；TesterEmail 非空時只保留首封並改收件者、清副本，會修改輸入 DTO。
         /// </summary>
+        /// <param name="emails">待處理的郵件設定清單</param>
+        /// <param name="smtp">寄信伺服器及寄件者設定</param>
         public static async Task SendByDtosA(List<EmailDto> emails, SmtpDto? smtp = null)
         {
             //change receiver to tester if need !!
@@ -107,6 +112,8 @@ namespace Base.Services
         /// <summary>
         /// 建立 HTML MailMessage；目前只保留 ToUsers 最後一位，未加入 CcUsers，呼叫端須釋放訊息。
         /// </summary>
+        /// <param name="email">單封郵件的內容及收件者設定</param>
+        /// <param name="smtp">寄信伺服器及寄件者設定</param>
         public static MailMessage DtoToMsg(EmailDto email, SmtpDto? smtp = null)
         {
             smtp ??= _Fun.Smtp;
@@ -178,6 +185,8 @@ namespace Base.Services
         /// <summary>
         /// 將 DTO 清單轉為 MailMessage 清單，沿用單封轉換的收件者限制。
         /// </summary>
+        /// <param name="emails">待處理的郵件設定清單</param>
+        /// <param name="smtp">寄信伺服器及寄件者設定</param>
         public static List<MailMessage> DtosToMsgs(List<EmailDto> emails, SmtpDto? smtp = null)
         {
             smtp ??= _Fun.Smtp;
@@ -221,6 +230,9 @@ namespace Base.Services
         /// <summary>
         /// 寄送單封訊息，可附加設定圖片；此入口不替換測試收件者。
         /// </summary>
+        /// <param name="msg">要傳送或記錄的訊息</param>
+        /// <param name="smtp">寄信伺服器及寄件者設定</param>
+        /// <param name="sendImage">是否附加設定中的郵件圖片</param>
         public static async Task SendByMsgA(MailMessage msg, SmtpDto? smtp = null, bool sendImage = true)
         {
             await SendByMsgsA([msg], smtp, sendImage);
@@ -229,6 +241,9 @@ namespace Base.Services
         /// <summary>
         /// 依序寄送訊息並可加圖片；捕捉到的寄送錯誤只寫記錄，不回傳成功狀態或釋放訊息。
         /// </summary>
+        /// <param name="msgs">要依序寄送的郵件訊息清單</param>
+        /// <param name="smtp">寄信伺服器及寄件者設定</param>
+        /// <param name="sendImage">是否附加設定中的郵件圖片</param>
         public static async Task SendByMsgsA(List<MailMessage> msgs, SmtpDto? smtp = null, bool sendImage = true)
         {
             //check

@@ -12,6 +12,7 @@ namespace BaseWeb.Services
 {
 
     //_Helper -> _Input
+    /// <summary>產生 Xi 欄位及共用表單元件的 HTML 和屬性。</summary>
     public static class _Input
     {
         //public const string XgRequired = "x-required";     //for label
@@ -28,11 +29,8 @@ namespace BaseWeb.Services
         }
         */
 
-        /// <summary>
-        /// GetRequiredSpan -> GetReqSpan
-        /// get label html string with required sign.
-        /// </summary>
-        /// <param name="required"></param>
+        /// <summary>在必填時產生星號標記，其他情況回傳空字串。</summary>
+        /// <param name="required">是否標為必填</param>
         /// <returns></returns>
         public static string GetReqSpan(bool required)
         {
@@ -45,22 +43,18 @@ namespace BaseWeb.Services
                 ? "" : $" data-init='{value}'";
         }
 
-        /// <summary>
-        /// get label tip with icon
-        /// </summary>        
+        /// <summary>回傳資訊提示圖示的 HTML。</summary>
         public static string GetIconTip()
         {
             return "<i class='ico-info'></i>";
         }
 
         #region get attribute
-        /// <summary>
-        /// get input attr: data-fid,name,readonly, ext attributes
-        /// </summary>
-        /// <param name="fid">if empty will not set name attribute</param>
-        /// <param name="edit"></param>
-        /// <param name="inputAttr"></param>
-        /// <param name="setName">set name attribute or not</param>
+        /// <summary>依欄位設定組合名稱、編輯標記、必填及額外屬性。</summary>
+        /// <param name="fid">欄位識別值，空字串時省略 name 與 data-fid。</param>
+        /// <param name="edit">前端使用的 data-edit 屬性值</param>
+        /// <param name="inputAttr">附加到生成標記的 HTML 屬性片段</param>
+        /// <param name="required">是否標為必填</param>
         /// <returns></returns>
         public static string GetInputAttr(string fid,
             string edit = "", bool required = false, string inputAttr = "")
@@ -79,6 +73,8 @@ namespace BaseWeb.Services
         }
 
         //get data-edit attribute string
+        /// <summary>組合前端辨識編輯欄位用的 data-edit 屬性。</summary>
+        /// <param name="edit">前端使用的 data-edit 屬性值</param>
         public static string GetDataEdit(string edit)
         {
             if (_Str.IsEmpty(edit)) edit = "";
@@ -87,6 +83,8 @@ namespace BaseWeb.Services
 
         //add placeholder attribute
         //placeholder could have quota, use escape
+        /// <summary>提示文字非空時組合 placeholder 屬性。</summary>
+        /// <param name="inputTip">輸入欄位未填值時顯示的提示</param>
         public static string GetPlaceHolder(string inputTip)
         {
             return (inputTip == "")
@@ -96,12 +94,16 @@ namespace BaseWeb.Services
 
         //GetRequired -> GetReqAttr
         //get required attribute ??
+        /// <summary>依必填旗標回傳 required 屬性或空字串。</summary>
+        /// <param name="required">是否標為必填</param>
         public static string GetReqAttr(bool required)
         {
             return required ? " required" : "";
         }
 
         //get maxlength attribute
+        /// <summary>長度為正數時回傳 maxlength 屬性。</summary>
+        /// <param name="maxLen">文字長度上限</param>
         public static string GetMaxLength(int maxLen)
         {
             return (maxLen > 0) 
@@ -109,6 +111,8 @@ namespace BaseWeb.Services
                 : "";
         }
 
+        /// <summary>有有效規則時組合 HTML pattern 屬性。</summary>
+        /// <param name="pattern">瀏覽器使用的 HTML pattern 規則</param>
         public static string GetPattern(string pattern)
         {
             return (string.IsNullOrEmpty(pattern) || pattern == InputPatternEstr.None)
@@ -121,7 +125,7 @@ namespace BaseWeb.Services
         /// </summary>
         /// <param name="clsNow">目前css class</param>
         /// <param name="clsExt">額外css class</param>
-        /// <param name="width">使用固定寬度 x-wxxx, 有值則加上 x-inline(??, 暫不使用)</param>
+        /// <param name="width">指定固定寬度樣式，正數時加入對應的 x-w CSS 類別。 (??, 暫不使用)</param>
         /// <returns></returns>
         public static string GetCssClass(string clsNow, string clsExt, int width)
         {
@@ -135,12 +139,10 @@ namespace BaseWeb.Services
             return clsNow;
         }
 
-        /// <summary>
-        /// get event attribute string for onclick, onchange, etc.
-        /// </summary>
-        /// <param name="fnName">html event ex: onclick, onchange</param>
-        /// <param name="fnValue"></param>
-        /// <param name="args"></param>
+        /// <summary>組合前端事件的 data 屬性與選用參數。</summary>
+        /// <param name="fnName">事件名稱，例如 onclick 或 onchange</param>
+        /// <param name="fnValue">要寫入前端事件屬性的處理函式名稱</param>
+        /// <param name="args">傳給前端事件處理函式的參數字串。</param>
         /// <returns></returns>
         public static string GetEventAttr(string fnName, string fnValue, string args = "")
         {
@@ -155,13 +157,15 @@ namespace BaseWeb.Services
         #endregion
 
         #region get html string
-        /// <summary>
-        /// get date view component html string
-        /// </summary>
-        /// <param name="fid"></param>
-        /// <param name="value">format: _Fun.CsDtFormat</param>
-        /// <param name="type">data-type, empty for part field, ex:DateTime</param>
-        /// <param name="required"></param>
+        /// <summary>建立日期選擇器及其文字輸入的 HTML。</summary>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="value">用於初始化欄位或選項的值</param>
+        /// <param name="type">輸入型別標記，空字串時產生沒有獨立欄位名稱的子元件。</param>
+        /// <param name="required">是否標為必填</param>
+        /// <param name="edit">前端使用的 data-edit 屬性值</param>
+        /// <param name="inputTip">輸入欄位未填值時顯示的提示</param>
+        /// <param name="inputAttr">附加到生成標記的 HTML 屬性片段</param>
+        /// <param name="clsBox">加在元件容器上的 CSS 類別</param>
         /// <returns></returns>
         public static string GetDateHtml(string fid, string value, string type, 
             bool required = false, string edit = "", string inputTip = "",             
@@ -201,25 +205,26 @@ namespace BaseWeb.Services
         }
 
         //get link function string
+        /// <summary>組合取消連結預設動作並執行指定指令的事件內容。</summary>
+        /// <param name="fn">要在連結事件中執行的指令字串</param>
         public static string GetLinkFn(string fn)
         {
             return $"event.preventDefault();{fn};return false;";
         }
 
-        /// <summary>
-        /// get select view component html string
-        /// </summary>
-        /// <param name="fid"></param>
-        /// <param name="value"></param>
-        /// <param name="type">empty means part component</param>
-        /// <param name="rows"></param>
-        /// <param name="required"></param>
-        /// <param name="edit"></param>
-        /// <param name="addEmptyRow"></param>
-        /// <param name="inputTip"></param>
-        /// <param name="inputAttr"></param>
-        /// <param name="clsBox"></param>
-        /// <param name="fnOnChange"></param>
+        /// <summary>產生下拉欄位、選項及選用的變更事件屬性。</summary>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="value">用於初始化欄位或選項的值</param>
+        /// <param name="type">輸入型別標記，空字串時產生沒有獨立欄位名稱的子元件。</param>
+        /// <param name="rows">下拉選項，使用各項的 Id 作為值及 Str 作為顯示文字。</param>
+        /// <param name="required">是否標為必填</param>
+        /// <param name="edit">前端使用的 data-edit 屬性值</param>
+        /// <param name="addEmptyRow">是否在下拉選項首位加入空值選項</param>
+        /// <param name="inputTip">輸入欄位未填值時顯示的提示</param>
+        /// <param name="inputAttr">附加到生成標記的 HTML 屬性片段</param>
+        /// <param name="clsBox">加在元件容器上的 CSS 類別</param>
+        /// <param name="fnOnChange">選項變更時要呼叫的前端函式</param>
+        /// <param name="eventArgs">傳給前端事件處理函式的參數字串</param>
         /// <returns></returns>
         public static string GetSelectHtml(string fid, string value, 
             string type, List<IdStrDto> rows,
@@ -346,6 +351,8 @@ namespace BaseWeb.Services
         }
 
         #region 傳回各種輸入欄位 html 字串, 其他程式會用到
+        /// <summary>依欄位設定產生核取欄位的 HTML。</summary>
+        /// <param name="dto">用於產生核取欄位的欄位設定。</param>
         public static string XiCheck(XiCheckDto dto)
         {
             //prop ??= new PropCheckDto();
@@ -381,6 +388,8 @@ namespace BaseWeb.Services
             return html;
         }
         //old args: string fid, string label, int maxLen, string clsBox
+        /// <summary>依欄位設定產生附文字輸入的核取欄位的 HTML。</summary>
+        /// <param name="dto">用於產生附文字輸入的核取欄位的欄位設定。</param>
         public static string XiCheckText(XiCheckTextDto dto)
         {
             return $@"
@@ -391,6 +400,8 @@ namespace BaseWeb.Services
 ";
         }
 
+        /// <summary>依欄位設定產生日期輸入欄位的 HTML。</summary>
+        /// <param name="dto">用於產生日期輸入欄位的欄位設定。</param>
         public static string XiDate(XiDateDto dto)
         {
             var html = GetDateHtml(dto.Fid, dto.Value, InputTypeEstr.Date, dto.Required,
@@ -432,6 +443,8 @@ namespace BaseWeb.Services
             return new HtmlString(html);
             */
         }
+        /// <summary>依欄位設定產生小數輸入欄位的 HTML。</summary>
+        /// <param name="dto">用於產生小數輸入欄位的欄位設定。</param>
         public static string XiDec(XiDecDto dto)
         {
             //attr, both digits/number should be type=number for validate(digits not work !!)
@@ -457,6 +470,8 @@ namespace BaseWeb.Services
                 html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
+        /// <summary>依欄位設定產生日期與時間輸入欄位的 HTML。</summary>
+        /// <param name="dto">用於產生日期與時間輸入欄位的欄位設定。</param>
         public static string XiDt(XiDtDto dto)
         {
             //fids:0(date),1(hour),2(minute)
@@ -489,6 +504,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             }
             return html;
         }
+        /// <summary>依欄位設定產生檔案上傳欄位的 HTML。</summary>
+        /// <param name="dto">用於產生檔案上傳欄位的欄位設定。</param>
         public static string XiFile(XiFileDto dto)
         {
             /*
@@ -530,6 +547,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
+        /// <summary>依欄位設定產生隱藏輸入欄位的 HTML。</summary>
+        /// <param name="dto">用於產生隱藏輸入欄位的欄位設定。</param>
         public static string XiHide(XiHideDto dto)
         {
             var attr = GetInputAttr(dto.Fid, "", false, dto.InputAttr);
@@ -539,12 +558,15 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
             var html = $"<input{attr} data-type='{InputTypeEstr.Text}' type='hidden' data-init='{dto.Value}' value='{dto.Value}'>";
             return html;
         }
+        /// <summary>產生供維護表單使用的隱藏主鍵欄位。</summary>
         public static string XiHideId()
         {
             var attr = GetInputAttr("Id");
             var html = $"<input{attr} data-type='{InputTypeEstr.Text}' type='hidden'>";
             return html;
         }
+        /// <summary>依欄位設定產生HTML 編輯欄位的 HTML。</summary>
+        /// <param name="dto">用於產生HTML 編輯欄位的欄位設定。</param>
         public static string XiHtml(XiHtmlDto dto)
         {
             var attr = GetInputAttr(dto.Fid, dto.Edit, dto.Required, dto.InputAttr) +
@@ -563,6 +585,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
+        /// <summary>依欄位設定產生整數輸入欄位的 HTML。</summary>
+        /// <param name="dto">用於產生整數輸入欄位的欄位設定。</param>
         public static string XiInt(XiIntDto dto)
         {
             //attr, both digits/number should be type=number for validate(digits not work !!)
@@ -588,6 +612,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
+        /// <summary>依欄位設定產生連結欄位的 HTML。</summary>
+        /// <param name="dto">用於產生連結欄位的欄位設定。</param>
         public static string XiLink(XiLinkDto dto)
         {
             //add class xi-unsave for not save Db !!
@@ -602,6 +628,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, false, dto);
             return html;
         }
+        /// <summary>依欄位設定產生單選選項群組的 HTML。</summary>
+        /// <param name="dto">用於產生單選選項群組的欄位設定。</param>
         public static string XiRadio(XiRadioDto dto)
         {
             if (dto.Rows == null || dto.Rows.Count == 0)
@@ -657,6 +685,10 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         }
 
         //單個radio button
+        /// <summary>以指定欄位名稱、值與標籤產生單一單選項目。</summary>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="value">用於初始化欄位或選項的值</param>
+        /// <param name="label">畫面顯示的標籤文字</param>
         public static string XiRadio0(string fid, string value, string label)
         {
             var attr = GetInputAttr(fid) +
@@ -671,6 +703,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
 ";
         }
 
+        /// <summary>依欄位設定產生附文字輸入的單選欄位的 HTML。</summary>
+        /// <param name="dto">用於產生附文字輸入的單選欄位的欄位設定。</param>
         public static string XiRadioText(XiRadioTextDto dto)
         {
             return $@"
@@ -681,6 +715,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
 ";
         }
 
+        /// <summary>依欄位設定產生唯讀顯示欄位的 HTML。</summary>
+        /// <param name="dto">用於產生唯讀顯示欄位的欄位設定。</param>
         public static string XiRead(XiReadDto dto)
         {
             var attr = GetInputAttr(dto.Fid, "", false, dto.InputAttr);
@@ -703,6 +739,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, false, dto);
             return html;
         }
+        /// <summary>依欄位設定產生下拉選擇欄位的 HTML。</summary>
+        /// <param name="dto">用於產生下拉選擇欄位的欄位設定。</param>
         public static string XiSelect(XiSelectDto dto)
         {
             var html = GetSelectHtml(dto.Fid, dto.Value, InputTypeEstr.Select, dto.Rows!,
@@ -715,6 +753,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
         }
 
         //可以在裡面右側加上 find icon
+        /// <summary>依欄位設定產生單行文字欄位的 HTML。</summary>
+        /// <param name="dto">用於產生單行文字欄位的欄位設定。</param>
         public static string XiText(XiTextDto dto)
         {
             //base attr: fid,name,readonly,ext attr
@@ -759,6 +799,8 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
+        /// <summary>依欄位設定產生多行文字欄位的 HTML。</summary>
+        /// <param name="dto">用於產生多行文字欄位的欄位設定。</param>
         public static string XiTextarea(XiTextareaDto dto)
         {
             //attr
@@ -776,6 +818,9 @@ GetSelectHtml("", min, "", _Date.GetMinuteList(dto.MinuteStep), false, dto.Edit,
                 html = InputAddLayout(html, dto.Required, dto);
             return html;
         }
+        /// <summary>產生表單群組標題，可加上圖示。</summary>
+        /// <param name="title">圖表資料集的顯示名稱</param>
+        /// <param name="icon">是否附加群組圖示</param>
         public static string XgGroup(string title, bool icon)
         {
             //var text = _Str.Repeat(10, "· • ●");

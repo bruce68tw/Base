@@ -6,22 +6,20 @@ using Newtonsoft.Json.Linq;
 
 namespace BaseOffice.Services
 {
+    /// <summary>以 Open XML 讀寫 Excel，支援查詢結果匯出與逐列匯入。</summary>
     public class _Excel
     {
-        /// <summary>
-        /// excel 日期int 轉成"日期"字串
-        /// </summary>
-        /// <param name="value"></param>
+        /// <summary>將 Excel 日期序號轉成指定格式的日期字串。</summary>
+        /// <param name="value">要解析的 Excel 日期序號字串。</param>
+        /// <param name="uiDtFormat">日期儲存格轉成字串時使用的格式</param>
         /// <returns></returns>
         public static string DateIntToStr(string value, string uiDtFormat)
         {
             return DateTime.FromOADate(double.Parse(value)).ToString(uiDtFormat);
         }
 
-        /// <summary>
-        /// convert excel Stream to Openxml Workbook(Docx)
-        /// </summary>
-        /// <param name="stream"></param>
+        /// <summary>以唯讀方式從串流開啟 Open XML 試算表。 (Docx)</summary>
+        /// <param name="stream">包含 Excel 工作簿內容的串流。</param>
         /// <returns></returns>
         public static SpreadsheetDocument StreamToDocx(Stream stream)
         {
@@ -29,17 +27,16 @@ namespace BaseOffice.Services
             return SpreadsheetDocument.Open(stream, false);
         }
 
-        /// <summary>
-        /// import db by excel file, table first column must be LineNo
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="insertSql">sql for import</param>
-        /// <param name="excelCols">import excel column no, base 0</param>
-        /// <param name="excelStartRow"></param>
-        /// <param name="isDates">excel column flag of date</param>
-        /// <param name="sheetNo"></param>
-        /// <param name="db"></param>
-        /// <returns>error msg if any</returns>
+        /// <summary>從 Excel 檔案讀取指定工作表，並依 SQL 逐列寫入資料庫。</summary>
+        /// <param name="filePath">要讀取或寫入的完整檔案路徑</param>
+        /// <param name="insertSql">逐列寫入資料庫使用的 INSERT SQL</param>
+        /// <param name="excelCols">依匯入順序選取的 Excel 欄索引清單，從零開始</param>
+        /// <param name="excelStartRow">要開始匯入的 Excel 列號，從 1 開始</param>
+        /// <param name="isDates">與匯入欄逐項對應的日期轉換旗標</param>
+        /// <param name="sheetNo">要讀取的工作表索引，從零開始</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="uiDtFormat">日期儲存格轉成字串時使用的格式</param>
+        /// <returns>成功時回傳空字串，失敗時回傳錯誤訊息。</returns>
         public static async Task<string> ImportByFileA(string uiDtFormat, string filePath, string insertSql, int[] excelCols, int excelStartRow, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
         {
             //check
@@ -50,17 +47,16 @@ namespace BaseOffice.Services
             return await ImportByDocxA(uiDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
         }
 
-        /// <summary>
-        /// import db by openXml object
-        /// </summary>
-        /// <param name="docx"></param>
-        /// <param name="insertSql"></param>
-        /// <param name="excelCols"></param>
-        /// <param name="excelStartRow"></param>
-        /// <param name="isDates"></param>
-        /// <param name="sheetNo"></param>
-        /// <param name="db"></param>
-        /// <returns>error msg if any</returns>
+        /// <summary>從已開啟的 Open XML 試算表讀取指定工作表，並依 SQL 逐列寫入資料庫。</summary>
+        /// <param name="docx">已開啟的 Open XML 工作簿</param>
+        /// <param name="insertSql">逐列寫入資料庫使用的 INSERT SQL</param>
+        /// <param name="excelCols">依匯入順序選取的 Excel 欄索引清單，從零開始</param>
+        /// <param name="excelStartRow">要開始匯入的 Excel 列號，從 1 開始</param>
+        /// <param name="isDates">與匯入欄逐項對應的日期轉換旗標</param>
+        /// <param name="sheetNo">要讀取的工作表索引，從零開始</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="uiDtFormat">日期儲存格轉成字串時使用的格式</param>
+        /// <returns>成功時回傳空字串，失敗時回傳錯誤訊息。</returns>
         public static async Task<string> ImportByDocxA(string uiDtFormat, SpreadsheetDocument docx, string insertSql, int[] excelCols, int excelStartRow, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
         {
             //open excel
@@ -156,15 +152,13 @@ namespace BaseOffice.Services
         }
         */
 
-        /// <summary>
-        /// crud read export to Excel file
-        /// </summary>
-        /// <param name="ctrl"></param>
-        /// <param name="docx"></param>
-        /// <param name="readDto"></param>
-        /// <param name="findJson"></param>
-        /// <param name="srcRowNo"></param>
-        /// <param name="dbStr"></param>
+        /// <summary>依 CRUD 查詢與匯出權限取得資料，填入已開啟的試算表。</summary>
+        /// <param name="ctrl">對應作業的控制器名稱</param>
+        /// <param name="docx">已開啟的 Open XML 工作簿</param>
+        /// <param name="readDto">查詢 SQL 與欄位條件設定</param>
+        /// <param name="findJson">查詢欄位與條件值的 JSON</param>
+        /// <param name="srcRowNo">資料列寫入 SheetData 的零起算插入位置。</param>
+        /// <param name="dbStr">資料庫連線字串</param>
         public static async Task DocxByReadA(string ctrl, SpreadsheetDocument docx, ReadDto readDto,
             JObject findJson, int srcRowNo, string dbStr = "")
         {
@@ -173,12 +167,11 @@ namespace BaseOffice.Services
                 DocxByRows(rows, docx, srcRowNo);
         }
 
-        /// <summary>
-        /// sql statement to excel file
-        /// </summary>
-        /// <param name="filePath">excel file path to save</param>
-        /// <param name="sql"></param>
-        /// <param name="dbStr">db property name in config file</param>
+        /// <summary>執行 SQL 取得資料，填入已開啟的試算表。</summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="docx">已開啟的 Open XML 工作簿</param>
+        /// <param name="srcRowNo">資料列寫入 SheetData 的零起算插入位置。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task DocxBySqlA(string sql, SpreadsheetDocument docx, int srcRowNo, Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
@@ -188,14 +181,11 @@ namespace BaseOffice.Services
                 DocxByRows(rows, docx, srcRowNo);
         }
 
-        /// <summary>
-        /// json rows to openXml excel object
-        /// see https://blog.johnwu.cc/article/asp-net-core-export-to-excel.html
-        /// </summary>
-        /// <param name="rows">json array</param>
-        /// <param name="docx"></param>
-        /// <param name="srcRowNo">excel start row, base 1</param>
-        /// <returns>error msg if any</returns>
+        /// <summary>將 JSON 資料列寫入已開啟的 Open XML 試算表。</summary>
+        /// <param name="rows">依順序處理的資料列集合</param>
+        /// <param name="docx">已開啟的 Open XML 工作簿</param>
+        /// <param name="srcRowNo">資料列寫入 SheetData 的零起算插入位置。</param>
+        /// <returns>成功時回傳空字串，失敗時回傳錯誤訊息。</returns>
         public static string DocxByRows(JArray rows, SpreadsheetDocument docx, int srcRowNo)
         {
             //if (docx == null) return "_Excel.cs RowsToDocx() failed, docx is null.";
@@ -243,17 +233,16 @@ namespace BaseOffice.Services
 
 
         //=== no change ===
-        /// <summary>
-        /// import db by stream
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="insertSql"></param>
-        /// <param name="excelStartRow"></param>
-        /// <param name="excelCols"></param>
-        /// <param name="isDates"></param>
-        /// <param name="sheetNo"></param>
-        /// <param name="db"></param>
-        /// <returns>error msg if any</returns>
+        /// <summary>將 Excel 串流移回開頭後開啟工作簿，並依 SQL 匯入資料。</summary>
+        /// <param name="stream">承載文件內容的串流</param>
+        /// <param name="insertSql">逐列寫入資料庫使用的 INSERT SQL</param>
+        /// <param name="excelStartRow">要開始匯入的 Excel 列號，從 1 開始</param>
+        /// <param name="excelCols">依匯入順序選取的 Excel 欄索引清單，從零開始</param>
+        /// <param name="isDates">與匯入欄逐項對應的日期轉換旗標</param>
+        /// <param name="sheetNo">要讀取的工作表索引，從零開始</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="uiDtFormat">日期儲存格轉成字串時使用的格式</param>
+        /// <returns>成功時回傳空字串，失敗時回傳錯誤訊息。</returns>
         public static async Task<string> ImportByStreamA(string uiDtFormat, Stream stream, string insertSql, int excelStartRow, int[] excelCols, bool[]? isDates = null, int sheetNo = 0, Db? db = null)
         {
             stream.Position = 0;
@@ -261,10 +250,8 @@ namespace BaseOffice.Services
             return await ImportByDocxA(uiDtFormat, docx, insertSql, excelCols, excelStartRow, isDates, sheetNo, db);
         }
 
-        /// <summary>
-        /// excel column name(ex:A) to column index(base 0)
-        /// </summary>
-        /// <param name="colName"></param>
+        /// <summary>將 Excel 欄名轉為從零開始的索引。 (ex:A) (base 0)</summary>
+        /// <param name="colName">要轉換的 Excel 字母欄名</param>
         /// <returns></returns>
         public static int ColNameToIdx(string colName)
         {
@@ -281,11 +268,9 @@ namespace BaseOffice.Services
             return idx;
         }
 
-        /// <summary>
-        /// excel column number to letter string, ex: 'A'
-        /// </summary>
-        /// <param name="idx"></param>
-        /// <returns>col index, base 1</returns>
+        /// <summary>將從零開始的 Excel 欄索引轉為字母欄名。</summary>
+        /// <param name="idx">要轉換的零起算欄索引</param>
+        /// <returns>對應的 Excel 字母欄名。</returns>
         public static string ColIdxToName(int idx)
         {
             var value = idx;  //商數

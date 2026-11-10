@@ -6,8 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace BaseWeb.ViewComponents
 {
     //add row button
+    /// <summary>呈現建立人、修改人及其時間的唯讀欄位的 MVC ViewComponent。</summary>
     public class XgCol4ViewComponent : ViewComponent
     {
+        /// <summary>產生建立人、修改人及其時間的唯讀欄位的 HTML。</summary>
+        /// <param name="cols">傳給元件的版面欄寬設定</param>
         public HtmlString Invoke(string cols = "")
         {
 			//here!!

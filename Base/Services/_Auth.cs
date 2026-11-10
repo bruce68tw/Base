@@ -15,6 +15,7 @@ namespace Base.Services
         /// <summary>
         /// 以完全相等比對允許的 IP 清單，不解析 DNS 或 CIDR。
         /// </summary>
+        /// <param name="clientIp">要比對允許清單的來源 IP 字串</param>
         public static bool CheckClientIp(string clientIp)
         {
             return (_Fun.Config.ClientIps.IndexOf(clientIp) >= 0);
@@ -23,6 +24,9 @@ namespace Base.Services
         /// <summary>
         /// 依授權模式檢查作業或子功能；未傳權限字串時取目前使用者，並非所有模式自動放行。
         /// </summary>
+        /// <param name="prog">要檢查的作業代碼</param>
+        /// <param name="fun">要處理的 CRUD 操作類型</param>
+        /// <param name="authStr">使用者的作業權限字串，空白時採目前使用者的權限</param>
         public static bool CheckAuth(string prog, CrudEnum fun, string authStr = "")
         {
             if (string.IsNullOrEmpty(authStr))
@@ -45,6 +49,12 @@ namespace Base.Services
         /// <summary>
         /// 依 Id 查使用者欄位並比對目前使用者；All 通過，None 失敗，其餘一律按個人範圍檢查。
         /// </summary>
+        /// <param name="ctrl">對應作業的控制器名稱</param>
+        /// <param name="fun">要處理的 CRUD 操作類型</param>
+        /// <param name="table">查詢或異動所用的資料表名稱，由可信設定提供</param>
+        /// <param name="userFid">記錄使用者 ID 的資料欄位名稱</param>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="db">可沿用的 Db，省略時由共用查詢建立。</param>
         public static async Task<string> CheckAuthUserA(string ctrl, CrudEnum fun, string table, 
             string userFid, string key, Db? db = null)
         {
@@ -62,6 +72,7 @@ namespace Base.Services
         /// <summary>
         /// Action 或 Row 模式檢查新增功能，其餘模式直接回傳 true。
         /// </summary>
+        /// <param name="prog">要檢查的作業代碼</param>
         public static bool CheckCreate(string prog)
         {
             return (_Fun.AuthType != AuthTypeEnum.Action && _Fun.AuthType != AuthTypeEnum.Row)
@@ -72,6 +83,9 @@ namespace Base.Services
         /// <summary>
         /// 依 CrudEnum 位置解析單一權限數字；位置缺失為 None，非資料列模式的非零值轉成 All。
         /// </summary>
+        /// <param name="prog">要檢查的作業代碼</param>
+        /// <param name="fun">要處理的 CRUD 操作類型</param>
+        /// <param name="authStr">使用者的作業權限字串，空白時採目前使用者的權限</param>
         public static AuthRangeEnum GetAuthRange(string prog, CrudEnum fun, string authStr = "")
         {
             if (string.IsNullOrEmpty(authStr))
@@ -95,6 +109,8 @@ namespace Base.Services
         /// <summary>
         /// 依使用者角色查詢權限並組成逗號包圍字串；只釋放自行建立的 Db。
         /// </summary>
+        /// <param name="userId">用來識別使用者的 ID</param>
+        /// <param name="db">可沿用的 Db，省略時由方法建立並釋放。</param>
         public static async Task<string> GetAuthStrA(string userId, Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
@@ -234,6 +250,8 @@ join XpProg p on a.ProgId=p.Id
             return progs;
         }
 
+        /// <summary>依使用者的授權作業代碼讀取作業名稱，按 Sort 排序。</summary>
+        /// <param name="user">用於查詢作業權限的使用者資料</param>
         public static async Task<List<string>> GetAuthProgNamesA(BaseUserDto user)
         {
             var codes = GetAuthProgCodes(user);
@@ -249,6 +267,8 @@ order by Sort
         /// <summary>
         /// 讀取單層功能表；非 superMode 且 fnSetPwd 非空時才依使用者權限過濾。
         /// </summary>
+        /// <param name="fnSetPwd">設定密碼功能的作業識別值</param>
+        /// <param name="superMode">是否以不依一般使用者權限過濾的模式讀取</param>
         public static async Task<List<MenuDto>> GetMenu1A(string fnSetPwd = "", bool superMode = false)
         {
             //get Program name from XpProg
@@ -267,6 +287,8 @@ order by Sort
         /// <summary>
         /// 依 MenuGroup 組合啟用中的兩層選單；非 superMode 時原地過濾無權限項目。
         /// </summary>
+        /// <param name="fnSetPwd">設定密碼功能的作業識別值</param>
+        /// <param name="superMode">是否以不依一般使用者權限過濾的模式讀取</param>
         public static async Task<List<MenuDto>> GetMenu2A(string fnSetPwd, bool superMode = false)
         {
             var sql = @"
@@ -307,6 +329,9 @@ order by c.Sort, p.Sort
         /// <summary>
         /// 原地移除無權限項目與空群組；無密碼使用者依 fnSetPwd 限制可見作業。
         /// </summary>
+        /// <param name="menus">要原地過濾的選單清單</param>
+        /// <param name="fnSetPwd">設定密碼功能的作業識別值</param>
+        /// <param name="has2Level">選單是否包含群組與下層項目</param>
         public static void RemoveEmptyMenu(List<MenuDto>? menus, string fnSetPwd, bool has2Level)
         {
             if (menus == null) return;

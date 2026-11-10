@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BaseFlow.Services
 {
+    /// <summary>依 XpFlow 的節點與連線建立簽核資料，並處理簽核決定。</summary>
     public class _Flow
     {
         //match to XpCode.Type="AndOr" && Flow.js
@@ -27,6 +28,10 @@ where u.Id='{0}'
         public static string SqlRole = "select UserId from dbo.XpUserRole where RoleId='{0}'";
 
         //for controller Read method
+        /// <summary>載入簽核流程設定畫面使用的選項。</summary>
+        /// <param name="viewBag">要填入選項資料的 MVC ViewBag</param>
+        /// <param name="locale">用於選擇語系欄位的語系代碼</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task ReadSetViewBagA(dynamic viewBag, string locale, Db? db = null)
         {
             var newDb = _Db.CheckOpenDb(ref db);
@@ -39,15 +44,14 @@ where u.Id='{0}'
             await _Db.CheckCloseDbA(db!, newDb);
         }
 
-        /// <summary>
-        /// create workflow signing rows
-        /// </summary>
-        /// <param name="row">flow data</param>
-        /// <param name="userFid">fid of owner user id of row</param>
-        /// <param name="flowCode">Flow.Code</param>
-        /// <param name="sourceId">source row Id(key)</param>
-        /// <param name="db"></param>
-        /// <returns>error msg if any</returns>
+        /// <summary>依流程規則建立簽核主檔及明細，失敗時回傳錯誤訊息。</summary>
+        /// <param name="row">提供流程條件及來源擁有者欄位的資料列。</param>
+        /// <param name="userFid">來源資料列中記錄擁有者使用者 ID 的欄位名稱。</param>
+        /// <param name="flowCode">對應 XpFlow.Code 的流程代碼</param>
+        /// <param name="sourceId">與簽核資料關聯的來源主鍵 (key)</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="isTest">是否使用測試用的簽核資料表</param>
+        /// <returns>成功時回傳空字串，失敗時回傳錯誤訊息。</returns>
         public static async Task<string> CreateSignRowsA(JObject row, string userFid, string flowCode,
             string sourceId, bool isTest, Db db)
         {
@@ -376,14 +380,14 @@ insert into dbo.{signTable}(
             return false;
         }
 
-        /// <summary>
-        /// sign one row
-        /// </summary>
-        /// <param name="flowSignId">XpFlowSign.Id</param>
-        /// <param name="signYes">agree or not</param>
-        /// <param name="signNote">sign note</param>
-        /// <param name="sourceTable">source Table for update FlowLevel, FlowStatus columns</param>
-        /// <returns>ResultDto for called by controller</returns>
+        /// <summary>處理一筆簽核的同意或退回，並更新來源資料的流程狀態。</summary>
+        /// <param name="flowSignId">要更新的簽核明細主鍵</param>
+        /// <param name="signYes">是否同意簽核，否則按退回類型處理</param>
+        /// <param name="signNote">寫入簽核明細的意見</param>
+        /// <param name="sourceTable">要更新流程關卡及狀態的來源表名</param>
+        /// <param name="isTest">是否使用測試用的簽核資料表</param>
+        /// <param name="backType">未同意時要採用的退回處理方式</param>
+        /// <returns>供控制器處理的簽核結果。</returns>
         public static async Task<ResultDto> SignRowA(string flowSignId, bool signYes,
             string signNote, string sourceTable, bool isTest, FlowBackTypeEnum backType)
         {

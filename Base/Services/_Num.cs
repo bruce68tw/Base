@@ -11,7 +11,7 @@ namespace Base.Services
         /// <summary>
         /// 空鍵回傳 -1，非數字或正數鍵回傳 0；零或負數轉為非負的暫存列號。
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="key">要判斷是否為暫存列號的資料鍵。</param>
         /// <returns>-1(error/not found), 0(正常key值), n(new key)</returns>
         public static int KeyToUpRowNo(string key)
         {
@@ -23,7 +23,7 @@ namespace Base.Services
         /// <summary>
         /// 依每列項目數換算 12 欄格線寬度；未列出的項目數回傳 12。
         /// </summary>
-        /// <param name="itemCount">columns count, 1-12</param>
+        /// <param name="itemCount">每列要配置的項目數</param>
         /// <returns></returns>
         public static int NumToRwdCol(int itemCount)
         {
@@ -42,6 +42,8 @@ namespace Base.Services
         /// <summary>
         /// 依分隔符轉整數清單；空字串回傳空清單，無法解析的項目略過。
         /// </summary>
+        /// <param name="text">要處理的文字</param>
+        /// <param name="sep">用於連接或拆分項目的分隔符號</param>
         public static List<int> StrToList(string text, char sep)
         {
             var result = new List<int>();
@@ -56,6 +58,8 @@ namespace Base.Services
         /// <summary>
         /// 嘗試解析整數；null 或失敗時回傳 value。
         /// </summary>
+        /// <param name="obj">要處理或轉成字串的物件</param>
+        /// <param name="value">輸入為 null 或無法解析時回傳的整數。</param>
         public static int TryParse(object? obj, int value)
         {
             return (obj == null) ? value : 
@@ -65,6 +69,7 @@ namespace Base.Services
         /// <summary>
         /// 回傳 0 起、未達 maxNum 的一般 Random 整數，非密碼學安全亂數。
         /// </summary>
+        /// <param name="maxNum">亂數的上界，不含該值</param>
         public static int GetRandom(int maxNum)
         {
             var random = new Random(Guid.NewGuid().GetHashCode());

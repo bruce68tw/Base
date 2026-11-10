@@ -7,17 +7,16 @@ using BaseWeb.Services;
 //todo
 namespace BaseWeb.Helpers
 {
+    /// <summary>提供舊版自動完成文字欄位輔助方法。</summary>
     public static class XiTextAutoHelper
     {
 
-        /// <summary>
-        /// todo
-        /// auto complete 文字欄位, 含 error msg
-        /// </summary>
-        /// <param name="htmlHelper"></param>
-        /// <param name="fid"></param>
-        /// <param name="hint"></param>
-        /// <param name="ftype"></param>
+        /// <summary>產生可由前端初始化自動完成的文字輸入欄位。</summary>
+        /// <param name="htmlHelper">目前 Razor 檢視使用的 HTML 輔助物件</param>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="hint">文字輸入欄位的提示文字</param>
+        /// <param name="value">用於初始化欄位或選項的值</param>
+        /// <param name="maxLength">文字長度上限，非正數時不加上限制屬性</param>
         /// <returns></returns>
         public static IHtmlContent XiTextAuto(this IHtmlHelper htmlHelper, string fid, string value = "", int maxLength = 0, string hint="")
         {

@@ -8,6 +8,7 @@
         /// <summary>
         /// 物件為 null 或字串表示為空時回傳 true。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
         public static bool IsEmpty(object? data)
         {
             return (data == null || data.ToString() == "");
@@ -16,6 +17,7 @@
         /// <summary>
         /// 物件非 null 且字串表示非空時回傳 true。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
         public static bool NotEmpty(object? data)
         {
             return !_Var.IsEmpty(data);
@@ -24,6 +26,7 @@
         /// <summary>
         /// 僅 1 或不分大小寫的 true 視為 true；null 視為 false。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
         public static bool ToBool(object? data)
         {
             if (data == null) return false;

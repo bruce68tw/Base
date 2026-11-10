@@ -4,10 +4,14 @@ using Newtonsoft.Json.Linq;
 
 namespace BaseFlow.Services
 {
+    /// <summary>提供簽核流程定義及其子資料的維護設定。</summary>
     public class XgFlowE : BaseEditSvc
     {
+        /// <summary>以控制器名稱初始化維護服務。</summary>
+        /// <param name="ctrl">對應作業的控制器名稱</param>
         public XgFlowE(string ctrl) : base(ctrl) { }
 
+        /// <summary>取得簽核流程主從資料的維護設定。</summary>
         override public EditDto GetDto()
         {
             return new EditDto()
@@ -66,11 +70,16 @@ namespace BaseFlow.Services
             };
         }
 
+        /// <summary>以流程維護設定新增資料。</summary>
+        /// <param name="json">要寫入的流程主從資料 JSON</param>
         public override async Task<ResultDto> CreateA(JObject json)
         {
             return await EditSvc().CreateA(json);
         }
 
+        /// <summary>依主鍵更新流程主從資料。</summary>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="json">要寫入的流程主從資料 JSON</param>
         public override async Task<ResultDto> UpdateA(string key, JObject json)
         {
             return await EditSvc().UpdateA(key, json);

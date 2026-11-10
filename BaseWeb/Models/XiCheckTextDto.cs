@@ -1,6 +1,7 @@
 ﻿namespace BaseWeb.Models
 {
     //繼承 XiCheckDto !!
+    /// <summary>設定附文字輸入的核取欄位。</summary>
     public class XiCheckTextDto : XiCheckDto
     {
         /// <summary>

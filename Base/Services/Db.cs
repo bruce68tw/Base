@@ -35,6 +35,7 @@ namespace Base.Services
         /// <summary>
         /// 保存連線字串但尚不開連線；空字串使用 _Fun.Config.Db。
         /// </summary>
+        /// <param name="dbStr">資料庫連線字串，空字串時採用共用設定。</param>
         public Db(string dbStr = "")
         {
             //_dbStr: db field name at config, if length > 30, it will be connection string !!
@@ -181,6 +182,9 @@ namespace Base.Services
         /// <summary>
         /// 執行查詢並回傳讀取器，失敗可為 null；呼叫端須關閉讀取器，dbSec 單位秒。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
+        /// <param name="dbSec">資料庫命令逾時秒數</param>
         public async Task<IDataReader?> GetReaderA(string sql, List<object>? sqlArgs = null, int dbSec = _dbSec)
         {
             //init command
@@ -210,6 +214,7 @@ namespace Base.Services
         /// <summary>
         /// 將名稱、值交錯清單中的值串成記錄文字，不用於 SQL 參數綁定。
         /// </summary>
+        /// <param name="args">供擷取參數值並寫入記錄的名稱和值交錯清單。</param>
         public string GetArgsText(List<object> args)
         {
             if (args.Count == 0) return "";
@@ -242,6 +247,8 @@ namespace Base.Services
         /// <summary>
         /// 取得第一列 JObject；無資料或讀取失敗可回傳 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<JObject?> GetRowA(string sql, List<object>? sqlArgs = null)
         {
             var rows = await GetRowsA(sql, sqlArgs);
@@ -252,6 +259,8 @@ namespace Base.Services
         /// <summary>
         /// 取得 JArray 並在正常讀取後關閉讀取器；無資料或捕捉到的錯誤回傳 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<JArray?> GetRowsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderA(sql, sqlArgs);
@@ -280,6 +289,8 @@ namespace Base.Services
         /// <summary>
         /// 取得第一列首欄的可空整數；無資料或讀取失敗可回傳 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<int?> GetIntA(string sql, List<object>? sqlArgs = null)
         {
             var list = await GetIntsA(sql, sqlArgs);
@@ -289,6 +300,8 @@ namespace Base.Services
         /// <summary>
         /// 讀取首欄整數清單，DB NULL 保留為 null；無資料或查詢失敗回傳 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<List<int?>?> GetIntsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
@@ -306,6 +319,8 @@ namespace Base.Services
         /// <summary>
         /// 取得第一列首欄字串；DB NULL 為空字串，無資料時可為 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<string?> GetStrA(string sql, List<object>? sqlArgs = null)
         {
             var list = await GetStrsA(sql, sqlArgs);
@@ -315,6 +330,8 @@ namespace Base.Services
         /// <summary>
         /// 讀取首欄字串清單，DB NULL 轉空字串；無資料時回傳 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<List<string>?> GetStrsA(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
@@ -333,6 +350,8 @@ namespace Base.Services
         /// <summary>
         /// 將第一列映射為 IdStrDto，無資料或映射失敗回傳 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<IdStrDto?> GetIdStrA(string sql, List<object>? sqlArgs = null)
         {
             var rows = await GetModelsA<IdStrDto>(sql, sqlArgs);
@@ -341,6 +360,8 @@ namespace Base.Services
         /// <summary>
         /// 將查詢結果映射為 IdStrDto 清單，無資料或映射失敗回傳 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<List<IdStrDto>?> GetIdStrsA(string sql, List<object>? sqlArgs = null)
         {
             return await GetModelsA<IdStrDto>(sql, sqlArgs);
@@ -348,6 +369,8 @@ namespace Base.Services
         /// <summary>
         /// 以同名公開屬性映射第一列；無資料或失敗回傳 default。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<T?> GetModelA<T>(string sql, List<object>? sqlArgs = null)
         {
             var rows = await GetModelsA<T>(sql, sqlArgs);
@@ -357,6 +380,8 @@ namespace Base.Services
         /// <summary>
         /// 以同名公開屬性與資料庫原始型別映射新模型；需可無參數建構，無資料或映射失敗回傳 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<List<T>?> GetModelsA<T>(string sql, List<object>? sqlArgs = null)
         {
             var reader = await GetReaderForModelA(sql, sqlArgs);
@@ -406,6 +431,7 @@ namespace Base.Services
         /// <summary>
         /// 依先前欄位對照轉換目前列；DB NULL 轉空字串，日期轉共用格式。
         /// </summary>
+        /// <param name="reader">目前位於待轉換資料列的資料讀取器</param>
         public JObject GetRowByReader(IDataReader reader)
         {
             //var dtFormat = _Fun.DbDtFormat;
@@ -479,6 +505,8 @@ namespace Base.Services
         /// <summary>
         /// 執行異動並回傳筆數；初始化失敗為 0、一般 DB 錯誤為 -1、辨識出的唯一鍵錯誤為 -2。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
         public async Task<int> ExecSqlA(string sql, List<object>? sqlArgs = null)
         {
             if (!await InitCmdA(sql, sqlArgs)) return 0;
@@ -514,6 +542,12 @@ namespace Base.Services
         /// <summary>
         /// 依參數化主鍵更新狀態為 1 或 0，異動筆數大於 0 才回傳 true；結構片段直接組合。
         /// </summary>
+        /// <param name="table">查詢或異動所用的資料表名稱，由可信設定提供</param>
+        /// <param name="kid">主鍵欄位名稱，由可信設定提供</param>
+        /// <param name="kvalue">要比對的主鍵值</param>
+        /// <param name="status">寫入的狀態，true 對應 1，false 對應 0。</param>
+        /// <param name="statusId">要更新的狀態欄位名稱</param>
+        /// <param name="where">附加於更新語句的額外條件，由可信設定提供</param>
         public async Task<bool> SetRowStatus(string table, string kid, object kvalue, 
             bool status, string statusId = "Status", string where = "")
         {

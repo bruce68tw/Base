@@ -357,6 +357,11 @@ namespace Base.Services
         /// <summary>
         /// 先備妥 Config 再設定全域模式、DI 與 DB 格式，必要時原地解密組態；成功回傳空字串，不驗證連線。
         /// </summary>
+        /// <param name="isDev">是否以開發模式初始化</param>
+        /// <param name="diBox">供共用程式解析相依服務的 DI 容器</param>
+        /// <param name="dbType">使用的資料庫類型</param>
+        /// <param name="authType">應用程式使用的授權模式</param>
+        /// <param name="multiLang">是否啟用多語功能</param>
         public static string Init(bool isDev, IServiceProvider? diBox, DbTypeEnum dbType, 
             AuthTypeEnum authType, bool multiLang = false)
         {
@@ -468,6 +473,8 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// <summary>
         /// 產生全部人角色的等值或不等值 SQL 片段；未指定 RoleAll 時回傳 1=1。
         /// </summary>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="equal">是否使用相等條件</param>
         public static string RoleAllCond(string fid, bool equal)
         {
             return (RoleAll == "")
@@ -478,6 +485,8 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// <summary>
         /// 以字串連接根路徑與子目錄，可補尾端分隔符，不建立目錄。
         /// </summary>
+        /// <param name="folder">相對於應用根目錄的子路徑</param>
+        /// <param name="tailSep">是否在結果尾端補上目錄分隔符號</param>
         public static string Dir(string folder, bool tailSep = true)
         {
             return DirRoot + folder + (tailSep ? DirSep : "");
@@ -568,6 +577,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// <summary>
         /// 拋出指定訊息的 Exception，空訊息改用系統錯誤文字。
         /// </summary>
+        /// <param name="error">要記錄或回傳的錯誤訊息</param>
         public static void Except(string error = "")
         {
             throw new Exception(_Str.EmptyToValue(error, SystemError));
@@ -576,6 +586,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
         /// <summary>
         /// 將設定的圖片根網址與子路徑直接連接，不進行 URL 編碼。
         /// </summary>
+        /// <param name="subPath">要附加於圖片根網址的子路徑</param>
         public static string GetHtmlImageUrl(string subPath)
         {
             return $"{Config!.HtmlImageUrl}{subPath}";

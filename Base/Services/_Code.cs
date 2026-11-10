@@ -48,6 +48,9 @@ namespace Base.Services
         /// <summary>
         /// 查詢 Id、Str 選項；無資料或底層查詢失敗回傳空清單。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
         public static async Task<List<IdStrDto>> SqlToCodesA(string sql, Db? db = null, List<object>? args = null)
         {
             //return await _Db.SqlToCodesA(sql, null, db) ?? [];
@@ -57,6 +60,9 @@ namespace Base.Services
         /// <summary>
         /// 查詢附 Ext 的選項，無結果回傳空清單。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
         public static async Task<List<IdStrExtDto>> SqlToCodeExtsA(string sql, Db? db = null, List<object>? args = null)
         {
             return await _Db.GetModelsA<IdStrExtDto>(sql, args, db) ?? [];
@@ -65,6 +71,9 @@ namespace Base.Services
         /// <summary>
         /// 查詢附 Ext、Ext2 的選項，無結果回傳空清單。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
         public static async Task<List<IdStrExt2Dto>> SqlToCodeExt2sA(string sql, Db? db = null, List<object>? args = null)
         {
             return await _Db.GetModelsA<IdStrExt2Dto>(sql, args, db) ?? [];
@@ -73,6 +82,9 @@ namespace Base.Services
         /// <summary>
         /// 依分類查 XpCode；locale 非空時選取 Name_語系 欄位，依 Sort 排序。
         /// </summary>
+        /// <param name="type">要套用的分類或格式值</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="locale">用於選擇語系欄位的語系代碼</param>
         public static async Task<List<IdStrDto>> TypeToCodesA(string type, Db? db = null, string locale = "")
         {
             var name = string.IsNullOrEmpty(locale) ? "Name" : "Name_" + locale;
@@ -87,6 +99,9 @@ order by Sort";
         /// <summary>
         /// 從指定表讀 Id、Name，預設依 Id 排序。
         /// </summary>
+        /// <param name="table">查詢或異動所用的資料表名稱，由可信設定提供</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="sort">查詢使用的排序片段，由可信設定提供</param>
         public static async Task<List<IdStrDto>> TableToCodesA(string table, Db? db = null, string? sort = null)
         {
             //return await _Db.TableToCodesA("XpFlow", db, sort) ?? [];
@@ -101,6 +116,10 @@ order by {sort}";
         /// <summary>
         /// 從指定表讀選項及擴充欄位，預設依 Id 排序。
         /// </summary>
+        /// <param name="table">查詢或異動所用的資料表名稱，由可信設定提供</param>
+        /// <param name="extFid">要讀為擴充值的資料庫欄位名稱</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="sort">查詢使用的排序片段，由可信設定提供</param>
         public static async Task<List<IdStrExtDto>> TableToCodeExtsA(string table, string extFid, 
             Db? db = null, string? sort = null)
         {
@@ -115,6 +134,9 @@ order by {sort}";
         /// <summary>
         /// 查詢多個 XpCode 分類，Ext 帶回 Type；分類清單直接加引號組合。
         /// </summary>
+        /// <param name="types">要查詢的代碼分類清單</param>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="locale">用於選擇語系欄位的語系代碼</param>
         public static async Task<List<IdStrExtDto>> TypesToCodesA(string[] types, Db? db = null, string locale = "")
         {
             var name = string.IsNullOrEmpty(locale) ? "Name" : "Name_" + locale;
@@ -129,6 +151,8 @@ order by Type, Sort";
         /// <summary>
         /// 在清單首項原地加入空識別碼選項；輸入 null 時建立清單。
         /// </summary>
+        /// <param name="codes">要處理的選項清單</param>
+        /// <param name="plsSelect">空值選項要顯示的提示文字</param>
         public static List<IdStrDto> AddEmpty(List<IdStrDto>? codes, string plsSelect)
         {
             codes ??= [];
@@ -143,6 +167,7 @@ order by Type, Sort";
         /// <summary>
         /// 取得 XpUser 的使用者選項。
         /// </summary>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>> UsersA(Db? db = null)
         {
             return await TableToCodesA("dbo.XpUser", db);
@@ -151,6 +176,7 @@ order by Type, Sort";
         /// <summary>
         /// 取得依 Sort 排列的 XpProg 選項。
         /// </summary>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>> ProgsA(Db? db = null)
         {
             return await TableToCodesA("dbo.XpProg", db, "Sort");
@@ -159,6 +185,7 @@ order by Type, Sort";
         /// <summary>
         /// 取得角色選項，依 RoleAllCond 排除指定的全部人角色。
         /// </summary>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>> RolesA(Db? db = null)
         {
             var sql = $@"
@@ -174,6 +201,7 @@ order by Sort
         /// <summary>
         /// 取得 xAuthRange 分類的資料範圍選項。
         /// </summary>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>> AuthRangesA(Db? db = null)
         {
             return await TypeToCodesA(AuthRange, db);
@@ -182,6 +210,7 @@ order by Sort
         /// <summary>
         /// 取得 XpFlow 的流程選項。
         /// </summary>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>> XpFlowA(Db? db = null)
         {
             return await TableToCodesA("XpFlow", db);
@@ -190,6 +219,7 @@ order by Sort
         /// <summary>
         /// 連接部門與角色，顯示為部門名稱-角色名稱。
         /// </summary>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>> DeptRolesA(Db? db = null)
         {
             var sql = $@"
@@ -205,6 +235,7 @@ order by d.Sort, r.Sort
         /// <summary>
         /// 取得依 Sort 排列的單層作業選項。
         /// </summary>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>> Progs1A(Db? db = null)
         {
             return await TableToCodesA("dbo.XpProg", db, "Sort");
@@ -213,6 +244,7 @@ order by d.Sort, r.Sort
         /// <summary>
         /// 依 MenuGroup 分類及作業 Sort 排序取得作業選項。
         /// </summary>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>> Progs2A(Db? db = null)
         {
             var sql = $@"
@@ -226,6 +258,7 @@ order by c.Sort, p.Sort";
         /// <summary>
         /// 取得依 Sort 排列的部門選項。
         /// </summary>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>> DeptsA(Db? db = null)
         {
             return await TableToCodesA("dbo.XpDept", db, "Sort");
@@ -234,6 +267,7 @@ order by c.Sort, p.Sort";
         /// <summary>
         /// 從擴充代碼中取簽核分類的同意與退回項目；無有效清單時可能拋出。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
         public static List<IdStrDto>? CodesToSignStatuses(List<IdStrExtDto>? rows)
         {
             return FilterByExt(rows, SignStatus)!
@@ -244,6 +278,8 @@ order by c.Sort, p.Sort";
         /// <summary>
         /// 取得簽核狀態；forSign 為 true 時只取 Ext=1 的可簽項目。
         /// </summary>
+        /// <param name="forSign">是否只保留可供簽核操作選擇的狀態</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>> SignStatusA(bool forSign, Db? db = null)
         {
             //return 
@@ -282,6 +318,8 @@ order by Sort
         /// <summary>
         /// 依 Ext 篩選並轉為 Id、Str 清單；來源 null 或空時回傳 null。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
+        /// <param name="value">要使用的輸入值</param>
         public static List<IdStrDto>? FilterByExt(List<IdStrExtDto>? rows, string value)
         {
             return (rows == null || rows.Count == 0)

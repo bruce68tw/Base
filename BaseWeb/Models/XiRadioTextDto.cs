@@ -1,6 +1,7 @@
 ﻿namespace BaseWeb.Models
 {
     //繼承 XiRadioDto，增加 TextMaxLen 與 TextClsBox 兩個屬性
+    /// <summary>設定附文字輸入的單選欄位。</summary>
     public class XiRadioTextDto : XiRadioDto
     {
         /// <summary>

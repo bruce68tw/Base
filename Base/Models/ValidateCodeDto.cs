@@ -29,6 +29,7 @@ namespace Base.Models
         /// <summary>
         /// 依 length 產生數字字串，使用一般 Random；極端長度可能造成例外。
         /// </summary>
+        /// <param name="length">要產生的驗證碼字數</param>
         public string CreateValidateCode(int length)
         {
             int[] randMembers = new int[length];
@@ -117,6 +118,7 @@ namespace Base.Models
         /// <summary>
         /// 依字數回傳預估圖片寬度：字數乘以 12。
         /// </summary>
+        /// <param name="validateNumLength">驗證碼的字元數</param>
         public static int GetImageWidth(int validateNumLength)
         {
             return (int)(validateNumLength * 12.0);

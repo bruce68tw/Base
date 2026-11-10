@@ -40,6 +40,7 @@ namespace Base.Services
         /// <summary>
         /// 寫入一般訊息，不受除錯記錄旗標限制。
         /// </summary>
+        /// <param name="msg">要傳送或記錄的訊息</param>
         public static void Info(string msg)
         {
             //temp add
@@ -51,6 +52,7 @@ namespace Base.Services
         /// <summary>
         /// 僅在 Config.LogDebug 啟用時寫入除錯訊息。
         /// </summary>
+        /// <param name="msg">要傳送或記錄的訊息</param>
         public static void Debug(string msg)
         {
             if (_Fun.Config.LogDebug)
@@ -60,6 +62,7 @@ namespace Base.Services
         /// <summary>
         /// 僅在 Config.LogSql 啟用時寫入 SQL 訊息。
         /// </summary>
+        /// <param name="msg">要傳送或記錄的訊息</param>
         public static void Sql(string msg)
         {
             if (_Fun.Config.LogSql)
@@ -69,6 +72,7 @@ namespace Base.Services
         /// <summary>
         /// 寫入錯誤記錄。
         /// </summary>
+        /// <param name="msg">要傳送或記錄的訊息</param>
         public static void Error(string msg)
         {
             LogFile(GetFilePath("error"), msg);
@@ -77,6 +81,7 @@ namespace Base.Services
         /// <summary>
         /// 寫入錯誤記錄，再非同步嘗試寄送管理者通知。
         /// </summary>
+        /// <param name="msg">要傳送或記錄的訊息</param>
         public static async Task ErrorA(string msg)
         {
             LogFile(GetFilePath("error"), msg);
@@ -100,6 +105,7 @@ namespace Base.Services
         /// <summary>
         /// 寫入錯誤記錄，再非同步嘗試寄送管理者通知。
         /// </summary>
+        /// <param name="msg">要傳送或記錄的訊息</param>
         public static async Task ErrorRootA(string msg)
         {
             LogFile(GetFilePath("error"), msg);

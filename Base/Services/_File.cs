@@ -19,6 +19,7 @@ namespace Base.Services
         /// <summary>
         /// 讀取 JSON 提問檔；讀取或反序列化失敗時記錄並回傳 null。
         /// </summary>
+        /// <param name="path">要處理的檔案或目錄路徑</param>
         public static LlmAskDto? ReadLlmAsk(string path)
         {
             try
@@ -36,6 +37,8 @@ namespace Base.Services
         /// <summary>
         /// 將路徑副檔名改成上傳用變形名稱，不移動或加密檔案內容。
         /// </summary>
+        /// <param name="path">要處理的檔案或目錄路徑</param>
+        /// <param name="oldExt">原路徑使用的副檔名</param>
         public static string PathExtToUp(string path, string oldExt = "")
         {
             if (string.IsNullOrEmpty(oldExt))
@@ -46,6 +49,7 @@ namespace Base.Services
         /// <summary>
         /// 對副檔名部分字元作既有位移轉換；輸入須非空，並非加密。
         /// </summary>
+        /// <param name="ext">要處理或比對的副檔名</param>
         public static string UpExtRename(string ext)
         {
             var chars = ext.ToCharArray();
@@ -61,6 +65,7 @@ namespace Base.Services
         /// <summary>
         /// 依既有位移規則還原副檔名，輸入須非空。
         /// </summary>
+        /// <param name="ext">要處理或比對的副檔名</param>
         public static string UpExtRestore(string ext)
         {
             var chars = ext.ToCharArray();
@@ -76,6 +81,9 @@ namespace Base.Services
         /// <summary>
         /// 建立 ZIP 並先刪除既有目的檔；名稱數量不符或來源缺失回傳 false，可能留下部分結果。
         /// </summary>
+        /// <param name="fromPaths">要加入壓縮檔的來源檔案路徑清單</param>
+        /// <param name="toPath">要建立的 ZIP 檔案路徑，同名檔會先刪除。</param>
+        /// <param name="entryNames">與來源路徑逐項對應的 ZIP 項目名稱</param>
         public static bool ZipFiles(List<string> fromPaths, string toPath, List<string>? entryNames = null)
         {
             if (entryNames != null && entryNames.Count != fromPaths.Count)
@@ -110,6 +118,8 @@ namespace Base.Services
         /// <summary>
         /// 建立位置歸零的 ZIP MemoryStream，由呼叫端釋放；名稱不符或來源缺失回傳 null。
         /// </summary>
+        /// <param name="fromPaths">要加入壓縮檔的來源檔案路徑清單</param>
+        /// <param name="entryNames">與來源路徑逐項對應的 ZIP 項目名稱</param>
         public static MemoryStream? ZipToStream(List<string> fromPaths, List<string>? entryNames = null)
         {
             if (entryNames != null && entryNames.Count != fromPaths.Count)
@@ -149,6 +159,8 @@ namespace Base.Services
         /// <summary>
         /// 列出目錄直屬且尾碼符合 ext 的檔名，忽略大小寫；目錄缺失回傳 null。
         /// </summary>
+        /// <param name="dir">要處理的目錄路徑</param>
+        /// <param name="ext">要處理或比對的副檔名</param>
         public static List<string>? GetFiles(string dir, string ext)
         {
             dir = _Str.RemoveRightSlash(dir);
@@ -168,6 +180,8 @@ namespace Base.Services
         /// <summary>
         /// 計算目錄直屬且尾碼符合 ext 的檔案數，目錄缺失回傳 0。
         /// </summary>
+        /// <param name="dir">要處理的目錄路徑</param>
+        /// <param name="ext">要處理或比對的副檔名</param>
         public static int GetFileCount(string dir, string ext)
         {
             dir = _Str.RemoveRightSlash(dir);
@@ -186,6 +200,7 @@ namespace Base.Services
         /// <summary>
         /// 目錄不存在時建立，目錄字串須非空。
         /// </summary>
+        /// <param name="dir">要處理的目錄路徑</param>
         public static void MakeDir(string dir)
         {
             dir = _Str.RemoveRightSlash(dir);
@@ -196,6 +211,7 @@ namespace Base.Services
         /// <summary>
         /// 取得路徑最後的檔名，含副檔名。
         /// </summary>
+        /// <param name="path">要處理的檔案或目錄路徑</param>
         public static string GetFileName(string path)
         {
             return Path.GetFileName(path);
@@ -204,6 +220,7 @@ namespace Base.Services
         /// <summary>
         /// 取得小寫且不含句點的副檔名。
         /// </summary>
+        /// <param name="path">要處理的檔案或目錄路徑</param>
         public static string GetFileExt(string path)
         {
             //return Path.GetExtension(path).Replace(".", "").ToLower();
@@ -214,6 +231,8 @@ namespace Base.Services
         /// <summary>
         /// 尋找固定變形圖片尾碼；目錄缺失回傳空字串，無符合檔案回傳 null。
         /// </summary>
+        /// <param name="dir">要處理的目錄路徑</param>
+        /// <param name="fileName">檔案名稱，必要時包含副檔名</param>
         public static string? DirHasUpImage(string dir, string fileName)
         {
             if (!Directory.Exists(dir))
@@ -235,6 +254,8 @@ namespace Base.Services
         /// <summary>
         /// 在副檔名前插入指定尾碼，不改動實體檔案。
         /// </summary>
+        /// <param name="fname">要附加尾碼的檔名</param>
+        /// <param name="tail">要附加或移除的尾端字串</param>
         public static string FnameAddTail(string fname, string tail)
         {
             var ext = Path.GetExtension(fname);  //has dot(.)
@@ -273,9 +294,9 @@ namespace Base.Services
         }
         */
 
-        /// <summary>
-        /// 以 UTF-8 讀取檔案，檔案不存在回傳 null。
-        /// </summary>
+        /// <summary>同步以 UTF-8 讀取文字檔。缺檔時回傳 null，可選擇記錄錯誤。</summary>
+        /// <param name="path">要以 UTF-8 讀取的文字檔路徑。</param>
+        /// <param name="logError">找不到檔案時是否記錄錯誤。</param>
         public static string? ToStr(string path, bool logError = false)
         {
             if (!File.Exists(path))
@@ -293,6 +314,7 @@ namespace Base.Services
         /// <summary>
         /// 非同步以 UTF-8 讀檔，檔案不存在回傳 null。
         /// </summary>
+        /// <param name="path">要處理的檔案或目錄路徑</param>
         public static async Task<string?> ToStrA(string path)
         {
             if (!File.Exists(path)) return null;
@@ -305,6 +327,8 @@ namespace Base.Services
         /// <summary>
         /// 以 UTF-8 覆寫檔案，成功回傳 true；捕捉寫入例外後記錄並回傳 false。
         /// </summary>
+        /// <param name="str">要以 UTF-8 寫入檔案的文字。</param>
+        /// <param name="path">要處理的檔案或目錄路徑</param>
         public static async Task<bool> StrToFileA(string str, string path)
         {
             try
@@ -338,6 +362,8 @@ namespace Base.Services
         /// <summary>
         /// 尋找未存在的加序號路徑，不建立檔案；tailPos 控制序號在副檔名前或後。
         /// </summary>
+        /// <param name="filePath">要讀取或寫入的完整檔案路徑</param>
+        /// <param name="tailPos">決定序號加在副檔名前或後的位置值</param>
         public static string GetNextFileName(string filePath, bool tailPos)
         {
             //split the path into parts
@@ -359,6 +385,8 @@ namespace Base.Services
         /// <summary>
         /// 依上傳分類取得副檔名清單，全部類型為 *，未知類型為 ??。
         /// </summary>
+        /// <param name="type">要套用的分類或格式值</param>
+        /// <param name="fileTypeExts">各上傳檔案類型對應的副檔名設定</param>
         public static string TypeToExts(UpFileTypeEnum type, string fileTypeExts)
         {
             return type switch
@@ -376,6 +404,9 @@ namespace Base.Services
         /// <summary>
         /// 取得目錄中符合檔名前綴的第一個路徑，無結果回傳預設圖片路徑。
         /// </summary>
+        /// <param name="dir">要處理的目錄路徑</param>
+        /// <param name="preName">要比對的檔名前綴</param>
+        /// <param name="noImagePath">查無對應檔案時回傳的預設圖片路徑</param>
         public static string GetFirstPath(string dir, string preName, string noImagePath)
         {
             var files = Directory.GetFiles(dir, preName + "*");
@@ -400,6 +431,7 @@ namespace Base.Services
         /// <summary>
         /// 以字串分割取得目錄，優先採最後一個斜線，不進行路徑正規化。
         /// </summary>
+        /// <param name="path">要處理的檔案或目錄路徑</param>
         public static string PathToDir(string path)
         {
             var dir = _Str.GetLeft2(path, "/");
@@ -411,6 +443,8 @@ namespace Base.Services
         /// <summary>
         /// 以識別碼與原檔副檔名組成檔名；原檔名為空時回傳空字串。
         /// </summary>
+        /// <param name="id">用於識別目標資料的 ID</param>
+        /// <param name="fileName">檔案名稱，必要時包含副檔名</param>
         public static string IdToFileName(string id, string fileName)
         {
             return (string.IsNullOrEmpty(fileName))

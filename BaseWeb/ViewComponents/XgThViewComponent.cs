@@ -7,15 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace BaseWeb.ViewComponents
 {
     //配合 _xp.js
+    /// <summary>呈現可附提示及必填標記的表頭的 MVC ViewComponent。</summary>
     public class XgThViewComponent : ViewComponent
     {
-        /// <summary>
-        /// table th
-        /// </summary>
-        /// <param name="helper"></param>
-        /// <param name="title">prog path list</param>
-        /// <param name="tip"></param>
-        /// <param name="required"></param>
+        /// <summary>產生可附提示及必填標記的表頭的 HTML。</summary>
+        /// <param name="dto">表頭的標題、提示與顯示設定。</param>
         /// <returns></returns>
         public HtmlString Invoke(XgThDto dto)
         {

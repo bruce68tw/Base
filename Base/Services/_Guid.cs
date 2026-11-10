@@ -18,6 +18,7 @@ namespace Base.Services
         /// <summary>
         /// 將 GUID 或合法 GUID 字串編成不含尾端等號的 22 字元字串。
         /// </summary>
+        /// <param name="guidText">要編碼的合法 GUID 字串</param>
         public static string Encode(string guidText)
         {
             var guid = new Guid(guidText);
@@ -27,6 +28,7 @@ namespace Base.Services
         /// <summary>
         /// 將 GUID 或合法 GUID 字串編成不含尾端等號的 22 字元字串。
         /// </summary>
+        /// <param name="guid">要編碼的 GUID</param>
         public static string Encode(Guid guid)
         {
             var code = Convert.ToBase64String(guid.ToByteArray());
@@ -38,6 +40,7 @@ namespace Base.Services
         /// <summary>
         /// 還原 Encode 產生的字串；格式錯誤會拋出例外。
         /// </summary>
+        /// <param name="encode">由 Encode 產生的 GUID 編碼字串</param>
         public static Guid Decode(string encode)
         {
             encode = encode.Replace("_", "/");

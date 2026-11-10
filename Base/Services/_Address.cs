@@ -30,6 +30,7 @@ namespace Base.Services
         /// <summary>
         /// 依序將中文數字轉阿拉伯數字，再將符合位置的數字逐字轉中文；空白輸入原樣回傳。
         /// </summary>
+        /// <param name="address">要正規化的地址文字</param>
         public static string Normalize(string address)
         {
             if (string.IsNullOrWhiteSpace(address))

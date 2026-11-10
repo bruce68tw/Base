@@ -17,6 +17,7 @@ namespace Base
         /// <summary>
         /// 重設計時起點與記錄，可加上作業名稱。
         /// </summary>
+        /// <param name="name">要附在計時記錄的名稱</param>
         public static void Init(string name = "") 
         {
             if (name != "") name += _newLine;
@@ -28,6 +29,7 @@ namespace Base
         /// <summary>
         /// 追加步驟名稱、距前一步與距起點的毫秒數。
         /// </summary>
+        /// <param name="name">要附在計時記錄的名稱</param>
         public static void Log(string name)
         {
             var now = DateTime.Now;

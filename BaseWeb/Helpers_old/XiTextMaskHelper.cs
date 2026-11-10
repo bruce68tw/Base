@@ -6,16 +6,15 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 //todo
 namespace BaseWeb.Helpers
 {
+    /// <summary>提供舊版遮罩文字欄位輔助方法。</summary>
     public static class XiTextMaskHelper
     {
-        /// <summary>
-        /// text input mask
-        /// </summary>
-        /// <param name="htmlHelper"></param>
-        /// <param name="fid"></param>
-        /// <param name="isCheck"></param>
-        /// <param name="label"></param>
-        /// <param name="className"></param>
+        /// <summary>產生附有輸入遮罩設定的文字欄位。</summary>
+        /// <param name="htmlHelper">目前 Razor 檢視使用的 HTML 輔助物件</param>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="dataMask">前端遮罩元件使用的格式字串</param>
+        /// <param name="value">用於初始化欄位或選項的值</param>
+        /// <param name="placeholder">輸入欄位為空時顯示的提示文字</param>
         /// <returns></returns>
         public static IHtmlContent XiTextMask(this IHtmlHelper htmlHelper, string fid, string dataMask, string value="", string placeholder="")
         {

@@ -11,6 +11,7 @@ namespace Base
         /// <summary>
         /// 符合規則回傳空字串，否則回傳中文原因；0 不限制，1 要求英數，其他層級要求大小寫、數字、符號及至少 10 字元。
         /// </summary>
+        /// <param name="pwd">要驗證的密碼</param>
         public static string CheckStrong(string pwd)
         {
             switch (_Fun.PwdStrongLevel)

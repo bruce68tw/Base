@@ -6,6 +6,7 @@ namespace BaseOffice.Services
     //Word docx image
     //http://blog.darkthread.net/post-2017-11-06-insert-image-to-docx.aspx
     //ImageDate -> WordImageModel
+    /// <summary>讀取 Word 嵌入圖片，保留原始位元組並將指定尺寸轉成 EMU。</summary>
     public class WordImageSvc
     {
         //private const decimal INCH_TO_CM = 2.54M;
@@ -30,6 +31,11 @@ namespace BaseOffice.Services
         //constructor
         //width/height: unit is celimeter
         //public WordImageModel(string fileName, byte[] data, int dpi = 300)
+        /// <summary>從檔案讀取圖片並設定顯示尺寸。檔案不存在時串流維持 null。</summary>
+        /// <param name="fileName">要讀取的圖片檔案路徑。</param>
+        /// <param name="width">嵌入文件時的顯示寬度，單位為公分。</param>
+        /// <param name="height">嵌入文件時的顯示高度，單位為公分。</param>
+        /// <param name="dpi">保留的解析度參數，現行方法未用來換算尺寸</param>
         public WordImageSvc(string fileName, double width, double height, int dpi = 300)
         {
             // 檔案不存在時直接結束建構，DataStream 會維持 null。

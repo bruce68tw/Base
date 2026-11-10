@@ -66,9 +66,9 @@ order by Id)
         /// <summary>
         /// 以分隔符連接清單，可加單引號；不進行 SQL 跳脫。
         /// </summary>
-        /// <param name="list"></param>
+        /// <param name="list">要處理的輸入清單</param>
         /// <param name="quote">是否加上單引號</param>
-        /// <param name="sep"></param>
+        /// <param name="sep">用於連接或拆分項目的分隔符號</param>
         /// <returns></returns>
         public static string ToStr(List<string> list, bool quote = false, string sep = ",")
         {
@@ -82,6 +82,9 @@ order by Id)
         /// <summary>
         /// 以分隔符連接清單，可加單引號；不進行 SQL 跳脫。
         /// </summary>
+        /// <param name="list">要處理的輸入清單</param>
+        /// <param name="quote">是否替各項加上單引號</param>
+        /// <param name="sep">用於連接或拆分項目的分隔符號</param>
         public static string ToStr(List<int> list, bool quote, string sep = ",")
         {
             var result = (list == null || list.Count == 0)
@@ -94,6 +97,8 @@ order by Id)
         /// <summary>
         /// 以英數、底線與逗號規則檢查鍵清單，可記錄失敗原因。
         /// </summary>
+        /// <param name="list">要依鍵值規則檢查的清單。</param>
+        /// <param name="logError">發生錯誤時是否寫入記錄</param>
         public static bool CheckKey(List<string> list, bool logError = true)
         {
             return _Str.CheckKey(ToStr(list), logError);
@@ -102,6 +107,8 @@ order by Id)
         /// <summary>
         /// 合併兩個可空清單，不去重；結果無項目時回傳 null。
         /// </summary>
+        /// <param name="list1">要合併的第一個清單</param>
+        /// <param name="list2">要合併的第二個清單</param>
         public static List<string>? Concat(List<string?>? list1, List<string>? list2)
         {
             var list = new List<string>();
@@ -128,6 +135,8 @@ order by Id)
         /// <summary>
         /// 依顯示文字找第一個識別碼，找不到時回傳 null。
         /// </summary>
+        /// <param name="codes">要處理的選項清單</param>
+        /// <param name="str">要處理的來源字串</param>
         public static string? StrToId(List<IdStrDto>? codes, string str)
         {
             if (codes == null || codes.Count == 0)
@@ -141,6 +150,7 @@ order by Id)
         /// <summary>
         /// 判斷清單為 null 或沒有項目。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
         public static bool IsEmpty<T>(List<T>? rows) where T : class
         {
             return rows == null || rows.Count == 0;
@@ -148,6 +158,7 @@ order by Id)
         /// <summary>
         /// 判斷清單非 null 且含有項目。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
         public static bool NotEmpty<T>(List<T>? rows) where T : class
         {
             return !IsEmpty(rows);

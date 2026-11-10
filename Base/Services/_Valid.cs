@@ -13,6 +13,9 @@ namespace Base.Services
         /// <summary>
         /// 將欄位訊息轉成單項錯誤清單，預設編輯區為 0。
         /// </summary>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="msg">要附加到指定欄位的驗證訊息。</param>
+        /// <param name="editNo">發生驗證錯誤的編輯區編號</param>
         public static List<ErrorRowDto> MsgToErrors(string fid, string msg, int editNo = 0)
         {
             return
@@ -29,7 +32,7 @@ namespace Base.Services
         /// <summary>
         /// 以現有正規表示式檢查電子郵件格式，不驗證信箱存在。
         /// </summary>
-        /// <param name="data">input email string</param>
+        /// <param name="data">要檢查的電子郵件地址。</param>
         /// <return>true/false</return>
         public static bool IsEmail(string data)
         {
@@ -41,6 +44,7 @@ namespace Base.Services
         /// <summary>
         /// 僅檢查字串開頭是否為數字或句點，非完整數值解析。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
         public static bool IsNumber(object data)
         {
             return Regex.IsMatch(data.ToString()!, @"^[0-9.]");
@@ -49,6 +53,7 @@ namespace Base.Services
         /// <summary>
         /// 僅檢查開頭是否為數字，非全字串純數字檢查。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
         public static bool IsDigits(object data)
         {
             return Regex.IsMatch(data.ToString()!, @"^[0-9]");
@@ -57,6 +62,7 @@ namespace Base.Services
         /// <summary>
         /// 檢查空值或開頭是否符合文字字元集合，不檢查全字串。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
         public static bool IsText(object data)
         {
             return _Object.IsEmpty(data) 
@@ -66,6 +72,7 @@ namespace Base.Services
         /// <summary>
         /// 檢查空值或開頭是否符合指定字元集合，不清理或驗證 HTML 安全性。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
         public static bool IsHtml(object data)
         {
             return _Object.IsEmpty(data) 
@@ -75,6 +82,7 @@ namespace Base.Services
         /// <summary>
         /// 以 IsText 檢查 JSON 各欄位的字串表示。
         /// </summary>
+        /// <param name="row">要逐欄檢查字串表示的 JSON 資料列。</param>
         public static bool IsJsonText(JObject row)
         {
             //if (row == null) return true;
@@ -86,6 +94,8 @@ namespace Base.Services
         /// <summary>
         /// 以 IsText 檢查各欄位；目前不填入傳入的 errorModel。
         /// </summary>
+        /// <param name="errorModel">保留的錯誤資料參數，現行方法不會填入</param>
+        /// <param name="row">要讀取、檢查或寫入的單列 JSON</param>
         public static bool CheckFormInput(ResultDto errorModel, JObject row)
         {
             var result = true;
@@ -105,6 +115,7 @@ namespace Base.Services
         /// <summary>
         /// 僅在 _ErrorMsg 為空時回傳 true，不檢查 ErrorRows。
         /// </summary>
+        /// <param name="result">要判斷操作是否成功的結果物件</param>
         public static bool ResultStatus(ResultDto result)
         {
             return _Str.IsEmpty(result._ErrorMsg);

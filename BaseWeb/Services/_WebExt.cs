@@ -15,6 +15,7 @@ using System.Net;
 
 namespace BaseWeb.Services
 {
+    /// <summary>提供 ASP.NET Core builder 與 app 的 MVC、靜態檔案及中介軟體設定擴充方法。</summary>
     public static class _WebExt
     {
         /// <summary>

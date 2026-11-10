@@ -6,6 +6,7 @@ using BaseWeb.Services;
 //todo
 namespace BaseWeb.Helpers
 {
+    /// <summary>提供舊版時間輸入欄位輔助方法。</summary>
     public static class XiTimeHelper
     {
         /*

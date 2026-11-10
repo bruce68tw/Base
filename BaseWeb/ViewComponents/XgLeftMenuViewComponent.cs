@@ -6,15 +6,12 @@ using System.Collections.Generic;
 namespace BaseWeb.ViewComponents
 {
 
+    /// <summary>呈現最多兩層的左側導覽選單的 MVC ViewComponent。</summary>
     public class XgLeftMenuViewComponent : ViewComponent
     {
-        /// <summary>
-        /// left side menu(max to 2 levels), outside class name is x-leftmenu
-        /// </summary>
-        /// <param name="htmlHelper"></param>
-        /// <param name="rows">menu rows</param>
-        /// <param name="minWidth">px</param>
-        /// <param name="maxWidth">px</param>
+        /// <summary>產生最多兩層的左側導覽選單的 HTML。 (max to 2 levels)</summary>
+        /// <param name="rows">供產生導覽連結及群組的選單資料。</param>
+        /// <param name="showSort">是否在選單顯示排序資訊</param>
         /// <returns></returns>
         public HtmlString Invoke(List<MenuDto> rows, bool showSort = false)
         {

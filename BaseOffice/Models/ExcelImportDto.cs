@@ -5,6 +5,7 @@ namespace BaseOffice.Models
     //for excel import function
     //import source file name: Id + ".xlsx"
     //import failed file name: Id + "_fail.xlsx"
+    /// <summary>定義 Excel 工作表匯入時使用的欄位對應及資料處理設定。</summary>
     public class ExcelImportDto<T> where T : class, new()
     {
         //public FnCheckImportRow<T> FnCheckImportRow = null;

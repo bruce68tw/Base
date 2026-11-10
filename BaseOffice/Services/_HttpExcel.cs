@@ -8,16 +8,15 @@ using Newtonsoft.Json.Linq;
 
 namespace BaseOffice.Services
 {
+    /// <summary>提供 Excel 表單上傳匯入及目前 HTTP 回應的下載匯出。</summary>
     public static class _HttpExcel
     {
-        /// <summary>
-        /// import by uploaded file
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="importType"></param>
-        /// <param name="importDto"></param>
-        /// <param name="uiDtFormat">skip if excel no datetime cell</param>
+        /// <summary>從表單上傳檔讀取 Excel，依匯入設定處理並回傳匯入結果。</summary>
+        /// <param name="file">前端上傳的 Excel 檔案</param>
+        /// <param name="importDto">欄位對應、驗證及資料處理的匯入設定</param>
+        /// <param name="uiDtFormat">日期儲存格轉成字串時使用的格式</param>
         /// <param name="writeLog">是否寫入XpImportLog table, 如果要自行控制寫入log, 則設為false</param>
+        /// <param name="dirUpload">儲存匯入檔案的目錄</param>
         public static async Task<ResultImportDto> ImportByFileA<T>(IFormFile file, string dirUpload,
             ExcelImportDto<T> importDto, string uiDtFormat = "", bool writeLog = true) where T : class, new()
         {
@@ -32,15 +31,13 @@ namespace BaseOffice.Services
             return await new ExcelImportSvc<T>().ImportByStreamA(file.OpenReadStream(), importDto, dirUpload, file.FileName, uiDtFormat, writeLog);
         }
 
-        /// <summary>
-        /// readDto to screen
-        /// </summary>
-        /// <param name="ctrl">controller name</param>
-        /// <param name="readDto"></param>
-        /// <param name="findJson"></param>
-        /// <param name="fileName">output fileName</param>
-        /// <param name="tplPath"></param>
-        /// <param name="srcRowNo"></param>
+        /// <summary>依 CRUD 查詢與匯出權限取得資料，填入 Excel 範本後回傳下載。</summary>
+        /// <param name="ctrl">對應作業的控制器名稱</param>
+        /// <param name="readDto">查詢 SQL 與欄位條件設定</param>
+        /// <param name="findJson">查詢欄位與條件值的 JSON</param>
+        /// <param name="fileName">檔案名稱，必要時包含副檔名</param>
+        /// <param name="tplPath">要讀取的範本檔案路徑</param>
+        /// <param name="srcRowNo">資料列寫入 SheetData 的零起算插入位置。</param>
         public static async Task ExportByReadA(string ctrl, ReadDto readDto, JObject findJson, 
             string fileName, string tplPath, int srcRowNo)
         {
@@ -49,14 +46,11 @@ namespace BaseOffice.Services
                 await ExportByRowsA(rows, fileName, tplPath, srcRowNo);
         }
 
-        /// <summary>
-        /// sql to screen
-        /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="fileName">output fileName</param>
-        /// <param name="tplPath"></param>
-        /// <param name="srcRowNo"></param>
-        /// <param name="dbStr"></param>
+        /// <summary>執行 SQL 取得資料，填入 Excel 範本後回傳下載。</summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="fileName">檔案名稱，必要時包含副檔名</param>
+        /// <param name="tplPath">要讀取的範本檔案路徑</param>
+        /// <param name="srcRowNo">資料列寫入 SheetData 的零起算插入位置。</param>
         public static async Task ExportBySqlA(string sql, string fileName, string tplPath, 
             int srcRowNo)
         {
@@ -65,13 +59,11 @@ namespace BaseOffice.Services
                 await ExportByRowsA(rows, fileName, tplPath, srcRowNo);
         }
 
-        /// <summary>
-        /// json rows to screen
-        /// </summary>
-        /// <param name="rows"></param>
-        /// <param name="fileName">output fileName</param>
-        /// <param name="tplPath"></param>
-        /// <param name="srcRowNo"></param>
+        /// <summary>將指定 JSON 資料列填入 Excel 範本並寫入目前 HTTP 回應。</summary>
+        /// <param name="rows">依順序處理的資料列集合</param>
+        /// <param name="fileName">檔案名稱，必要時包含副檔名</param>
+        /// <param name="tplPath">要讀取的範本檔案路徑</param>
+        /// <param name="srcRowNo">資料列寫入 SheetData 的零起算插入位置。</param>
         public static async Task ExportByRowsA(JArray rows, string fileName, string tplPath, int srcRowNo)
         {
             // 讀取檔案 bytes

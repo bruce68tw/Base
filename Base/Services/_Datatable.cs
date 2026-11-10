@@ -10,6 +10,8 @@ namespace Base.Services
         /// <summary>
         /// 從 findJson 取得欄位字串；JSON 無效、為空或欄位缺失時回傳空字串。
         /// </summary>
+        /// <param name="dt">包含查詢條件 JSON 的分頁輸入。</param>
+        /// <param name="fid">要處理的欄位識別值</param>
         public static string GetFindValue(DtDto dt, string fid)
         {
             if (dt.findJson == null) return "";

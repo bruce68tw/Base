@@ -5,15 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BaseWeb.ViewComponents
 {
-    /// <summary>
-    /// radio with text component
-    /// </summary>
+    /// <summary>呈現附文字輸入的單選欄位的 MVC ViewComponent。</summary>
     public class XiRadioTextViewComponent : ViewComponent
     {
-        /// <summary>
-        /// old args: string fid, string label, int len, string cls
-        /// checkbox component
-        /// </summary>
+        /// <summary>產生附文字輸入的單選欄位的 HTML。</summary>
+        /// <param name="dto">用於產生附文字輸入的單選欄位的欄位設定。</param>
         /// <returns></returns>
         public HtmlString Invoke(XiRadioTextDto dto)
         {

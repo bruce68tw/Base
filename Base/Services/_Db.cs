@@ -13,6 +13,8 @@ namespace Base.Services
         /// <summary>
         /// db 為 null 時只建立 Db 並回傳 true，不會立即開連線。
         /// </summary>
+        /// <param name="db">可沿用的 Db 參考，為 null 時填入新建的 Db。</param>
+        /// <param name="dbStr">資料庫連線字串</param>
         public static bool CheckOpenDb(ref Db? db, string dbStr = "")
         {
             var newDb = (db == null);
@@ -23,6 +25,8 @@ namespace Base.Services
         /// <summary>
         /// 僅在 newDb 為 true 時非同步釋放 Db。
         /// </summary>
+        /// <param name="db">要沿用的資料庫物件</param>
+        /// <param name="newDb">是否由呼叫端所在流程建立 Db，為 true 時才由此方法釋放</param>
         public static async Task CheckCloseDbA(Db db, bool newDb)
         {
             if (newDb) await db.DisposeAsync();
@@ -32,6 +36,9 @@ namespace Base.Services
         /// <summary>
         /// 取得第一列 JSON；無資料或失敗可為 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<JObject?> GetRowA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -44,6 +51,9 @@ namespace Base.Services
         /// <summary>
         /// 取得多列 JSON；無資料或失敗可為 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<JArray?> GetRowsA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -57,6 +67,9 @@ namespace Base.Services
         /// <summary>
         /// 取得第一個識別碼與文字配對，無資料可為 null；此方法為實例方法。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public async Task<IdStrDto?> GetIdStrA(string sql, List<object>? sqlArgs = null, Db? db = null)
         {
             return await GetModelA<IdStrDto>(sql, sqlArgs, db);
@@ -64,6 +77,9 @@ namespace Base.Services
         /// <summary>
         /// 取得識別碼與文字清單，無資料可為 null；此方法為實例方法。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="sqlArgs">依名稱和值交錯排列的 SQL 參數清單</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public async Task<List<IdStrDto>?> GetIdStrsA(string sql, List<object>? sqlArgs = null, Db? db = null)
         {
             return await GetModelsA<IdStrDto>(sql, sqlArgs, db);
@@ -71,6 +87,9 @@ namespace Base.Services
         /// <summary>
         /// 以同名屬性讀取首列模型，無資料回傳 default。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<T?> GetModelA<T>(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -82,6 +101,9 @@ namespace Base.Services
         /// <summary>
         /// 以同名屬性讀取模型清單，無資料或失敗可為 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<T>?> GetModelsA<T>(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -95,6 +117,9 @@ namespace Base.Services
         /// <summary>
         /// 取得首列首欄字串，無資料可為 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<string?> GetStrA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -106,6 +131,9 @@ namespace Base.Services
         /// <summary>
         /// 取得首欄字串清單，無資料可為 null。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<string>?> GetStrsA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -119,6 +147,9 @@ namespace Base.Services
         /// <summary>
         /// 取得首列首欄可空整數。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<int?> GetIntA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -130,6 +161,9 @@ namespace Base.Services
         /// <summary>
         /// 取得首欄可空整數清單。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<int?>?> GetIntsA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);
@@ -251,6 +285,9 @@ order by Type, Sort";
         /// <summary>
         /// 執行異動，沿用 Db 的筆數與 0、-1、-2 回傳規則；不自動建立交易。
         /// </summary>
+        /// <param name="sql">要執行或解析的 SQL 字串</param>
+        /// <param name="args">依名稱和值交錯排列的 SQL 參數清單。</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<int> ExecSqlA(string sql, List<object>? args = null, Db? db = null)
         {
             var newDb = CheckOpenDb(ref db);

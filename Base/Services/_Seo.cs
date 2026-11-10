@@ -15,10 +15,10 @@ namespace Base
         /// <summary>
         /// 以 Loc、LastMod 資料建立 sitemap 位元組；會原地補齊網址與頻率等欄位，rows 為 null 時回傳 null。
         /// </summary>
-        /// <param name="domain"></param>
+        /// <param name="domain">用來組合網站地圖絕對網址的網站根網址</param>
         /// <param name="rows">包含Loc, LastMod 2個欄位</param>
-        /// <param name="changeFreq"></param>
-        /// <param name="priority"></param>
+        /// <param name="changeFreq">寫入網站地圖的更新頻率值</param>
+        /// <param name="priority">寫入網站地圖的優先順序值</param>
         /// <returns></returns>
         public static byte[]? GenSiteMapFile(string domain, JArray? rows, string changeFreq = "weekly", string priority = "1.0") 
         {

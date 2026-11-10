@@ -12,6 +12,7 @@ using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 namespace BaseOffice.Services
 {
     //word套表
+    /// <summary>以 Open XML 對 Word 範本填入主從資料及圖片。</summary>
     public class WordSetSvc
     {
         //checked char type(yes/no)
@@ -29,6 +30,8 @@ namespace BaseOffice.Services
         private Body _tplBody = null!;
 
         //constructor
+        /// <summary>載入 Word 範本並保留供後續填值的本文。</summary>
+        /// <param name="tplPath">要讀取的範本檔案路徑</param>
         public WordSetSvc(string tplPath)
         {
             // 1. 檢查模板檔案
@@ -54,16 +57,15 @@ namespace BaseOffice.Services
         }
 
         // 只有範本成功開啟並取得本文後，才會標記為可套表。
+        /// <summary>回傳範本是否已成功載入。</summary>
         public bool IsOk()
         {
             return _isOk;
         }
 
-        /// <summary>
-        /// 一筆資料產生memorystream
-        /// </summary>
+        /// <summary>以單筆資料填入範本並產生 DOCX 串流。</summary>
         /// <param name="row">可為json或model, 包含Child或Childs欄位</param>
-        /// <param name="images"></param>
+        /// <param name="images">要依範本標記填入的圖片清單，可為 null</param>
         /// <returns></returns>
         public MemoryStream? RowToMs(dynamic row, List<WordImageDto>? images = null)
         {
@@ -78,12 +80,9 @@ namespace BaseOffice.Services
             return _ms;
         }
 
-        /// <summary>
-        /// _HttpWord.MsByTplRow -> _Word.TplToMsA -> TplRowsToMsA
-        /// word to memoryStream for convert pdf
-        /// </summary>
+        /// <summary>以多筆資料逐筆套用範本，合併成單一 DOCX 串流。</summary>
         /// <param name="rows">可為json或model</param>
-        /// <param name="images"></param>
+        /// <param name="images">要依範本標記填入的圖片清單，可為 null</param>
         /// <returns></returns>
         public MemoryStream? RowsToMs(IEnumerable<dynamic> rows, List<WordImageDto>? images = null)
         {

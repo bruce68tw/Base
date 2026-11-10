@@ -5,22 +5,17 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BaseWeb.Helpers
 {
-    /// <summary>
-    /// single radio, for single/multi edit form
-    /// no validate span !!
-    /// </summary>
+    /// <summary>提供編輯表單使用的單一單選項目輔助方法。</summary>
     public static class XiRadioHelper
     {
 
-        /// <summary>
-        /// radio
-        /// </summary>
-        /// <param name="htmlHelper"></param>
-        /// <param name="fid"></param>
-        /// <param name="isCheck"></param>
-        /// <param name="value"></param>
-        /// <param name="label"></param>
-        /// <param name="prop"></param>
+        /// <summary>依欄位、選取狀態和值產生單一單選項目。</summary>
+        /// <param name="htmlHelper">目前 Razor 檢視使用的 HTML 輔助物件</param>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="isCheck">是否預先選取此項目</param>
+        /// <param name="value">用於初始化欄位或選項的值</param>
+        /// <param name="label">畫面顯示的標籤文字</param>
+        /// <param name="prop">單選項目的額外欄位設定</param>
         /// <returns></returns>
         public static IHtmlContent XiRadio(this IHtmlHelper htmlHelper, string fid = "", bool isCheck = false, string value = "1", string label = "", PropInputDto prop = null)
         {

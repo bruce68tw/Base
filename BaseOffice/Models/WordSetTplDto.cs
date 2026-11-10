@@ -1,6 +1,7 @@
 ﻿namespace BaseOffice.Models
 {
     //word set template dto
+    /// <summary>保存範本文字的命中片段及其起訖位置。</summary>
     public class WordSetTplDto
     {
         //found template string

@@ -12,6 +12,8 @@ namespace Base.Services
         /// <summary>
         /// 依讀取權限產生 u.Id 或 u.DeptId 條件；無權限時產生 and 1=0。
         /// </summary>
+        /// <param name="ctrl">對應作業的控制器名稱</param>
+        /// <param name="br">用於資料範圍檢查的使用者資料</param>
         public static string GetCondByAuth(string ctrl, BaseUserDto? br = null)
         {
             br ??= _Fun.GetBaseUser();
@@ -28,8 +30,8 @@ namespace Base.Services
         /// <summary>
         /// 以關鍵字位置拆分 SELECT SQL，可改用方括號區段；不支援任意複雜 SQL 語法。
         /// </summary>
-        /// <param name="sql">如果空白會傳回 empty SqlDto</param>
-        /// <param name="useSquare"></param>
+        /// <param name="sql">要拆成查詢各區段的 SELECT SQL。</param>
+        /// <param name="useSquare">是否用方括號區段辨識 SQL 結構</param>
         /// <returns></returns>
         public static SqlDto SqlToDto(string sql, bool useSquare)
         {
@@ -105,8 +107,8 @@ namespace Base.Services
         /// <summary>
         /// 依初始化的 DB 分頁格式組合 SQL；length 不大於 0 時讀取全部且不加排序。
         /// </summary>
-        /// <param name="dto"></param>
-        /// <param name="start"></param>
+        /// <param name="dto">用來組合查詢的 SQL 結構資料</param>
+        /// <param name="start">分頁查詢的起始位移量。</param>
         /// <param name="length">0表示讀取全部資料, 並且不使用order by</param>
         /// <returns></returns>
         public static string DtoToSql(SqlDto dto, int start, int length)
@@ -125,10 +127,10 @@ namespace Base.Services
         /// <summary>
         /// 建立參數化 IN 的名稱清單，並將名稱與值追加至 args。
         /// </summary>
-        /// <param name="fid">傳入參數欄位id</param>
-        /// <param name="keys">in key值array</param>
-        /// <param name="args">要回傳的sql傳入參數, by ref</param>
-        /// <returns>in 字串</returns>    
+        /// <param name="fid">用來產生 SQL 參數名稱的欄位識別值。</param>
+        /// <param name="keys">要轉為 IN 條件參數的鍵值陣列。</param>
+        /// <param name="args">要原地追加參數名稱與值的清單。</param>
+        /// <returns>以逗號分隔的 SQL 參數名稱。</returns>
         public static string SqlAddIn(string fid, string[] keys, ref List<object> args)
         {
             //args.Clear();     //不清空 !!
@@ -152,6 +154,8 @@ namespace Base.Services
         /// <summary>
         /// 直接將清單加引號組成 IN 條件，不跳脫值或使用參數。
         /// </summary>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="list">要處理的輸入清單</param>
         public static string GetCondByListStr(string fid, List<string> list)
         {
             return fid + " in (" + _List.ToStr(list, true) + ")";
@@ -162,7 +166,7 @@ namespace Base.Services
         /// 依資料庫種類組合 SQL 字串串接；少於兩項或種類未支援時回傳空字串。
         /// </summary>
         /// <param name="values">第後一個欄位為 alias 名稱, 可為空白</param>
-        /// <returns>string</returns>
+        /// <returns>組合完成的 SQL 字串。</returns>
         //public static string sqlConcat(string ps_sql, params string[] pas_input)
         public static string GetConcat(params string[] values)
         {

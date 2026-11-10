@@ -16,6 +16,7 @@ namespace Base.Services
         /// <summary>
         /// 使用傳入的記憶體快取，保留其生命週期管理。
         /// </summary>
+        /// <param name="cache">呼叫端提供的記憶體快取實例</param>
         public CacheMemSvc(IMemoryCache cache)
         {
             _cache = cache;
@@ -30,6 +31,8 @@ namespace Base.Services
         /// <summary>
         /// 讀取字串，找不到時回傳 null。
         /// </summary>
+        /// <param name="userId">用來識別使用者的 ID</param>
+        /// <param name="key">用來定位資料的鍵值</param>
         public string? GetStr(string userId, string key)
         {
             _cache.TryGetValue(GetKey(userId, key), out string? result);
@@ -39,6 +42,9 @@ namespace Base.Services
         /// <summary>
         /// 寫入字串，滑動期限為 _Fun.TimeOut 分鐘；完成時回傳 true。
         /// </summary>
+        /// <param name="userId">用來識別使用者的 ID</param>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="value">要使用的輸入值</param>
         public bool SetStr(string userId, string key, string value)
         {
             _cache.Set(GetKey(userId, key), value, new MemoryCacheEntryOptions()
@@ -49,6 +55,8 @@ namespace Base.Services
         /// <summary>
         /// 移除指定鍵；即使鍵不存在也回傳 true。
         /// </summary>
+        /// <param name="userId">用來識別使用者的 ID</param>
+        /// <param name="key">用來定位資料的鍵值</param>
         public bool DeleteKey(string userId, string key)
         {
             _cache.Remove(GetKey(userId, key));

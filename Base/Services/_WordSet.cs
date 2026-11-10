@@ -20,6 +20,7 @@ using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 namespace Base.Services
 {
     //word套表, 以靜態類別呈現較方便
+    /// <summary>舊版 Word 樣板圖片工具，現行專案設定排除此類別。</summary>
     public static class _WordSet
     {
         //word carrier
@@ -33,6 +34,10 @@ namespace Base.Services
         public const int CharV = 3;     //V char
         */
 
+        /// <summary>複製 Word 樣板並替換描述為 Photo 的圖片。目的檔存在時會覆寫。</summary>
+        /// <param name="oldWordPath">要複製的 Word 樣板路徑</param>
+        /// <param name="newWordPath">複製並修改後的 Word 檔案路徑</param>
+        /// <param name="newImagePath">用來替換樣板圖片的來源路徑</param>
         public static void AddImage(string oldWordPath, string newWordPath, string newImagePath)
         {
             // Copy the original file to the new path

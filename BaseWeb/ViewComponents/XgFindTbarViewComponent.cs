@@ -9,12 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace BaseWeb.ViewComponents
 {
     //配合 _xp.js
+    /// <summary>呈現包含查詢及選用操作的查詢工具列的 MVC ViewComponent。</summary>
     public class XgFindTbarViewComponent : ViewComponent
     {
-        /// <summary>
-        /// program title: left(path), right(tool)
-        /// </summary>
-        /// <param name="dto"></param>
+        /// <summary>產生包含查詢及選用操作的查詢工具列的 HTML。 (path) (tool)</summary>
+        /// <param name="dto">查詢工具列的版面和按鈕設定，可省略。</param>
         /// <returns></returns>
         public HtmlString Invoke(XgFindTbarDto? dto = null)
         {

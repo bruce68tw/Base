@@ -33,6 +33,7 @@ namespace Base.Services
         /// <summary>
         /// 接受 HTTP WebSocket 升級；請求不符或已有連線時拋出例外。
         /// </summary>
+        /// <param name="httpContext">目前要接受 WebSocket 升級的 HTTP 請求內容</param>
         public async Task AcceptA(HttpContext httpContext)
         {
             ArgumentNullException.ThrowIfNull(httpContext);
@@ -47,6 +48,9 @@ namespace Base.Services
         /// <summary>
         /// 先釋放舊連線再連至遠端，可設定請求標頭與取消權杖；連線失敗會拋出。
         /// </summary>
+        /// <param name="uri">要建立連線的遠端 WebSocket URI</param>
+        /// <param name="requestHeaders">建立遠端 WebSocket 時送出的請求標頭</param>
+        /// <param name="ct">取消目前非同步操作的權杖</param>
         public async Task ConnectRemoteA(Uri uri, 
             IEnumerable<KeyValuePair<string, string>>? requestHeaders = null,
             CancellationToken ct = default)
@@ -92,6 +96,8 @@ namespace Base.Services
         /// <summary>
         /// 接收完整文字或二進位訊息並以 UTF-8 解碼；關閉回傳 null，超過位元組上限會拋出。
         /// </summary>
+        /// <param name="maxMsgBytes">單一 WebSocket 訊息允許的最大位元組數</param>
+        /// <param name="cancelToken">取消目前非同步操作的權杖</param>
         public async Task<string?> GetDataA(int maxMsgBytes = 256 * 1024, CancellationToken cancelToken = default)
         {
             var socket = _socket ?? throw new InvalidOperationException("WebSocket is not attached or connected.");
@@ -123,6 +129,8 @@ namespace Base.Services
         /// <summary>
         /// 將物件序列化為 JSON 文字後以鎖序列化傳送；未開啟時略過。
         /// </summary>
+        /// <param name="payload">要序列化並傳送的 WebSocket 訊息物件</param>
+        /// <param name="cancelToken">取消目前非同步操作的權杖</param>
         public async Task SendDataA(object payload, CancellationToken cancelToken = default)
         {
             var socket = _socket;
@@ -149,6 +157,8 @@ namespace Base.Services
         /// <summary>
         /// 僅在 Open 狀態執行正常關閉握手，不使用取消權杖。
         /// </summary>
+        /// <param name="status">通知對端的 WebSocket 關閉狀態碼。</param>
+        /// <param name="description">傳送給對端的 WebSocket 關閉說明</param>
         public async Task CloseA(WebSocketCloseStatus status = WebSocketCloseStatus.NormalClosure,
             string? description = null)
         {

@@ -5,15 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BaseWeb.ViewComponents
 {
-    /// <summary>
-    /// checkbox component
-    /// </summary>
+    /// <summary>呈現附文字輸入的核取欄位的 MVC ViewComponent。</summary>
     public class XiCheckTextViewComponent : ViewComponent
     {
-        /// <summary>
-        /// old args: string fid, string label, int len, string cls
-        /// checkbox component
-        /// </summary>
+        /// <summary>產生附文字輸入的核取欄位的 HTML。</summary>
+        /// <param name="dto">用於產生附文字輸入的核取欄位的欄位設定。</param>
         /// <returns></returns>
         public HtmlString Invoke(XiCheckTextDto dto)
         {

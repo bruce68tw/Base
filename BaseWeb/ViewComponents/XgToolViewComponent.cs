@@ -4,13 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BaseWeb.ViewComponents
 {
+    /// <summary>呈現共用訊息、確認、警示及等候介面的 MVC ViewComponent。</summary>
     public class XgToolViewComponent : ViewComponent
     {
-        /// <summary>
-        /// include: msg, ans, alert, wait
-        /// css use id, not class !!
-        /// </summary>
-        /// <returns>must be HtmlString, or will get extra quote !!</returns>
+        /// <summary>產生共用訊息、確認、警示及等候介面的 HTML。</summary>
+        /// <returns>供 Razor 直接輸出的 HtmlString。</returns>
         public HtmlString Invoke()
         {
 /* 全部改用 ansA

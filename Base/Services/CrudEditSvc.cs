@@ -41,6 +41,8 @@ namespace Base.Services
 		/// <summary>
 		/// 設定異動服務的作業名稱與連線字串。
 		/// </summary>
+		/// <param name="ctrl">對應作業的控制器名稱</param>
+		/// <param name="dbStr">資料庫連線字串</param>
 		public CrudEditSvc(string ctrl, string dbStr = "")
             : base(ctrl, dbStr)
         {
@@ -660,6 +662,8 @@ namespace Base.Services
         /// <summary>
         /// 將 _rows 首列標成新增後驗證與儲存；輸入必須包含首列，結果以 ResultDto 表示。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
+        /// <param name="editDto">主從表、主鍵及欄位的 CRUD 維護設定</param>
         public async Task<ResultDto> CreateA(JObject json, EditDto editDto)
         {
             //todo: 如果有草稿模式, 刪除草稿 if any
@@ -673,6 +677,10 @@ namespace Base.Services
         /// <summary>
         /// 以非空主鍵修改資料，必要時檢查既有列範圍，錯誤以 ResultDto 回傳。
         /// </summary>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
+        /// <param name="editDto">主從表、主鍵及欄位的 CRUD 維護設定</param>
+        /// <param name="fun">要處理的 CRUD 操作類型</param>
         public async Task<ResultDto> UpdateA(string key, JObject json, EditDto editDto, CrudEnum fun = CrudEnum.Update)
         {
             //return error if empty key
@@ -707,6 +715,8 @@ namespace Base.Services
         /// <summary>
         /// 將 JSON 寫入使用者草稿檔；目前忽略寫檔布林結果並回傳空白結果物件。
         /// </summary>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
         public async Task<ResultDto> DraftA(string key, JObject json)
         {
             var path = GetDraftPath(key);
@@ -919,6 +929,8 @@ namespace Base.Services
         /// <summary>
         /// 產生並原地填入新增主從鍵及對照 JSON，錯誤回傳字串，成功為空字串。
         /// </summary>
+        /// <param name="inputJson">要讀取或原地更新的 CRUD 輸入 JSON</param>
+        /// <param name="editDto">主從表、主鍵及欄位的 CRUD 維護設定</param>
         public async Task<string> SetNewKeyJsonA(JObject inputJson, EditDto editDto)
         {
             return await SetNewKeyJsonLoopA("0", null, inputJson, editDto);
@@ -1070,6 +1082,10 @@ namespace Base.Services
         /// <summary>
         /// 依來源層級的新鍵對照取代子列暫存外鍵，原地修改 JSON，失敗回傳錯誤字串。
         /// </summary>
+        /// <param name="inputJson">要讀取或原地更新的 CRUD 輸入 JSON</param>
+        /// <param name="childIdx">子項目在子集合中的索引，從零開始</param>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="fromLevelStr">供查找新主鍵對照的來源層級字串</param>
         public string SetChildFkey(JObject inputJson, int childIdx, string fid, string fromLevelStr)
         {
             //get child rows
@@ -1112,6 +1128,8 @@ namespace Base.Services
         /// <summary>
         /// 檢查單筆資料範圍後刪除主從資料。
         /// </summary>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="editDto">主從表、主鍵及欄位的 CRUD 維護設定</param>
         public async Task<ResultDto> DeleteA(string key, EditDto editDto)
         {
             //check for AuthType=Row if need
@@ -1129,6 +1147,8 @@ namespace Base.Services
         /// <summary>
         /// 依鍵清單刪除主從資料；此入口不逐筆執行 DeleteA 的範圍檢查。
         /// </summary>
+        /// <param name="keys">要比對或處理的資料鍵值清單</param>
+        /// <param name="editDto">主從表、主鍵及欄位的 CRUD 維護設定</param>
         public async Task<ResultDto> DeleteByKeysA(List<string> keys, EditDto editDto)
         {
             //check input

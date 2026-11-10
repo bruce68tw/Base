@@ -9,11 +9,14 @@ using System.Drawing;
 
 namespace PdfSpire
 {
+    /// <summary>以 Spire 轉換 Word 文件及將圖片蓋印至 PDF。</summary>
     public class SpireSvc : IPdfSvc
     {
         //private string _key = "";
 
         //在主機才會發生作用(本機不會)!!
+        /// <summary>從指定檔案設定 Spire 授權，空路徑時略過。</summary>
+        /// <param name="keyPath">授權檔案路徑</param>
         public void SetKey(string keyPath)
         {
             if (string.IsNullOrEmpty(keyPath))
@@ -24,6 +27,9 @@ namespace PdfSpire
                 LicenseProvider.SetLicenseKey(key);
         }
 
+        /// <summary>將 Word 檔案的位元組轉成 PDF，可指定授權檔。</summary>
+        /// <param name="wordBytes">要轉換成 PDF 的 Word 檔案位元組。</param>
+        /// <param name="keyPath">授權檔案路徑</param>
         public byte[] WordToPdf(byte[] wordBytes, string keyPath = "")
         {
             SetKey(keyPath);
@@ -93,12 +99,10 @@ namespace PdfSpire
         }
         */
 
-        /// <summary>
-        /// (跨平台)pdf file add images
-        /// </summary>
-        /// <param name="fromPath"></param>
-        /// <param name="toPath"></param>
-        /// <param name="imageDtos"></param>
+        /// <summary>讀取 PDF、在指定位置蓋印圖片，再寫出目的檔。 (跨平台)</summary>
+        /// <param name="fromPath">要讀取及蓋印圖片的來源 PDF 路徑。</param>
+        /// <param name="toPath">蓋印結果要寫入的 PDF 路徑。</param>
+        /// <param name="imageDtos">要加入 PDF 的圖片及其定位資料</param>
         /// <returns></returns>
         public bool AddImages(string fromPath, string toPath, PdfImageDto[] imageDtos)
         {

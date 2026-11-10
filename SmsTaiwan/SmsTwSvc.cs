@@ -9,6 +9,7 @@ using System.Web;
 namespace SmsTaiwan
 {
     //台哥大使用https傳送簡訊, 不必安裝套件
+    /// <summary>透過台灣大哥大企業簡訊介面發送訊息，並依長度切換短簡訊或長簡訊格式。</summary>
     public class SmsTwSvc : ISmsSvc
     {
         const string UrlShortMsg = "http://bizsms.taiwanmobile.com:18994";
@@ -17,6 +18,9 @@ namespace SmsTaiwan
 
         private Encoding encodeBig5 = Encoding.GetEncoding("big5");
 
+        /// <summary>依訊息長度編碼並送出簡訊。超過 335 字元回傳 false，收到 HTTP 回應後未解析供應商的送達狀態。</summary>
+        /// <param name="phone">簡訊接收者的電話號碼</param>
+        /// <param name="msg">要傳送或記錄的訊息</param>
         public async Task<bool> SendA(string phone, string msg)
         {
             //對簡訊內容進行重新處理

@@ -12,6 +12,7 @@ namespace Base.Services
         /// <summary>
         /// 判斷動態物件是否為 JObject；判斷發生例外時回傳 false。
         /// </summary>
+        /// <param name="item">要判斷型別的輸入物件</param>
         public static bool IsJObject(dynamic item)
         {
             try
@@ -29,6 +30,7 @@ namespace Base.Services
         /// <summary>
         /// 判斷物件為 null 或字串表示為空字串，不將空白視為空值。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
         public static bool IsEmpty(object? data)
         {
             return (data == null || data.ToString() == "");
@@ -37,6 +39,7 @@ namespace Base.Services
         /// <summary>
         /// 判斷物件非 null 且字串表示非空。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
         public static bool NotEmpty(object? data)
         {
             return !IsEmpty(data);
@@ -45,6 +48,7 @@ namespace Base.Services
         /// <summary>
         /// 將 null 轉空字串，否則使用物件的字串表示。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
         public static string NullToEmpty(object? data)
         {
             return (data == null) ? "" : data.ToString()!;
@@ -67,11 +71,9 @@ namespace Base.Services
         }
         */
 
-        /// <summary>
-        /// 依屬性名稱讀值；屬性不存在時可能拋出例外。
-        /// </summary>
-        /// <param name="data">前需要加 this ??</param>
-        /// <param name="fid">property name</param>
+        /// <summary>以屬性名稱透過反射讀值，屬性不存在時可能擲出例外。</summary>
+        /// <param name="data">要透過反射讀取屬性的實例。</param>
+        /// <param name="fid">要讀取的公開屬性名稱，須存在於實例型別。</param>
         /// <returns></returns>
         public static object GetValueByFid(this object data, string fid)
         {
@@ -81,6 +83,9 @@ namespace Base.Services
         /// <summary>
         /// 依屬性名稱寫值，不自動轉型或處理不存在的屬性。
         /// </summary>
+        /// <param name="data">要處理的輸入值</param>
+        /// <param name="fid">要寫入的公開屬性名稱，須存在於實例型別。</param>
+        /// <param name="value">要使用的輸入值</param>
         public static void SetValueByName(this object data, string fid, object value)
         {
             data.GetType().GetProperty(fid)!.SetValue(data, value, null);
@@ -89,6 +94,7 @@ namespace Base.Services
         /// <summary>
         /// 組合屬性型別名稱；Nullable 型別另加上其底層型別名稱。
         /// </summary>
+        /// <param name="inputObject">要檢查公開屬性型別的物件</param>
         public static string GetTypeFullName(this PropertyInfo inputObject)
         {
             var propertyType = inputObject.PropertyType;

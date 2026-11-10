@@ -15,6 +15,7 @@ using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 
 namespace BaseOffice.Services
 {
+    /// <summary>提供 Word 範本填值、文件合併與 Open XML 檢查工具。</summary>
     public static class _Word
     {
         //word carrier
@@ -28,14 +29,10 @@ namespace BaseOffice.Services
         public const int CharV = 3;     //V char
         */
 
-        /// <summary>
-        /// _HttpWord.MsByTplRow -> _Word.TplToMsA -> TplRowsToMsA
-        /// template and rows to memory stream
-        /// </summary>
-        /// <param name="tplPath"></param>
-        /// //<param name="mainRow">可為json或model</param>
-        /// <param name="rows">可為json或model</param>
-        /// <param name="images"></param>
+        /// <summary>以多筆資料各自填入範本本文，組成一份 DOCX 串流。</summary>
+        /// <param name="tplPath">要讀取的範本檔案路徑</param>
+        /// <param name="rows">依輸出順序提供每份範本文字及子資料的集合。</param>
+        /// <param name="images">要依範本標記填入的圖片清單，可為 null</param>
         /// <returns></returns>
         public static MemoryStream? TplRowsToMs(string tplPath, IEnumerable<dynamic> rows,
             List<WordImageDto>? images = null)
@@ -45,18 +42,20 @@ namespace BaseOffice.Services
         }
 
         // WordSetSvc 在記憶體中的範本副本填值，儲存並關閉 DOCX 後才回傳可從開頭讀取的串流。
+        /// <summary>以單筆資料填入範本的主從欄位，產生 DOCX 串流。</summary>
+        /// <param name="tplPath">要讀取的範本檔案路徑</param>
+        /// <param name="row">提供 Word 範本標記對應值的單筆資料。</param>
+        /// <param name="images">要依範本標記填入的圖片清單，可為 null</param>
         public static MemoryStream? TplRowToMs(string tplPath, dynamic row, List<WordImageDto>? images = null)
         {
             // 主資料的 [欄位名] 須完整落在同一個 Open XML Text 節點。子資料則依 [!0] 等標記定位範本列。
             return new WordSetSvc(tplPath).RowToMs(row, images);
         }
 
-        /// <summary>
-        /// merge word files into one
-        /// </summary>
-        /// <param name="srcFiles">source word files/param>
-        /// <param name="toFile">target word file</param>
-        /// <param name="deleteSrc">delete source file or not</param>
+        /// <summary>按輸入順序合併 Word 文件，並可移除來源檔。</summary>
+        /// <param name="srcFiles">依合併順序排列的 Word 來源檔路徑</param>
+        /// <param name="deleteSrc">合併時是否移除來源檔案</param>
+        /// <param name="toFile">產生圖片的輸出檔案路徑</param>
         public static void MergeFiles(string[] srcFiles, string toFile, bool deleteSrc)
         {
             //copy first file to target

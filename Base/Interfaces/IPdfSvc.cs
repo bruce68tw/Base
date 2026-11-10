@@ -10,14 +10,20 @@ namespace Base.Interfaces
         /// <summary>
         /// 從 keyPath 指定的檔案設定授權；現有 Spire 實作遇空路徑時略過。
         /// </summary>
+        /// <param name="keyPath">授權檔案路徑</param>
         void SetKey(string keyPath);
         /// <summary>
         /// 將 Word 位元組轉為 PDF 位元組；可另提供授權檔路徑，轉換錯誤可能拋出例外。
         /// </summary>
+        /// <param name="wordBytes">要轉成 PDF 的 Word 檔案位元組</param>
+        /// <param name="keyPath">授權檔案路徑</param>
         byte[] WordToPdf(byte[] wordBytes, string keyPath = "");
         /// <summary>
         /// 讀取 fromPath 並將圖片加入後寫至 toPath；現有 Spire 實作只處理第一頁，失敗可能拋出例外。
         /// </summary>
+        /// <param name="fromPath">要讀取的來源檔路徑</param>
+        /// <param name="toPath">輸出結果要寫入的目的路徑</param>
+        /// <param name="imageDtos">要加入 PDF 的圖片及其定位資料</param>
         bool AddImages(string fromPath, string toPath, PdfImageDto[] imageDtos);
     }
 }

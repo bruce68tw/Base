@@ -37,6 +37,8 @@ namespace Base.Services
         /// <summary>
         /// 保存作業名稱與連線字串，尚不建立資料庫連線。
         /// </summary>
+        /// <param name="ctrl">對應作業的控制器名稱</param>
+        /// <param name="dbStr">資料庫連線字串</param>
         public CrudEditGetSvc(string ctrl, string dbStr = "")
         {
             _ctrl = ctrl;
@@ -54,6 +56,7 @@ namespace Base.Services
         /// <summary>
         /// 取得或延遲建立 Db；outside 旗標只在建立時設定，釋放行為依實際流程。
         /// </summary>
+        /// <param name="outside">新建 Db 時是否標記為外部管理</param>
         public Db GetDb(bool outside = false)
         {
             if (_db == null)
@@ -77,6 +80,7 @@ namespace Base.Services
         /// <summary>
         /// 組成作業、使用者及資料鍵的草稿 JSON 路徑；空鍵改用 -1。
         /// </summary>
+        /// <param name="key">用來定位資料的鍵值</param>
         public string GetDraftPath(string key)
         {
             key = _Str.EmptyToValue(key, "-1");     //-1表示新增
@@ -86,6 +90,9 @@ namespace Base.Services
         /// <summary>
         /// 依指定功能讀取主從資料與資料範圍檢查；結果可為 null、空物件或錯誤 JSON。
         /// </summary>
+        /// <param name="fun">要處理的 CRUD 操作類型</param>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="editDto">主從表、主鍵及欄位的 CRUD 維護設定</param>
         public async Task<JObject?> GetJsonByFunA(CrudEnum fun, string key, EditDto editDto)
         {
             return await GetJsonA(fun, key, editDto);
@@ -146,6 +153,9 @@ namespace Base.Services
         /// <summary>
         /// 讀取主表首列；自訂 ReadSql 使用 @Id，僅釋放此方法自行建立的 Db。
         /// </summary>
+        /// <param name="edit">主表的 CRUD 維護設定</param>
+        /// <param name="key">用來定位資料的鍵值</param>
+        /// <param name="db">要沿用的資料庫物件</param>
         public async Task<JObject?> GetDbRowA(EditDto edit, string key, Db? db = null)
         {
             //reset sqlArgs first

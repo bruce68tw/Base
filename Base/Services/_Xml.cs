@@ -13,6 +13,7 @@ namespace Base.Services
         /// <summary>
         /// 將 XML 節點序列化為 JSON 字串。
         /// </summary>
+        /// <param name="node">要序列化的 XML 節點</param>
         public static string ToStr(XmlNode node)
         {
             return JsonConvert.SerializeXmlNode(node);
@@ -21,6 +22,9 @@ namespace Base.Services
         /// <summary>
         /// 依 XPath 讀取屬性；檔案或節點缺失回傳 null，XML 格式錯誤仍可能拋出。
         /// </summary>
+        /// <param name="filePath">要讀取或寫入的完整檔案路徑</param>
+        /// <param name="keyPath">用來選取 XML 節點的 XPath。</param>
+        /// <param name="propName">要讀取的 XML 屬性名稱</param>
         public static string? GetKeyProp(string filePath, string keyPath, string propName)
         {
             //check

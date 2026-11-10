@@ -17,6 +17,7 @@ namespace Base.Services
         /// <summary>
         /// 回傳固定字串 OK，不執行傳入的 SQL。
         /// </summary>
+        /// <param name="sql">預留的 SQL 輸入，現行佔位方法不會執行。</param>
         public static string RunSql(string sql)
         {
             //xxx

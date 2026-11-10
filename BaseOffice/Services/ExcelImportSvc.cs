@@ -30,14 +30,13 @@ namespace BaseOffice.Services
 
         private List<ExcelImportFieldDto> _excelFields = null!;
 
-        /// <summary>
-        /// import by stream
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="importDto"></param>
-        /// <param name="fileName"></param>
-        /// <param name="uiDtFormat"></param>
+        /// <summary>將 Excel 串流移回開頭後，依匯入設定處理工作簿。</summary>
+        /// <param name="stream">承載文件內容的串流</param>
+        /// <param name="importDto">欄位對應、驗證及資料處理的匯入設定</param>
+        /// <param name="fileName">檔案名稱，必要時包含副檔名</param>
+        /// <param name="uiDtFormat">日期儲存格轉成字串時使用的格式</param>
         /// <param name="writeLog">是否寫入XpImportLog table, 如果要自行控制寫入log, 則設為false</param>
+        /// <param name="dirUpload">儲存匯入檔案的目錄</param>
         /// <returns></returns>
         public async Task<ResultImportDto> ImportByStreamA(Stream stream, ExcelImportDto<T> importDto, 
             string dirUpload, string fileName, string uiDtFormat, bool writeLog)
@@ -52,16 +51,14 @@ namespace BaseOffice.Services
             return result;
         }
 
-        /// <summary>
-        /// import by excel docx
-        /// excel row/cell (base 0)
-        /// </summary>
-        /// <param name="docx"></param>
-        /// <param name="importDto"></param>
-        /// <param name="fileName">imported excel file name</param>
+        /// <summary>讀取已開啟的 Excel 工作簿，依匯入設定驗證並處理資料列。 (base 0)</summary>
+        /// <param name="docx">已開啟的 Open XML 工作簿</param>
+        /// <param name="importDto">欄位對應、驗證及資料處理的匯入設定</param>
+        /// <param name="fileName">檔案名稱，必要時包含副檔名</param>
         /// <param name="uiDtFormat">excel裡面的datetime日期格式</param>
         /// <param name="writeLog">是否寫入XpImportLog table, 如果要自行控制寫入log, 則設為false</param>
-        /// <returns>error msg if any</returns>
+        /// <param name="dirUpload">儲存匯入檔案的目錄</param>
+        /// <returns>包含匯入筆數與錯誤資訊的結果。</returns>
         public async Task<ResultImportDto> ImportByDocxA(SpreadsheetDocument docx, 
             ExcelImportDto<T> importDto, string dirUpload, string fileName, string uiDtFormat, bool writeLog)
         {
@@ -479,10 +476,9 @@ values('{importDto.LogRowId}', '{importDto.ImportType}', '{fileName}',
                 : value;
         }
 
-        /// <summary>
-        /// add row error
-        /// </summary>
-        /// <param name="error"></param>
+        /// <summary>記錄指定資料列的非空錯誤訊息。</summary>
+        /// <param name="error">要記錄或回傳的錯誤訊息</param>
+        /// <param name="rowNo">要記錄的 Excel 資料列編號</param>
         public void AddError(int rowNo, string error)
         {
             if (error != "")

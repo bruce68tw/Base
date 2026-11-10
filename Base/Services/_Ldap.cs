@@ -14,6 +14,9 @@ namespace Base.Services
         /// <summary>
         /// 以帳密驗證並讀取 sn、mail；server 為主機、網域及選用埠的逗號清單，失敗可回傳 null。
         /// </summary>
+        /// <param name="server">LDAP 連線設定，依序指定主機、網域與選用的連接埠</param>
+        /// <param name="id">用於識別目標資料的 ID</param>
+        /// <param name="pwd">要驗證的密碼</param>
         public static async Task<LoginUserDto?> LoginA(string server, string id, string pwd)
         {
             var cols = server.Split(',');

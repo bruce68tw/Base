@@ -5,14 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BaseWeb.ViewComponents
 {
-    /// <summary>
-    /// file input
-    /// </summary>
+    /// <summary>呈現檔案上傳欄位的 MVC ViewComponent。</summary>
     public class XiFileViewComponent : ViewComponent
     {
-        /// <summary>
-        /// file upload, 
-        /// </summary>
+        /// <summary>產生檔案上傳欄位的 HTML。</summary>
+        /// <param name="dto">用於產生檔案上傳欄位的欄位設定。</param>
         /// <returns></returns>
         public HtmlString Invoke(XiFileDto dto)
         {

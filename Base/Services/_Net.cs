@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 /// </summary>
 public static class _Net
 {
+    /// <summary>傳給 Windows 網路共用 API 的連線資源描述。</summary>
     [StructLayout(LayoutKind.Sequential)]
     private class NetResourceDto
     {
@@ -35,6 +36,9 @@ public static class _Net
     /// <summary>
     /// 先取消同一路徑連線再以帳密連接；原生回傳碼為 0 時回傳 true。
     /// </summary>
+    /// <param name="netPath">目標 Windows 網路共用路徑</param>
+    /// <param name="userId">登入網路共用所用的帳號。</param>
+    /// <param name="pwd">登入網路共用所用的密碼。</param>
     public static bool Connect(string netPath, string userId, string pwd)
     {
         //連線前先取消連線，避免重複連線, 造成error
@@ -58,6 +62,7 @@ public static class _Net
     /// <summary>
     /// 強制取消指定路徑的共用連線，忽略原生回傳碼。
     /// </summary>
+    /// <param name="netPath">目標 Windows 網路共用路徑</param>
     public static void Disconnect(string netPath)
     {
         WNetCancelConnection2(netPath, 0, true);

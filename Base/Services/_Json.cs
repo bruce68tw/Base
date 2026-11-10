@@ -15,6 +15,7 @@ namespace Base.Services
         /// <summary>
         /// 將 JObject 轉為模型，null 輸入回傳 default。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
         public static T? ToModel<T>(JObject json)
         {
             return (json == null)
@@ -25,6 +26,8 @@ namespace Base.Services
         /// <summary>
         /// 建立單一字串欄位的 JObject。
         /// </summary>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="value">要使用的輸入值</param>
         public static JObject PairToJson(string fid, string value)
         {
             return new JObject { [fid] = value };
@@ -32,6 +35,8 @@ namespace Base.Services
         /// <summary>
         /// 建立單一字串欄位並轉成 JSON 文字。
         /// </summary>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="value">要使用的輸入值</param>
         public static string PairToJsonStr(string fid, string value)
         {
             return PairToJson(fid, value).ToString();
@@ -40,6 +45,7 @@ namespace Base.Services
         /// <summary>
         /// 取得分頁 JSON 的 data 陣列，缺失或型別不符可為 null。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
         public static JArray? PageGetRows(JObject? json)
         {
             return (json == null || json["data"] == null)
@@ -50,6 +56,8 @@ namespace Base.Services
         /// <summary>
         /// 將陣列或單列包成 _rows，直接更新傳入 JSON。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
+        /// <param name="rows">要處理的資料列清單</param>
         public static void SetRows(JObject json, JArray rows)
         {
             json[_Fun.FidRows] = rows;
@@ -57,6 +65,8 @@ namespace Base.Services
         /// <summary>
         /// 將陣列或單列包成 _rows，直接更新傳入 JSON。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
+        /// <param name="row">要讀取、檢查或寫入的單列 JSON</param>
         public static void SetRows(JObject json, JObject row)
         {
             json[_Fun.FidRows] = new JArray(row);
@@ -65,6 +75,9 @@ namespace Base.Services
         /// <summary>
         /// 取代既有 _childs 中指定索引的物件；結構缺失時記錄並回傳 false。
         /// </summary>
+        /// <param name="upJson">包含子項目的上傳 JSON 物件</param>
+        /// <param name="childIdx">子項目在子集合中的索引，從零開始</param>
+        /// <param name="childJson">要寫入指定子項目的 JSON 物件</param>
         public static bool SetChildJson(JObject upJson, int childIdx, JObject childJson)
         {
             var error = "";
@@ -93,6 +106,9 @@ namespace Base.Services
         /// <summary>
         /// 建立必要的 _childs 項目並填入 _rows，回傳該子物件。
         /// </summary>
+        /// <param name="upJson">包含子項目的上傳 JSON 物件</param>
+        /// <param name="childIdx">子項目在子集合中的索引，從零開始</param>
+        /// <param name="rows">要處理的資料列清單</param>
         public static JObject SetChildRows(JObject upJson, int childIdx, JArray rows)
         {
             // 假設 _edit.Childs 和 _edit.Rows 是字串變數
@@ -129,6 +145,7 @@ namespace Base.Services
         /// <summary>
         /// 輸出不含縮排的 JSON 字串。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
         public static string ToStr(JObject json)
         {
             return json.ToString(Formatting.None);
@@ -137,6 +154,7 @@ namespace Base.Services
         /// <summary>
         /// 解析 JSON 陣列，空值回傳 null，無效格式會拋出。
         /// </summary>
+        /// <param name="str">要處理的來源字串</param>
         public static JArray? StrToArray(string? str)
         {
             return _Str.IsEmpty(str) ? null : JArray.Parse(str!);
@@ -155,6 +173,8 @@ namespace Base.Services
         /// <summary>
         /// 讀取欄位字串，欄位不存在時回傳空字串。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
+        /// <param name="fid">要處理的欄位識別值</param>
         public static string NullToEmpty(JObject json, string fid)
         {
             return (json[fid] == null) 
@@ -164,6 +184,7 @@ namespace Base.Services
         /// <summary>
         /// 建立 _ErrorMsg 物件，空訊息改用系統錯誤文字。
         /// </summary>
+        /// <param name="error">要記錄或回傳的錯誤訊息</param>
         public static JObject GetError(string error = "")
         {
             return new JObject { [_Fun.FidErrorMsg] = _Str.EmptyToValue(error, _Fun.SystemError) };
@@ -172,7 +193,7 @@ namespace Base.Services
         /// <summary>
         /// 建立 _ErrorMsg 為 B:語系鍵 的物件。
         /// </summary>
-        /// <param name="fid">_BR fid</param>
+        /// <param name="fid">共用語系資源中的錯誤鍵。</param>
         /// <returns></returns>
         public static JObject GetBrError(string fid)
         {
@@ -192,6 +213,7 @@ namespace Base.Services
         /// <summary>
         /// 輸出縮排陣列 JSON，空陣列回傳 null。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
         public static string? ArrayToStr(JArray rows)
         {
             return (rows.Count == 0) 
@@ -201,6 +223,8 @@ namespace Base.Services
         /// <summary>
         /// 依欄位字串排序成新陣列；空字串以 zzz 作排序替代值。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
+        /// <param name="fid">要處理的欄位識別值</param>
         public static JArray SortArray(JArray rows, string fid)
         {
             //put empty field to last
@@ -210,6 +234,8 @@ namespace Base.Services
         /// <summary>
         /// 依各列指定欄位建立字串清單，欄位須存在。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
+        /// <param name="fid">要處理的欄位識別值</param>
         public static List<string> ArrayToListStr(JArray rows, string fid)
         {
             var data = new List<string>();
@@ -221,6 +247,10 @@ namespace Base.Services
         /// <summary>
         /// 連接非空欄位值，可加引號與分隔符，不跳脫內容。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="addQuote">是否以單引號包住各項</param>
+        /// <param name="sep">用於連接或拆分項目的分隔符號</param>
         public static string ArrayToStrs(JArray rows, string fid, bool addQuote = true, string sep = ",")
         {
             var quote = addQuote ? "'" : "";
@@ -236,8 +266,11 @@ namespace Base.Services
 
         /// <summary>
         /// 篩選欄位字串等於指定值的列，無結果回傳 null。
-        /// FilterArray -> Filter
+        /// 原方法名稱為 FilterArray。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="value">欄位必須等於的字串。</param>
         public static JArray? Filter(JArray rows, string fid, string value)
         {
             //if (rows == null) return null;
@@ -251,8 +284,11 @@ namespace Base.Services
 
         /// <summary>
         /// 取得首個符合欄位字串的 JObject，無結果回傳 null。
-        /// FindArray -> FilterOne
+        /// 原方法名稱為 FindArray。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="value">欄位必須等於的字串。</param>
         public static JObject? FilterOne(JArray rows, string fid, string value)
         {
             var finds = Filter(rows, fid, value);
@@ -270,6 +306,7 @@ namespace Base.Services
         /// <summary>
         /// 將 JArray 轉成字串陣列，內容不符時可能拋出。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
         public static string[] ArrayToStrArray(JArray rows)
         {
             return rows.ToObject<string[]>()!;
@@ -278,6 +315,9 @@ namespace Base.Services
         /// <summary>
         /// 原地移除各列欄位的指定尾碼；欄位長度須至少與尾碼相同。
         /// </summary>
+        /// <param name="rows">要處理的資料列清單</param>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="tail">要附加或移除的尾端字串</param>
         public static void ArrayRemoveTailStr(ref JArray rows, string fid, string tail)
         {
             var tailLen = tail.Length;
@@ -293,6 +333,7 @@ namespace Base.Services
         /// <summary>
         /// 取得 JObject 的欄位名稱清單。
         /// </summary>
+        /// <param name="row">要讀取、檢查或寫入的單列 JSON</param>
         public static List<string> GetKeys(JObject row)
         {
             var data = new List<string>();
@@ -304,6 +345,8 @@ namespace Base.Services
         /// <summary>
         /// 以字串值寫入同名公開靜態欄位，欄位型別不符時可能拋出。
         /// </summary>
+        /// <param name="from">提供欄位名稱與值的來源 JSON。</param>
+        /// <param name="type">要填入同名公開靜態欄位的型別。</param>
         public static void CopyToStaticClass(JObject from, Type type)
         {
             //Type type = typeof(T);
@@ -320,6 +363,8 @@ namespace Base.Services
         /// 將 JSON 轉型後寫入同名可寫屬性，略過不存在或轉型失敗的屬性。
         /// 注意: 新版newtonsoft JObject 不支援GetType().GetProperties(), 改用linq寫法
         /// </summary>
+        /// <param name="from">提供要複製到模型的 JSON 資料。</param>
+        /// <param name="model">要讀取、寫入或序列化的模型</param>
         public static void CopyToModel(JObject from, object model)
         {
             var type = model.GetType();
@@ -365,6 +410,7 @@ namespace Base.Services
         /// <summary>
         /// 判斷 JObject 為 null 或沒有欄位。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
         public static bool IsEmpty(JObject? json)
         {
             return (json == null || !json.HasValues);
@@ -373,6 +419,7 @@ namespace Base.Services
         /// <summary>
         /// 判斷 JObject 非 null 且含有欄位。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
         public static bool NotEmpty(JObject? json)
         {
             return !IsEmpty(json);
@@ -381,6 +428,8 @@ namespace Base.Services
         /// <summary>
         /// 判斷物件或欄位缺失，或欄位字串為空。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
+        /// <param name="fid">要處理的欄位識別值</param>
         public static bool IsFidEmpty(JObject? json, string fid)
         {
             return (IsEmpty(json) || json![fid] == null || json![fid]!.ToString() == "");
@@ -389,6 +438,8 @@ namespace Base.Services
         /// <summary>
         /// 判斷指定欄位存在且字串非空。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
+        /// <param name="fid">要處理的欄位識別值</param>
         public static bool NotFidEmpty(JObject? json, string fid)
         {
             return !IsFidEmpty(json, fid);
@@ -397,6 +448,7 @@ namespace Base.Services
         /// <summary>
         /// 忽略底線開頭的特殊欄位後判斷是否沒有一般欄位，不按字串內容判空。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
         public static bool IsEmptyNoSpec(JObject? json)
         {
             if (IsEmpty(json)) return true;
@@ -414,6 +466,7 @@ namespace Base.Services
         /// <summary>
         /// 取得 _rows 首列；鍵缺失回傳 null，但空陣列或結構錯誤可能拋出。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
         public static JObject? GetRows0(JObject json)
         {
             //var fid = "_rows";  //same to CrudEdit.Rows
@@ -426,6 +479,9 @@ namespace Base.Services
         /// <summary>
         /// 判斷欄位存在且字串等於指定值。
         /// </summary>
+        /// <param name="json">要讀取或修改的 JSON 資料</param>
+        /// <param name="fid">要處理的欄位識別值</param>
+        /// <param name="value">要使用的輸入值</param>
         public static bool IsFidEqual(JObject json, string fid, string value)
         {
             return (json[fid] != null && json[fid]!.ToString() ==  value);
@@ -434,9 +490,9 @@ namespace Base.Services
         /// <summary>
         /// 依從 0 起算的子索引讀取 _rows，結構缺失可為 null。
         /// </summary>
-        /// <param name="upJson">input row</param>
-        /// <param name="childIdx">child index</param>
-        /// <returns>JArray</returns>
+        /// <param name="upJson">包含子資料的上傳 JSON。</param>
+        /// <param name="childIdx">子項目在子集合中的索引，從零開始</param>
+        /// <returns>讀取的 JSON 陣列。</returns>
         public static JArray? GetChildRows(JObject upJson, int childIdx)
         {
             var child = GetChildJson(upJson, childIdx);
@@ -446,6 +502,8 @@ namespace Base.Services
         /// <summary>
         /// 取得指定子項目的首列，無陣列時回傳 null；空陣列可能拋出。
         /// </summary>
+        /// <param name="upJson">包含子項目的上傳 JSON 物件</param>
+        /// <param name="childIdx">子項目在子集合中的索引，從零開始</param>
         public static JObject? GetChildRows0(JObject upJson, int childIdx)
         {
             var rows = GetChildRows(upJson, childIdx);
@@ -457,6 +515,8 @@ namespace Base.Services
         /// <summary>
         /// 取得指定 _childs 物件，缺失、空物件或索引超出時回傳 null。
         /// </summary>
+        /// <param name="upJson">包含子項目的上傳 JSON 物件</param>
+        /// <param name="childIdx">子項目在子集合中的索引，從零開始</param>
         public static JObject? GetChildJson(JObject upJson, int childIdx)
         {
             const string fid = _Fun.FidChilds;
@@ -471,6 +531,9 @@ namespace Base.Services
 		/// <summary>
 		/// 取得非空欄位字串，物件或欄位缺失及空值時回傳 defaultValue。
 		/// </summary>
+		/// <param name="json">要讀取或修改的 JSON 資料</param>
+		/// <param name="fid">要處理的欄位識別值</param>
+		/// <param name="defaultValue">取不到有效值時使用的替代值</param>
 		public static string GetFidStr(JObject? json, string fid, string defaultValue = "")
 		{
 			if (json == null || json[fid] == null)

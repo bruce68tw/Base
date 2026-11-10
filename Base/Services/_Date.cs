@@ -16,6 +16,8 @@ namespace Base.Services
         /// <summary>
         /// 取得時間差的整日分量；任一時間為 null 時回傳 0。
         /// </summary>
+        /// <param name="start">比較或計算的起始時間</param>
+        /// <param name="end">比較或計算的結束時間</param>
         public static int DayDiff(DateTime? start, DateTime? end)
         {
             return (start == null || end == null || start == end)
@@ -26,6 +28,8 @@ namespace Base.Services
         /// <summary>
         /// 取得 TimeSpan.Minutes 分量，非總分鐘數；任一時間為 null 時回傳 0。
         /// </summary>
+        /// <param name="start">比較或計算的起始時間</param>
+        /// <param name="end">比較或計算的結束時間</param>
         public static long MinDiff(DateTime? start, DateTime? end)
         {
             return (start == null || end == null || start == end)
@@ -35,6 +39,9 @@ namespace Base.Services
         /// <summary>
         /// 解析日期字串後計算整日差；捕捉例外時設定 error 並回傳 0。
         /// </summary>
+        /// <param name="error">日期解析失敗時由方法寫入的錯誤訊息。</param>
+        /// <param name="start">比較或計算的起始時間</param>
+        /// <param name="end">比較或計算的結束時間</param>
         public static int StrDayDiff(ref string error, string start, string end)
         {
             error = ""; //initial
@@ -55,6 +62,8 @@ namespace Base.Services
         /// <summary>
         /// 取得總毫秒差；任一時間為 null 時回傳 0。
         /// </summary>
+        /// <param name="start">比較或計算的起始時間</param>
+        /// <param name="end">比較或計算的結束時間</param>
         public static double MiniSecDiff(DateTime? start, DateTime? end)
         {
             return (start == null || end == null)
@@ -65,6 +74,9 @@ namespace Base.Services
         /// <summary>
         /// 解析日期字串並計算毫秒差；捕捉例外時設定 error 並回傳 0。
         /// </summary>
+        /// <param name="error">日期解析失敗時由方法寫入的錯誤訊息。</param>
+        /// <param name="start">比較或計算的起始時間</param>
+        /// <param name="end">比較或計算的結束時間</param>
         public static double StrMiniSecDiff(ref string error, string start, string end)
         {
             error = ""; //initial
@@ -87,6 +99,8 @@ namespace Base.Services
         /// <summary>
         /// 比較年月日，忽略時分秒。
         /// </summary>
+        /// <param name="start">比較或計算的起始時間</param>
+        /// <param name="end">比較或計算的結束時間</param>
         public static bool IsSameDate(DateTime start, DateTime end)
         {
             return (start.Date == end.Date);
@@ -95,6 +109,7 @@ namespace Base.Services
         /// <summary>
         /// 以 DateTime.TryParse 判斷字串是否可解析。
         /// </summary>
+        /// <param name="date">要解析的日期字串</param>
         public static bool IsDate(string date)
         {
             //DateTime date2;
@@ -104,6 +119,10 @@ namespace Base.Services
         /// <summary>
         /// 判斷兩區間是否相交；第一區間的 null 端點視為無界，包含邊界。
         /// </summary>
+        /// <param name="start">第一個區間的起始時間，null 表示無下限。</param>
+        /// <param name="end">第一個區間的結束時間，null 表示無上限。</param>
+        /// <param name="start2">第二個區間的起始時間</param>
+        /// <param name="end2">第二個區間的結束時間</param>
         public static bool IsInRange4(DateTime? start, DateTime? end, DateTime start2, DateTime end2)
         {
             return 
@@ -116,6 +135,8 @@ namespace Base.Services
         /// <summary>
         /// 判斷本機目前時間是否落在含端點的區間；字串多載先取日期，不延伸結束日。
         /// </summary>
+        /// <param name="start">比較或計算的起始時間</param>
+        /// <param name="end">比較或計算的結束時間</param>
         public static bool IsNowInRange(string start, string end)
         {
             var start2 = CsToDate(start);
@@ -130,6 +151,8 @@ namespace Base.Services
         /// <summary>
         /// 判斷本機目前時間是否落在含端點的區間；字串多載先取日期，不延伸結束日。
         /// </summary>
+        /// <param name="start">比較或計算的起始時間</param>
+        /// <param name="end">比較或計算的結束時間</param>
         public static bool IsNowInRange(DateTime start, DateTime end)
         {
             var now = DateTime.Now;
@@ -234,6 +257,7 @@ namespace Base.Services
         /// <summary>
         /// 依 _Fun.DbDtFmt 格式化時間，不轉換時區。
         /// </summary>
+        /// <param name="dt">要格式化或轉換的日期時間</param>
         public static string ToDbStr(DateTime dt)
         {
             return dt.ToString(_Fun.DbDtFmt);
@@ -248,6 +272,7 @@ namespace Base.Services
         /// <summary>
         /// 依 _Fun.CsDtFmt 格式化時間。
         /// </summary>
+        /// <param name="dt">要格式化或轉換的日期時間</param>
         public static string ToCsStr(DateTime dt)
         {
             return dt.ToString(_Fun.CsDtFmt);
@@ -256,6 +281,7 @@ namespace Base.Services
         /// <summary>
         /// 依 _Fun.DbDateFmt 格式化日期。
         /// </summary>
+        /// <param name="dt">要格式化或轉換的日期時間</param>
         public static string ToDbDateStr(DateTime dt)
         {
             return dt.ToString(_Fun.DbDateFmt);
@@ -264,6 +290,8 @@ namespace Base.Services
         /// <summary>
         /// 對 HH:mm 加分鐘，最多校正一次跨時；不處理跨日與大量分鐘進位。
         /// </summary>
+        /// <param name="hm5">要調整的 HH:mm 時間字串</param>
+        /// <param name="addMin">要加上的分鐘數</param>
         public static string Hm5AddMin(string hm5, int addMin)
         {
             var pos = hm5.IndexOf(":");
@@ -289,6 +317,7 @@ namespace Base.Services
         /// <summary>
         /// 輸出 HH:mm。
         /// </summary>
+        /// <param name="dt">要格式化或轉換的日期時間</param>
         public static string ToHm5(DateTime dt)
         {
             return dt.ToString("HH:mm");
@@ -297,6 +326,8 @@ namespace Base.Services
         /// <summary>
         /// 將小時與分鐘各補足兩位，以冒號連接，不驗證範圍。
         /// </summary>
+        /// <param name="hour">要格式化的小時數</param>
+        /// <param name="min">要格式化的分鐘數</param>
         public static string HmToHm5(int hour, int min)
         {
             return hour.ToString("00") + ":" + min.ToString("00");
@@ -305,6 +336,8 @@ namespace Base.Services
         /// <summary>
         /// 依生日計算現有年齡或月齡值；目前年齡公式在生日已到時額外加一，並非實歲。
         /// </summary>
+        /// <param name="birth">用於計算年齡的生日</param>
+        /// <param name="isYear">是否以年為單位計算，否則以月為單位</param>
         public static int BirthToAge(DateTime? birth, bool isYear = true)
         {
             if (birth == null) return 0;
@@ -332,6 +365,7 @@ namespace Base.Services
         /// <summary>
         /// 轉成自 1970 年起的秒數並固定扣除八小時，不是 .NET ticks。
         /// </summary>
+        /// <param name="dt">要格式化或轉換的日期時間</param>
         public static long ToTick(DateTime dt)
         {
             //if (dt == null) return 0;
@@ -343,6 +377,7 @@ namespace Base.Services
         /// <summary>
         /// 將自 1970 年起的秒數加到基準時間後呼叫 ToLocalTime。
         /// </summary>
+        /// <param name="tick">自 1970 年起的秒數</param>
         public static DateTime TickToDt(long tick)
         {
             // Unix timestamp is seconds past epoch
@@ -353,6 +388,7 @@ namespace Base.Services
         /// <summary>
         /// 解析共用日期時間字串後轉成秒數，空字串回傳 0。
         /// </summary>
+        /// <param name="dts">要解析或擷取日期的日期時間字串</param>
         public static long CsToTick(string dts)
         {
             var dt = CsToDt(dts);
@@ -362,6 +398,7 @@ namespace Base.Services
         /// <summary>
         /// 依 CsDtFmt 解析，短日期補零時；空字串回傳 null，格式失敗實作回傳 DateTime.MinValue。
         /// </summary>
+        /// <param name="dts">要解析或擷取日期的日期時間字串</param>
         public static DateTime? CsToDt(string dts)
         {
             if (dts == "") return null;
@@ -374,6 +411,7 @@ namespace Base.Services
         /// <summary>
         /// 解析共用日期時間並只保留日期，空字串回傳 null。
         /// </summary>
+        /// <param name="dts">要解析或擷取日期的日期時間字串</param>
         public static DateTime? CsToDate(string dts)
         {
             var dt = CsToDt(dts);
@@ -384,6 +422,7 @@ namespace Base.Services
         /// <summary>
         /// 輸出共用含秒的日期時間格式。
         /// </summary>
+        /// <param name="dt">要格式化或轉換的日期時間</param>
         public static string GetDtStr(DateTime dt)
         {
             return dt.ToString(_Fun.CsDtFmt);
@@ -392,6 +431,7 @@ namespace Base.Services
         /// <summary>
         /// 輸出共用不含秒的日期時間格式。
         /// </summary>
+        /// <param name="dt">要格式化或轉換的日期時間</param>
         public static string GetDtStr2(DateTime dt)
         {
             return dt.ToString(_Fun.CsDtFmt2);
@@ -400,6 +440,7 @@ namespace Base.Services
         /// <summary>
         /// 輸出 yyyy/MM/dd HH:mm:ss-fff，包含毫秒。
         /// </summary>
+        /// <param name="dt">要格式化或轉換的日期時間</param>
         public static string GetDtStr3(DateTime dt)
         {
             return dt.ToString("yyyy/MM/dd HH:mm:ss-fff");
@@ -408,6 +449,7 @@ namespace Base.Services
         /// <summary>
         /// 取第一個空白前的日期片段，沒有空白時原樣回傳。
         /// </summary>
+        /// <param name="dts">要解析或擷取日期的日期時間字串</param>
         public static string GetDateStr(string dts)
         {
             if (dts == "") return "";
@@ -430,6 +472,8 @@ namespace Base.Services
         /// <summary>
         /// 轉為民國日期；type 1 為中文、2 為斜線、3 為連續數字，其他值回傳 ??。
         /// </summary>
+        /// <param name="dt">要格式化或轉換的日期時間</param>
+        /// <param name="type">輸出格式，1 為中文，2 為斜線分隔，3 為連續數字。</param>
         public static string ToTwDateStr(DateTime dt, int type)
         {
             var year = (dt.Year - 1911).ToString();
@@ -445,6 +489,7 @@ namespace Base.Services
         /// <summary>
         /// 嚴格解析 yyyyMMdd；格式不符會拋出例外。
         /// </summary>
+        /// <param name="ymd">要解析的西元日期，格式為 yyyyMMdd。</param>
         public static DateTime YmdToDate(string ymd)
         {
             return DateTime.ParseExact(ymd, "yyyyMMdd", CultureInfo.InvariantCulture);
@@ -453,6 +498,8 @@ namespace Base.Services
         /// <summary>
         /// 將斜線分隔的西元年月轉為民國年月，type 1、2、3 分別為中文、斜線、數字。
         /// </summary>
+        /// <param name="ym">以斜線分隔的西元年月字串</param>
+        /// <param name="type">輸出格式，1 為中文，2 為斜線分隔，3 為連續數字。</param>
         public static string Ym7ToTwYm(string ym, int type)
         {
             if (ym == "") return "";
@@ -473,6 +520,8 @@ namespace Base.Services
         /// <summary>
         /// 解析日期字串再轉民國格式；空字串原樣回傳，解析失敗會拋出。
         /// </summary>
+        /// <param name="dts">要解析或擷取日期的日期時間字串</param>
+        /// <param name="type">輸出格式，1 為中文，2 為斜線分隔，3 為連續數字。</param>
         public static string StrToTwDateStr(string dts, int type)
         {
             return (dts == "")
@@ -482,6 +531,7 @@ namespace Base.Services
         /// <summary>
         /// 將前三碼民國年加 1911，再解析為西元日期。
         /// </summary>
+        /// <param name="ymd">要轉換的民國年月日，前三碼為民國年。</param>
         public static DateTime TwYmdToDate(string ymd)
         {
             var twYear = int.Parse(ymd[..3]) + 1911;
@@ -491,6 +541,7 @@ namespace Base.Services
         /// <summary>
         /// 將六碼或七碼民國年月日轉成西元斜線日期；其他長度回傳空字串。
         /// </summary>
+        /// <param name="ds">要轉換的民國日期字串</param>
         public static string TwYmdToDateStr(string ds)
         {
             var len = ds.Length;
@@ -522,6 +573,7 @@ namespace Base.Services
         /// <summary>
         /// 以 step 產生小於 60 的分鐘選項；step 須為正數以避免無限迴圈。
         /// </summary>
+        /// <param name="step">每次增加的分鐘數，須為正數</param>
         public static List<IdStrDto> GetMinuteList(int step)
         {
             var rows = new List<IdStrDto>();
