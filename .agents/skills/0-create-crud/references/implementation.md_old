@@ -1,0 +1,52 @@
+# 備份、產生與驗證
+
+## 確認生成目錄
+
+- 以使用者指定的既有應用專案目錄為準。在 Codex 中，使用者若以專案屬性指定目錄，就以該目錄為準。確認其絕對路徑及對應的應用程式 `.csproj`，並把路徑列入產生前的需求摘要。
+- 目前工作目錄、Codex 自動建立的 Git worktree 和暫存目錄可能與目標不同。只有使用者明確指定 worktree 為目標時，才把正式檔案產生在該 worktree。若目標目錄無法寫入，依環境的權限流程處理，並回報無法完成的部分。
+- 備份、產生、修改與正式打包產物一律以已確認的目標專案為根目錄。動手前在目標專案查看 Git 狀態並核對相關檔案，保留既有變更。若用隔離目錄建置，完成前仍要確認正式檔案已落在目標專案。
+
+## 同名目標檔備份（使用者已確認）
+
+只檢查本功能將產生的相關目標檔案。已有同名檔時，先將原檔改名備份、保留完整舊內容，再產生新的目標檔，不覆寫舊內容，也不處理無關檔案。
+
+備份名稱在完整檔名（含副檔名）後加 `-1`、`-2` 等流水號，例如 `ColumnRead.cs-1`、`Read.cshtml-1`、`Column.ts-1`。已存在的編號不得覆蓋，選下一個可用號；不使用括號編號。
+
+備份的目的是保留舊檔並使其不再參與編譯或打包。不能只靠改名就宣稱所有工具都會忽略：核對目標 `.csproj`、TypeScript 與 gulp 等實際編譯／打包設定，確認備份已排除，必要時處理本功能備份的排除設定。
+
+## 摘要確認後的程式產生順序
+
+1. **定位實作入口與目標檔。** 依目標應用的 `.csproj`、實際參照版本與最相近的既有功能，核對 Controller、查詢 Service、Read View、TypeScript 入口及其打包方式。需要編輯時，再定位維護 Service 與共用的 Edit View。按[共用開發規則](../../coding-rules/SKILL.md)及摘要確認的功能代碼決定路徑，資料表專用 Service 按實際需求納入。若路由、欄位或操作仍有缺漏，先查目標應用相同用途的入口。查證後仍有會影響需求或實作的歧義，先釐清再處理受影響的部分。
+
+2. **備份同名目標檔。** 在產生程式前執行上節的改名備份與排除檢查。若需調整共用的 `_XpCode.cs`，依選項來源規則精準修改，保留其他功能。
+
+3. **產生查詢後端。** 必讀 [ReadDto](../../../../Base/.agents/skills/model-ReadDto/SKILL.md) 與 [QitemDto](../../../../Base/.agents/skills/model-QitemDto/SKILL.md)，再依其導引閱讀類別與註解。依摘要實作 `ReadSql` 與查詢條件，重用目標應用採用的分頁服務。DbAdm Column 由 `ColumnController.GetPage` 接收 `DtDto`，經 `ColumnRead` 呼叫 `CrudReadSvc.GetPageA`。實際 action 名稱、HTTP 方法、輸入、回傳與授權，須對照目標前端的請求及既有 Controller，並參照 [BaseApi 指引](../../../../BaseApi/.agents/skills/0-overview/SKILL.md)。需要資料權限時，另核對列表服務實際套用的限制。使用 `CrudReadSvc` 時須核對應用的列權限設定、傳入的 `ctrl` 及 `ReadDto` 權限條件。
+
+4. **產生查詢畫面與列表。** 依已確認的查詢欄位編排產生 Read View，按 [BaseWeb 指引](../../../../BaseWeb/.agents/skills/0-overview/SKILL.md)核對元件及實際輸出的欄位識別。下拉式／radio 依[選項來源與接線](options.md)接好 `_XpCode`、Controller 與 View。沿用目標應用的表單、列表及腳本載入入口，建立 TypeScript 的查詢與欄位設定。核對表單送出的名稱與型態、`QitemDto` 的欄位及比對、SQL 回傳名稱與列表欄位順序。虛擬欄依 ReadDto 指引處理，SQL 須提供 renderer 所需的資料與列識別值。操作欄依下節及摘要設定。
+
+5. **串接已確認的維護操作。** 純查詢直接進入驗證。涉及編輯時，必讀 [EditDto](../../../../Base/.agents/skills/model-EditDto/SKILL.md) 與 [EitemDto](../../../../Base/.agents/skills/model-EitemDto/SKILL.md)，再核對類別與註解。DbAdm Column 由 `ColumnEdit.GetDto()` 提供設定，透過 `BaseEditSvc` 串接單筆讀取與異動。依摘要設定資料表、主鍵、讀寫欄位及驗證，單筆 SQL 與資料權限依 EditDto 指引處理。按已確認的編排產生同一份 Edit View，並依操作串接按鈕或圖示、表單與 Controller。修改須核對取回資料及儲存兩條路徑，單筆檢視須核對取回資料及唯讀狀態，新增須核對初始值及提交。對照目標應用的 Controller 和前端 CRUD 來源，核對主鍵傳遞、資料填入、提交格式、後端驗證及成功／錯誤回應。若需刪除，先核對目標應用既有刪除事件、action、服務與權限，再確認適用的刪除語意。找不到可沿用的契約時，先釐清該操作再實作。
+
+6. **驗證生成結果。** 檢查 diff、檔案範圍與備份排除，依目標應用的建置方式驗證受影響的 C#／Razor 與 TypeScript／打包產物。能啟動時，由功能入口確認查詢畫面與已確認的編排、篩選、結果欄位、分頁及排序（依啟用項目），再逐一驗證已確認的維護操作。若有資料權限，依適用的列表、單筆與異動路徑檢查允許及拒絕的案例。回報重用的入口、實際驗證結果及未執行的項目。
+
+## 前端列表操作欄組裝（已核對參考）
+
+參考 DbAdm 的 `_src/tsView/Column.ts` 與 `_src/tsBase/svc/CrudR.ts`，目前本機專案為 `C:/_project/DbAdm`。以下是 Column 原例，不代表新功能預設顯示所有操作：
+
+```typescript
+// columns 中的操作欄
+{ data: '_Fun' }
+
+// columnDefs 中對應的 renderer
+{
+    targets: [7],
+    render(data, type, full) {
+        return _me.crudR.dtCrudFun(full.Id, full.Name, '*');
+    }
+}
+```
+
+- `targets` 從 0 起算；原例 `[7]` 是第 8 欄，產生時依實際列表位置設定，不照抄 7。
+- 現行簽章為 `dtCrudFun(key: string, rowName: string, funs: string, exts: string = '')`。`key` 使用資料列實際識別值，範例為 `Id`；SQL 須提供該值及其他 render 依賴資料。虛擬欄位規則見 [ReadDto](../../../../Base/.agents/skills/model-ReadDto/SKILL.md)。
+- `rowName` 註解用途為刪除前顯示名稱，目前實作未使用；範例傳 `Name` 不代表每張資料表都必須有 Name 欄位，依目標資料提供參數，不杜撰欄位。
+- `funs`：`U` 修改、`D` 刪除、`V` 單筆檢視，可組合如 `UV`。依逐題確認的操作設定；只有三者皆要顯示時才使用 `*`，不能預設全開。
+- `dtCrudFun` 僅渲染操作圖示，不代表已檢查功能或資料權限；權限需求仍依前述確認分支處理。此示例不新增刪除等操作的實作契約。

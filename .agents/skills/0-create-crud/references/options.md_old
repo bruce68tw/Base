@@ -1,0 +1,47 @@
+# 選項來源與接線
+
+## 下拉式／radio 選項來源（使用者已確認）
+
+需要下拉式或 radio 選項來源時，先詢問「來源是一般資料表，還是 XpCode 資料表？」已知答案直接沿用；一般資料表例如 Project，另一類直接稱為 `XpCode` 資料表。需求摘要須標明來源類別。
+
+目前 AI 代寫選項來源程式的支援範圍僅為這兩類；其他來源明確交由程式設計師自行撰寫，AI 不代寫來源程式或猜測選項。一般資料表分支只詢問資料表名稱（已提供則沿用），固定讀取 `Id` 與 `Name`：Id 為選項值、Name 為顯示文字，不再詢問值／文字欄名，也不另加排序或過濾的必問項。摘要記錄表名與此固定對應；下拉式與 radio 均適用。XpCode 分支只詢問 `Type`，已提供則沿用，缺漏時才逐題詢問；固定以 `Value` 作選項值、`Name` 作顯示文字，依 `Sort` 排序。摘要記錄 Type、此欄位對應與排序；來源仍透過目標專案 `_XpCode` 的既有適用方法，不另猜排序升降或新增問題。使用者提供的 XpCode 欄位為 Type、Value、Name、Sort、Ext、Note；Ext／Note 用途未指定，不推論或列為必問。
+
+`_XpCode` 是應用的共用類別，`XpCode` 是資料表，兩者須區分。上述兩類選項來源皆依下列方式串接。
+
+選項來源由目標應用專案的 `Services/_XpCode.cs` 集中設定；`Controller.Read` 呼叫其方法並以 `await` 取得資料，經 `ViewBag` 交給 View 元件，不直接在前端另寫資料來源。先重用 `_XpCode` 既有適用方法；沒有適用方法時，才依已確認的選項來源新增，不猜測資料表或選項值。來源仍依前述訪談只補問缺漏。
+
+支援來源的答案確認後，`Services/_XpCode.cs` 必須列入本功能的生成／修改範圍，落實對應取值函數，而不只是記錄來源：一般資料表依已確認表名提供 Id／Name，XpCode 依 Type 提供 Value／Name 並依 Sort 排序。已有完全相同且適用的函數時重用，否則新增；方法名稱沿用目標既有風格，不另訂尚未討論的命名標準。
+
+`_XpCode.cs` 是多功能共用檔，應精準新增並保留其他函數，不將整個檔案當作生成目標改名備份後覆蓋。同名函數須先核對語意，不覆寫或破壞其他功能。此處為同名目標檔備份流程的共用檔處理例外。
+
+產生前摘要須列出預計新增或重用的來源函數，以及 Controller `await` → ViewBag → View 的串接；摘要確認後才實際生成。其他來源仍由程式設計師自行撰寫，不因本段擴大 AI 代寫範圍。
+
+DbAdm Column 的下拉式串接示例（僅示意此資料來源，不固定所有功能使用 Projects）：
+
+```csharp
+// Services/_XpCode.cs
+public static async Task<List<IdStrDto>> ProjectsA(Db? db = null)
+{
+    return await _Code.TableToCodesA("dbo.Project", db, "Name");
+}
+
+// XpCode.Type 來源：Services/_XpCode.cs 的 RptTypesA
+public static async Task<List<IdStrDto>> RptTypesA(Db? db = null)
+{
+    return await _Code.TypeToCodesA(RptType, db);
+}
+
+// ColumnController.Read()（一般資料表範例）
+ViewBag.Projects = await _XpCode.ProjectsA();
+```
+
+```cshtml
+@await Component.InvokeAsync(XiEstr.Select,
+    new XiSelectDto { Fid = "ProjectId", Rows = ViewBag.Projects })
+```
+
+此處 `_XpCode` 選項取值方法的命名：末尾 `A` 表示非同步，呼叫時使用 `await`；`A` 前的 `s` 表示多筆。對應的 ViewBag 變數同樣使用複數 `s`，但不加 `A`，例如 `ViewBag.Projects = await _XpCode.ProjectsA();`；`RptTypesA` 對應 `ViewBag.RptTypes`。此規則僅限本段選項取值方法與 ViewBag，不泛化至其他函數或變數。
+
+以上兩個來源函數入口為 DbAdm `Services/_XpCode.cs` 的 `ProjectsA`（一般資料表）與 `RptTypesA`（XpCode.Type）。生成時依使用者提供的表名或 Type 替換，不固定使用 Project 或 RptType，也不猜測 RptType 的具體值；直接沿用 `_Code.TableToCodesA`／`_Code.TypeToCodesA`，不重寫其查詢邏輯。既有適用函數優先重用，缺少才新增，Controller／View 串接依前述方式。
+
+radio 同樣經 `_XpCode` 提供來源是使用者確認的約定；上述 Column 範例本身展示的是下拉式，不是 radio。具體元件契約依目標使用的模組 skill 與來源核對，不在此複製 API 文件。

@@ -15,35 +15,6 @@ namespace Base.Services
         /// 資料存取範圍的代碼分類。
         /// </summary>
         public const string AuthRange = "xAuthRange";
-        /// <summary>
-        /// 個別簽核狀態的代碼分類。
-        /// </summary>
-        public const string SignStatus = "xfSignStatus";
-        /// <summary>
-        /// 流程節點種類的代碼分類。
-        /// </summary>
-        public const string NodeType = "xfNodeType";
-        /// <summary>
-        /// 簽核對象種類的代碼分類。
-        /// </summary>
-        public const string SignerType = "xfSignerType";
-        /// <summary>
-        /// 條件組合方式的代碼分類。
-        /// </summary>
-        public const string AndOr = "xfAndOr";
-        /// <summary>
-        /// 流程連線運算子的代碼分類。
-        /// </summary>
-        public const string LineOp = "xfLineOp";
-        /// <summary>
-        /// 連線來源種類的代碼分類。
-        /// </summary>
-        public const string LineFromType = "xfLineFromType";
-        /// <summary>
-        /// 流程整體狀態的代碼分類。
-        /// </summary>
-        public const string FlowStatus = "xfFlowStatus";
-        //public const string SignStatus = "xfSignStatus";
 
         /// <summary>
         /// 查詢 Id、Str 選項；無資料或底層查詢失敗回傳空清單。
@@ -208,15 +179,6 @@ order by Sort
         }
 
         /// <summary>
-        /// 取得 XpFlow 的流程選項。
-        /// </summary>
-        /// <param name="db">要沿用的資料庫物件</param>
-        public static async Task<List<IdStrDto>> XpFlowA(Db? db = null)
-        {
-            return await TableToCodesA("XpFlow", db);
-        }
-
-        /// <summary>
         /// 連接部門與角色，顯示為部門名稱-角色名稱。
         /// </summary>
         /// <param name="db">要沿用的資料庫物件</param>
@@ -262,42 +224,6 @@ order by c.Sort, p.Sort";
         public static async Task<List<IdStrDto>> DeptsA(Db? db = null)
         {
             return await TableToCodesA("dbo.XpDept", db, "Sort");
-        }
-
-        /// <summary>
-        /// 從擴充代碼中取簽核分類的同意與退回項目；無有效清單時可能拋出。
-        /// </summary>
-        /// <param name="rows">要處理的資料列清單</param>
-        public static List<IdStrDto>? CodesToSignStatuses(List<IdStrExtDto>? rows)
-        {
-            return FilterByExt(rows, SignStatus)!
-                .Where(a => a.Id is SignStatusEstr.Agree or SignStatusEstr.Back)
-                .ToList();
-        }
-
-        /// <summary>
-        /// 取得簽核狀態；forSign 為 true 時只取 Ext=1 的可簽項目。
-        /// </summary>
-        /// <param name="forSign">是否只保留可供簽核操作選擇的狀態</param>
-        /// <param name="db">要沿用的資料庫物件</param>
-        public static async Task<List<IdStrDto>> SignStatusA(bool forSign, Db? db = null)
-        {
-            //return 
-            if (forSign)
-            {
-                var sql = $@"
-select Id=Value, Str=Name
-from dbo.XpCode
-where Type='{SignStatus}'
-and Ext=1
-order by Sort
-";
-                return await SqlToCodesA(sql, db);
-            }
-            else
-            {
-                return await TypeToCodesA(SignStatus, db);
-            }
         }
 
         /*

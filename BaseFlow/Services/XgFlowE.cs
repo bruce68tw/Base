@@ -70,6 +70,7 @@ namespace BaseFlow.Services
             };
         }
 
+        /*
         /// <summary>以流程維護設定新增資料。</summary>
         /// <param name="json">要寫入的流程主從資料 JSON</param>
         public override async Task<ResultDto> CreateA(JObject json)
@@ -84,6 +85,7 @@ namespace BaseFlow.Services
         {
             return await EditSvc().UpdateA(key, json);
         }
+        */
 
         /// <summary>
         /// delegate for setNewKey

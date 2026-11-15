@@ -5,7 +5,7 @@ using StackExchange.Redis;
 namespace RedisStack
 {
     /// <summary>Redis Stack 向量資料庫服務骨架，目前尚未提供可用的向量存取。</summary>
-    public class RedisStackSvc : IEmbedDbSvc
+    public class RedisStackSvc : AbEmbedDbSvc
     {
         private readonly IDatabase _db;
 

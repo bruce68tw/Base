@@ -195,7 +195,6 @@ namespace Base.Services
                 await db.DisposeAsync();
         }
 
-        /*
         /// <summary>
         /// ??for jquery/app/vue simple pagination
         /// get page rows for dataTables(json)
@@ -224,7 +223,7 @@ namespace Base.Services
             //if (sqlDto == null) return null;
             //prepare sql where & set sql args by user input condition
             //var search = (_dtDto.search == null) ? "" : _dtDto.search.value;
-            var where = await GetWhereA(ctrl, readDto, _Str.ToJson(pageIn.findJson), CrudEnum.Read);
+            var where = GetWhere(ctrl, readDto, _Str.ToJson(pageIn.findJson), CrudEnum.Read);
             if (where == "-1") return _Page.GetError<T>(result);
             else if (where == "-2") return _Page.GetBrError<T>(result, _Fun.FidTimeOut);
 
@@ -287,7 +286,6 @@ namespace Base.Services
             result.Rows = rows;
             return result;
         }
-        */
 
         /// <summary>
         /// 依匯出權限與條件取資料，上限為 MaxExportCount；此路徑不自動釋放服務內 Db。

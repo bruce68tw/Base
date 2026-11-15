@@ -99,9 +99,10 @@ namespace BaseApi.Services
         }
 
         /// <summary>
-        /// get locale code
+        /// 從用戶基本 session 讀取語系代碼
         /// </summary>
-        /// <returns></returns>
+        /// <param name="dash">是否包含dash符號</param>
+        /// <returns>語系代碼</returns>
         /*
         public static string GetLocaleByUser(bool dash = true)
         {

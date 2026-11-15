@@ -47,4 +47,4 @@ description: 在 Base 系列 MVC 功能涉及編輯時，閱讀 EditDto 及直�
 
 DbAdm 的 `Services/ColumnEdit.cs` 是 EditDto／EitemDto 設定的參考，目前本機位置為 `C:/_project/DbAdm`；搬移後重新定位。其資料表、主鍵、joins、欄位及其他設定屬於個案，不直接複製為通用規則。
 
-查詢 Model 見 [ReadDto](../model-ReadDto/SKILL.md)；同名 `ReadSql` 等欄位仍須依所屬 Model 註解理解，不將查詢 Model 的設定原則直接套用至 EditDto。開發慣例沿用 [shared-coding-rules](../../../../.agents/skills/shared-coding-rules/SKILL.md)。各子模組總覽 保留原位置與職責。
+查詢 Model 見 [ReadDto](../model-ReadDto/SKILL.md)；同名 `ReadSql` 等欄位仍須依所屬 Model 註解理解，不將查詢 Model 的設定原則直接套用至 EditDto。開發慣例請讀取 `../../../../.agents/skills/coding-rules.md`。各子模組總覽 保留原位置與職責。
