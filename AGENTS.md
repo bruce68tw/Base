@@ -21,7 +21,7 @@
 - 判斷有效程式以 `.csproj` 為準；多處有 `Compile Remove`，不能將所有 `.cs` 都視為編譯來源。`*_old`、`*_bak`、`*_npoi`、`*_op` 等版本先核對用途，不直接視為現行入口，也不順手清理。
 - 遵循 [.gitignore](.gitignore)，避免納入建置產物；勿把實際金鑰、密碼或連線資訊寫入指引。
 
-- 查找 Base 共用程式時，先讀取 `.agents/skills/find-base-code.md`，依需求查閱相關模組的使用 skill 與來源，優先呼叫符合需求的既有共用函式，避免重寫相同邏輯；完成時交代關鍵重用結果或自行實作的原因。
+- 查找 Base 共用程式時，先讀取 `.agents/skills/0-find-base-code/SKILL.md`，依需求查閱相關模組的使用 skill 與來源，優先呼叫符合需求的既有共用函式，避免重寫相同邏輯；完成時交代關鍵重用結果或自行實作的原因。
 - 跨模組與應用的前端／後端開發慣例請先讀取 `.agents/skills/coding-rules.md`，按任務讀取對應規則；各模組 API 用法仍留在原有模組 skill。
 
 ## 知識整理原則
