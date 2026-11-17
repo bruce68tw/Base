@@ -30,6 +30,38 @@ namespace BaseApi.Services
         */
 
         /// <summary>
+        /// response stream 到前端檔案
+        /// </summary>
+        /// <param name="stream">要下載的可定位串流，複製前會移回開頭。</param>
+        /// <param name="fileName">寫入 Content-Disposition 的下載名稱。</param>
+        public static async Task RespStreamToFileA(Stream stream, string fileName)
+        {
+            //response to client, must close docx first, 
+            //so put code here, or docx file will get wrong !!
+            var resp = GetResponse();
+
+            //consider IE
+            //resp.AppendHeader("Content-Disposition", "attachment;filename=" + fileName);
+            var browser = GetRequest().Headers["User-Agent"].ToString();
+            if (browser != null && browser.Equals("ie", StringComparison.OrdinalIgnoreCase))
+                resp.Headers.Append("Content-Disposition", "attachment; filename*=UTF-8''" + HttpUtility.UrlPathEncode(fileName) + "\"");
+            else
+                resp.Headers.Append("Content-Disposition", "attachment; filename=\"" + HttpUtility.UrlPathEncode(fileName) + "\"");
+
+            //var ext = _File.GetFileExt(fileName);
+            //resp.ContentType = _Http.ExtToContentType(ext, true); //會開啟檔案
+            resp.ContentType = "application/octet-stream";  //強制下載, 但無作用, 還是會開啟!!
+
+            //stream.Flush();
+            stream.Position = 0;
+            await stream.CopyToAsync(resp.Body);
+            //resp.Flush();
+            await resp.Body.FlushAsync();
+            //resp.End();
+            //resp.Body..EndWrite();
+        }
+
+        /// <summary>
         /// 請求帶有非空的 X-PJAX 標頭時回傳 null，否則回傳共用版面路徑。
         /// </summary>
         public static string? PjaxToLayout()

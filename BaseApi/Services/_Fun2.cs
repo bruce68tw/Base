@@ -1,13 +1,8 @@
 ﻿using Base.Services;
-using Microsoft.AspNetCore.Http;
-using System;
 using System.IO;
-using System.Threading.Tasks;
-using System.Web;
 
 namespace BaseApi.Services
 {
-#pragma warning disable CA2211 // 非常數欄位不應可見
     /// <summary>
     /// 提供網站目錄、CRUD 上傳欄位名稱及將串流直接寫入目前 HTTP 回應的下載工具。
     /// </summary>
@@ -50,7 +45,9 @@ namespace BaseApi.Services
         }
         */
 
+        /*
         /// <summary>
+        /// move to _Http.RespStreamToFileA
         /// 需要可定位的串流及有效的 HTTP 請求。將串流位置重設為零，並以附件直接寫入目前回應。
         /// </summary>
         /// <param name="stream">要下載的可定位串流，複製前會移回開頭。</param>
@@ -81,7 +78,7 @@ namespace BaseApi.Services
             //resp.End();
             //resp.Body..EndWrite();
         }
+        */
 
     }//class
-    #pragma warning restore CA2211 // 非常數欄位不應可見
 }

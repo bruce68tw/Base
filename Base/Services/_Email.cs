@@ -32,10 +32,15 @@ namespace Base.Services
             var email = new EmailDto()
             {
                 Subject = _Fun.Config.SystemName + " Info",
-                ToUsers = StrToUsers(_Fun.Config.RootEmail),
                 Body = msg,
             };
-            await SendByMsgA(DtoToMsg(email), null, false);
+
+            //以BCC寄信, 避免Email顯示全部收件人!!
+            using var mail = DtoToMsg(email);
+            foreach (var user in StrToUsers(_Fun.Config.RootEmail))
+                mail.Bcc.Add(user);
+
+            await SendByMsgA(mail, null, false);
         }
 
         /// <summary>
@@ -169,7 +174,6 @@ namespace Base.Services
             {
                 foreach (var user in email.ToUsers)
                 {
-                    msg.To.Clear();
                     msg.To.Add(user);
                     //client.Send(msg);   //call sync method here!!
                 }
@@ -183,7 +187,7 @@ namespace Base.Services
         }
 
         /// <summary>
-        /// 將 DTO 清單轉為 MailMessage 清單，沿用單封轉換的收件者限制。
+        /// 將 DTO 清單轉為 MailMessage 清單，保留各封郵件設定的所有收件者。
         /// </summary>
         /// <param name="emails">待處理的郵件設定清單</param>
         /// <param name="smtp">寄信伺服器及寄件者設定</param>

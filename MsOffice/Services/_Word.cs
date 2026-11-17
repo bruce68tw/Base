@@ -1,5 +1,4 @@
-﻿using Base.Models;
-using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using MsOffice.Models;
 

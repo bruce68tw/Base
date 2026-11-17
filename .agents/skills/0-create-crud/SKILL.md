@@ -1,5 +1,5 @@
 ---
-name: create-crud
+name: 0-create-crud
 description: 生成 MVC CRUD 功能的程式檔案到用戶指定的應用專案的路徑。
 ---
 
