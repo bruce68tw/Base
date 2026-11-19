@@ -215,6 +215,7 @@ namespace BaseAI.Interfaces
 
             // 唯一的 UI reader 將 client 原始訊息送進跨輪 messages queue；不隨 provider 重連取消。
             var uiToWebTurn = OnUiToWebTurnA(messages.Writer, lifeTime.Token);
+            var initialText = llmOpt.InitialText;
 
             // 呼叫端取消整段工作階段是正常的結束方式，不再轉成錯誤訊息回報。
             try
@@ -239,6 +240,12 @@ namespace BaseAI.Interfaces
                         Tools = llmOpt.Tools,
                         Histories = []
                     }, lifeTime.Token);
+
+                    if (!string.IsNullOrWhiteSpace(initialText))
+                    {
+                        await WebToLlmTextA(initialText, lifeTime.Token);
+                        initialText = "";
+                    }
 
                     // 本輪 provider event receiver 是唯一 writer，ProcessTurnQueueA 是唯一 reader。
                     // unbounded queue 可先收下已完成回合，session loop 再於停止 receiver 後統一排空。
@@ -394,7 +401,7 @@ namespace BaseAI.Interfaces
         /// <summary>將橋接事件或資料序列化為 JSON，並透過目前的瀏覽器 WebSocket 傳送。</summary>
         /// <param name="payload">要傳給前端的事件或資料物件。</param>
         /// <param name="ct">取消等待或傳送操作的權杖。</param>
-        private Task WebToUiDataA(object payload, CancellationToken ct = default)
+        public Task WebToUiDataA(object payload, CancellationToken ct = default)
         {
             return _uiSocketSvc.SendDataA(payload, ct);
         }

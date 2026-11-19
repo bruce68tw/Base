@@ -17,6 +17,9 @@
         /// <summary>控制模型回覆方式與內容的系統提示詞。</summary>
         public string SystemPrompt { get; set; } = "";
 
+        /// <summary>連線完成後，觸發模型開場所用的文字。</summary>
+        public string InitialText { get; set; } = "";
+
         /// <summary>音訊輸入尚無辨識文字時使用的預設文字。</summary>
         public string DefaultAudioInput { get; set; } = "";
 
