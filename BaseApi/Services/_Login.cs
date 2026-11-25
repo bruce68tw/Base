@@ -21,7 +21,7 @@ namespace BaseApi.Services
         /// 使用 View Object 登入
         /// </summary>
         /// <param name="vo">登入輸入，方法會清除並依結果更新其中的訊息欄位。</param>
-        /// <param name="sqlFindUser">查詢使用者的 SQL，接收 Account 參數。空字串時使用內建查詢。</param>
+        /// <param name="sqlFindUser">查詢使用者的 SQL，接收 Account 參數，空字串時使用內建查詢；"U"表示只有XpUser。</param>
         /// <param name="encodePwd">密碼模式下，是否先以 MD5 處理輸入密碼再與資料庫值比對。</param>
         /// <param name="extCol">第一個額外值，非空時寫入使用者資料的 ExtCol，並加入預設 SQL 的 ExtCol 選取項。</param>
         /// <param name="extCol2">第二個額外值，非空時寫入使用者資料的 ExtCol2，並加入預設 SQL 的 ExtCol2 選取項。</param>
@@ -71,6 +71,14 @@ from dbo.XpUser u
 left join dbo.XpDept d on u.DeptId=d.Id
 where u.Account=@Account
 ";
+            else if (sqlFindUser == "U")
+                sqlFindUser = $@"
+select Id as UserId, Name as UserName, Pwd,
+    '' as DeptId, '' as DeptName{extColSql}
+from dbo.XpUser
+where Account=@Account
+";
+
             var status = false;
             var row = await _Db.GetRowA(sqlFindUser, ["Account", vo.Account]);
             if (row != null)
@@ -178,7 +186,7 @@ where u.Account=@Account
 
             //2.compare Ip
             var newDb = _Db.CheckOpenDb(ref db);
-            var sql = "select Ip from dbo.[UserApp] where Id=@Id";
+            var sql = "select Ip from dbo.UserApp where Id=@Id";
             var row = await _Db.GetRowA(sql, ["Id", userId], db);
             if (row == null) goto lab_exit;
 
@@ -266,7 +274,7 @@ insert into dbo.Login(Account, LoginStatus, LoginTime, FailCount) values (
         }
 
         /// <summary>
-        /// 記錄登入失敗
+        /// ??記錄登入失敗
         /// </summary>
         /// <param name="account">要記錄登入失敗的帳號。</param>
         /// <param name="db">可沿用的資料庫物件，省略時由方法開啟。</param>

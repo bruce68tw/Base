@@ -171,10 +171,15 @@ namespace Base.Services
                     _cmd.Parameters.Add(arg);
                 }
             }
+
+            //非 ms sql 要移除 dbo.
+            if (_Fun.DbType != DbTypeEnum.MSSql)
+                sql = sql.Replace("dbo.", "");
             _cmd.CommandText = sql;
 
             //log debug info
-            if (sql != "") _Log.Sql(GetSqlText(sql!));
+            if (sql != "") 
+                _Log.Sql(GetSqlText(sql!));
             return true;
         }
 

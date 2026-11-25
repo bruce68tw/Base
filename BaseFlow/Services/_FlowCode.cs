@@ -42,9 +42,9 @@ namespace BaseFlow.Services
         /// 取得 XpFlow 的流程選項。
         /// </summary>
         /// <param name="db">要沿用的資料庫物件</param>
-        public static async Task<List<IdStrDto>> XpFlowA(Db? db = null)
+        public static async Task<List<IdStrDto>> XpFlowsA(Db? db = null)
         {
-            return await _Code.TableToCodesA("XpFlow", db);
+            return await _XgCode.TableToCodesA("XpFlow", db);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace BaseFlow.Services
         /// <param name="rows">要處理的資料列清單</param>
         public static List<IdStrDto>? CodesToSignStatuses(List<IdStrExtDto>? rows)
         {
-            return _Code.FilterByExt(rows, SignStatus)!
+            return _XgCode.FilterByExt(rows, SignStatus)!
                 .Where(a => a.Id is SignStatusEstr.Agree or SignStatusEstr.Back)
                 .ToList();
         }
@@ -75,11 +75,11 @@ where Type='{SignStatus}'
 and Ext=1
 order by Sort
 ";
-                return await _Code.SqlToCodesA(sql, db);
+                return await _XgCode.SqlToCodesA(sql, db);
             }
             else
             {
-                return await _Code.TypeToCodesA(SignStatus, db);
+                return await _XgCode.TypeToCodesA(SignStatus, db);
             }
         }
 
@@ -88,25 +88,25 @@ order by Sort
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> ProjectsA(Db? db = null)
         {
-            return await _Code.TableToCodesA("Project", db);
+            return await _XgCode.TableToCodesA("Project", db);
         }
         /// <summary>讀取使用者選項。</summary>
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> UsersA(Db? db = null)
         {
-            return await _Code.TableToCodesA("XpUser", db);
+            return await _XgCode.TableToCodesA("XpUser", db);
         }
         /// <summary>讀取部門選項。</summary>
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> DeptsA(Db? db = null)
         {
-            return await _Code.TableToCodesA("XpDept", db);
+            return await _XgCode.TableToCodesA("XpDept", db);
         }
         /// <summary>讀取角色選項。</summary>
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> RolesA(Db? db = null)
         {
-            return await _Code.TableToCodesA("XpRole", db);
+            return await _XgCode.TableToCodesA("XpRole", db);
         }
 
         /*
@@ -127,7 +127,7 @@ order by p.Sort";
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> FlowsA(Db? db = null)
         {
-            return await _Code.TableToCodesA("XpFlow", db);
+            return await _XgCode.TableToCodesA("XpFlow", db);
         }
         #endregion
 
@@ -137,28 +137,28 @@ order by p.Sort";
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> LineFromTypesA(string locale0, Db? db = null)
         {
-            return await _Code.TypeToCodesA("LineFromType", db, locale0);
+            return await _XgCode.TypeToCodesA("LineFromType", db, locale0);
         }
         /// <summary>讀取資料權限範圍選項。</summary>
         /// <param name="locale0">要用於查詢選項名稱的語系代碼</param>
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> AuthRangesA(string locale0, Db? db = null)
         {
-            return await _Code.TypeToCodesA("AuthRange", db, locale0);
+            return await _XgCode.TypeToCodesA("AuthRange", db, locale0);
         }
         /// <summary>讀取語言程度選項。</summary>
         /// <param name="locale0">要用於查詢選項名稱的語系代碼</param>
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> LangLevelsA(string locale0, Db? db = null)
         {
-            return await _Code.TypeToCodesA("LangLevel", db, locale0);
+            return await _XgCode.TypeToCodesA("LangLevel", db, locale0);
         }
         /// <summary>讀取假別選項。</summary>
         /// <param name="locale0">要用於查詢選項名稱的語系代碼</param>
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> LeaveTypesA(string locale0, Db? db = null)
         {
-            return await _Code.TypeToCodesA("LeaveType", db, locale0);
+            return await _XgCode.TypeToCodesA("LeaveType", db, locale0);
         }
         //all xpCode rows
         /// <summary>讀取流程狀態選項。</summary>
@@ -166,14 +166,14 @@ order by p.Sort";
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> FlowStatusesA(string locale0, Db? db = null)
         {
-            return await _Code.TypeToCodesA("FlowStatus", db, locale0);
+            return await _XgCode.TypeToCodesA("FlowStatus", db, locale0);
         }
         /// <summary>讀取簽核狀態選項。</summary>
         /// <param name="locale0">要用於查詢選項名稱的語系代碼</param>
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> SignStatusesA(string locale0, Db? db = null)
         {
-            return await _Code.TypeToCodesA("SignStatus", db, locale0);
+            return await _XgCode.TypeToCodesA("SignStatus", db, locale0);
         }
         //ext=1 only for FlowSign Form
         /// <summary>讀取供簽核使用的狀態選項。</summary>
@@ -188,7 +188,7 @@ from dbo.XpCode
 where Type='SignStatus'
 and Ext='1'
 order by Sort";
-            return await _Code.SqlToCodesA(sql, db);
+            return await _XgCode.SqlToCodesA(sql, db);
         }
         #endregion
 
@@ -198,28 +198,28 @@ order by Sort";
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> NodeTypesA(string locale = "", Db? db = null)
         {
-            return await _Code.TypeToCodesA("NodeType", db, locale);
+            return await _XgCode.TypeToCodesA("NodeType", db, locale);
         }
         /// <summary>讀取簽核者類型選項。</summary>
         /// <param name="locale">用於選擇語系欄位的語系代碼</param>
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> SignerTypesA(string locale = "", Db? db = null)
         {
-            return await _Code.TypeToCodesA("SignerType", db, locale);
+            return await _XgCode.TypeToCodesA("SignerType", db, locale);
         }
         /// <summary>讀取條件的且／或運算選項。</summary>
         /// <param name="locale">用於選擇語系欄位的語系代碼</param>
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> AndOrsA(string locale = "", Db? db = null)
         {
-            return await _Code.TypeToCodesA("AndOr", db, locale);
+            return await _XgCode.TypeToCodesA("AndOr", db, locale);
         }
         /// <summary>讀取流程線條件運算子選項。</summary>
         /// <param name="locale">用於選擇語系欄位的語系代碼</param>
         /// <param name="db">要沿用的資料庫物件</param>
         public static async Task<List<IdStrDto>?> LineOpsA(string locale, Db? db = null)
         {
-            return await _Code.TypeToCodesA("LineOp", db, locale);
+            return await _XgCode.TypeToCodesA("LineOp", db, locale);
         }
 
         /*

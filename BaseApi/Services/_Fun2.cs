@@ -1,4 +1,6 @@
 ﻿using Base.Services;
+using Microsoft.AspNetCore.Html;
+using System;
 using System.IO;
 
 namespace BaseApi.Services
@@ -21,6 +23,11 @@ namespace BaseApi.Services
         /// </summary>        
         public static string DirWeb = "";
 
+        /// <summary>
+        /// 由 DirRoot 初始組成的範本目錄路徑。
+        /// </summary>
+        public static string DirTpl = "";
+
         //public const string SessionFid = "ASP.NET_SessionId";
         //public const string SessionFid = "_SessionId_";
         //public const string LocaleFid = "_Locale_";     //cookie field id for locale
@@ -28,13 +35,38 @@ namespace BaseApi.Services
 
         //public static string NoImagePath = "";
 
+        //for 資安 script, style 使用 inline
+        public static string Nonce = "";
+
+
         //constructor
         static _Fun2()
         {
             var dir = _Fun.DirRoot + "wwwroot/";
-            DirWeb = Directory.Exists(dir)
-                ? dir : _Fun.DirRoot;
+            DirWeb = Directory.Exists(dir) ? dir : _Fun.DirRoot;
+            DirTpl = _Fun.DirRoot + "_template" + _Fun.DirSep;
+
             //NoImagePath = DirWeb + "image/noImage.jpg";
+        }
+
+        /// <summary>
+        /// get template file path
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="hasLocale"></param>
+        /// <returns></returns>
+        public static string GetTplPath(string fileName, bool hasLocale)
+        {
+            return $"{DirTpl}{(hasLocale ? _Locale.GetLocale() : "")}/{fileName}";
+        }
+
+        //傳回 script src 文字, 加上時間序號做為url後面亂數
+        /// <summary>組合模組腳本路徑、nonce 與時間戳記查詢參數。</summary>
+        /// <param name="prog">對應 jsView 目錄下的腳本名稱</param>
+        public static IHtmlContent Script(string prog)
+        {
+            var time = DateTime.Now.ToString("HHmmssfff");
+            return new HtmlString($"type=\"module\" nonce=\"{Nonce}\" src=\"/jsView/{prog}.js?v={time}\"");
         }
 
         /*

@@ -1,6 +1,8 @@
 ﻿using Base.Models;
 using Base.Services;
 using BaseApi.Services;
+using BaseWeb.Models;
+using BaseWeb.Services;
 using DocumentFormat.OpenXml.Packaging;
 using Microsoft.AspNetCore.Http;
 using MsOffice.Models;
@@ -81,7 +83,7 @@ namespace MsOffice.Services
             docx.Dispose(); //must dispose, or get empty excel !!
             //ms.Position = 0;
             // 匯出工具會將串流移回開頭，再寫入目前的 HTTP 回應。
-            await _Fun2.ExportByStreamA(ms, fileName);
+            await _Http.RespStreamToFileA(ms, fileName);
         }
 
         #region remark code

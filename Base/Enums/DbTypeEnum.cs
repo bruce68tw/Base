@@ -9,17 +9,25 @@
         /// 未指定資料庫種類，列舉預設值；Init 沒有對應設定分支。
         /// </summary>
         None,
+
         /// <summary>
         /// Microsoft SQL Server。
         /// </summary>
         MSSql,
+
         /// <summary>
         /// MySQL；Init 的刪除 SQL 設定仍有待實作項目。
         /// </summary>
         MySql,
+
         /// <summary>
         /// Oracle；Init 的刪除 SQL 設定仍有待實作項目。
         /// </summary>
-        Oracle
+        Oracle,
+
+        /// <summary>
+        /// PostGre SQL 使用大camel table/column 要加引號, 不方便, 暫不考慮!!
+        /// </summary>
+        //Postgre
     }
 }

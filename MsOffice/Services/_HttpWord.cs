@@ -20,7 +20,7 @@ namespace MsOffice.Services
             if (ms == null) return false;
 
             // 匯出時文件已儲存並關閉，ExportByStreamA 會從串流開頭寫入回應。
-            await _Fun2.ExportByStreamA(ms, fileName);
+            await _Http.RespStreamToFileA(ms, fileName);
             return true;
         }
 
@@ -36,7 +36,7 @@ namespace MsOffice.Services
             var ms = _Word.TplRowsToMs(tplPath, rows, images);
             if (ms == null) return false;
 
-            await _Fun2.ExportByStreamA(ms, fileName);
+            await _Http.RespStreamToFileA(ms, fileName);
             return true;
         }
 

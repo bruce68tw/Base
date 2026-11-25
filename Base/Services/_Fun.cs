@@ -1,6 +1,7 @@
 ﻿using Base.Enums;
 using Base.Interfaces;
 using Base.Models;
+using Microsoft.AspNetCore.Html;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,10 +21,12 @@ namespace Base.Services
         /// 資料範圍檢查使用的使用者欄位鍵。
         /// </summary>
         public const string FidUser = "_userId";
+
         /// <summary>
         /// 資料範圍檢查使用的部門欄位鍵。
         /// </summary>
         public const string FidDept = "_deptId";
+
         /// <summary>
         /// JSON 錯誤訊息欄位鍵，對應 ResultDto._ErrorMsg。
         /// </summary>
@@ -38,17 +41,21 @@ namespace Base.Services
         /// 個人資料無權限的語系訊息鍵。
         /// </summary>
         public const string FidNoAuthUser = "NoAuthUser";  //您只能存取個人資料，請聯絡管理者。
+
         /// <summary>
         /// 部門資料無權限的語系訊息鍵。
         /// </summary>
         public const string FidNoAuthDept = "NoAuthDept";  //您只能存取同部門資料，請聯絡管理者。
+
         /// <summary>
         /// 作業無權限的語系訊息鍵。
         /// </summary>
         public const string FidNoAuthProg = "NoAuthProg";  //您沒有此功能的權限，請聯絡管理者。
+
         /// <summary>
         /// 尚未登入的語系訊息鍵。
         /// </summary>
+        /// 
         public const string FidNotLogin = "NotLogin";      //您尚未登入系統。
         /// <summary>
         /// 唯一鍵重複的語系訊息鍵。
@@ -64,14 +71,17 @@ namespace Base.Services
         /// CRUD JSON 的資料列陣列鍵。
         /// </summary>
         public const string FidRows = "_rows";          //rows fid for CrudEdit
+
         /// <summary>
         /// 單一子項目鍵的共用常數。
         /// </summary>
         public const string FidChild = "_child";        //child fid for WordSetSvc
+
         /// <summary>
         /// CRUD JSON 的子表陣列鍵。
         /// </summary>
         public const string FidChilds = "_childs";      //childs fid for CrudEdit、WordSetSvc
+
         /// <summary>
         /// CRUD JSON 的待刪鍵清單欄位。
         /// </summary>
@@ -81,6 +91,7 @@ namespace Base.Services
         /// 目前使用者資料的共用儲存鍵。
         /// </summary>
         public const string FidBaseUser = "_BaseUser";  //base user info
+
         /// <summary>
         /// 前端全選欄位的共用鍵。
         /// </summary>
@@ -91,10 +102,12 @@ namespace Base.Services
         /// 共用含秒日期時間格式 yyyy/MM/dd HH:mm:ss。
         /// </summary>
         public const string CsDtFmt = "yyyy/MM/dd HH:mm:ss";
+
         /// <summary>
         /// 共用不含秒日期時間格式 yyyy/MM/dd HH:mm。
         /// </summary>
         public const string CsDtFmt2 = "yyyy/MM/dd HH:mm";
+
         /// <summary>
         /// 共用日期格式 yyyy/MM/dd。
         /// </summary>
@@ -110,6 +123,7 @@ namespace Base.Services
         /// 平台預設文字換行字元。
         /// </summary>
         public static string TextCarrier = Environment.NewLine;     //for 跨平台
+
         /// <summary>
         /// HTML 換行字串。
         /// </summary>
@@ -121,10 +135,12 @@ namespace Base.Services
         /// 短自動識別碼的長度 6。
         /// </summary>
         public const int AutoIdShort = 6;
+
         /// <summary>
         /// 中自動識別碼的長度 10。
         /// </summary>
         public const int AutoIdMid = 10;
+
         /// <summary>
         /// 長自動識別碼的長度 22。
         /// </summary>
@@ -134,34 +150,39 @@ namespace Base.Services
         /// 共用錯誤代碼 E。
         /// </summary>
         public const string Error = "E";        //在程式判斷, 避免hard code
+
         /// <summary>
         /// 一般錯誤文字的 E: 前綴。
         /// </summary>
         public const string PreError = "E:";
+
         /// <summary>
         /// 語系錯誤鍵的 B: 前綴。
         /// </summary>
         public const string PreBrError = "B:";  //_BR code error
 
+
 		/// <summary>
 		/// 水平表單預設標籤與輸入格線寬度 2,3。
 		/// </summary>
 		public const string DefHoriCols = "2,3";
-		/// <summary>
-		/// 由 DefHoriCols 初始建立的寬度清單，不會隨字串變更自動重算。
-		/// </summary>
-		public static List<int> DefHoriColList = _Str.ToIntList(DefHoriCols);
+
+        /// <summary>
+        /// 行動版隱藏元素的 CSS 類別名稱。
+        /// </summary>
+        public const string ClsHideRwd = "x-hide-rwd";
+
+        #endregion
+
+        /// <summary>
+        /// 由 DefHoriCols 初始建立的寬度清單，不會隨字串變更自動重算。
+        /// </summary>
+        public static List<int> DefHoriColList = _Str.ToIntList(DefHoriCols);
 
         /// <summary>
         /// 目前平台的目錄分隔字元。
         /// </summary>
         public static char DirSep = Path.DirectorySeparatorChar;
-
-        /// <summary>
-        /// 行動版隱藏元素的 CSS 類別名稱。
-        /// </summary>
-        public static string ClsHideRwd = "x-hide-rwd";
-        #endregion
 
         #region variables PG can modify
         /// <summary>
@@ -220,6 +241,7 @@ namespace Base.Services
         /// 表示全部部門的部門識別碼設定。
         /// </summary>
         public static string DeptAll = "";
+
         /// <summary>
         /// 表示所有人角色的識別碼，空字串表示未指定。
         /// </summary>
@@ -307,6 +329,12 @@ namespace Base.Services
         /// 由 DirRoot 初始組成的暫存目錄路徑。
         /// </summary>
         public static string DirTemp = DirRoot + "_temp" + DirSep;
+
+        /// <summary>
+        /// 由 DirRoot 初始組成的檔案上傳目錄路徑。
+        /// </summary>
+        public static string DirUpload = DirRoot + "_upload" + DirSep;
+
         #endregion
 
         #region Db variables
@@ -463,6 +491,27 @@ Offset {2} Rows Fetch Next {3} Rows Only
                     //TODO: set delete sql for Oracle
                     //DeleteRowsSql = 
                     break;
+
+                /*
+                case DbTypeEnum.Postgre:
+                    DbDtFmt = "yyyy-MM-dd HH:mm:ss";
+                    DbDateFmt = "yyyy-MM-dd";
+
+                    // PostgreSQL 唯一鍵衝突的 SQLSTATE 為 "23505"（字串型別，非 MS SQL 的 int 2601/2627）
+                    // 若你的基底屬性型別原本是 int[]，建議改為 string[] 或另外用專屬欄位/轉換處理
+                    //UniqueKeyErrorNo = ["23505"]; //todo
+
+                    // PostgreSQL 支援 OFFSET ... FETCH ROWS ONLY（也可改寫為 limit {3} offset {2}）
+                    // 注意：{1} 內通常需包含 FROM、WHERE 與 ORDER BY
+                    ReadPageSql = @"
+select {0} {1}
+offset {2} rows fetch next {3} rows only
+";
+
+                    // PostgreSQL 標準語法需要加上 FROM
+                    DeleteRowsSql = "delete from {0} where {1} in ({2})";
+                    break;
+                */
             }
             #endregion
 
@@ -490,6 +539,17 @@ Offset {2} Rows Fetch Next {3} Rows Only
         public static string Dir(string folder, bool tailSep = true)
         {
             return DirRoot + folder + (tailSep ? DirSep : "");
+        }
+
+        /// <summary>
+        /// get upload path
+        /// </summary>
+        /// <param name="subDir"></param>
+        /// <param name="tailSep"></param>
+        /// <returns></returns>
+        public static string GetUploadPath(string subDir, bool tailSep = true)
+        {
+            return DirUpload + subDir + (tailSep ? DirSep : "");
         }
 
         /// <summary>

@@ -27,8 +27,10 @@
     <None Remove="Services\_ActionResult.cs_old" />
     <None Remove="Services\_ActionResult.cs_tmp" />
     <None Remove="Services\_BR.cs_old" />
+    <None Remove="Services\_Fun3.c_old" />
     <None Remove="Services\_Http.cs_tmp" />
     <None Remove="Services\_Session.cs_old" />
+    <None Remove="Services\_WebExt.c_old" />
     <None Remove="ViewComponents\XgPageViewComponent.cs_old" />
     <None Remove="ViewComponents\XiCheckViewComponent.cs_old" />
     <None Remove="ViewComponents\zz_XiCheckViewComponent.cs_old" />
@@ -47,6 +49,10 @@
   <ItemGroup>
     <ProjectReference Include="..\BaseApi\BaseApi.csproj" />
     <ProjectReference Include="..\Base\Base.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Interfaces\" />
   </ItemGroup>
 
 </Project>

@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Http;
 using System.Net.WebSockets;
 using System.Threading.Channels;
+using BaseApi.Services;
 
 namespace BaseAI.Interfaces
 {

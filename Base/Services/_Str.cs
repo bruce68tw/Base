@@ -19,11 +19,11 @@ namespace Base.Services
     /// </summary>
     public class _Str
     {
-
         //base34 encode(remove I/O for readable)
         //private static readonly char[] _base34 = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ".ToCharArray();
         //private static readonly char[] _base36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
-        //private static readonly char[] _base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
+        //排序為0-9,A-Z,a-z 可產生以時間排序的base62字串!!
+        private static readonly char[] _base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
         //private static readonly ulong _baseLen = (ulong)_base34.Length;
         //private static readonly long _startTicks = new DateTime(2000, 1, 1).Ticks;
         //private static long _startMilliSec = new DateTime(2000, 1, 1).Ticks / 1000;
@@ -603,7 +603,7 @@ namespace Base.Services
         public static string Md5Hex(string? str)
         {
             if (string.IsNullOrEmpty(str)) return "";
-            var bytes = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(str));
+            var bytes = MD5.HashData(Encoding.UTF8.GetBytes(str));
             return Convert.ToHexString(bytes).ToLower();
             /*
             // Convert the byte array to string format
@@ -626,12 +626,31 @@ namespace Base.Services
 
             //var ticks = (dt == null) ? DateTime.Now.Ticks : dt.Value.Ticks;
             //var num = (ulong)((ticks - _startTicks) / TimeSpan.TicksPerMillisecond) * 3;
-            using var sha = SHA256.Create();
-            var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(DateTime.Now.Ticks.ToString()));
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(DateTime.Now.Ticks.ToString()));
             return _Fun.Config.ServerId + string.Concat(Convert.ToBase64String(hash)
                 .ToCharArray()
                 .Where(a => char.IsLetterOrDigit(a))    //取英數字
                 .Take(len - _Fun.Config.ServerId.Length));
+        }
+
+        /// <summary>
+        /// 將目前 Unix 毫秒時間編碼為固定 8 碼、ASCII 順序的 Base62 ID。
+        /// 不含 ServerId、亂數或流水號；沿用 NewId 的 1 毫秒等待，但不保證並行或跨程序唯一。
+        /// 使用 binary collation 時，字串順序等同時間戳順序，不代表提交順序；時鐘回撥時亦會回退。
+        /// </summary>
+        /// <returns>固定 9 碼(含ServerId)；時間超出可表示範圍時記錄錯誤並回傳空字串。</returns>
+        public static string NewTimeId()
+        {
+            Thread.Sleep(1);
+            var sec = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            Span<char> chars = stackalloc char[8];
+            chars.Fill('0');
+            for (var index = chars.Length - 1; sec > 0; index--)
+            {
+                chars[index] = _base62[(int)(sec % 62)];
+                sec /= 62;
+            }
+            return _Fun.Config.ServerId + new string(chars);
         }
 
         /*

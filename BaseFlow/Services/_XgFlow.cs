@@ -2,6 +2,7 @@
 using Base.Services;
 using BaseApi.Services;
 using BaseFlow.Enums;
+using BaseWeb.Services;
 using Newtonsoft.Json.Linq;
 
 namespace BaseFlow.Services
@@ -119,15 +120,15 @@ select
 from dbo.XpCode
 where Type like 'xf%'
 order by Type, Sort";
-            var rows = await _Code.SqlToCodeExtsA(sql, db);
+            var rows = await _XgCode.SqlToCodeExtsA(sql, db);
             if (rows == null) return;
 
             //await using var db = new Db();
-            viewBag.NodeTypes = _Code.FilterByExt(rows, _FlowCode.NodeType);
-            viewBag.SignerTypes = _Code.FilterByExt(rows, _FlowCode.SignerType);
-            viewBag.AndOrs = _Code.FilterByExt(rows, _FlowCode.AndOr);
-            viewBag.LineOps = _Code.FilterByExt(rows, _FlowCode.LineOp);
-            viewBag.LineFromTypes = _Code.FilterByExt(rows, _FlowCode.LineFromType);
+            viewBag.NodeTypes = _XgCode.FilterByExt(rows, _FlowCode.NodeType);
+            viewBag.SignerTypes = _XgCode.FilterByExt(rows, _FlowCode.SignerType);
+            viewBag.AndOrs = _XgCode.FilterByExt(rows, _FlowCode.AndOr);
+            viewBag.LineOps = _XgCode.FilterByExt(rows, _FlowCode.LineOp);
+            viewBag.LineFromTypes = _XgCode.FilterByExt(rows, _FlowCode.LineFromType);
         }
 
         /// <summary>
