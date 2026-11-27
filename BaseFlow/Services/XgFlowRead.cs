@@ -1,6 +1,7 @@
 using Base.Models;
 using BaseWeb.Models;
 using BaseWeb.Services;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 
 namespace BaseFlow.Services
@@ -10,6 +11,13 @@ namespace BaseFlow.Services
     /// </summary>
     public class XgFlowRead
     {
+        //for controller Read()
+        public async Task<ActionResult> ReadA(Controller ctrl)
+        {
+            await _Flow.SetViewBagA(ctrl.ViewBag);
+            return ctrl.View("~/Views/XgFlow/Read.cshtml");
+        }
+
         private readonly ReadDto dto = new()
         {
             ReadSql = @"

@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Drawing;
 //nuGet System.Drawing.Common
 //using System.Drawing.Drawing2D;
 //using System.Drawing.Imaging;
-using System.IO;
 
 namespace Base.Models
 {

@@ -71,6 +71,11 @@
     <None Remove="Services\WordSetSvc.cs_op" />
     <None Remove="Services\zz_Cache0Service.cs_old" />
     <None Remove="Services\zz_CacheDb.cs_old" />
+    <None Remove="Services\zz_Extension.cs_old" />
+    <None Remove="Services\zz_Hashids.cs_old" />
+    <None Remove="Services\zz__Cast.cs_old" />
+    <None Remove="Services\zz__Config.cs_old" />
+    <None Remove="Services\zz__Linq.cs_old" />
     <None Remove="Services\_Cache.cs_old" />
     <None Remove="Services\_Cache.cs_old2" />
     <None Remove="Services\_Cast.cs_old" />

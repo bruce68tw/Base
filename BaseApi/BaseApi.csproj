@@ -9,6 +9,9 @@
   <ItemGroup>
     <None Remove="Attributes\XgRB0Attribute.cs_old" />
     <None Remove="Attributes\XgRBAttribute.cs_old" />
+    <None Remove="Attributes\zz_XgRB0Attribute.cs_old" />
+    <None Remove="Attributes\zz_XgRBAttribute.cs_old" />
+    <None Remove="Services\zz__HttpWord.cs_op" />
     <None Remove="Services\_HttpWord.cs_new" />
     <None Remove="Services\_HttpWord.cs_old" />
     <None Remove="Services\_HttpWord.cs_op" />
@@ -27,10 +30,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Base\Base.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>

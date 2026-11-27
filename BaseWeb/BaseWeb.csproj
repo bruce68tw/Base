@@ -24,6 +24,9 @@
     <None Remove="Services\SessionRedisService.cs_old" />
     <None Remove="Services\SessionService.cs_old" />
     <None Remove="Services\XpResourceService.c_old" />
+    <None Remove="Services\zz__ActionResult.cs_old" />
+    <None Remove="Services\zz__BR.cs_old" />
+    <None Remove="Services\zz__Session.cs_old" />
     <None Remove="Services\_ActionResult.cs_old" />
     <None Remove="Services\_ActionResult.cs_tmp" />
     <None Remove="Services\_BR.cs_old" />
@@ -49,10 +52,6 @@
   <ItemGroup>
     <ProjectReference Include="..\BaseApi\BaseApi.csproj" />
     <ProjectReference Include="..\Base\Base.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
   </ItemGroup>
 
 </Project>

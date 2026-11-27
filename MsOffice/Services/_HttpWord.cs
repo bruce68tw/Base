@@ -1,5 +1,4 @@
-﻿using Base.Models;
-using BaseApi.Services;
+﻿using BaseApi.Services;
 using MsOffice.Models;
 
 namespace MsOffice.Services

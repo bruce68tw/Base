@@ -1,60 +1,154 @@
-﻿using Base.Enums;
+﻿using BaseFlow.Models;
 using Base.Models;
 using Base.Services;
+using BaseApi.Services;
 using BaseFlow.Enums;
+using BaseWeb.Services;
 using Newtonsoft.Json.Linq;
 
 namespace BaseFlow.Services
 {
-    /// <summary>依 XpFlow 的節點與連線建立簽核資料，並處理簽核決定。</summary>
+    /// <summary>
+    /// 依流程節點與連線建立簽核資料，並提供簽核紀錄查詢、刪除及簽核處理。
+    /// </summary>
     public class _Flow
     {
-        //match to XpCode.Type="AndOr" && Flow.js
+        //match to XpCode.Type="xfAndOr" && XpFlow.js??
         private const string OrSep = "{O}";
         private const string AndSep = "{A}";
         private const string ColSep = ",";
 
-        //get user's dept manager
+        /// <summary>
+        /// 以使用者 ID 查詢其所屬部門主管 ID 的 SQL 範本。
+        /// </summary>
         public static string SqlUserMgr = @"
 select d.MgrId 
 from dbo.XpDept d
 inner join dbo.XpUser u on d.Id=u.DeptId
 where u.Id='{0}'
 ";
-        //get user name
+        /// <summary>
+        /// SQL 範本以帳號查詢使用者 ID。目前指定使用者的簽核分支傳入資料擁有者 ID。
+        /// todo:待確認 指定使用者分支傳入使用者 ID，待確認 SQL 應比對的欄位。
+        /// </summary>
+        public static string SqlUser = "select UserId from dbo.XpUser where Account='{0}'";
+        
+        /// <summary>
+        /// 以使用者 ID 查詢姓名的 SQL 範本。
+        /// </summary>
         public static string SqlUserName = "select Name from dbo.XpUser where Id='{0}'";
-        //get dept manager Id
+        
+        /// <summary>
+        /// 以部門 ID 查詢部門主管 ID 的 SQL 範本。
+        /// </summary>
         public static string SqlDeptMgr = "select MgrId from dbo.XpDept where Id='{0}'";
-        //get first role member
+        
+        /// <summary>
+        /// 以角色 ID 查詢成員 ID 的 SQL 範本。角色簽核分支會讀取多筆結果。
+        /// </summary>
         public static string SqlRole = "select UserId from dbo.XpUserRole where RoleId='{0}'";
+        
+        /// <summary>
+        /// 依角色 ID 查詢指定部門按使用者 ID 排序的第一位成員。部門 ID 在靜態欄位初始化時取得。
+        /// 因為有 '{0}', 使用+號串接
+        /// </summary>
+        public static string SqlDeptRole = @"
+select top 1 u.Id
+from dbo.XpUserRole ur
+join dbo.XpUser u on ur.UserId=u.Id
+where u.DeptId='" + _Fun.DeptId() + "'" + @"
+and ur.RoleId='{0}'
+order by u.Id
+";
 
-        //for controller Read method
-        /// <summary>載入簽核流程設定畫面使用的選項。</summary>
-        /// <param name="viewBag">要填入選項資料的 MVC ViewBag</param>
-        /// <param name="locale">用於選擇語系欄位的語系代碼</param>
-        /// <param name="db">要沿用的資料庫物件</param>
-        public static async Task ReadSetViewBagA(dynamic viewBag, string locale, Db? db = null)
+        /// <summary>
+        /// 刪除 XpFlowSign、XpFlowMap 簽核記錄
+        /// </summary>
+        /// <param name="progCode">來源作業的代碼，對應 XpProg.Code。</param>
+        /// <param name="sourceId">來源資料列的主鍵。</param>
+        /// <param name="db">可沿用的資料庫物件，省略時由方法開啟。</param>
+        public static async Task DeleteSignA(string progCode, string sourceId, Db? db = null)
         {
-            var newDb = _Db.CheckOpenDb(ref db);
-            //await using var db = new Db();
-            viewBag.NodeTypes = await _FlowCode.NodeTypesA(locale, db);
-            viewBag.SignerTypes = await _FlowCode.SignerTypesA(locale, db);
-            viewBag.AndOrs = await _FlowCode.AndOrsA(locale, db);
-            viewBag.LineOps = await _FlowCode.LineOpsA(locale, db);
-            viewBag.LineFromTypes = await _FlowCode.LineFromTypesA(locale, db);
-            await _Db.CheckCloseDbA(db!, newDb);
+            var sql = $@"
+delete s
+from dbo.XpFlowSign s
+join dbo.XpFlowMap m on s.FlowMapId=m.Id
+where m.ProgCode=@ProgCode
+and m SourceId=@SourceId;
+delete m
+from dbo.XpFlowMap m
+where m.ProgCode=@ProgCode
+and m.SourceId=@SourceId;
+";
+            await _Db.ExecSqlA(sql, ["ProgCode", progCode, "SourceId", sourceId], db);
         }
 
-        /// <summary>依流程規則建立簽核主檔及明細，失敗時回傳錯誤訊息。</summary>
-        /// <param name="row">提供流程條件及來源擁有者欄位的資料列。</param>
-        /// <param name="userFid">來源資料列中記錄擁有者使用者 ID 的欄位名稱。</param>
-        /// <param name="flowCode">對應 XpFlow.Code 的流程代碼</param>
-        /// <param name="sourceId">與簽核資料關聯的來源主鍵 (key)</param>
-        /// <param name="db">要沿用的資料庫物件</param>
-        /// <param name="isTest">是否使用測試用的簽核資料表</param>
-        /// <returns>成功時回傳空字串，失敗時回傳錯誤訊息。</returns>
-        public static async Task<string> CreateSignRowsA(JObject row, string userFid, string flowCode,
-            string sourceId, bool isTest, Db db)
+        /// <summary>
+        /// 讀取簽核記錄
+        /// </summary>
+        /// <param name="progCode">來源作業的代碼，對應 XpProg.Code。</param>
+        /// <param name="sourceId">來源資料列的主鍵。</param>
+        /// <param name="db">可沿用的資料庫物件，省略時由方法開啟。</param>
+        /// <returns>如果無記錄則傳回[]</returns>
+        public static async Task<JArray> GetSignRowsA(string progCode, string sourceId, Db? db = null)
+        {
+            var sql = $@"
+select s.NodeName, s.SignerName, s.GetTime, s.SignTime, s.Note,
+    SignStatusName=c.Name
+from dbo.XpFlowSign s
+join dbo.XpFlowMap m on s.FlowMapId=m.Id
+join dbo.XpFlow f on m.FlowId=f.Id
+join dbo.XpCode c on c.Type='{_FlowCode.SignStatus}' and s.SignStatus=c.Value
+where m.ProgCode='{progCode}'
+and m.SourceId='{sourceId}'
+order by s.FlowLevel
+";
+            return await _Db.GetRowsA(sql, null, db) ?? [];
+        }
+
+        /// <summary>
+        /// 讀取全部簽核相關的 XpCode 資料，供 controller 設定 viewBag
+        /// </summary>
+        /// <param name="viewBag">要填入簽核選項資料的 MVC ViewBag。</param>
+        /// <param name="db">可沿用的資料庫物件，省略時由方法開啟。</param>
+        public static async Task SetViewBagA(dynamic viewBag, Db? db = null)
+        {
+            var locale = _Fun.MultiLang ? _Locale.GetLocaleNoDash() : "";
+            var name = string.IsNullOrEmpty(locale) ? "Name" : "Name_" + locale;
+            var sql = $@"
+select 
+    Value as Id, {name} as Str, Type as Ext
+from dbo.XpCode
+where Type like 'xf%'
+order by Type, Sort";
+            var rows = await _XgCode.SqlToCodeExtsA(sql, db);
+            if (rows == null) return;
+
+            //await using var db = new Db();
+            viewBag.NodeTypes = _XgCode.FilterByExt(rows, _FlowCode.NodeType);
+            viewBag.SignerTypes = _XgCode.FilterByExt(rows, _FlowCode.SignerType);
+            viewBag.AndOrs = _XgCode.FilterByExt(rows, _FlowCode.AndOr);
+            viewBag.LineOps = _XgCode.FilterByExt(rows, _FlowCode.LineOp);
+            viewBag.LineFromTypes = _XgCode.FilterByExt(rows, _FlowCode.LineFromType);
+        }
+
+        /// <summary>
+        /// 建立簽核主檔與明細，測試模式使用對應的測試資料表。
+        /// 修改時不會建立XpFlowMap
+        /// </summary>
+        /// <param name="isNew">是否新增, false表示申請者退回後重新送單</param>
+        /// <param name="row">用於比對流程條件及讀取欄位型簽核者的來源資料。</param>
+        /// <param name="ownerId">來源資料擁有者的使用者 ID。</param>
+        /// <param name="flowCode">簽核流程代碼，對應 XpFlow.Code。</param>
+        /// <param name="progCode">來源作業代碼，對應 XpProg.Code。</param>
+        /// <param name="sourceId">來源資料列的主鍵。</param>
+        /// <param name="db">呼叫端提供的資料庫物件。</param>
+        /// <param name="now">寫入簽核紀錄的作業時間。</param>
+        /// <param name="startNodeName">寫入第零關簽核明細的節點名稱。</param>
+        /// <param name="isTest">是否使用測試模式的簽核資料表。</param>
+        /// <returns>成功時為空字串，失敗時回傳錯誤訊息。</returns>
+        public static async Task<string> CreateSignA(bool isNew, JObject row, DateTime now, string ownerId, string flowCode,
+            string progCode, string sourceId, string startNodeName, bool isTest, Db db)
         {
             #region 1.get flow lines by flow code
             var error = string.Empty;
@@ -94,9 +188,8 @@ order by l.FromNodeId, l.Sort
             var nowNodeName = firstLine.FromNodeName;
             #endregion
 
-            //3.get matched lines
-            var signTable = GetSignTable(isTest);
-            var findIdxs = new List<int>(); //found lines for insert XpFlowSign/XpTestFlowSign
+            //3.get matched lines: set findLineIdxs
+            var findLineIdxs = new List<int>(); //found lines for insert XpFlowSign/XpTestFlowSign
             while (true)
             {
                 #region 4.get lines of current node
@@ -130,7 +223,7 @@ order by l.FromNodeId, l.Sort
 
                 //check endless loop
                 var idx = flowLines!.IndexOf(findLine);
-                if (findIdxs.IndexOf(idx) >= 0)
+                if (findLineIdxs.IndexOf(idx) >= 0)
                 {
                     error = "Find Node Twice(" + nodeLines[idx].FromNodeName + ")";
                     goto lab_exit;
@@ -138,7 +231,7 @@ order by l.FromNodeId, l.Sort
                 #endregion
 
                 //add found line index
-                findIdxs.Add(idx);
+                findLineIdxs.Add(idx);
 
                 //when end node then exit loop
                 if (findLine.ToNodeType == NodeTypeEstr.End)
@@ -149,110 +242,160 @@ order by l.FromNodeId, l.Sort
                 nowNodeName = findLine.ToNodeName;
             }//loop
 
-            #region 6.prepare sql for insert XpFlowSign/XpTestFlowSign
-            sql = $@"
-insert into dbo.{signTable}(
-    Id, FlowId, SourceId, 
-    NodeName, FlowLevel, TotalLevel,
-    SignerId, SignerName, 
-    SignStatus, SignTime) values(
-    @Id, @FlowId, @SourceId,
-    @NodeName, @FlowLevel, @TotalLevel,
-    @SignerId, @SignerName, 
-    @SignStatus, @SignTime)
+            #region insert XpFlowMap
+            var userId = _Fun.UserId();
+            var flowId = firstLine.FlowId;
+            var mapTable = GetMapTable(isTest);
+            var signTable = GetSignTable(isTest);
+            var findLineCount = findLineIdxs.Count; //流程線=關卡數
+            int oldTotalLevel = 0;  //目前的XpFlowMap.TotalLevel, base 0
+            int newTotalLevel = 0;  //寫入XpFlowMap.TotalLevel, base 0
+            string flowMapId = "";
+            //FlowLevel=1, 第0關會直接送出
+            if (isNew)
+            {
+                newTotalLevel = findLineCount - 1;
+                flowMapId = _Str.NewId();
+                sql = $@"
+insert into dbo.{mapTable}(
+    Id, FlowId, ProgCode, SourceId, 
+    TotalLevel, FlowLevel, FlowStatus,
+    Creator, Created) values(
+'{flowMapId}', '{flowId}', @ProgCode, '{sourceId}',
+{newTotalLevel}, 1, '{FlowStatusEstr.Work}',
+'{userId}', @Created)
 ";
+                await db.ExecSqlA(sql, [
+                    "ProgCode", progCode,
+                    "Created", now,
+                ]);
+            }
+            else
+            {
+                var args = new List<Object>() { "ProgCode", progCode, "SourceId", sourceId };
+                sql = @"
+select Id, TotalLevel
+from dbo.XpFlowMap
+where ProgCode=@ProgCode 
+and SourceId=@SourceId
+";
+                var signRow = (await db.GetRowA(sql, args))!;
+                flowMapId = signRow["Id"]!.ToString();
+                oldTotalLevel = Convert.ToInt32(signRow["TotalLevel"]);
+                newTotalLevel = oldTotalLevel + findLineCount;    //不必減1
+                //FlowLevel直接到下一關，所以+2
+                sql = $@"
+update dbo.{mapTable} set
+    TotalLevel={newTotalLevel}, FlowLevel={oldTotalLevel + 2}, FlowStatus='{FlowStatusEstr.Work}'
+where ProgCode=@ProgCode 
+and SourceId=@SourceId
+";
+                await db.ExecSqlA(sql, args);
+            }
             #endregion
 
-            //insert XpFlowSign/XpTestFlowSign rows
-            var totalLevel = findIdxs.Count - 1;
+            #region insert XpFlowSign/XpTestFlowSign rows
             var level = 0;  //current flow level, start 0
             var userType = "";
-            foreach (var idx in findIdxs)
+            foreach (var idx in findLineIdxs)
             {
                 #region 7.get signer Id/name by rules
                 var line = flowLines[idx];
-                var signerId = "";
-                var signerIds = new List<string?>();
+                var uid = "";
+                var signerIds = new List<string>();
                 var hasRows = false;
-                DateTime? signTime = null;
+                DateTime? signTime = (level == 0) ? now : null;
+                DateTime? getTime = (level <= 1) ? now : null;  //等於上一筆的signTime, level=0也填入有助排序
                 if (level == 0)
                 {
                     userType = "UserId";
-                    signTime = DateTime.Now;
-                    if (row[userFid] != null)
-                        signerId = row[userFid]!.ToString();
+                    uid = ownerId;
                 } 
                 else
                 {
+                    //每一條流程線可能多位簽核者
                     switch (line.SignerType)
                     {
-                        /*
-                        case EnumSignerType.User:
-                            signerValue = line.SignerValue;
+                        case SignerTypeEstr.User:
+                            userType = "User";
+                            uid = await db.GetStrA(string.Format(SqlUser, ownerId));
                             break;
-                            */
                         case SignerTypeEstr.Fid:
                             userType = line.SignerValue;
                             if (row[line.SignerValue] != null)
-                                signerId = row[line.SignerValue]!.ToString();
+                                uid = row[line.SignerValue]!.ToString();
                             break;
                         case SignerTypeEstr.UserMgr:
                             userType = "User Manager";
-                            if (row[userFid] != null)
-                                signerId = await db.GetStrA(string.Format(SqlUserMgr, row[userFid]!.ToString()));
+                            uid = await db.GetStrA(string.Format(SqlUserMgr, ownerId));
                             break;
                         case SignerTypeEstr.DeptMgr:
-                            userType = "Depart Manager";
+                            userType = "Dept Manager";
                             if (line.SignerValue != null)
-                                signerId = await db.GetStrA(string.Format(SqlDeptMgr, line.SignerValue));
+                                uid = await db.GetStrA(string.Format(SqlDeptMgr, line.SignerValue));
                             break;
                         case SignerTypeEstr.Role:
-                            hasRows = true;
+                            hasRows = true; //多筆
                             userType = "Role";
                             if (line.SignerValue != null)
                                 signerIds = await db.GetStrsA(string.Format(SqlRole, line.SignerValue));
+                            break;
+                        case SignerTypeEstr.DeptRole:
+                            userType = "Dept Role";
+                            if (line.SignerValue != null)
+                                uid = await db.GetStrA(string.Format(SqlDeptRole, line.SignerValue));
                             break;
                     }
                 }
 
                 if (!hasRows)
-                    signerIds!.Add(signerId);
+                    signerIds!.Add(uid!);
 
-                foreach(var userId in signerIds!)
+                //6.prepare sql for insert XpFlowSign/XpTestFlowSign
+                sql = $@"
+insert into dbo.{signTable}(
+    Id, FlowMapId, FlowLevel,
+    NodeName, SignerId, SignerName, 
+    SignStatus, GetTime, SignTime) values(
+@Id, '{flowMapId}', @FlowLevel,
+@NodeName, @SignerId, @SignerName, 
+@SignStatus, @GetTime, @SignTime)
+";
+                #endregion
+
+                //insert XpFlowSign rows by userId list
+                foreach (var signerId in signerIds!)
                 {
-                    if (string.IsNullOrEmpty(userId))
+                    if (string.IsNullOrEmpty(signerId))
                     {
                         error = $"SignerId is empty. ({userType})";
                         goto lab_exit;
                     }
 
                     //get signer name
-                    var signerName = await db.GetStrA(string.Format(SqlUserName, userId));
+                    var signerName = await db.GetStrA(string.Format(SqlUserName, signerId));
                     if (string.IsNullOrEmpty(signerName))
                     {
-                        error = $"SignerId not existed. ({userType}={userId})";
+                        error = $"SignerId not existed. ({userType}={signerId})";
                         goto lab_exit;
                     }
-                    #endregion
 
-                    #region 8.insert XpFlowSign/XpTestFlowSign
+                    //8.insert XpFlowSign/XpTestFlowSign, 同時傳入其他欄位
                     await db.ExecSqlA(sql, [
                         "Id", _Str.NewId(),
-                        "FlowId", line.FlowId,
-                        "SourceId", sourceId,
-                        "NodeName", line.FromNodeName,
-                        "FlowLevel", level,
-                        "TotalLevel", totalLevel,
-                        "SignerId", userId,
+                        "NodeName", (level == 0) ? startNodeName : line.FromNodeName,
+                        "FlowLevel", oldTotalLevel + level, //考慮退回重簽
+                        "SignerId", signerId,
                         "SignerName", signerName,
-                        "SignStatus", (level == 0) ? "1" : "0",
+                        "SignStatus", (level == 0) ? SignStatusEstr.Agree : SignStatusEstr.None,
+                        "GetTime", getTime!,
                         "SignTime", signTime!,
                     ]);
                 }
 
                 level++;
-                #endregion
             }
+            #endregion
 
             //case of ok
             return "";
@@ -261,10 +404,22 @@ insert into dbo.{signTable}(
         lab_exit:
             return isTest
                 ? error
-                : $"_XpFlow.cs CreateSignRows() failed(Flow.Code={flowCode}): {error}";
+                : $"_XgFlow.cs CreateSignA() failed(XpFlow.Code={flowCode}): {error}";
         }
 
-        private static string GetSignTable(bool isTest)
+        /// <summary>
+        /// 依測試模式選擇簽核主檔資料表名稱。
+        /// </summary>
+        /// <param name="isTest">是否使用測試模式的簽核資料表。</param>
+        public static string GetMapTable(bool isTest)
+        {
+            return isTest ? "XpTestFlowMap" : "XpFlowMap";
+        }
+        /// <summary>
+        /// 依測試模式選擇簽核明細資料表名稱。
+        /// </summary>
+        /// <param name="isTest">是否使用測試模式的簽核資料表。</param>
+        public static string GetSignTable(bool isTest)
         {
             return isTest ? "XpTestFlowSign" : "XpFlowSign";
         }
@@ -381,16 +536,17 @@ insert into dbo.{signTable}(
             return false;
         }
 
-        /// <summary>處理一筆簽核的同意或退回，並更新來源資料的流程狀態。</summary>
-        /// <param name="flowSignId">要更新的簽核明細主鍵</param>
-        /// <param name="signYes">是否同意簽核，否則按退回類型處理</param>
-        /// <param name="signNote">寫入簽核明細的意見</param>
-        /// <param name="sourceTable">要更新流程關卡及狀態的來源表名</param>
-        /// <param name="isTest">是否使用測試用的簽核資料表</param>
-        /// <param name="backType">未同意時要採用的退回處理方式</param>
+        /// <summary>
+        /// 處理指定簽核明細的同意或退回，並更新簽核流程狀態。
+        /// </summary>
+        /// <param name="flowSignId">要處理的簽核明細 ID。</param>
+        /// <param name="signYes">是否同意。為 false 時執行退回處理。</param>
+        /// <param name="signNote">寫入簽核明細的意見。</param>
+        /// <param name="isTest">是否使用測試模式的簽核資料表。</param>
+        /// <param name="FnAfterSignRowA">可選的簽核後續回呼，接收流程狀態及資料庫物件。</param>
         /// <returns>供控制器處理的簽核結果。</returns>
         public static async Task<ResultDto> SignRowA(string flowSignId, bool signYes,
-            string signNote, string sourceTable, bool isTest, FlowBackTypeEnum backType)
+            string signNote, bool isTest, FnAfterSignRowA? FnAfterSignRowA = null)
         {
             #region 1.check XpFlowSign/XpTestFlowSign row existed
             Db? db = null;
@@ -401,18 +557,25 @@ insert into dbo.{signTable}(
             await db.BeginTranA();
 
             //get XpFlowSign/XpTestFlowSign row
+            var mapTable = GetMapTable(isTest);
             var signTable = GetSignTable(isTest);
-            var sql = $"select SourceId, FlowLevel, TotalLevel from dbo.{signTable} where Id='{flowSignId}' and SignStatus='0'";
-            var row = await db.GetRowA(sql);
-            if (row == null)
+            var sql = $@"
+select s.FlowMapId, s.FlowLevel, r.TotalLevel 
+from dbo.{signTable} s
+join dbo.{mapTable} r on s.FlowMapId=r.Id
+where s.Id='{flowSignId}' 
+and s.SignStatus='{SignStatusEstr.None}'
+";
+            var signRow = await db.GetRowA(sql);
+            if (signRow == null)
             {
                 error = $"not found {signTable} row.(Id={flowSignId})";
                 goto lab_error;
             }
             #endregion
 
-            #region 2.update XpFlowSign/XpTestFlowSign row
-            var signStatus = signYes ? "Y" : "N";
+            #region 2.update XpFlowSign/test row
+            var signStatus = signYes ? SignStatusEstr.Agree : SignStatusEstr.Back;
             sql = $@"
 update dbo.{signTable} set 
     SignStatus=@SignStatus, 
@@ -420,57 +583,107 @@ update dbo.{signTable} set
     SignTime=getDate()
 where Id='{flowSignId}' 
 ";
-            var count = await db.ExecSqlA(sql, new List<object>() { "SignStatus", signStatus, "Note", signNote });
+            var count = await db.ExecSqlA(sql, ["SignStatus", signStatus, "Note", signNote]);
             if (count != 1)
             {
-                error = "_XpFlow.cs SignRowA() failed, should update one row: " + sql;
+                error = $"{signTable} should only update one row: {sql}";
                 goto lab_error;
             }
             #endregion
 
-            #region 3.update source row FlowLevel/FlowStatus
-            //flowStatus: Y(agree flow), N(not agree), 0(signing)
-            var nowLevel = Convert.ToInt32(row["FlowLevel"]);
+            #region 2a.insert XpFlowSign/test if need
+            var flowMapId = signRow["FlowMapId"]!.ToString();
+            var signLevel = Convert.ToInt32(signRow["FlowLevel"]);
+            if (_Fun.UseNextSigner)
+            {
+                var userId = _Fun.UserId();
+                var nextSigner = await _Flow2.GetNextSignerA(userId, db);
+                if (nextSigner == null)
+                {
+                    error = "Find No XpUser.NextSignerId.";
+                    goto lab_error;
+                }
 
-            //拒絶時, 如果中止則flowStatus=N, 否則為0(表示繼續流程)
-            var flowStatus = !signYes ? (backType == FlowBackTypeEnum.Close ? "N" : "0") :
-                (nowLevel == Convert.ToInt32(row["TotalLevel"])) ? "Y" : 
-                "0";
+                sql = $@"
+insert into dbo.{signTable}(
+    Id, FlowMapId, FlowLevel,
+    NodeName, SignerId, SignerName, 
+    SignStatus, GetTime, SignTime) values(
+'{_Str.NewId()}', '{flowMapId}', {signLevel + 1},
+'', '{nextSigner!.Id}', '{nextSigner!.Str}', 
+'{SignStatusEstr.None}', @Now, null);
+";
+                await db.ExecSqlA(sql, [
+                    "Now", DateTime.Now,
+                ]);
+            }
+            #endregion
+
+            #region 3.update XpFlowMap/test table
+            //flowStatus: Y(agree flow), N(not agree), 0(signing)
+            string flowStatus;
+            int nowLevel;
+            if (signYes)
+            {
+                //同意, 如果是最後一關則 Agree, 否則繼續 Work
+                nowLevel = Convert.ToInt32(signRow["FlowLevel"]);
+                flowStatus = (nowLevel == Convert.ToInt32(signRow["TotalLevel"])) 
+                    ? FlowStatusEstr.Agree : FlowStatusEstr.Work;
+            }
+            else
+            {
+                //退回
+                nowLevel = 0;
+                flowStatus = FlowStatusEstr.Back;
+            }
 
             //final flowLevel must between 0-totalLevel
-            //繼續流程時(flowStatus=0), 如果拒絶&&回上一關, 則關卡減1
-            var flowLevel = (flowStatus != "0") ? 0 :
+            //繼續流程時, 如果退回則關卡為0
+            var flowLevel = (flowStatus != FlowStatusEstr.Work) ? 0 :
                 signYes ? nowLevel + 1 :
-                (backType == FlowBackTypeEnum.ToFirst) ? 1 :
-                (nowLevel <= 1) ? 1 : nowLevel - 1;
+                _Fun.FlowBackToFirst ? 1 : 0;
 
-            //update source table
-            var sourceId = row["SourceId"]!.ToString();
+            //update XpFlowMap/test set FlowLevel, FlowStatus
             sql = $@"
-update {sourceTable} set
+update dbo.{mapTable} set
     FlowLevel={flowLevel},
     FlowStatus='{flowStatus}'
-where Id='{sourceId}'
+where Id='{flowMapId}'
 ";
-            #region case ok error
+            #endregion
+
+            //case ok error
             count = await db.ExecSqlA(sql);
             if (count != 1)
             {
-                error = "_XpFlow.cs SignRow() failed, should update one row: " + sql;
+                error = $"{mapTable} should only update one row: {sql}";
                 goto lab_error;
             }
-            #endregion
 
-            #region case of ok
+            //rollback function if any
+            if (FnAfterSignRowA != null)
+            {
+                try
+                {
+                    error = await FnAfterSignRowA(flowStatus, db);
+                    if (!string.IsNullOrEmpty(error))
+                        goto lab_error;
+                }
+                catch (Exception ex)
+                {
+                    error = "FnAfterSignRowA() exception: " + ex.Message;
+                    goto lab_error;
+                }
+            }
+
+            //case of ok
             await db.CommitA();
             await db.DisposeAsync();
 
             return new ResultDto()
             {
-                Value = "2",  //update 2 rows
+                Value = "2",  //update 2 tables
             };
-            #endregion
-            #endregion
 
         //case of error
         lab_error:
@@ -479,7 +692,7 @@ where Id='{sourceId}'
                 await db.RollbackA();
                 await db.DisposeAsync();
             }
-            return _Model.GetError(error);
+            return _Model.GetError("_XgFlow.cs SignRowA() failed: " + error);
         }
 
     }//class

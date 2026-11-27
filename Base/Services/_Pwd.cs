@@ -1,7 +1,7 @@
 ﻿using Base.Services;
 using System.Text.RegularExpressions;
 
-namespace Base
+namespace Base.Services
 {
     /// <summary>
     /// 依 _Fun.PwdStrongLevel 檢查密碼強度。

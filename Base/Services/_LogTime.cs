@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Base
+namespace Base.Services
 {
     /// <summary>
     /// 以靜態狀態累積各步驟及總耗時，不隔離並行操作。

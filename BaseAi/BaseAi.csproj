@@ -10,6 +10,7 @@
     <Compile Remove="Interfaces\zz_IEmbedDbSvc.cs" />
     <Compile Remove="Interfaces\zz_ILiveLlmSvc.cs" />
     <Compile Remove="Interfaces\zz_ILlmSvc.cs" />
+    <Compile Remove="Services\zz_GeminiSttSvc.cs" />
     <Compile Remove="Services\zz_RagSvc.cs" />
   </ItemGroup>
 

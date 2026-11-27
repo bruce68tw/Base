@@ -1,5 +1,3 @@
-using BaseAI.Models;
-
 namespace BaseAI.Interfaces
 {
     /// <summary>

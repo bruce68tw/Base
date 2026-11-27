@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
-
-namespace BaseAI.Services
+﻿namespace BaseAI.Services
 {
     // ==========================================
     // 1. 資料模型定義 (Models)

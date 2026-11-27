@@ -17,24 +17,6 @@ namespace Base.Services
     public class _File
     {
         /// <summary>
-        /// 讀取 JSON 提問檔；讀取或反序列化失敗時記錄並回傳 null。
-        /// </summary>
-        /// <param name="path">要處理的檔案或目錄路徑</param>
-        public static LlmAskDto? ReadLlmAsk(string path)
-        {
-            try
-            {
-                var json = File.ReadAllText(path);
-                return JsonSerializer.Deserialize<LlmAskDto>(json);
-            }
-            catch (Exception ex)
-            {
-                _Log.Error("_File.cs ReadLlmAsk() failed: " + ex.Message);
-                return null;
-            }
-        }
-
-        /// <summary>
         /// 將路徑副檔名改成上傳用變形名稱，不移動或加密檔案內容。
         /// </summary>
         /// <param name="path">要處理的檔案或目錄路徑</param>

@@ -1,6 +1,4 @@
-﻿using Base.Models;
-using Base.Services;
-using BaseWeb.Models;
+﻿using BaseWeb.Models;
 
 namespace BaseWeb.Services
 {

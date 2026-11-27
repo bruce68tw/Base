@@ -8,15 +8,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="zz_Areas\**" />
+    <Content Remove="zz_Areas\**" />
+    <EmbeddedResource Remove="zz_Areas\**" />
+    <None Remove="zz_Areas\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Services\zz__Flow.c_old" />
+    <None Remove="Services\_Flow.c_old" />
+  </ItemGroup>
+
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BaseWeb\BaseWeb.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Areas\MyFeature\" />
   </ItemGroup>
 
 

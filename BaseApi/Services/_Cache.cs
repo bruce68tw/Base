@@ -1,5 +1,5 @@
-﻿using Base.Services;
-using BaseApi.Interfaces;
+﻿using Base.Interfaces;
+using Base.Services;
 using System.Threading.Tasks;
 
 namespace BaseApi.Services

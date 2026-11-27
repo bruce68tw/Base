@@ -4,7 +4,6 @@ using Base.Services;
 using BaseWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
-using Novell.Directory.Ldap.Utilclass;
 using System.Threading.Tasks;
 
 namespace BaseWeb.Services
